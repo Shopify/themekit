@@ -7,11 +7,22 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+var assetLocations = []string{"templates/customers", "assets", "config", "layout", "snippets", "templates"}
 
 type FsAssetEvent struct {
 	asset     phoenix.Asset
 	eventType phoenix.EventType
+}
+
+type FileReader func(filename string) ([]byte, error)
+
+var WatcherFileReader FileReader = ioutil.ReadFile
+
+func RestoreReader() {
+	WatcherFileReader = ioutil.ReadFile
 }
 
 func (f FsAssetEvent) Asset() phoenix.Asset {
@@ -31,16 +42,14 @@ func NewFileWatcher(dir string, recur bool) (processor chan phoenix.AssetEvent) 
 	return
 }
 
-func loadAsset(event fsnotify.Event) phoenix.Asset {
-	fmt.Println(event.Name)
-	contents, _ := ioutil.ReadFile(event.Name)
-	return phoenix.Asset{Key: "", Value: string(contents)}
+func LoadAsset(event fsnotify.Event) phoenix.Asset {
+	contents, _ := WatcherFileReader(event.Name)
+	return phoenix.Asset{Key: extractAssetKey(event.Name), Value: string(contents)}
 }
 
-func handleEvent(event fsnotify.Event) FsAssetEvent {
+func HandleEvent(event fsnotify.Event) FsAssetEvent {
 	var eventType phoenix.EventType
-	asset := loadAsset(event)
-	fmt.Println(event.String())
+	asset := LoadAsset(event)
 	switch event.Op {
 	case fsnotify.Create, fsnotify.Chmod:
 		eventType = phoenix.Update
@@ -50,11 +59,21 @@ func handleEvent(event fsnotify.Event) FsAssetEvent {
 	return FsAssetEvent{asset: asset, eventType: eventType}
 }
 
+func extractAssetKey(filename string) string {
+	for _, dir := range assetLocations {
+		split := strings.SplitAfterN(filename, dir, 2)
+		if len(split) > 1 {
+			return fmt.Sprintf("%s%s", dir, split[len(split)-1])
+		}
+	}
+	return ""
+}
+
 func convertFsEvents(events chan fsnotify.Event) chan phoenix.AssetEvent {
 	results := make(chan phoenix.AssetEvent)
 	go func() {
 		for {
-			results <- handleEvent(<-events)
+			results <- HandleEvent(<-events)
 		}
 	}()
 	return results
