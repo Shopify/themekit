@@ -50,7 +50,7 @@ func (conf Configuration) AssetPath() string {
 
 func (conf Configuration) AddHeaders(req *http.Request) {
 	req.Header.Add("X-Shopify-Access-Token", conf.AccessToken)
-	req.Header.Add("Content-Type", "application/x-form-urlencoded")
+	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", "go/phoenix")
 }

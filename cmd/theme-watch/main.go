@@ -10,7 +10,6 @@ func main() {
 	done := make(chan bool)
 	dir, _ := os.Getwd()
 	config, _ := phoenix.LoadConfigurationFromFile(fmt.Sprintf("%s/config.yml", dir))
-	fmt.Println(config.String())
 	bucket := phoenix.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
 	bucket.TopUp()
 	foreman := phoenix.NewForeman(bucket)
@@ -19,7 +18,12 @@ func main() {
 	foreman.JobQueue = watcher
 	foreman.IssueWork()
 
-	go client.Process(foreman.WorkerQueue)
+	go func() {
+		asset := <-foreman.WorkerQueue
+		message := fmt.Sprintf("Recieved %s event on %s", asset.Type(), asset.Asset().Key)
+		fmt.Println(message)
+		client.Perform(asset)
+	}()
 
 	<-done
 }

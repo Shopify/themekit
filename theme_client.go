@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -21,6 +20,17 @@ type Asset struct {
 }
 
 type EventType int
+
+func (e EventType) String() string {
+	switch e {
+	case Update:
+		return "Update"
+	case Remove:
+		return "Remove"
+	default:
+		return "Unknown"
+	}
+}
 
 const (
 	Update EventType = iota
@@ -67,21 +77,25 @@ func (t ThemeClient) Process(events chan AssetEvent) {
 }
 
 func (t ThemeClient) Perform(asset AssetEvent) {
+	var event string
 	switch asset.Type() {
 	case Update:
-		t.request(asset, "PUT")
+		event = "PUT"
 	case Remove:
-		t.request(asset, "DELETE")
+		event = "DELETE"
+	}
+	_, err := t.request(asset, event)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
 	path := t.config.AssetPath()
-	content := url.Values{}
-	content.Set("asset[key]", event.Asset().Key)
-	content.Set("asset[value]", event.Asset().Value)
+	data := map[string]map[string]string{"asset": {"key": event.Asset().Key, "value": event.Asset().Value}}
+	encoded, err := json.Marshal(data)
 
-	req, err := http.NewRequest(method, path, strings.NewReader(content.Encode()))
+	req, err := http.NewRequest(method, path, strings.NewReader(string(encoded)))
 
 	if err != nil {
 		log.Fatal(err)
