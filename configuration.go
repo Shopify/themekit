@@ -3,14 +3,16 @@ package phoenix
 import (
 	"fmt"
 	"gopkg.in/yaml.v1"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 type Configuration struct {
-	AccessToken  string `yaml:"access_token"`
-	Domain       string `yaml:"store"`
-	Url          string
+	AccessToken  string   `yaml:"access_token"`
+	Domain       string   `yaml:"store"`
+	Url          string   `yaml:"-"`
 	IgnoredFiles []string `yaml:"ignore_files,omitempty"`
 	BucketSize   int      `yaml:"bucket_size"`
 	RefillRate   int      `yaml:"refill_rate"`
@@ -44,8 +46,21 @@ func LoadConfigurationFromFile(location string) (conf Configuration, err error) 
 	return
 }
 
+func (conf Configuration) Write(w io.Writer) error {
+	bytes, err := yaml.Marshal(conf)
+	if err == nil {
+		_, err = w.Write(bytes)
+	}
+	return err
+}
+
 func (conf Configuration) Save(location string) error {
-	return nil
+	file, err := os.OpenFile(location, os.O_WRONLY|os.O_CREATE, 0644)
+	defer file.Close()
+	if err == nil {
+		err = conf.Write(file)
+	}
+	return err
 }
 
 func (conf Configuration) AssetPath() string {

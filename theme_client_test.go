@@ -1,11 +1,11 @@
 package phoenix
 
 import (
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 )
 
@@ -23,7 +23,7 @@ func (t TestEvent) Type() EventType {
 }
 
 func TestPerformWithUpdateAssetEvent(t *testing.T) {
-	ts := assertRequest(t, "PUT", map[string]string{"asset[value]": "Hello World", "asset[key]": "assets/hello.txt"})
+	ts := assertRequest(t, "PUT", "asset", map[string]string{"value": "Hello World", "key": "assets/hello.txt"})
 	defer ts.Close()
 	asset := TestEvent{asset: asset(), eventType: Update}
 	client := NewThemeClient(conf(ts))
@@ -31,7 +31,7 @@ func TestPerformWithUpdateAssetEvent(t *testing.T) {
 }
 
 func TestPerformWithRemoveAssetEvent(t *testing.T) {
-	ts := assertRequest(t, "DELETE", map[string]string{"asset[key]": "assets/hello.txt"})
+	ts := assertRequest(t, "DELETE", "asset", map[string]string{"key": "assets/hello.txt"})
 	defer ts.Close()
 	asset := TestEvent{asset: asset(), eventType: Remove}
 	client := NewThemeClient(conf(ts))
@@ -74,14 +74,16 @@ func conf(server *httptest.Server) Configuration {
 	return Configuration{Url: server.URL, AccessToken: "abra"}
 }
 
-func assertRequest(t *testing.T, method string, formValues map[string]string) *httptest.Server {
+func assertRequest(t *testing.T, method string, root string, formValues map[string]string) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "abra", r.Header.Get("X-Shopify-Access-Token"))
 		assert.Equal(t, method, r.Method)
+		var results map[string]map[string]string
 		data, _ := ioutil.ReadAll(r.Body)
-		v, _ := url.ParseQuery(string(data))
+		json.Unmarshal(data, &results)
+		values := results[root]
 		for key, value := range formValues {
-			assert.Equal(t, value, v.Get(key))
+			assert.Equal(t, value, values[key])
 		}
 	}))
 	return ts

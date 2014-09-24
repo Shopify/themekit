@@ -4,43 +4,49 @@ import (
 	"flag"
 	"fmt"
 	"github.com/csaunders/phoenix"
+	"log"
 	"os"
 	"strings"
 )
 
 var domain, accessToken string
 var bucketSize, refillRate int
-var flagSet flag.FlagSet
 
 func main() {
-	setupAndParseArgs()
+	setupAndParseArgs(os.Args[1:])
 	verifyArguments()
+	config := phoenix.Configuration{Domain: domain, AccessToken: accessToken, BucketSize: bucketSize, RefillRate: refillRate}
+	err := config.Save("config.yml")
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
-func setupAndParseArgs() {
+func setupAndParseArgs(args []string) {
 	set := flag.NewFlagSet("theme-configure", flag.ExitOnError)
 	set.StringVar(&domain, "domain", "", "your myshopify domain")
 	set.StringVar(&accessToken, "access_token", "", "accessToken (or password) to make successful API calls")
 	set.IntVar(&bucketSize, "bucketSize", phoenix.DefaultBucketSize, "leaky bucket capacity")
 	set.IntVar(&refillRate, "refillRate", phoenix.DefaultRefillRate, "leaky bucket refill rate / second")
-	set.Parse(os.Args[1:])
+	set.Parse(args)
 }
 
 func verifyArguments() {
 	var errors = []string{}
 	if len(domain) <= 0 {
-		errors = append(errors, red("domain cannot be blank"))
+		errors = append(errors, "\t-domain cannot be blank")
 	}
 	if len(accessToken) <= 0 {
-		errors = append(errors, red("access_token cannot be blank"))
+		errors = append(errors, "\t-access_token cannot be blank")
 	}
 	if len(errors) > 0 {
-		errorMessage := fmt.Sprintf("Cannot create config.yml! errors:\n%s", strings.Join(errors, "\n"))
+		errorMessage := red(fmt.Sprintf("Cannot create config.yml!\nErrors:\n%s", strings.Join(errors, "\n")))
 		fmt.Println(errorMessage)
+		setupAndParseArgs([]string{"--help"})
 		os.Exit(1)
 	}
 }
 
 func red(s string) string {
-	return fmt.Sprintf("\033[31m%s\0330", s)
+	return fmt.Sprintf("\033[31m%s\033[0m", s)
 }

@@ -1,6 +1,7 @@
 package phoenix
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -27,6 +28,20 @@ func TestLoadingAnUnsupportedConfiguration(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "example.myshopify.com", config.Domain)
 	assert.Equal(t, "abracadabra", config.AccessToken)
+}
+
+func TestWritingAConfigurationFile(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	config := Configuration{Domain: "hello.myshopify.com", AccessToken: "secret", BucketSize: 10, RefillRate: 4}
+	err := config.Write(buffer)
+	expectedConfiguration :=
+		`access_token: secret
+store: hello.myshopify.com
+bucket_size: 10
+refill_rate: 4
+`
+	assert.Nil(t, err, "An error should not have been raised")
+	assert.Equal(t, expectedConfiguration, string(buffer.Bytes()))
 }
 
 const (
