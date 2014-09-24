@@ -44,6 +44,10 @@ func LoadConfigurationFromFile(location string) (conf Configuration, err error) 
 	return
 }
 
+func (conf Configuration) Save(location string) error {
+	return nil
+}
+
 func (conf Configuration) AssetPath() string {
 	return fmt.Sprintf("%s/assets.json", conf.Url)
 }
