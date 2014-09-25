@@ -63,20 +63,25 @@ func (t ThemeClient) AssetList() chan Asset {
 	return assets
 }
 
-func (t ThemeClient) Process(events chan AssetEvent) {
+func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan string) {
+	done = make(chan bool)
+	messages = make(chan string)
 	go func() {
 		for {
 			job, more := <-events
 			if more {
-				t.Perform(job)
+				resp, err := t.Perform(job)
+				messages <- processResponse(resp, err, job.Asset())
 			} else {
+				done <- true
 				return
 			}
 		}
 	}()
+	return
 }
 
-func (t ThemeClient) Perform(asset AssetEvent) {
+func (t ThemeClient) Perform(asset AssetEvent) (response *http.Response, err error) {
 	var event string
 	switch asset.Type() {
 	case Update:
@@ -84,10 +89,11 @@ func (t ThemeClient) Perform(asset AssetEvent) {
 	case Remove:
 		event = "DELETE"
 	}
-	_, err := t.request(asset, event)
+	response, err = t.request(asset, event)
 	if err != nil {
 		log.Fatal(err)
 	}
+	return
 }
 
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
@@ -103,4 +109,18 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 
 	t.config.AddHeaders(req)
 	return t.client.Do(req)
+}
+
+func processResponse(r *http.Response, err error, asset Asset) string {
+	if err != nil {
+		return err.Error()
+	}
+	host := fmt.Sprintf("\033[34m%s\033[0m", r.Request.URL.Host)
+	key := fmt.Sprintf("\033[34m%s\033[0m", asset.Key)
+	code := r.StatusCode
+	if code >= 200 && code < 300 {
+		return fmt.Sprintf("Successfully uploaded contents of \033[%s to %s", key, host)
+	} else {
+		return fmt.Sprintf("[%d]Could not upload %s to %s/%s", code, key, host)
+	}
 }
