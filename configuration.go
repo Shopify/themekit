@@ -23,6 +23,16 @@ const (
 	DefaultRefillRate int = 2
 )
 
+func LoadConfigurationFromCurrentDirectory() (conf Configuration, err error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return Configuration{}, err
+	}
+
+	config, err := LoadConfigurationFromFile(fmt.Sprintf("%s/config.yml", dir))
+	return config, err
+}
+
 func LoadConfiguration(contents []byte) (conf Configuration, err error) {
 	err = yaml.Unmarshal(contents, &conf)
 	if err == nil {

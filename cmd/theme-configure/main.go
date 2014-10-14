@@ -47,6 +47,7 @@ func verifyArguments() {
 	}
 }
 
+// TODO: Deprecate this and use RedText from utils.go instead
 func red(s string) string {
 	return fmt.Sprintf("\033[31m%s\033[0m", s)
 }
