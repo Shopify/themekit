@@ -1,0 +1,11 @@
+# Contribution Guidelines
+
+- Open an issue to discuss the feature/bug
+- If feature/bug is deemed valid then fork repo
+- Implement patch to resolve issue, include tests to prevent regressions/validate patch/be super awesome
+- Submit pull request and mention maintainers
+  - Current Maintainers: @csaunders
+
+# Authors
+
+- Chris Saunders <[Shopify](https://shopify.com)>
