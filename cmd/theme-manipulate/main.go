@@ -81,7 +81,7 @@ func verifyArguments() {
 		errors = append(errors, fmt.Sprintf("\t-'%s' is not a valid command", command))
 	}
 
-	if len(filesToProcess) <= 0 {
+	if len(filesToProcess) <= 0 && command != commandDefault {
 		errors = append(errors, "\t- There needs to be at least one file to process")
 	}
 

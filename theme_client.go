@@ -47,20 +47,31 @@ func NewThemeClient(config Configuration) ThemeClient {
 }
 
 func (t ThemeClient) AssetList() chan Asset {
-	assets := make(chan Asset)
+	results := make(chan Asset)
 	go func() {
 		path := fmt.Sprintf("%s?fields=key,attachment", t.config.AssetPath())
 		req, err := http.NewRequest("GET", path, nil)
 		resp, err := t.client.Do(req)
 		defer resp.Body.Close()
 		bytes, err := ioutil.ReadAll(resp.Body)
-		var assets map[string]Asset
+		var assets map[string][]Asset
 		err = json.Unmarshal(bytes, &assets)
-		if err == nil {
-
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		for _, asset := range assets["assets"] {
+			results <- asset
+		}
+		close(results)
 	}()
-	return assets
+	return results
+}
+
+type AssetRetrieval func(filename string) Asset
+
+func (t ThemeClient) Asset(filename string) Asset {
+	return Asset{}
 }
 
 func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan string) {
