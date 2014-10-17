@@ -19,10 +19,12 @@ func main() {
 	foreman.IssueWork()
 
 	go func() {
-		asset := <-foreman.WorkerQueue
-		message := fmt.Sprintf("Recieved %s event on %s", asset.Type(), asset.Asset().Key)
-		fmt.Println(message)
-		client.Perform(asset)
+		for {
+			asset := <-foreman.WorkerQueue
+			message := fmt.Sprintf("Recieved %s event on %s", asset.Type(), asset.Asset().Key)
+			fmt.Println(message)
+			client.Perform(asset)
+		}
 	}()
 
 	<-done
