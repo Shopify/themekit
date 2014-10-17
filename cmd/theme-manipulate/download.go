@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/base64"
+	"fmt"
 	"github.com/csaunders/phoenix"
 	"log"
 	"os"
@@ -43,27 +45,44 @@ func downloadFiles(retrievalFunction phoenix.AssetRetrieval, filenames []string,
 func writeToDisk(asset phoenix.Asset) {
 	dir, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not get current working directory ", err)
 	}
 
 	perms, err := os.Stat(dir)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not get directory information ", err)
 	}
 
-	filename := dir + asset.Key
+	filename := fmt.Sprintf("%s/%s", dir, asset.Key)
 	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not create parent directory ", err)
 	}
 
 	file, err := os.Create(filename)
+	defer file.Sync()
+	defer file.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not create ", filename, err)
 	}
-	_, err = file.Write([]byte(asset.Value))
+
+	var data []byte
+	switch {
+	case len(asset.Value) > 0:
+		data = []byte(asset.Value)
+	case len(asset.Attachment) > 0:
+		data, err = base64.StdEncoding.DecodeString(asset.Attachment)
+		if err != nil {
+			fmt.Println(fmt.Sprintf("Could not decode %s. error: %s", asset.Key, err))
+			return
+		}
+	}
+
+	if len(data) > 0 {
+		_, err = file.Write(data)
+	}
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not write file to disk ", err)
 	}
 }

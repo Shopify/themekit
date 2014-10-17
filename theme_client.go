@@ -15,8 +15,13 @@ type ThemeClient struct {
 }
 
 type Asset struct {
-	Key   string `json:key`
-	Value string `json:value`
+	Key        string `json:key`
+	Value      string `json:value`
+	Attachment string `json:attachment`
+}
+
+func (a Asset) String() string {
+	return fmt.Sprintf("key: %s | value: %s | attachment: %s", a.Key, a.Value, a.Attachment)
 }
 
 type EventType int
@@ -49,10 +54,20 @@ func NewThemeClient(config Configuration) ThemeClient {
 func (t ThemeClient) AssetList() chan Asset {
 	results := make(chan Asset)
 	go func() {
-		path := fmt.Sprintf("%s?fields=key,attachment", t.config.AssetPath())
+		path := fmt.Sprintf("%s?fields=key,attachment,value", t.config.AssetPath())
+
 		req, err := http.NewRequest("GET", path, nil)
+		if err != nil {
+			log.Fatal("Invalid Request", err)
+		}
+
+		t.config.AddHeaders(req)
 		resp, err := t.client.Do(req)
 		defer resp.Body.Close()
+		if err != nil {
+			log.Fatal("Invalid Response", err)
+		}
+
 		bytes, err := ioutil.ReadAll(resp.Body)
 		var assets map[string][]Asset
 		err = json.Unmarshal(bytes, &assets)

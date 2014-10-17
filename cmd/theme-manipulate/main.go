@@ -26,7 +26,8 @@ var permittedCommands = map[string]string{
 type Operation func(client phoenix.ThemeClient, filenames []string) (done chan bool)
 
 var operations = map[string]Operation{
-	"upload": UploadOperation,
+	"upload":   UploadOperation,
+	"download": DownloadOperation,
 }
 
 func CommandDescription(defaultCommand string) string {
@@ -70,8 +71,9 @@ func main() {
 func setupAndParseArgs(args []string) {
 	set := flag.NewFlagSet("theme-manipulate", flag.ExitOnError)
 	set.StringVar(&command, "command", commandDefault, CommandDescription(commandDefault))
-	set.Parse(args)
-	filesToProcess = args[len(args)-set.NArg():]
+	if len(args) != set.NArg() {
+		filesToProcess = args[len(args)-set.NArg():]
+	}
 }
 
 func verifyArguments() {
