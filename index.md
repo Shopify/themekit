@@ -10,21 +10,18 @@ The Phoenix library is used for the creation of several tools that make it easy 
 work with the Shopify Assets API. Before you can get started, download the appropriate
 collection of binaries for your system:
 
-
-* Windows
-** [32 bit(pending)](#)
-** [64 bit(pending)](#)
+* [Windows 32 bit(pending)](#)
+* [Windows 64 bit(pending)](#)
 * [Linux (pending)](#)
 * [Mac OS X(pending)](#)
 
 Place the binary files somewhere and add that location to your classpath. On a Unix-like operating
 system using Bash you'd do something like this:
 
-```
-mkdir -p ~/utils/phoenix
-echo "export PATH=$PATH:/~/utils/phoenix" > ~/.bashrc
-source ~/.bashrc
-```
+    mkdir -p ~/utils/phoenix
+    echo "export PATH=$PATH:/~/utils/phoenix" > ~/.bashrc
+    source ~/.bashrc
+
 
 ### Theme Tools
 
@@ -36,10 +33,8 @@ with your theme on Shopify.
 
 Basic usage includes:
 
-```
-cd theme-dir
-theme-configure --domain=somedomain.myshopify.com --access_token=TOKEN
-```
+    cd theme-dir
+    theme-configure --domain=somedomain.myshopify.com --access_token=TOKEN
 
 **Access Tokens**
 
