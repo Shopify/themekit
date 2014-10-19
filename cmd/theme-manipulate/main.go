@@ -28,6 +28,7 @@ type Operation func(client phoenix.ThemeClient, filenames []string) (done chan b
 var operations = map[string]Operation{
 	"upload":   UploadOperation,
 	"download": DownloadOperation,
+	"remove":   RemoveOperation,
 }
 
 func CommandDescription(defaultCommand string) string {
@@ -54,7 +55,7 @@ var command string
 var filesToProcess = []string{}
 
 func main() {
-	setupAndParseArgs(os.Args[1:])
+	SetupAndParseArgs(os.Args[1:])
 	verifyArguments()
 
 	config, err := phoenix.LoadConfigurationFromCurrentDirectory()
@@ -68,11 +69,16 @@ func main() {
 	<-done
 }
 
-func setupAndParseArgs(args []string) {
+func SetupAndParseArgs(args []string) {
 	set := flag.NewFlagSet("theme-manipulate", flag.ExitOnError)
 	set.StringVar(&command, "command", commandDefault, CommandDescription(commandDefault))
+	set.Parse(args)
+
 	if len(args) != set.NArg() {
 		filesToProcess = args[len(args)-set.NArg():]
+	} else if len(args) > 0 && operations[args[0]] != nil {
+		command = args[0]
+		filesToProcess = args[1:]
 	}
 }
 
@@ -90,7 +96,7 @@ func verifyArguments() {
 	if len(errors) > 0 {
 		errorMessage := fmt.Sprintf("Invalid Invocation!\n%s", strings.Join(errors, "\n"))
 		fmt.Println(phoenix.RedText(errorMessage))
-		setupAndParseArgs([]string{"--help"})
+		SetupAndParseArgs([]string{"--help"})
 		os.Exit(1)
 	}
 }

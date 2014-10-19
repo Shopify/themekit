@@ -13,7 +13,10 @@ func UploadOperation(client phoenix.ThemeClient, filenames []string) (done chan 
 	done, messages := client.Process(files)
 	go func() {
 		for {
-			message := <-messages
+			message, more := <-messages
+			if !more {
+				return
+			}
 			fmt.Println(message)
 		}
 	}()

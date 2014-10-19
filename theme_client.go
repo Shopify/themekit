@@ -97,8 +97,9 @@ func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages c
 			job, more := <-events
 			if more {
 				resp, err := t.Perform(job)
-				messages <- processResponse(resp, err, job.Asset())
+				messages <- processResponse(resp, err, job)
 			} else {
+				close(messages)
 				done <- true
 				return
 			}
@@ -137,16 +138,18 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 	return t.client.Do(req)
 }
 
-func processResponse(r *http.Response, err error, asset Asset) string {
+func processResponse(r *http.Response, err error, event AssetEvent) string {
+	asset := event.Asset()
 	if err != nil {
 		return err.Error()
 	}
-	host := fmt.Sprintf("\033[34m%s\033[0m", r.Request.URL.Host)
-	key := fmt.Sprintf("\033[34m%s\033[0m", asset.Key)
+	host := BlueText(r.Request.URL.Host)
+	key := BlueText(asset.Key)
+	eventType := YellowText(event.Type().String())
 	code := r.StatusCode
 	if code >= 200 && code < 300 {
-		return fmt.Sprintf("Successfully uploaded contents of \033[%s to %s", key, host)
+		return fmt.Sprintf("Successfully performed %s operation for file %s to %s", eventType, key, host)
 	} else {
-		return fmt.Sprintf("[%d]Could not upload %s to %s/%s", code, key, host)
+		return fmt.Sprintf("[%d]Could not peform %s to %s at %s", code, eventType, key, host)
 	}
 }
