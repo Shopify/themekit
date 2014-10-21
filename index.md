@@ -10,10 +10,8 @@ The Phoenix library is used for the creation of several tools that make it easy 
 work with the Shopify Assets API. Before you can get started, download the appropriate
 collection of binaries for your system:
 
-* [Windows 32 bit(pending)](#)
-* [Windows 64 bit(pending)](#)
-* [Linux (pending)](#)
-* [Mac OS X(pending)](#)
+* **[Current Release - 0.0.1 alpha](https://github.com/csaunders/phoenix/releases/tag/0.0.1)**
+
 
 Place the binary files somewhere and add that location to your classpath. On a Unix-like operating
 system using Bash you'd do something like this:
