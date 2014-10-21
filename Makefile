@@ -20,7 +20,7 @@ deps:
 clean:
 	rm -rf build/
 
-.PHONY: all build clean
+.PHONY: all build clean zip
 
 build64:
 	export GOARCH=amd64; $(MAKE) build
@@ -39,4 +39,8 @@ linux:
 	export GOOS=linux; $(MAKE) build64
 	export GOOS=linux; $(MAKE) build32
 
-dist: deps windows mac linux
+zip:
+	./compress
+
+dist: deps windows mac linux zip
+
