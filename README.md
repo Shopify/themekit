@@ -16,7 +16,6 @@ The library is very much a work in progress but includes a few core things:
 - YAML based Configuration Management
 - Rudimentary Shopify API interaction via a ThemeClient
 - API Limit control via a client side leaky bucket that is controlled via an arbiter (currently called Foreman)
-- 
 
 ## Downloads
 
