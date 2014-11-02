@@ -11,6 +11,11 @@ import (
 
 const commandDefault string = "download"
 
+var permittedZeroArgCommands = map[string]bool{
+	"download": true,
+	"replace":  true,
+}
+
 var commandDescriptionPrefix = []string{
 	"An operation to be performed against the theme.",
 	"  Valid commands are:",
@@ -29,6 +34,7 @@ var operations = map[string]Operation{
 	"upload":   UploadOperation,
 	"download": DownloadOperation,
 	"remove":   RemoveOperation,
+	"replace":  ReplaceOperation,
 }
 
 func CommandDescription(defaultCommand string) string {
@@ -82,14 +88,22 @@ func SetupAndParseArgs(args []string) {
 	}
 }
 
+func CommandIsInvalid(command string) bool {
+	return permittedCommands[command] == ""
+}
+
+func CannotProcessCommandWithoutFilenames(command string, files []string) bool {
+	return len(filesToProcess) <= 0 && permittedZeroArgCommands[command] == false
+}
+
 func verifyArguments() {
 	errors := []string{}
 
-	if permittedCommands[command] == "" {
+	if CommandIsInvalid(command) {
 		errors = append(errors, fmt.Sprintf("\t-'%s' is not a valid command", command))
 	}
 
-	if len(filesToProcess) <= 0 && command != commandDefault {
+	if CannotProcessCommandWithoutFilenames(command, filesToProcess) {
 		errors = append(errors, "\t- There needs to be at least one file to process")
 	}
 

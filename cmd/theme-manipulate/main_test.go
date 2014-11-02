@@ -31,9 +31,36 @@ func TestSetupAndParseArgs(t *testing.T) {
 		Expectation{input: []string{"file1", "file2"}, output: "download"},
 		Expectation{input: []string{"--command=upload", "file1"}, output: "upload"},
 		Expectation{input: []string{}, output: "download"},
+		Expectation{input: []string{"replace"}, output: "replace"},
 	}
 	for _, expectation := range expectations {
 		SetupAndParseArgs(expectation.input)
 		assert.Equal(t, expectation.output, command, fmt.Sprintf("%s", expectation.input))
+	}
+}
+
+func TestCommandIsInvalid(t *testing.T) {
+	expectations := map[string]bool{
+		"remove":   false,
+		"upload":   false,
+		"replace":  false,
+		"download": false,
+		"doodle":   true,
+	}
+	for command, expected := range expectations {
+		assert.Equal(t, expected, CommandIsInvalid(command))
+	}
+}
+
+func TestCannotProcessCommandWithoutFilenames(t *testing.T) {
+	expectations := map[string]bool{
+		"remove":   true,
+		"upload":   true,
+		"replace":  false,
+		"download": false,
+	}
+	filenames := []string{}
+	for command, expected := range expectations {
+		assert.Equal(t, expected, CannotProcessCommandWithoutFilenames(command, filenames), command)
 	}
 }
