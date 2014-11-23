@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/csaunders/phoenix"
 	"gopkg.in/fsnotify.v1"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,7 +46,13 @@ func NewFileWatcher(dir string, recur bool) (processor chan phoenix.AssetEvent) 
 
 func LoadAsset(event fsnotify.Event) phoenix.Asset {
 	contents, _ := WatcherFileReader(event.Name)
-	return phoenix.Asset{Key: extractAssetKey(event.Name), Value: string(contents)}
+	asset := phoenix.Asset{Key: extractAssetKey(event.Name)}
+	if ContentTypeFor(contents) == "text" {
+		asset.Value = string(contents)
+	} else {
+		asset.Attachment = Encode64(contents)
+	}
+	return asset
 }
 
 func HandleEvent(event fsnotify.Event) FsAssetEvent {
@@ -57,6 +65,19 @@ func HandleEvent(event fsnotify.Event) FsAssetEvent {
 		eventType = phoenix.Remove
 	}
 	return FsAssetEvent{asset: asset, eventType: eventType}
+}
+
+func ContentTypeFor(data []byte) string {
+	contentType := http.DetectContentType(data)
+	if strings.Contains(contentType, "text") {
+		return "text"
+	} else {
+		return "binary"
+	}
+}
+
+func Encode64(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
 }
 
 func extractAssetKey(filename string) string {

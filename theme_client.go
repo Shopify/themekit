@@ -1,11 +1,13 @@
 package phoenix
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -15,9 +17,9 @@ type ThemeClient struct {
 }
 
 type Asset struct {
-	Key        string `json:key`
-	Value      string `json:value`
-	Attachment string `json:attachment`
+	Key        string `json:"key"`
+	Value      string `json:"value,omitempty"`
+	Attachment string `json:"attachment,omitempty"`
 }
 
 func (a Asset) String() string {
@@ -48,7 +50,7 @@ type AssetEvent interface {
 }
 
 func NewThemeClient(config Configuration) ThemeClient {
-	return ThemeClient{config: config, client: &http.Client{}}
+	return ThemeClient{config: config, client: newHttpClient(config)}
 }
 
 func (t ThemeClient) AssetList() chan Asset {
@@ -124,7 +126,7 @@ func (t ThemeClient) Perform(asset AssetEvent) string {
 
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
 	path := t.config.AssetPath()
-	data := map[string]map[string]string{"asset": {"key": event.Asset().Key, "value": event.Asset().Value}}
+	data := map[string]Asset{"asset": event.Asset()}
 	encoded, err := json.Marshal(data)
 
 	req, err := http.NewRequest(method, path, strings.NewReader(string(encoded)))
@@ -151,4 +153,18 @@ func processResponse(r *http.Response, err error, event AssetEvent) string {
 	} else {
 		return fmt.Sprintf("[%d]Could not peform %s to %s at %s", code, eventType, key, host)
 	}
+}
+
+func newHttpClient(config Configuration) (client *http.Client) {
+	client = &http.Client{}
+	if len(config.Proxy) > 0 {
+		fmt.Println("Proxy URL detected from Configuration:", config.Proxy)
+		fmt.Println("SSL Certificate Validation will be disabled!")
+		proxyUrl, err := url.Parse(config.Proxy)
+		if err != nil {
+			fmt.Println("Proxy configuration invalid:", err)
+		}
+		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyUrl), TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	}
+	return
 }

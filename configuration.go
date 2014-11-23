@@ -17,6 +17,7 @@ type Configuration struct {
 	BucketSize   int      `yaml:"bucket_size"`
 	RefillRate   int      `yaml:"refill_rate"`
 	Concurrency  int      `yaml:"concurrency,omitempty"`
+	Proxy        string   `yaml:"proxy,omitempty"`
 }
 
 const (

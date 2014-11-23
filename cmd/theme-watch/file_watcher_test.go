@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/csaunders/phoenix"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/fsnotify.v1"
+	"image"
+	"image/png"
 	"testing"
 )
 
@@ -32,7 +35,25 @@ func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
 	}
 }
 
-func (s *FileWatcherSuite) TestHandleEventConversFSNotifyEventsIntoAssetEvents() {
+func (s *FileWatcherSuite) TestDeterminingContentTypesOfFiles() {
+	assert.Equal(s.T(), "binary", ContentTypeFor(makeRgbImage(8, 8)))
+	assert.Equal(s.T(), "text", ContentTypeFor([]byte("Hello World")))
+	assert.Equal(s.T(), "text", ContentTypeFor([]byte("<!DOCTYPE html><html><head></head><body></body></html>")))
+}
+
+func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsAttachmentDataForBinaryFiles() {
+	imageData := makeRgbImage(8, 8)
+	encodedImageData := Encode64(imageData)
+	WatcherFileReader = func(filename string) ([]byte, error) {
+		return imageData, nil
+	}
+	event := fsnotify.Event{Name: "assets/image.png", Op: fsnotify.Chmod}
+	assetEvent := HandleEvent(event)
+	assert.Equal(s.T(), "", assetEvent.Asset().Value)
+	assert.Equal(s.T(), encodedImageData, assetEvent.Asset().Attachment)
+}
+
+func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents() {
 	WatcherFileReader = func(filename string) ([]byte, error) {
 		return []byte("hello"), nil
 	}
@@ -46,6 +67,13 @@ func (s *FileWatcherSuite) TestHandleEventConversFSNotifyEventsIntoAssetEvents()
 		assetEvent := HandleEvent(event)
 		assert.Equal(s.T(), phoenixEvent, assetEvent.Type())
 	}
+}
+
+func makeRgbImage(w, h int) []byte {
+	img := image.NewRGBA(image.Rect(0, 0, w, h))
+	buff := bytes.NewBuffer([]byte{})
+	png.Encode(buff, img)
+	return buff.Bytes()
 }
 
 func TestFileWatcherSuite(t *testing.T) {

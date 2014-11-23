@@ -1,7 +1,6 @@
 package phoenix
 
 import (
-	"fmt"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
