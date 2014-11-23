@@ -47,6 +47,13 @@ By running `theme-watch` you will start up a long running process that will watc
 (and all subdirectories) for changes. If you update or remove files, those changes will be passed off to
 Shopify and updated on your theme.
 
+**Concurrency**
+
+You can tune how many uploads you'd like to do at once by adjusting the `concurrency` field in your `config.yml`. By default you'll have a concurrency of **2** which means you should never have to worry about running out of API requests when working on a theme. If you aren't making a super large amount of updates at the same time you can tweak this value into something that is a bit more acceptable for you.
+
+*Caveats*
+
+Most API clients have an upper limit of 40 requests with a 2 request refill. So if you make a request that does more than 40 updates, after those first 40 requests you'll end up with an effective concurrency of 2 until all your files have been processed.
 
 #### theme-manipulate
 
