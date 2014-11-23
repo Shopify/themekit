@@ -17,6 +17,10 @@ The library is very much a work in progress but includes a few core things:
 - Rudimentary Shopify API interaction via a ThemeClient
 - API Limit control via a client side leaky bucket that is controlled via an arbiter (currently called Foreman)
 
+## Downloads
+
+You can get your hands on a build for your system by checking out the [releases section](https://github.com/csaunders/phoenix/releases).
+
 
 ## Contributing
 
