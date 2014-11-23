@@ -1,6 +1,8 @@
 # Phoenix
 ## Shopify Theme Manipulation Utilities and Libraries
 
+[Read more about it on the website](csaunders.github.io/phoenix)
+
 ### Utilities
 
 Phoenix provides a number of utilities when they are all built. These are to replicate the features in the [shopify_theme gem](https://github.com/shopify/shopify_theme) but aims to solve a few core problems:
