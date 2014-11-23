@@ -1,6 +1,7 @@
 package phoenix
 
 import (
+	"fmt"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -39,27 +40,23 @@ func TestPerformWithRemoveAssetEvent(t *testing.T) {
 }
 
 func TestProcessingAnEventsChannel(t *testing.T) {
-	stream := make(chan AssetEvent)
-	done := make(chan bool)
 	results := map[string]int{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		results[r.Method] += 1
-
-		// This is fragile, but if I don't do it here I end up missing out
-		// on the last (DELETE) event
-		if r.Method == "DELETE" {
-			done <- true
-		}
 	}))
 
+	stream := make(chan AssetEvent)
 	go func() {
 		stream <- TestEvent{asset: asset(), eventType: Update}
 		stream <- TestEvent{asset: asset(), eventType: Update}
 		stream <- TestEvent{asset: asset(), eventType: Remove}
+		close(stream)
 	}()
 
 	client := NewThemeClient(conf(ts))
-	client.Process(stream)
+	done, messages := client.Process(stream)
+
+	go drain(messages)
 
 	<-done
 	assert.Equal(t, 2, results["PUT"])
@@ -72,6 +69,15 @@ func asset() Asset {
 
 func conf(server *httptest.Server) Configuration {
 	return Configuration{Url: server.URL, AccessToken: "abra"}
+}
+
+func drain(channel chan string) {
+	for {
+		_, more := <- channel
+		if !more {
+			return
+		}
+	}
 }
 
 func assertRequest(t *testing.T, method string, root string, formValues map[string]string) *httptest.Server {
