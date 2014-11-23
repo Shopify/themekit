@@ -18,14 +18,20 @@ func main() {
 	foreman.JobQueue = watcher
 	foreman.IssueWork()
 
-	go func() {
-		for {
-			asset := <-foreman.WorkerQueue
-			message := fmt.Sprintf("Recieved %s event on %s", asset.Type(), asset.Asset().Key)
-			fmt.Println(message)
-			client.Perform(asset)
-		}
-	}()
+	fmt.Println("Waiting for local changes")
+	for i := 0; i < config.Concurrency; i++ {
+		go spawnWorker(i, foreman.WorkerQueue, client)
+	}
 
 	<-done
+}
+
+func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.ThemeClient) {
+	fmt.Println(fmt.Sprintf("~~~~ Spawning Worker %d ~~~~", workerId))
+	for {
+		asset := <-queue
+		message := fmt.Sprintf("Recieved %s event on %s", asset.Type(), asset.Asset().Key)
+		fmt.Println(message)
+		client.Perform(asset)
+	}
 }

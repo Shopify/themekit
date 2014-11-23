@@ -12,6 +12,7 @@ func TestLoadingAValidConfiguration(t *testing.T) {
 	assert.Equal(t, "example.myshopify.com", config.Domain)
 	assert.Equal(t, "abracadabra", config.AccessToken)
 	assert.Equal(t, "https://example.myshopify.com/admin", config.Url)
+	assert.Equal(t, 4, config.Concurrency)
 	assert.Nil(t, config.IgnoredFiles)
 }
 
@@ -48,6 +49,7 @@ const (
 	validConfiguration = `
   store: example.myshopify.com
   access_token: abracadabra
+  concurrency: 4
   `
 
 	validConfigurationWithIgnoredFiles = `
