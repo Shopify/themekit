@@ -16,11 +16,13 @@ type Configuration struct {
 	IgnoredFiles []string `yaml:"ignore_files,omitempty"`
 	BucketSize   int      `yaml:"bucket_size"`
 	RefillRate   int      `yaml:"refill_rate"`
+	Concurrency  int      `yaml:"concurrency,omitempty"`
 }
 
 const (
-	DefaultBucketSize int = 40
-	DefaultRefillRate int = 2
+	DefaultBucketSize  int = 40
+	DefaultRefillRate  int = 2
+	DefaultConcurrency int = 2
 )
 
 func LoadConfigurationFromCurrentDirectory() (conf Configuration, err error) {
@@ -41,6 +43,9 @@ func LoadConfiguration(contents []byte) (conf Configuration, err error) {
 		}
 		if conf.RefillRate <= 0 {
 			conf.RefillRate = DefaultRefillRate
+		}
+		if conf.Concurrency <= 0 {
+			conf.Concurrency = DefaultConcurrency
 		}
 		conf.Url = fmt.Sprintf("https://%s/admin", conf.Domain)
 	}

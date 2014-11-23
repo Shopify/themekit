@@ -96,8 +96,7 @@ func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages c
 		for {
 			job, more := <-events
 			if more {
-				resp, err := t.Perform(job)
-				messages <- processResponse(resp, err, job)
+				messages <- t.Perform(job)
 			} else {
 				close(messages)
 				done <- true
@@ -108,7 +107,7 @@ func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages c
 	return
 }
 
-func (t ThemeClient) Perform(asset AssetEvent) (response *http.Response, err error) {
+func (t ThemeClient) Perform(asset AssetEvent) string {
 	var event string
 	switch asset.Type() {
 	case Update:
@@ -116,11 +115,11 @@ func (t ThemeClient) Perform(asset AssetEvent) (response *http.Response, err err
 	case Remove:
 		event = "DELETE"
 	}
-	response, err = t.request(asset, event)
-	if err != nil {
-		log.Fatal(err)
+	resp, err := t.request(asset, event)
+	if err == nil {
+		defer resp.Body.Close()
 	}
-	return
+	return processResponse(resp, err, asset)
 }
 
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
