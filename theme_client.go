@@ -56,21 +56,11 @@ func NewThemeClient(config Configuration) ThemeClient {
 func (t ThemeClient) AssetList() chan Asset {
 	results := make(chan Asset)
 	go func() {
-		path := fmt.Sprintf("%s?fields=key,attachment,value", t.config.AssetPath())
-
-		req, err := http.NewRequest("GET", path, nil)
-		if err != nil {
-			log.Fatal("Invalid Request", err)
+		queryBuilder := func(path string) string {
+			return path
 		}
 
-		t.config.AddHeaders(req)
-		resp, err := t.client.Do(req)
-		defer resp.Body.Close()
-		if err != nil {
-			log.Fatal("Invalid Response", err)
-		}
-
-		bytes, err := ioutil.ReadAll(resp.Body)
+		bytes, err := t.query(queryBuilder)
 		var assets map[string][]Asset
 		err = json.Unmarshal(bytes, &assets)
 		if err != nil {
@@ -88,22 +78,11 @@ func (t ThemeClient) AssetList() chan Asset {
 type AssetRetrieval func(filename string) Asset
 
 func (t ThemeClient) Asset(filename string) Asset {
-	path := fmt.Sprintf("%s?fields=key,attachment,value", t.config.AssetPath())
-	path = fmt.Sprintf("%s&asset[key]=%s", path, filename)
-
-	req, err := http.NewRequest("GET", path, nil)
-	if err != nil {
-		log.Fatal("Invalid Request", err)
+	queryBuilder := func(path string) string {
+		return fmt.Sprintf("%s&asset[key]=%s", path, filename)
 	}
 
-	t.config.AddHeaders(req)
-	resp, err := t.client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		log.Fatal("Invalid Response", err)
-	}
-
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := t.query(queryBuilder)
 	var asset map[string]Asset
 	err = json.Unmarshal(bytes, &asset)
 	if err != nil {
@@ -144,6 +123,24 @@ func (t ThemeClient) Perform(asset AssetEvent) string {
 		defer resp.Body.Close()
 	}
 	return processResponse(resp, err, asset)
+}
+
+func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error) {
+	path := fmt.Sprintf("%s?fields=key,attachment,value", t.config.AssetPath())
+	path = queryBuilder(path)
+
+	req, err := http.NewRequest("GET", path, nil)
+	if err != nil {
+		log.Fatal("Invalid Request", err)
+	}
+
+	t.config.AddHeaders(req)
+	resp, err := t.client.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		log.Fatal("Invalid response", err)
+	}
+	return ioutil.ReadAll(resp.Body)
 }
 
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
