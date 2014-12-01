@@ -10,12 +10,18 @@ The Phoenix library is used for the creation of several tools that make it easy 
 work with the Shopify Assets API. Before you can get started, download the appropriate
 collection of binaries for your system:
 
-* **[Current Release - 0.0.2 alpha](https://github.com/csaunders/phoenix/releases/tag/0.0.2)**
+* **[Current Release - 0.0.3 alpha](https://github.com/csaunders/phoenix/releases/tag/0.0.3)**
 
 Older Releases
 
+* [0.0.2](https://github.com/csaunders/phoenix/releases/tag/0.0.2)
 * [0.0.1](https://github.com/csaunders/phoenix/releases/tag/0.0.1)
 
+Nightly Releases
+
+When new commits are pushed and a release hasn't been made yet, there will be a nightly branch. If nothing has diverged from the latest release, a nightly build will not be available.
+
+-------
 
 Place the binary files somewhere and add that location to your classpath. On a Unix-like operating
 system using Bash you'd do something like this:
