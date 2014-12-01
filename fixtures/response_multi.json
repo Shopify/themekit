@@ -1,0 +1,12 @@
+{
+  "assets": [
+    {
+      "key": "assets/hello.txt",
+      "value": "Hello World"
+    },
+    {
+      "key": "assets/goodbye.txt",
+      "value": "Goodbye"
+    }
+  ]
+}

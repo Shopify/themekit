@@ -1,0 +1,7 @@
+{
+  "asset": {
+    "key": "assets/hello.txt",
+    "value": "hello world",
+    "warnings": []
+  }
+}

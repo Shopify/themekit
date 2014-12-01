@@ -2,6 +2,7 @@ package phoenix
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -62,6 +63,28 @@ func TestProcessingAnEventsChannel(t *testing.T) {
 	assert.Equal(t, 1, results["DELETE"])
 }
 
+func TestRetrievingAnAssetList(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "fields=key,attachment,value", r.URL.RawQuery)
+		fmt.Fprintf(w, TestFixture("response_multi"))
+	}))
+
+	client := NewThemeClient(conf(ts))
+	assets := client.AssetList()
+	assert.Equal(t, 2, count(assets))
+}
+
+func TestRetrievingASingleAsset(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "fields=key,attachment,value&asset[key]=assets/foo.txt", r.URL.RawQuery)
+		fmt.Fprintf(w, TestFixture("response_single"))
+	}))
+
+	client := NewThemeClient(conf(ts))
+	asset := client.Asset("assets/foo.txt")
+	assert.Equal(t, "hello world", asset.Value)
+}
+
 func asset() Asset {
 	return Asset{Key: "assets/hello.txt", Value: "Hello World"}
 }
@@ -72,10 +95,21 @@ func conf(server *httptest.Server) Configuration {
 
 func drain(channel chan string) {
 	for {
-		_, more := <- channel
+		_, more := <-channel
 		if !more {
 			return
 		}
+	}
+}
+
+func count(channel chan Asset) int {
+	count := 0
+	for {
+		_, more := <-channel
+		if !more {
+			return count
+		}
+		count++
 	}
 }
 
