@@ -88,7 +88,29 @@ func (t ThemeClient) AssetList() chan Asset {
 type AssetRetrieval func(filename string) Asset
 
 func (t ThemeClient) Asset(filename string) Asset {
-	return Asset{}
+	path := fmt.Sprintf("%s?fields=key,attachment,value", t.config.AssetPath())
+	path = fmt.Sprintf("%s&asset[key]=%s", path, filename)
+
+	req, err := http.NewRequest("GET", path, nil)
+	if err != nil {
+		log.Fatal("Invalid Request", err)
+	}
+
+	t.config.AddHeaders(req)
+	resp, err := t.client.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		log.Fatal("Invalid Response", err)
+	}
+
+	bytes, err := ioutil.ReadAll(resp.Body)
+	var asset map[string]Asset
+	err = json.Unmarshal(bytes, &asset)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return asset["asset"]
 }
 
 func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan string) {
