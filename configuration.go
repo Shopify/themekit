@@ -18,7 +18,7 @@ type Configuration struct {
 	RefillRate   int      `yaml:"refill_rate"`
 	Concurrency  int      `yaml:"concurrency,omitempty"`
 	Proxy        string   `yaml:"proxy,omitempty"`
-	Ignores      string   `yaml:"ignores,omitempty"`
+	Ignores      []string `yaml:"ignores,omitempty"`
 }
 
 const (

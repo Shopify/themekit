@@ -46,22 +46,17 @@ func NewEventFilterFromReaders(readers []io.Reader) EventFilter {
 	return NewEventFilter(patterns)
 }
 
-func NewEventFilterFromFilesCSV(csv string) EventFilter {
-	if len(csv) > 0 {
-		filenames := strings.Split(csv, ",")
-		files := make([]io.Reader, len(filenames))
-		for i, name := range filenames {
-			file, err := os.Open(name)
-			defer file.Close()
-			if err != nil {
-				log.Fatal(err, "-", name)
-			}
-			files[i] = file
+func NewEventFilterFromFilesCSV(ignores []string) EventFilter {
+	files := make([]io.Reader, len(ignores))
+	for i, name := range ignores {
+		file, err := os.Open(name)
+		defer file.Close()
+		if err != nil {
+			log.Fatal(err, "-", name)
 		}
-		return NewEventFilterFromReaders(files)
-	} else {
-		return NewEventFilter([]string{})
+		files[i] = file
 	}
+	return NewEventFilterFromReaders(files)
 }
 
 func (e EventFilter) Filter(events chan string) chan string {
