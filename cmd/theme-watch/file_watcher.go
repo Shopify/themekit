@@ -35,11 +35,11 @@ func (f FsAssetEvent) Type() phoenix.EventType {
 	return f.eventType
 }
 
-func NewFileWatcher(dir string, recur bool) (processor chan phoenix.AssetEvent) {
+func NewFileWatcher(dir string, recur bool, filter phoenix.EventFilter) (processor chan phoenix.AssetEvent) {
 	if recur {
-		processor, _ = watchDirRecur(dir)
+		processor, _ = watchDirRecur(dir, filter)
 	} else {
-		processor, _ = watchDir(dir)
+		processor, _ = watchDir(dir, filter)
 	}
 	return
 }
@@ -90,21 +90,24 @@ func extractAssetKey(filename string) string {
 	return ""
 }
 
-func convertFsEvents(events chan fsnotify.Event) chan phoenix.AssetEvent {
+func convertFsEvents(events chan fsnotify.Event, filter phoenix.EventFilter) chan phoenix.AssetEvent {
 	results := make(chan phoenix.AssetEvent)
 	go func() {
 		for {
-			results <- HandleEvent(<-events)
+			event := <-events
+			if !filter.MatchesFilter(event.Name) {
+				results <- HandleEvent(event)
+			}
 		}
 	}()
 	return results
 }
 
-func watchDirRecur(dir string) (results chan phoenix.AssetEvent, err error) {
+func watchDirRecur(dir string, filter phoenix.EventFilter) (results chan phoenix.AssetEvent, err error) {
 	results = make(chan phoenix.AssetEvent)
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
-			channel, _ := watchDir(path)
+			channel, _ := watchDir(path, filter)
 			go func() {
 				for {
 					results <- <-channel
@@ -116,14 +119,14 @@ func watchDirRecur(dir string) (results chan phoenix.AssetEvent, err error) {
 	return
 }
 
-func watchDir(dir string) (results chan phoenix.AssetEvent, err error) {
+func watchDir(dir string, filter phoenix.EventFilter) (results chan phoenix.AssetEvent, err error) {
 	watcher, err := fsnotify.NewWatcher()
 	err = watcher.Add(dir)
 	if err != nil {
 		results = make(chan phoenix.AssetEvent)
 		close(results)
 	} else {
-		results = convertFsEvents(watcher.Events)
+		results = convertFsEvents(watcher.Events, filter)
 	}
 	return
 }

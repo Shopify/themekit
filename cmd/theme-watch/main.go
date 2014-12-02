@@ -14,7 +14,7 @@ func main() {
 	bucket.TopUp()
 	foreman := phoenix.NewForeman(bucket)
 	client := phoenix.NewThemeClient(config)
-	watcher := NewFileWatcher(dir, true)
+	watcher := constructFileWatcher(dir, config)
 	foreman.JobQueue = watcher
 	foreman.IssueWork()
 
@@ -34,4 +34,9 @@ func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.The
 		fmt.Println(message)
 		client.Perform(asset)
 	}
+}
+
+func constructFileWatcher(dir string, config phoenix.Configuration) chan phoenix.AssetEvent {
+	filter := phoenix.NewEventFilterFromFilesCSV(config.Ignores)
+	return NewFileWatcher(dir, true, filter)
 }
