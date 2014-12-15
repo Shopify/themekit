@@ -10,7 +10,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+const EventTimeoutInMs int64 = 3000
 
 var assetLocations = []string{"templates/customers", "assets", "config", "layout", "snippets", "templates"}
 
@@ -33,6 +36,14 @@ func (f FsAssetEvent) Asset() phoenix.Asset {
 
 func (f FsAssetEvent) Type() phoenix.EventType {
 	return f.eventType
+}
+
+func (f FsAssetEvent) IsValid() bool {
+	return f.eventType == phoenix.Remove || f.asset.IsValid()
+}
+
+func (f FsAssetEvent) String() string {
+	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
 }
 
 func NewFileWatcher(dir string, recur bool, filter phoenix.EventFilter) (processor chan phoenix.AssetEvent) {
@@ -93,10 +104,19 @@ func extractAssetKey(filename string) string {
 func convertFsEvents(events chan fsnotify.Event, filter phoenix.EventFilter) chan phoenix.AssetEvent {
 	results := make(chan phoenix.AssetEvent)
 	go func() {
+		duplicateEventTimeout := map[string]int64{}
 		for {
 			event := <-events
+
 			if !filter.MatchesFilter(event.Name) {
-				results <- HandleEvent(event)
+				fsevent := HandleEvent(event)
+				duplicateEventTimeoutKey := fsevent.String()
+				timestamp := (time.Now().UnixNano() / int64(time.Millisecond))
+
+				if duplicateEventTimeout[duplicateEventTimeoutKey] < timestamp && fsevent.IsValid() {
+					duplicateEventTimeout[duplicateEventTimeoutKey] = timestamp + EventTimeoutInMs
+					results <- fsevent
+				}
 			}
 		}
 	}()

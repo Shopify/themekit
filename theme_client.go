@@ -26,6 +26,10 @@ func (a Asset) String() string {
 	return fmt.Sprintf("key: %s | value: %s | attachment: %s", a.Key, a.Value, a.Attachment)
 }
 
+func (a Asset) IsValid() bool {
+	return len(a.Value) > 0 || len(a.Attachment) > 0
+}
+
 type EventType int
 
 func (e EventType) String() string {
