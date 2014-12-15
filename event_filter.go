@@ -67,7 +67,7 @@ func (e EventFilter) Filter(events chan string) chan string {
 			if !more {
 				return
 			}
-			if !e.MatchesFilter(event) {
+			if len(event) > 0 && !e.MatchesFilter(event) {
 				filtered <- event
 			}
 		}

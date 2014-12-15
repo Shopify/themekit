@@ -37,6 +37,13 @@ func TestBuildingEventFiltersFromMultipleReaders(t *testing.T) {
 	assertFilter(t, eventFilter, inputEvents, expectedResults)
 }
 
+func TestFilterRemovesEmptyStrings(t *testing.T) {
+	eventFilter := NewEventFilterFromReaders([]io.Reader{})
+	inputEvents := []string{"hello", "", "world"}
+	expectedEvents := []string{"hello", "world"}
+	assertFilter(t, eventFilter, inputEvents, expectedEvents)
+}
+
 func nextValue(channel chan string) string {
 	select {
 	case result := <-channel:
