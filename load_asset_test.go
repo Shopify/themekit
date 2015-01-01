@@ -39,7 +39,7 @@ func (s *LoadAssetSuite) TestWhenAFileIsEmpty() {
 	assert.False(s.T(), asset.IsValid(), "The returned asset should not be considered valid")
 }
 
-func (s *LoadAssetSuite) TestWhenAFileContainsData() {
+func (s *LoadAssetSuite) TestWhenAFileContainsTextData() {
 	root, filename, err := s.allocateFile("hello world")
 	if err != nil {
 		log.Fatal(err)
@@ -48,6 +48,19 @@ func (s *LoadAssetSuite) TestWhenAFileContainsData() {
 	asset, err := LoadAsset(root, filename)
 	assert.Nil(s.T(), err, "There should not be an error returned")
 	assert.True(s.T(), asset.IsValid(), "Files that contain data should be valid")
+	assert.Equal(s.T(), "hello world", asset.Value)
+}
+
+func (s *LoadAssetSuite) TestWhenAFileContainsBinaryData() {
+	root, filename, err := s.allocateFile(string(BinaryTestData()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	asset, err := LoadAsset(root, filename)
+	assert.Nil(s.T(), err, "There should not be an error returned")
+	assert.True(s.T(), asset.IsValid(), "Files that contain data should be valid")
+	assert.True(s.T(), len(asset.Attachment) > 0, "The attachment should not be blank")
 }
 
 func (s *LoadAssetSuite) TestWhenFileIsADirectory() {

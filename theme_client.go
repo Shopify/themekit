@@ -2,6 +2,7 @@ package phoenix
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,8 +51,27 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 	if err != nil {
 		return
 	}
-	asset = Asset{Value: string(buffer), Key: filename}
+
+	asset = Asset{Key: filename}
+	if contentTypeFor(buffer) == "text" {
+		asset.Value = string(buffer)
+	} else {
+		asset.Attachment = encode64(buffer)
+	}
 	return
+}
+
+func contentTypeFor(data []byte) string {
+	contentType := http.DetectContentType(data)
+	if strings.Contains(contentType, "text") {
+		return "text"
+	} else {
+		return "binary"
+	}
+}
+
+func encode64(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
 }
 
 type EventType int

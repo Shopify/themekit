@@ -1,7 +1,10 @@
 package phoenix
 
 import (
+	"bytes"
 	"fmt"
+	"image"
+	"image/png"
 	"io/ioutil"
 	"log"
 	"os"
@@ -31,4 +34,11 @@ func TestFixture(name string) string {
 		log.Fatal(err)
 	}
 	return string(bytes)
+}
+
+func BinaryTestData() []byte {
+	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+	buff := bytes.NewBuffer([]byte{})
+	png.Encode(buff, img)
+	return buff.Bytes()
 }
