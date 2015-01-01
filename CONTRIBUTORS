@@ -6,6 +6,12 @@
 - Submit pull request and mention maintainers
   - Current Maintainers: @csaunders
 
+# Getting the Source Code
+
+You can easily obtain the source code and all dependencies by typing the following into a console:
+
+  go get -u github.com/csaunders/phoenix
+
 # Authors
 
 - Chris Saunders <[Shopify](https://shopify.com)>
