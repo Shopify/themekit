@@ -10,10 +10,11 @@ The Phoenix library is used for the creation of several tools that make it easy 
 work with the Shopify Assets API. Before you can get started, download the appropriate
 collection of binaries for your system:
 
-* **[Current Release - 0.0.3 alpha](https://github.com/csaunders/phoenix/releases/tag/0.0.3)**
+* **[Current Release - 0.0.4 alpha](https://github.com/csaunders/phoenix/releases/tag/0.0.4)**
 
 Older Releases
 
+* [0.0.3](https://github.com/csaunders/phoenix/releases/tag/0.0.3)
 * [0.0.2](https://github.com/csaunders/phoenix/releases/tag/0.0.2)
 * [0.0.1](https://github.com/csaunders/phoenix/releases/tag/0.0.1)
 
@@ -72,10 +73,22 @@ a single asset file, such as uploading or downloading.
 
 ##### theme-manipulate upload file [...]
 
-Provide one or more files that you'd like to upload to Shopify.
+Provide one or more files that you'd like to upload to Shopify. If you want to upload an entire directory you can include a wildcard. (i.e. `theme-manipulate upload templates/*` to upload all your templates)
 
 #### theme-manipulate download [file ...]
 
 Download one or more files from Shopify.
 
 If no files are provided then all the themes assets will be downloaded to your local filesystem.
+
+
+# Debugging
+
+If you are having issues with the tool (uploads are not working for example) you can install a tool such as [Charles Proxy](http://www.charlesproxy.com/)
+or [mitmproxy](http://mitmproxy.org/). You can the information collected from the proxy to improve the quality of your bug report.
+
+**Be aware that running with a proxy will cause the theme utilties to disable certificate validation!**
+
+To enable the proxy feature simply add the following to your `config.yml`
+
+    proxy: url_to_your_proxy (i.e. http://localhost:8080)

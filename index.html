@@ -14,12 +14,14 @@
 <p>The Phoenix library is used for the creation of several tools that make it easy to work with the Shopify Assets API. Before you can get started, download the appropriate collection of binaries for your system:</p>
 
 <ul>
-<li><strong><a href="https://github.com/csaunders/phoenix/releases/tag/0.0.3">Current Release - 0.0.3 alpha</a></strong></li>
+<li><strong><a href="https://github.com/csaunders/phoenix/releases/tag/0.0.4">Current Release - 0.0.4 alpha</a></strong></li>
 </ul>
 
 <p>Older Releases</p>
 
 <ul>
+<li><a href="https://github.com/csaunders/phoenix/releases/tag/0.0.3">0.0.3</a></li>
+
 <li><a href="https://github.com/csaunders/phoenix/releases/tag/0.0.2">0.0.2</a></li>
 
 <li><a href="https://github.com/csaunders/phoenix/releases/tag/0.0.1">0.0.1</a></li>
@@ -70,11 +72,21 @@ theme-configure --domain=somedomain.myshopify.com --access_token=TOKEN</code></p
 
 <h5 id="thememanipulate_upload_file_">theme-manipulate upload file []</h5>
 
-<p>Provide one or more files that you’d like to upload to Shopify.</p>
+<p>Provide one or more files that you’d like to upload to Shopify. If you want to upload an entire directory you can include a wildcard. (i.e. <code>theme-manipulate upload templates/*</code> to upload all your templates)</p>
 
 <h4 id="thememanipulate_download_file_">theme-manipulate download [file ]</h4>
 
 <p>Download one or more files from Shopify.</p>
 
 <p>If no files are provided then all the themes assets will be downloaded to your local filesystem.</p>
+
+<h1 id="debugging">Debugging</h1>
+
+<p>If you are having issues with the tool (uploads are not working for example) you can install a tool such as <a href="http://www.charlesproxy.com/">Charles Proxy</a> or <a href="http://mitmproxy.org/">mitmproxy</a>. You can the information collected from the proxy to improve the quality of your bug report.</p>
+
+<p><strong>Be aware that running with a proxy will cause the theme utilties to disable certificate validation!</strong></p>
+
+<p>To enable the proxy feature simply add the following to your <code>config.yml</code></p>
+
+<pre><code>proxy: url_to_your_proxy (i.e. http://localhost:8080)</code></pre>
 </body></html>
