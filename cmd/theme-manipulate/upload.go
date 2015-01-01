@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/csaunders/phoenix"
 	"log"
+	"os"
 )
 
 func UploadOperation(client phoenix.ThemeClient, filenames []string) (done chan bool) {
@@ -27,10 +28,20 @@ func UploadOperation(client phoenix.ThemeClient, filenames []string) (done chan 
 func readAndPrepareFiles(filenames []string, results chan phoenix.AssetEvent) {
 	for _, filename := range filenames {
 		asset, err := loadAsset(filename)
-		if err != nil {
+		if err == nil {
+			results <- phoenix.NewUploadEvent(asset)
+		} else if err.Error() != "File is a directory" {
 			log.Panic(err)
 		}
-		results <- phoenix.NewUploadEvent(asset)
 	}
 	close(results)
+}
+
+func loadAsset(filename string) (asset phoenix.Asset, err error) {
+	root, err := os.Getwd()
+	if err != nil {
+		return
+	}
+
+	return phoenix.LoadAsset(root, filename)
 }

@@ -7,7 +7,10 @@ import (
 	"os"
 )
 
+const DeprecationNotice string = "theme-upload is deprecated. Use `theme-maniuplate upload file(s)` instead"
+
 func main() {
+	fmt.Println(phoenix.RedText(DeprecationNotice))
 	dir, _ := os.Getwd()
 	config, _ := phoenix.LoadConfigurationFromFile(fmt.Sprintf("%s/config.yml", dir))
 	files := make(chan phoenix.AssetEvent)
@@ -39,7 +42,7 @@ func readAndPrepareFiles(root string, filenames []string, results chan phoenix.A
 		assetEvent, err := loadAsset(root, filename)
 		if err == nil {
 			results <- assetEvent
-		} else {
+		} else if err.Error() != "File is a directory" {
 			log.Panic(err)
 		}
 	}
@@ -47,19 +50,12 @@ func readAndPrepareFiles(root string, filenames []string, results chan phoenix.A
 }
 
 func loadAsset(root, filename string) (assetEvent phoenix.AssetEvent, err error) {
-	path := fmt.Sprintf("%s/%s", root, filename)
-	file, err := os.Open(path)
-	info, err := os.Stat(path)
+	asset, err := phoenix.LoadAsset(root, filename)
+
 	if err != nil {
 		return
 	}
 
-	buffer := make([]byte, info.Size())
-	_, err = file.Read(buffer)
-	if err != nil {
-		return
-	}
-	asset := phoenix.Asset{Value: string(buffer), Key: filename}
 	assetEvent = phoenix.NewUploadEvent(asset)
 	return
 }

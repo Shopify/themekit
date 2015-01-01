@@ -16,7 +16,7 @@ type FileWatcherSuite struct {
 	suite.Suite
 }
 
-func (s *FileWatcherSuite) TearDownTestSuite() {
+func (s *FileWatcherSuite) TearDownTest() {
 	RestoreReader()
 }
 

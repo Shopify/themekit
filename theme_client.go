@@ -3,11 +3,13 @@ package phoenix
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -28,6 +30,28 @@ func (a Asset) String() string {
 
 func (a Asset) IsValid() bool {
 	return len(a.Value) > 0 || len(a.Attachment) > 0
+}
+
+func LoadAsset(root, filename string) (asset Asset, err error) {
+	path := fmt.Sprintf("%s/%s", root, filename)
+	file, err := os.Open(path)
+	info, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+
+	if info.IsDir() {
+		err = errors.New("File is a directory")
+		return
+	}
+
+	buffer := make([]byte, info.Size())
+	_, err = file.Read(buffer)
+	if err != nil {
+		return
+	}
+	asset = Asset{Value: string(buffer), Key: filename}
+	return
 }
 
 type EventType int
