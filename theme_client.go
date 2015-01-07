@@ -218,7 +218,8 @@ func processResponse(r *http.Response, err error, event AssetEvent) string {
 	if code >= 200 && code < 300 {
 		return fmt.Sprintf("Successfully performed %s operation for file %s to %s", eventType, key, host)
 	} else if code == 422 {
-		return ExtractErrorMessage(ioutil.ReadAll(r.Body))
+		errorMessage := ExtractErrorMessage(ioutil.ReadAll(r.Body))
+		return fmt.Sprintf("Could not upload %s:\n\t%s", key, errorMessage)
 	} else {
 		return fmt.Sprintf("[%d]Could not peform %s to %s at %s", code, eventType, key, host)
 	}
