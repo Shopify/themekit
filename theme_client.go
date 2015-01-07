@@ -217,9 +217,29 @@ func processResponse(r *http.Response, err error, event AssetEvent) string {
 	code := r.StatusCode
 	if code >= 200 && code < 300 {
 		return fmt.Sprintf("Successfully performed %s operation for file %s to %s", eventType, key, host)
+	} else if code == 422 {
+		return ExtractErrorMessage(ioutil.ReadAll(r.Body))
 	} else {
 		return fmt.Sprintf("[%d]Could not peform %s to %s at %s", code, eventType, key, host)
 	}
+}
+
+type AssetError struct {
+	Messages []string `json:"asset"`
+}
+
+func ExtractErrorMessage(data []byte, err error) string {
+	if err != nil {
+		return err.Error()
+	}
+
+	var assetErrors map[string]AssetError
+	err = json.Unmarshal(data, &assetErrors)
+
+	if err != nil {
+		return err.Error()
+	}
+	return RedText(strings.Join(assetErrors["errors"].Messages, "\n"))
 }
 
 func newHttpClient(config Configuration) (client *http.Client) {
