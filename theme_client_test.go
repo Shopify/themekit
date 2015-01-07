@@ -85,6 +85,12 @@ func TestRetrievingASingleAsset(t *testing.T) {
 	assert.Equal(t, "hello world", asset.Value)
 }
 
+func TestExtractErrorMessage(t *testing.T) {
+	contents := []byte(TestFixture("asset_error"))
+	expectedMessage := RedText("Liquid syntax error (line 10): 'comment' tag was never closed")
+	assert.Equal(t, expectedMessage, ExtractErrorMessage(contents, nil))
+}
+
 func asset() Asset {
 	return Asset{Key: "assets/hello.txt", Value: "Hello World"}
 }

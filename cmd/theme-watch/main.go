@@ -32,7 +32,7 @@ func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.The
 		asset := <-queue
 		message := fmt.Sprintf("Recieved %s event on '%s'", asset.Type(), asset.Asset().Key)
 		fmt.Println(message)
-		client.Perform(asset)
+		fmt.Println(client.Perform(asset))
 	}
 }
 
