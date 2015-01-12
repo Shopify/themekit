@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+const MessageSeparator string = "\n----------------------------------------------------------------\n"
+
 func RedText(s string) string {
 	return fmt.Sprintf("\033[31m%s\033[0m", s)
 }
@@ -41,4 +43,9 @@ func BinaryTestData() []byte {
 	buff := bytes.NewBuffer([]byte{})
 	png.Encode(buff, img)
 	return buff.Bytes()
+}
+
+func HaltAndCatchFire(err error) {
+	errorMessage := fmt.Sprintf("%s%s%s%s", MessageSeparator, LibraryInfo(), MessageSeparator, err)
+	log.Fatal(errorMessage)
 }
