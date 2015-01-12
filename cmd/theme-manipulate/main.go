@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/csaunders/phoenix"
-	"log"
 	"os"
 	"strings"
 )
@@ -66,7 +65,7 @@ func main() {
 
 	config, err := phoenix.LoadConfigurationFromCurrentDirectory()
 	if err != nil {
-		log.Fatal(err)
+		phoenix.HaltAndCatchFire(err)
 	}
 
 	client := phoenix.NewThemeClient(config)

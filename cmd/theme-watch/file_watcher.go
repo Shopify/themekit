@@ -126,7 +126,7 @@ func convertFsEvents(events chan fsnotify.Event, filter phoenix.EventFilter) cha
 func watchDirRecur(dir string, filter phoenix.EventFilter) (results chan phoenix.AssetEvent, err error) {
 	results = make(chan phoenix.AssetEvent)
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
+		if info.IsDir() && !filter.MatchesFilter(path) {
 			channel, _ := watchDir(path, filter)
 			go func() {
 				for {
