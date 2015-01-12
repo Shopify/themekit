@@ -10,10 +10,11 @@ The Phoenix library is used for the creation of several tools that make it easy 
 work with the Shopify Assets API. Before you can get started, download the appropriate
 collection of binaries for your system:
 
-* **[Current Release - 0.0.4 alpha](https://github.com/csaunders/phoenix/releases/tag/0.0.4)**
+* **[Current Release - 0.0.5 alpha](https://github.com/csaunders/phoenix/releases/tag/0.0.5)**
 
 Older Releases
 
+* [0.0.4](https://github.com/csaunders/phoenix/releases/tag/0.0.4)
 * [0.0.3](https://github.com/csaunders/phoenix/releases/tag/0.0.3)
 * [0.0.2](https://github.com/csaunders/phoenix/releases/tag/0.0.2)
 * [0.0.1](https://github.com/csaunders/phoenix/releases/tag/0.0.1)
