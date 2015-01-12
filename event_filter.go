@@ -1,6 +1,8 @@
 package phoenix
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/ryanuber/go-glob"
 	"io"
 	"io/ioutil"
@@ -10,6 +12,8 @@ import (
 	syn "regexp/syntax"
 	"strings"
 )
+
+const ConfigurationFilename string = "config\\.yml"
 
 type EventFilter struct {
 	filters []*re.Regexp
@@ -30,6 +34,7 @@ func NewEventFilter(rawPatterns []string) EventFilter {
 			filters = append(filters, re.MustCompile(regex.String()))
 		}
 	}
+	filters = append(filters, re.MustCompile(ConfigurationFilename))
 	return EventFilter{filters: filters, globs: globs}
 }
 
@@ -46,17 +51,24 @@ func NewEventFilterFromReaders(readers []io.Reader) EventFilter {
 	return NewEventFilter(patterns)
 }
 
-func NewEventFilterFromFilesCSV(ignores []string) EventFilter {
-	files := make([]io.Reader, len(ignores))
-	for i, name := range ignores {
-		file, err := os.Open(name)
-		defer file.Close()
-		if err != nil {
-			log.Fatal(err, "-", name)
-		}
-		files[i] = file
-	}
+func NewEventFilterFromIgnoreFiles(ignores []string) EventFilter {
+	files := filenamesToReaders(ignores)
 	return NewEventFilterFromReaders(files)
+}
+
+func NewEventFilterFromPatternsAndFiles(patterns []string, files []string) EventFilter {
+	readers := filenamesToReaders(files)
+	allReaders := make([]io.Reader, len(readers)+len(patterns))
+	pos := 0
+	for i := 0; i < len(readers); i++ {
+		allReaders[pos] = readers[i]
+		pos++
+	}
+	for i := 0; i < len(patterns); i++ {
+		allReaders[pos] = strings.NewReader(patterns[i])
+		pos++
+	}
+	return NewEventFilterFromReaders(allReaders)
 }
 
 func (e EventFilter) Filter(events chan string) chan string {
@@ -87,4 +99,25 @@ func (e EventFilter) MatchesFilter(event string) bool {
 		}
 	}
 	return false
+}
+
+func (e EventFilter) String() string {
+	buffer := bytes.NewBufferString(strings.Join(e.globs, "\n"))
+	for _, rxp := range e.filters {
+		buffer.WriteString(fmt.Sprintf("%s\n", rxp))
+	}
+	return buffer.String()
+}
+
+func filenamesToReaders(ignores []string) []io.Reader {
+	files := make([]io.Reader, len(ignores))
+	for i, name := range ignores {
+		file, err := os.Open(name)
+		defer file.Close()
+		if err != nil {
+			log.Fatal(err, "-", name)
+		}
+		files[i] = file
+	}
+	return files
 }

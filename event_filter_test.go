@@ -31,7 +31,7 @@ func TestBuildingEventFiltersFromMultipleReaders(t *testing.T) {
 	}
 	eventFilter := NewEventFilterFromReaders(readers)
 	inputEvents := []string{
-		"program.bat", "build/dist/program", "item.liquid", "gofoo", "gobar", "listing", "programbat",
+		"program.bat", "build/dist/program", "item.liquid", "gofoo", "gobar", "listing", "programbat", "config.yml",
 	}
 	expectedResults := []string{"item.liquid", "listing", "programbat"}
 	assertFilter(t, eventFilter, inputEvents, expectedResults)
