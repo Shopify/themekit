@@ -10,6 +10,7 @@ import (
 )
 
 type Configuration struct {
+	ThemeId      int64    `yaml:"theme_id,omitempty"`
 	AccessToken  string   `yaml:"access_token"`
 	Domain       string   `yaml:"store"`
 	Url          string   `yaml:"-"`
@@ -49,7 +50,12 @@ func LoadConfiguration(contents []byte) (conf Configuration, err error) {
 		if conf.Concurrency <= 0 {
 			conf.Concurrency = DefaultConcurrency
 		}
+
 		conf.Url = fmt.Sprintf("https://%s/admin", conf.Domain)
+		if conf.ThemeId != 0 {
+			conf.Url = fmt.Sprintf("%s/themes/%d", conf.Url, conf.ThemeId)
+		}
+
 	}
 	return
 }
