@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/csaunders/phoenix"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -112,4 +113,26 @@ func verifyArguments() {
 		SetupAndParseArgs([]string{"--help"})
 		os.Exit(1)
 	}
+}
+
+func loadAsset(filename string) (asset phoenix.Asset, err error) {
+	root, err := os.Getwd()
+	if err != nil {
+		return
+	}
+
+	path := fmt.Sprintf("%s/%s", root, filename)
+	file, err := os.Open(path)
+	info, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+
+	buffer := make([]byte, info.Size())
+	_, err = file.Read(buffer)
+	if err != nil {
+		return
+	}
+	asset = phoenix.Asset{Value: string(buffer), Key: filepath.ToSlash(filename)}
+	return
 }
