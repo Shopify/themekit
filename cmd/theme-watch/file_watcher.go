@@ -56,13 +56,19 @@ func NewFileWatcher(dir string, recur bool, filter phoenix.EventFilter) (process
 }
 
 func LoadAsset(event fsnotify.Event) phoenix.Asset {
-	contents, _ := WatcherFileReader(event.Name)
-	asset := phoenix.Asset{Key: extractAssetKey(event.Name)}
-	if ContentTypeFor(contents) == "text" {
-		asset.Value = string(contents)
-	} else {
-		asset.Attachment = Encode64(contents)
+	root := filepath.Dir(event.Name)
+	fileParentDir := filepath.Base(root)
+	filename := filepath.Base(event.Name)
+
+	asset, err := phoenix.LoadAsset(root, filename)
+	if err != nil {
+		if os.IsExist(err) {
+			phoenix.HaltAndCatchFire(err)
+		} else {
+			asset = phoenix.Asset{}
+		}
 	}
+	asset.Key = fmt.Sprintf("%s/%s", fileParentDir, filename)
 	return asset
 }
 

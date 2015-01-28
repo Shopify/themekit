@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -37,6 +38,14 @@ func (s *LoadAssetSuite) TestWhenAFileIsEmpty() {
 	asset, err := LoadAsset(root, filename)
 	assert.Nil(s.T(), err, "There should not be an error returned when the file is empty")
 	assert.False(s.T(), asset.IsValid(), "The returned asset should not be considered valid")
+}
+
+func (s *LoadAssetSuite) TestWhenAFilenameUsesWindowsPaths() {
+	dir, _, _ := s.allocateDir()
+	root, filename, _ := s.allocateFileInDir(dir, "hello world")
+	windowsRoot := strings.Replace(root, "/", "\\", -1)
+	asset, _ := LoadAsset(windowsRoot, filename)
+	assert.Equal(s.T(), filename, asset.Key)
 }
 
 func (s *LoadAssetSuite) TestWhenAFileContainsTextData() {
@@ -76,7 +85,11 @@ func (s *LoadAssetSuite) TestWhenFileIsADirectory() {
 }
 
 func (s *LoadAssetSuite) allocateFile(content string) (root, filename string, err error) {
-	file, err := ioutil.TempFile("", "load-asset-suite-test-file")
+	return s.allocateFileInDir("", content)
+}
+
+func (s *LoadAssetSuite) allocateFileInDir(directory, content string) (root, filename string, err error) {
+	file, err := ioutil.TempFile(directory, "load-asset-suite-test-file")
 	if err != nil {
 		return
 	}
