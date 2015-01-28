@@ -95,7 +95,7 @@ func extractAssetKey(filename string) string {
 	for _, dir := range assetLocations {
 		split := strings.SplitAfterN(filename, dir, 2)
 		if len(split) > 1 {
-			return fmt.Sprintf("%s%s", dir, split[len(split)-1])
+			return filepath.ToSlash(fmt.Sprintf("%s%s", dir, split[len(split)-1]))
 		}
 	}
 	return ""
