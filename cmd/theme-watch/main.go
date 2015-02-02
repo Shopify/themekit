@@ -30,13 +30,15 @@ func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.The
 	fmt.Println(fmt.Sprintf("~~~~ Spawning Worker %d ~~~~", workerId))
 	for {
 		asset := <-queue
-		message := fmt.Sprintf("Recieved %s event on '%s'", asset.Type(), asset.Asset().Key)
-		fmt.Println(message)
-		fmt.Println(client.Perform(asset))
+		if asset.Asset().IsValid() {
+			message := fmt.Sprintf("Recieved %s event on '%s'", asset.Type(), asset.Asset().Key)
+			fmt.Println(message)
+			fmt.Println(client.Perform(asset))
+		}
 	}
 }
 
 func constructFileWatcher(dir string, config phoenix.Configuration) chan phoenix.AssetEvent {
-	filter := phoenix.NewEventFilterFromFilesCSV(config.Ignores)
+	filter := phoenix.NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores)
 	return NewFileWatcher(dir, true, filter)
 }

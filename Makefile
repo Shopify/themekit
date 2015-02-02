@@ -4,14 +4,14 @@ all: deps
 	for subproject in $(SUBPROJECTS); \
 	do \
 		mkdir -p build/development; \
-	  go build -o build/development/$${subproject} cmd/$${subproject}/*; \
+	  go build -o build/development/$${subproject} cmd/$${subproject}/*.go; \
   done
 
 build:
 	for subproject in $(SUBPROJECTS); \
 	do \
 	  mkdir -p build/dist/${GOOS}-${GOARCH}; \
-		go build -o build/dist/${GOOS}-${GOARCH}/$${subproject} cmd/$${subproject}/*; \
+		go build -o build/dist/${GOOS}-${GOARCH}/$${subproject} cmd/$${subproject}/*.go; \
 	done
 
 deps:

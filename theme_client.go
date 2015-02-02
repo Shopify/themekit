@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -30,11 +31,19 @@ func (a Asset) String() string {
 }
 
 func (a Asset) IsValid() bool {
-	return len(a.Value) > 0 || len(a.Attachment) > 0
+	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)
+}
+
+func toSlash(path string) string {
+	newpath := filepath.ToSlash(path)
+	if strings.Index(newpath, "\\") >= 0 {
+		newpath = strings.Replace(newpath, "\\", "/", -1)
+	}
+	return newpath
 }
 
 func LoadAsset(root, filename string) (asset Asset, err error) {
-	path := fmt.Sprintf("%s/%s", root, filename)
+	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
 	file, err := os.Open(path)
 	info, err := os.Stat(path)
 	if err != nil {
@@ -52,7 +61,7 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 		return
 	}
 
-	asset = Asset{Key: filename}
+	asset = Asset{Key: toSlash(filename)}
 	if contentTypeFor(buffer) == "text" {
 		asset.Value = string(buffer)
 	} else {
