@@ -48,6 +48,15 @@ func (s *LoadAssetSuite) TestWhenAFilenameUsesWindowsPaths() {
 	assert.Equal(s.T(), filename, asset.Key)
 }
 
+func (s *LoadAssetSuite) TestWhenTheFilenameIncludesAWindowsPath() {
+	dir, _, _ := s.allocateDir()
+	root, filename, _ := s.allocateFileInDir(dir, "hello world")
+	windowsRoot := strings.Replace(root, "/", "\\", -1)
+	windowFilename := strings.Replace(filename, "/", "\\", -1)
+	asset, _ := LoadAsset(windowsRoot, windowFilename)
+	assert.Equal(s.T(), filename, asset.Key)
+}
+
 func (s *LoadAssetSuite) TestWhenAFileContainsTextData() {
 	root, filename, err := s.allocateFile("hello world")
 	if err != nil {
@@ -103,7 +112,8 @@ func (s *LoadAssetSuite) allocateFileInDir(directory, content string) (root, fil
 	s.noteAllocatedFile(file.Name())
 
 	root = filepath.Dir(file.Name())
-	filename = filepath.Base(file.Name())
+	filename = filepath.Base(root) + "/" + filepath.Base(file.Name())
+	root = filepath.Dir(root)
 	return
 }
 

@@ -61,7 +61,7 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 		return
 	}
 
-	asset = Asset{Key: filename}
+	asset = Asset{Key: toSlash(filename)}
 	if contentTypeFor(buffer) == "text" {
 		asset.Value = string(buffer)
 	} else {
