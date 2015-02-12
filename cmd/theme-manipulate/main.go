@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/csaunders/phoenix"
+	"github.com/csaunders/phoenix/commands"
 	"os"
 	"strings"
 )
@@ -30,10 +31,10 @@ var permittedCommands = map[string]string{
 type Operation func(client phoenix.ThemeClient, filenames []string) (done chan bool)
 
 var operations = map[string]Operation{
-	"upload":   UploadOperation,
-	"download": DownloadOperation,
-	"remove":   RemoveOperation,
-	"replace":  ReplaceOperation,
+	"upload":   commands.UploadOperation,
+	"download": commands.DownloadOperation,
+	"remove":   commands.RemoveOperation,
+	"replace":  commands.ReplaceOperation,
 }
 
 func CommandDescription(defaultCommand string) string {
