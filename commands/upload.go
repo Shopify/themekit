@@ -7,7 +7,11 @@ import (
 	"os"
 )
 
-func UploadOperation(client phoenix.ThemeClient, filenames []string) (done chan bool) {
+func UploadCommand(args map[string]interface{}) chan bool {
+	return toClientAndFilesAsync(args, Upload)
+}
+
+func Upload(client phoenix.ThemeClient, filenames []string) (done chan bool) {
 	files := make(chan phoenix.AssetEvent)
 	go readAndPrepareFiles(filenames, files)
 

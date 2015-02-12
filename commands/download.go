@@ -9,7 +9,11 @@ import (
 	"path/filepath"
 )
 
-func DownloadOperation(client phoenix.ThemeClient, filenames []string) (done chan bool) {
+func DownloadCommand(args map[string]interface{}) chan bool {
+	return toClientAndFilesAsync(args, Download)
+}
+
+func Download(client phoenix.ThemeClient, filenames []string) (done chan bool) {
 	done = make(chan bool)
 
 	if len(filenames) <= 0 {
