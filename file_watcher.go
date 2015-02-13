@@ -1,9 +1,8 @@
-package main
+package phoenix
 
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/csaunders/phoenix"
 	"gopkg.in/fsnotify.v1"
 	"io/ioutil"
 	"net/http"
@@ -18,8 +17,8 @@ const EventTimeoutInMs int64 = 3000
 var assetLocations = []string{"templates/customers", "assets", "config", "layout", "snippets", "templates"}
 
 type FsAssetEvent struct {
-	asset     phoenix.Asset
-	eventType phoenix.EventType
+	asset     Asset
+	eventType EventType
 }
 
 type FileReader func(filename string) ([]byte, error)
@@ -30,23 +29,23 @@ func RestoreReader() {
 	WatcherFileReader = ioutil.ReadFile
 }
 
-func (f FsAssetEvent) Asset() phoenix.Asset {
+func (f FsAssetEvent) Asset() Asset {
 	return f.asset
 }
 
-func (f FsAssetEvent) Type() phoenix.EventType {
+func (f FsAssetEvent) Type() EventType {
 	return f.eventType
 }
 
 func (f FsAssetEvent) IsValid() bool {
-	return f.eventType == phoenix.Remove || f.asset.IsValid()
+	return f.eventType == Remove || f.asset.IsValid()
 }
 
 func (f FsAssetEvent) String() string {
 	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
 }
 
-func NewFileWatcher(dir string, recur bool, filter phoenix.EventFilter) (processor chan phoenix.AssetEvent) {
+func NewFileWatcher(dir string, recur bool, filter EventFilter) (processor chan AssetEvent) {
 	if recur {
 		processor, _ = watchDirRecur(dir, filter)
 	} else {
@@ -55,17 +54,17 @@ func NewFileWatcher(dir string, recur bool, filter phoenix.EventFilter) (process
 	return
 }
 
-func LoadAsset(event fsnotify.Event) phoenix.Asset {
+func fwLoadAsset(event fsnotify.Event) Asset {
 	root := filepath.Dir(event.Name)
 	fileParentDir := filepath.Base(root)
 	filename := filepath.Base(event.Name)
 
-	asset, err := phoenix.LoadAsset(root, filename)
+	asset, err := LoadAsset(root, filename)
 	if err != nil {
 		if os.IsExist(err) {
-			phoenix.HaltAndCatchFire(err)
+			HaltAndCatchFire(err)
 		} else {
-			asset = phoenix.Asset{}
+			asset = Asset{}
 		}
 	}
 	asset.Key = fmt.Sprintf("%s/%s", fileParentDir, filename)
@@ -73,13 +72,13 @@ func LoadAsset(event fsnotify.Event) phoenix.Asset {
 }
 
 func HandleEvent(event fsnotify.Event) FsAssetEvent {
-	var eventType phoenix.EventType
-	asset := LoadAsset(event)
+	var eventType EventType
+	asset := fwLoadAsset(event)
 	switch event.Op {
 	case fsnotify.Create, fsnotify.Chmod:
-		eventType = phoenix.Update
+		eventType = Update
 	case fsnotify.Remove:
-		eventType = phoenix.Remove
+		eventType = Remove
 	}
 	return FsAssetEvent{asset: asset, eventType: eventType}
 }
@@ -107,8 +106,8 @@ func extractAssetKey(filename string) string {
 	return ""
 }
 
-func convertFsEvents(events chan fsnotify.Event, filter phoenix.EventFilter) chan phoenix.AssetEvent {
-	results := make(chan phoenix.AssetEvent)
+func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetEvent {
+	results := make(chan AssetEvent)
 	go func() {
 		duplicateEventTimeout := map[string]int64{}
 		for {
@@ -129,8 +128,8 @@ func convertFsEvents(events chan fsnotify.Event, filter phoenix.EventFilter) cha
 	return results
 }
 
-func watchDirRecur(dir string, filter phoenix.EventFilter) (results chan phoenix.AssetEvent, err error) {
-	results = make(chan phoenix.AssetEvent)
+func watchDirRecur(dir string, filter EventFilter) (results chan AssetEvent, err error) {
+	results = make(chan AssetEvent)
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() && !filter.MatchesFilter(path) {
 			channel, _ := watchDir(path, filter)
@@ -145,11 +144,11 @@ func watchDirRecur(dir string, filter phoenix.EventFilter) (results chan phoenix
 	return
 }
 
-func watchDir(dir string, filter phoenix.EventFilter) (results chan phoenix.AssetEvent, err error) {
+func watchDir(dir string, filter EventFilter) (results chan AssetEvent, err error) {
 	watcher, err := fsnotify.NewWatcher()
 	err = watcher.Add(dir)
 	if err != nil {
-		results = make(chan phoenix.AssetEvent)
+		results = make(chan AssetEvent)
 		close(results)
 	} else {
 		results = convertFsEvents(watcher.Events, filter)

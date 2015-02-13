@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const commandDefault string = "download"
+const commandDefault string = "download [<file> ...]"
 
 var permittedZeroArgCommands = map[string]bool{
 	"download": true,
@@ -23,21 +23,23 @@ var commandDescriptionPrefix = []string{
 }
 
 var permittedCommands = map[string]string{
-	"upload":    "Add file(s) to theme",
-	"download":  "Download file(s) from theme",
-	"remove":    "Remove file(s) from theme",
-	"replace":   "Overwrite theme file(s)",
-	"watch":     "Watch director for changes and update remote theme",
-	"configure": "Create a configuration file",
+	"upload <file> [<file2> ...]": "Add file(s) to theme",
+	"download [<file> ...]":       "Download file(s) from theme",
+	"remove <file> [<file2> ...]": "Remove file(s) from theme",
+	"replace [<file> ...]":        "Overwrite theme file(s)",
+	"watch":                       "Watch directory for changes and update remote theme",
+	"configure":                   "Create a configuration file",
 }
 
-type CommandParser func([]string) map[string]interface{}
+type CommandParser func([]string) (map[string]interface{}, *flag.FlagSet)
 
 var parserMapping = map[string]CommandParser{
-	"upload":   FileManipulationCommandParser,
-	"download": FileManipulationCommandParser,
-	"remove":   FileManipulationCommandParser,
-	"replace":  FileManipulationCommandParser,
+	"upload":    FileManipulationCommandParser,
+	"download":  FileManipulationCommandParser,
+	"remove":    FileManipulationCommandParser,
+	"replace":   FileManipulationCommandParser,
+	"watch":     FileManipulationCommandParser,
+	"configure": ConfigurationCommandParser,
 }
 
 type Command func(map[string]interface{}) (done chan bool)
@@ -64,7 +66,7 @@ func CommandDescription(defaultCommand string) string {
 		if cmd == defaultCommand {
 			def = " [default]"
 		}
-		commandDescription[pos] = fmt.Sprintf("    %s: %s%s", cmd, desc, def)
+		commandDescription[pos] = fmt.Sprintf("    %s:\n        %s%s", cmd, desc, def)
 		pos++
 	}
 
@@ -76,14 +78,14 @@ func main() {
 	verifyCommand(command, rest)
 
 	parser := parserMapping[command]
-	args := parser(rest)
+	args, _ := parser(rest)
 
 	operation := commandMapping[command]
 	done := operation(args)
 	<-done
 }
 
-func FileManipulationCommandParser(args []string) (result map[string]interface{}) {
+func FileManipulationCommandParser(args []string) (result map[string]interface{}, set *flag.FlagSet) {
 
 	result = make(map[string]interface{})
 	result["themeClient"] = loadThemeClient()
@@ -91,12 +93,12 @@ func FileManipulationCommandParser(args []string) (result map[string]interface{}
 	return
 }
 
-func ConfigurationCommandParser(args []string) (result map[string]interface{}) {
+func ConfigurationCommandParser(args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
 	var domain, accessToken string
 	var bucketSize, refillRate int
 
-	set := flag.NewFlagSet("theme", flag.ExitOnError)
+	set = flag.NewFlagSet("theme configure", flag.ExitOnError)
 	set.StringVar(&domain, "domain", "", "your myshopify domain")
 	set.StringVar(&accessToken, "access_token", "", "accessToken (or password) to make successful API calls")
 	set.IntVar(&bucketSize, "bucketSize", phoenix.DefaultBucketSize, "leaky bucket capacity")
@@ -120,7 +122,10 @@ func loadThemeClient() phoenix.ThemeClient {
 }
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {
-	set := flag.NewFlagSet("theme", flag.ExitOnError)
+	if command != "" {
+		command = " " + command
+	}
+	set := flag.NewFlagSet(fmt.Sprintf("theme%s", command), flag.ExitOnError)
 	set.StringVar(&command, "command", commandDefault, CommandDescription(commandDefault))
 	set.Parse(args)
 
@@ -134,7 +139,7 @@ func SetupAndParseArgs(args []string) (command string, rest []string) {
 }
 
 func CommandIsInvalid(command string) bool {
-	return permittedCommands[command] == ""
+	return commandMapping[command] == nil
 }
 
 func CannotProcessCommandWithoutAdditionalArguments(command string, additionalArgs []string) bool {
@@ -149,7 +154,8 @@ func verifyCommand(command string, args []string) {
 	}
 
 	if CannotProcessCommandWithoutAdditionalArguments(command, args) {
-		errors = append(errors, "\t- There needs to be at least one file to process")
+		errors = append(errors, fmt.Sprintf("\t- '%s' cannot run without additional arguments", command))
+		parserMapping[command]([]string{"-h"})
 	}
 
 	if len(errors) > 0 {

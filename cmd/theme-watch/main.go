@@ -40,5 +40,5 @@ func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.The
 
 func constructFileWatcher(dir string, config phoenix.Configuration) chan phoenix.AssetEvent {
 	filter := phoenix.NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores)
-	return NewFileWatcher(dir, true, filter)
+	return phoenix.NewFileWatcher(dir, true, filter)
 }

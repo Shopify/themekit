@@ -31,10 +31,10 @@ var permittedCommands = map[string]string{
 type Operation func(client phoenix.ThemeClient, filenames []string) (done chan bool)
 
 var operations = map[string]Operation{
-	"upload":   commands.UploadOperation,
-	"download": commands.DownloadOperation,
-	"remove":   commands.RemoveOperation,
-	"replace":  commands.ReplaceOperation,
+	"upload":   commands.Upload,
+	"download": commands.Download,
+	"remove":   commands.Remove,
+	"replace":  commands.Replace,
 }
 
 func CommandDescription(defaultCommand string) string {

@@ -1,7 +1,11 @@
 package commands
 
+// import (
+// 	"github.com/csaunders/phoenix"
+// )
+
 import (
-	"github.com/com/csaunders/phoenix"
+	"fmt"
 )
 
 func WatchCommand(args map[string]interface{}) chan bool {
@@ -9,5 +13,8 @@ func WatchCommand(args map[string]interface{}) chan bool {
 }
 
 func Watch() (result chan bool) {
+	result = make(chan bool)
+	fmt.Println("Not yet implemented. Sorry :(")
+	close(result)
 	return
 }
