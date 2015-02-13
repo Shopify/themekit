@@ -38,7 +38,7 @@ var parserMapping = map[string]CommandParser{
 	"download":  FileManipulationCommandParser,
 	"remove":    FileManipulationCommandParser,
 	"replace":   FileManipulationCommandParser,
-	"watch":     FileManipulationCommandParser,
+	"watch":     WatchCommandParser,
 	"configure": ConfigurationCommandParser,
 }
 
@@ -93,6 +93,18 @@ func FileManipulationCommandParser(args []string) (result map[string]interface{}
 	return
 }
 
+func WatchCommandParser(args []string) (result map[string]interface{}, set *flag.FlagSet) {
+	result = make(map[string]interface{})
+	config, err := phoenix.LoadConfigurationFromCurrentDirectory()
+	if err != nil {
+		phoenix.HaltAndCatchFire(err)
+	}
+
+	result["configuration"] = config
+
+	return
+}
+
 func ConfigurationCommandParser(args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
 	var domain, accessToken string
@@ -106,9 +118,9 @@ func ConfigurationCommandParser(args []string) (result map[string]interface{}, s
 	set.Parse(args)
 
 	result["domain"] = domain
-	result["accessToken"] = accessToken
-	result["bucketSize"] = bucketSize
-	result["refillRate"] = refillRate
+	result["access_token"] = accessToken
+	result["bucket_size"] = bucketSize
+	result["refill_rate"] = refillRate
 	return
 }
 

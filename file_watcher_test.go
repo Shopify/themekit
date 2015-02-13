@@ -18,8 +18,8 @@ func (s *FileWatcherSuite) TearDownTest() {
 
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
 	event := fsnotify.Event{Name: "fixtures/whatever.txt"}
-	asset := LoadAsset(event)
-	assert.Equal(s.T(), asset.Key, "whatever.txt")
+	asset := fwLoadAsset(event)
+	assert.Equal(s.T(), asset.Key, "fixtures/whatever.txt")
 	assert.Equal(s.T(), "whatever\n", asset.Value)
 }
 
