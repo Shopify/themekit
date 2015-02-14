@@ -1,7 +1,6 @@
-package main
+package phoenix
 
 import (
-	"github.com/csaunders/phoenix"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/fsnotify.v1"
@@ -19,8 +18,8 @@ func (s *FileWatcherSuite) TearDownTest() {
 
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
 	event := fsnotify.Event{Name: "fixtures/whatever.txt"}
-	asset := LoadAsset(event)
-	assert.Equal(s.T(), asset.Key, "whatever.txt")
+	asset := fwLoadAsset(event)
+	assert.Equal(s.T(), asset.Key, "fixtures/whatever.txt")
 	assert.Equal(s.T(), "whatever\n", asset.Value)
 }
 
@@ -47,10 +46,10 @@ func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents(
 	WatcherFileReader = func(filename string) ([]byte, error) {
 		return []byte("hello"), nil
 	}
-	writes := map[fsnotify.Op]phoenix.EventType{
-		fsnotify.Chmod:  phoenix.Update,
-		fsnotify.Create: phoenix.Update,
-		fsnotify.Remove: phoenix.Remove,
+	writes := map[fsnotify.Op]EventType{
+		fsnotify.Chmod:  Update,
+		fsnotify.Create: Update,
+		fsnotify.Remove: Remove,
 	}
 	for fsEvent, phoenixEvent := range writes {
 		event := fsnotify.Event{Name: "fixtures/whatever.txt", Op: fsEvent}

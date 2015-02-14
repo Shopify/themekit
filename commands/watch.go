@@ -1,15 +1,33 @@
-package main
+package commands
 
 import (
+	"errors"
 	"fmt"
 	"github.com/csaunders/phoenix"
 	"os"
 )
 
-func main() {
-	done := make(chan bool)
-	dir, _ := os.Getwd()
-	config, _ := phoenix.LoadConfigurationFromFile(fmt.Sprintf("%s/config.yml", dir))
+func WatchCommand(args map[string]interface{}) chan bool {
+	var ok bool
+	var config phoenix.Configuration
+	var dir string
+
+	if config, ok = args["configuration"].(phoenix.Configuration); !ok {
+		phoenix.HaltAndCatchFire(errors.New("configuration is not of valid type"))
+	}
+
+	if args["directory"] == nil {
+		dir, _ = os.Getwd()
+	} else if dir, ok = args["directory"].(string); !ok {
+		phoenix.HaltAndCatchFire(errors.New("directory is not of valid type"))
+	}
+
+	return Watch(config, dir)
+}
+
+func Watch(config phoenix.Configuration, dir string) (done chan bool) {
+	done = make(chan bool)
+
 	bucket := phoenix.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
 	bucket.TopUp()
 	foreman := phoenix.NewForeman(bucket)
@@ -23,7 +41,7 @@ func main() {
 		go spawnWorker(i, foreman.WorkerQueue, client)
 	}
 
-	<-done
+	return
 }
 
 func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.ThemeClient) {

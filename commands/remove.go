@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"fmt"
@@ -6,7 +6,11 @@ import (
 	"os"
 )
 
-func RemoveOperation(client phoenix.ThemeClient, filenames []string) (done chan bool) {
+func RemoveCommand(args map[string]interface{}) chan bool {
+	return toClientAndFilesAsync(args, Remove)
+}
+
+func Remove(client phoenix.ThemeClient, filenames []string) (done chan bool) {
 	var messages chan string
 	events := make(chan phoenix.AssetEvent)
 	done, messages = client.Process(events)

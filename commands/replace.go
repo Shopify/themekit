@@ -1,11 +1,15 @@
-package main
+package commands
 
 import (
 	"fmt"
 	"github.com/csaunders/phoenix"
 )
 
-func ReplaceOperation(client phoenix.ThemeClient, filenames []string) chan bool {
+func ReplaceCommand(args map[string]interface{}) chan bool {
+	return toClientAndFilesAsync(args, Replace)
+}
+
+func Replace(client phoenix.ThemeClient, filenames []string) chan bool {
 	var assets chan phoenix.Asset
 	events := make(chan phoenix.AssetEvent)
 	done, messages := client.Process(events)
