@@ -107,16 +107,18 @@ func WatchCommandParser(args []string) (result map[string]interface{}, set *flag
 
 func ConfigurationCommandParser(args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
-	var domain, accessToken string
+	var directory, domain, accessToken string
 	var bucketSize, refillRate int
 
 	set = flag.NewFlagSet("theme configure", flag.ExitOnError)
+	set.StringVar(&directory, "directory", "", "directory to create config.yml")
 	set.StringVar(&domain, "domain", "", "your myshopify domain")
 	set.StringVar(&accessToken, "access_token", "", "accessToken (or password) to make successful API calls")
 	set.IntVar(&bucketSize, "bucketSize", phoenix.DefaultBucketSize, "leaky bucket capacity")
 	set.IntVar(&refillRate, "refillRate", phoenix.DefaultRefillRate, "leaky bucket refill rate / second")
 	set.Parse(args)
 
+	result["directory"] = directory
 	result["domain"] = domain
 	result["access_token"] = accessToken
 	result["bucket_size"] = bucketSize

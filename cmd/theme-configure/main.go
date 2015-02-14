@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/csaunders/phoenix"
-	"log"
+	"github.com/csaunders/phoenix/commands"
 	"os"
 	"strings"
 )
@@ -15,11 +15,8 @@ var bucketSize, refillRate int
 func main() {
 	setupAndParseArgs(os.Args[1:])
 	verifyArguments()
-	config := phoenix.Configuration{Domain: domain, AccessToken: accessToken, BucketSize: bucketSize, RefillRate: refillRate}
-	err := config.Save("config.yml")
-	if err != nil {
-		log.Panic(err)
-	}
+
+	commands.Configure("", domain, accessToken, bucketSize, refillRate)
 }
 
 func setupAndParseArgs(args []string) {

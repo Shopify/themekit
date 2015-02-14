@@ -1,10 +1,11 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"github.com/csaunders/phoenix"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 func ConfigureCommand(args map[string]interface{}) (done chan bool) {
@@ -19,13 +20,35 @@ func ConfigureCommand(args map[string]interface{}) (done chan bool) {
 	extractInt(&refillRate, "refill_rate", args)
 
 	if domain == "" || accessToken == "" {
-		phoenix.HaltAndCatchFire(errors.New("domain and access_token cannot be blank"))
+		reportArgumentsError(dir, domain, accessToken)
 	}
 
+	Configure(dir, domain, accessToken, bucketSize, refillRate)
+	done = make(chan bool)
+	close(done)
 	return
 }
 
 func Configure(dir, domain, accessToken string, bucketSize, refillRate int) {
-	fmt.Println("Not yet implemnted. Sorry :(")
-	return
+	config := phoenix.Configuration{Domain: domain, AccessToken: accessToken, BucketSize: bucketSize, RefillRate: refillRate}
+	err := config.Save(filepath.Join(dir, "config.yml"))
+	if err != nil {
+		phoenix.HaltAndCatchFire(err)
+	}
+}
+
+func reportArgumentsError(directory, domain, accessToken string) {
+	var errors = []string{}
+	if len(domain) <= 0 {
+		errors = append(errors, "\t-domain cannot be blank")
+	}
+	if len(accessToken) <= 0 {
+		errors = append(errors, "\t-access_token cannot be blank")
+	}
+	if len(errors) > 0 {
+		fullPath := filepath.Join(directory, "config.yml")
+		errorMessage := phoenix.RedText(fmt.Sprintf("Cannot create %s!\nErrors:\n%s", fullPath, strings.Join(errors, "\n")))
+		fmt.Println(errorMessage)
+		os.Exit(1)
+	}
 }
