@@ -6,6 +6,7 @@ import (
 	"github.com/csaunders/phoenix"
 	"github.com/csaunders/phoenix/commands"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -31,7 +32,7 @@ var permittedCommands = map[string]string{
 	"configure":                   "Create a configuration file",
 }
 
-type CommandParser func([]string) (map[string]interface{}, *flag.FlagSet)
+type CommandParser func(string, []string) (map[string]interface{}, *flag.FlagSet)
 
 var parserMapping = map[string]CommandParser{
 	"upload":    FileManipulationCommandParser,
@@ -77,41 +78,51 @@ func main() {
 	command, rest := SetupAndParseArgs(os.Args[1:])
 	verifyCommand(command, rest)
 
-	parser := parserMapping[command]
-	args, _ := parser(rest)
+	args, _ := parserMapping[command](command, rest)
 
 	operation := commandMapping[command]
 	done := operation(args)
 	<-done
 }
 
-func FileManipulationCommandParser(args []string) (result map[string]interface{}, set *flag.FlagSet) {
-
+func FileManipulationCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
-	result["themeClient"] = loadThemeClient()
-	result["filenames"] = args
+	currentDir, _ := os.Getwd()
+	var environment, directory string
+
+	set = makeFlagSet(cmd)
+	set.StringVar(&environment, "environment", phoenix.DefaultEnvironment, "environment to run command")
+	set.StringVar(&directory, "directory", currentDir, "directory that config.yml is located")
+	set.Parse(args)
+
+	result["themeClient"] = loadThemeClient(directory, environment)
+	result["filenames"] = args[len(args)-set.NArg():]
 	return
 }
 
-func WatchCommandParser(args []string) (result map[string]interface{}, set *flag.FlagSet) {
+func WatchCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
-	config, err := phoenix.LoadConfigurationFromCurrentDirectory()
-	if err != nil {
-		phoenix.HaltAndCatchFire(err)
-	}
+	currentDir, _ := os.Getwd()
+	var environment, directory string
 
-	result["configuration"] = config
+	set = makeFlagSet(cmd)
+	set.StringVar(&environment, "environment", phoenix.DefaultEnvironment, "environment to run command")
+	set.StringVar(&directory, "directory", currentDir, "directory that config.yml is located")
+	set.Parse(args)
+
+	result["configuration"] = loadThemeClient(directory, environment).GetConfiguration()
 
 	return
 }
 
-func ConfigurationCommandParser(args []string) (result map[string]interface{}, set *flag.FlagSet) {
+func ConfigurationCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
-	var directory, domain, accessToken string
+	var directory, environment, domain, accessToken string
 	var bucketSize, refillRate int
 
-	set = flag.NewFlagSet("theme configure", flag.ExitOnError)
+	set = makeFlagSet(cmd)
 	set.StringVar(&directory, "directory", "", "directory to create config.yml")
+	set.StringVar(&environment, "environment", phoenix.DefaultEnvironment, "environment for this configuration")
 	set.StringVar(&domain, "domain", "", "your myshopify domain")
 	set.StringVar(&accessToken, "access_token", "", "accessToken (or password) to make successful API calls")
 	set.IntVar(&bucketSize, "bucketSize", phoenix.DefaultBucketSize, "leaky bucket capacity")
@@ -119,6 +130,7 @@ func ConfigurationCommandParser(args []string) (result map[string]interface{}, s
 	set.Parse(args)
 
 	result["directory"] = directory
+	result["environment"] = environment
 	result["domain"] = domain
 	result["access_token"] = accessToken
 	result["bucket_size"] = bucketSize
@@ -126,9 +138,24 @@ func ConfigurationCommandParser(args []string) (result map[string]interface{}, s
 	return
 }
 
-func loadThemeClient() phoenix.ThemeClient {
-	config, err := phoenix.LoadConfigurationFromCurrentDirectory()
+func loadThemeClient(directory, env string) phoenix.ThemeClient {
+	client := loadThemeClientWithRetry(directory, env, false)
+	return client
+}
+
+func loadThemeClientWithRetry(directory, env string, isRetry bool) phoenix.ThemeClient {
+	environments, err := phoenix.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
 	if err != nil {
+		phoenix.HaltAndCatchFire(err)
+	}
+	config, err := environments.GetConfiguration(env)
+	if err != nil && !isRetry {
+		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", phoenix.DefaultEnvironment)
+		fmt.Println(phoenix.YellowText(upgradeMessage))
+		commands.MigrateConfiguration(directory)
+		client := loadThemeClientWithRetry(directory, env, true)
+		return client
+	} else if err != nil {
 		phoenix.HaltAndCatchFire(err)
 	}
 
@@ -136,11 +163,9 @@ func loadThemeClient() phoenix.ThemeClient {
 }
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {
-	if command != "" {
-		command = " " + command
-	}
-	set := flag.NewFlagSet(fmt.Sprintf("theme%s", command), flag.ExitOnError)
-	set.StringVar(&command, "command", commandDefault, CommandDescription(commandDefault))
+
+	set := makeFlagSet(command)
+	set.StringVar(&command, "command", "download", CommandDescription(commandDefault))
 	set.Parse(args)
 
 	if len(args) != set.NArg() {
@@ -169,7 +194,7 @@ func verifyCommand(command string, args []string) {
 
 	if CannotProcessCommandWithoutAdditionalArguments(command, args) {
 		errors = append(errors, fmt.Sprintf("\t- '%s' cannot run without additional arguments", command))
-		parserMapping[command]([]string{"-h"})
+		parserMapping[command](command, []string{"-h"})
 	}
 
 	if len(errors) > 0 {
@@ -178,4 +203,11 @@ func verifyCommand(command string, args []string) {
 		SetupAndParseArgs([]string{"--help"})
 		os.Exit(1)
 	}
+}
+
+func makeFlagSet(command string) *flag.FlagSet {
+	if command != "" {
+		command = " " + command
+	}
+	return flag.NewFlagSet(fmt.Sprintf("theme%s", command), flag.ExitOnError)
 }

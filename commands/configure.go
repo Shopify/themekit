@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/csaunders/phoenix"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,9 +11,11 @@ import (
 
 func ConfigureCommand(args map[string]interface{}) (done chan bool) {
 	currentDir, _ := os.Getwd()
+	environment := phoenix.DefaultEnvironment
 	var dir, domain, accessToken string = currentDir, "", ""
 	var bucketSize, refillRate int = phoenix.DefaultBucketSize, phoenix.DefaultRefillRate
 
+	extractString(&environment, "environment", args)
 	extractString(&dir, "directory", args)
 	extractString(&domain, "domain", args)
 	extractString(&accessToken, "access_token", args)
@@ -23,18 +26,57 @@ func ConfigureCommand(args map[string]interface{}) (done chan bool) {
 		reportArgumentsError(dir, domain, accessToken)
 	}
 
-	Configure(dir, domain, accessToken, bucketSize, refillRate)
+	Configure(dir, environment, domain, accessToken, bucketSize, refillRate)
 	done = make(chan bool)
 	close(done)
 	return
 }
 
-func Configure(dir, domain, accessToken string, bucketSize, refillRate int) {
+func Configure(dir, environment, domain, accessToken string, bucketSize, refillRate int) {
+	environmentLocation := filepath.Join(dir, "config.yml")
 	config := phoenix.Configuration{Domain: domain, AccessToken: accessToken, BucketSize: bucketSize, RefillRate: refillRate}
-	err := config.Save(filepath.Join(dir, "config.yml"))
+
+	env := loadOrInitializeEnvironment(environmentLocation)
+	env.SetConfiguration(environment, config)
+
+	err := env.Save(environmentLocation)
 	if err != nil {
 		phoenix.HaltAndCatchFire(err)
 	}
+}
+
+func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool) {
+	dir, _ := os.Getwd()
+	extractString(&dir, "directory", args)
+
+	MigrateConfiguration(dir)
+
+	done = make(chan bool)
+	close(done)
+	return
+}
+
+func MigrateConfiguration(dir string) {
+	environmentLocation := filepath.Join(dir, "config.yml")
+	env := loadOrInitializeEnvironment(environmentLocation)
+	err := env.Save(environmentLocation)
+	if err != nil {
+		phoenix.HaltAndCatchFire(err)
+	}
+}
+
+func loadOrInitializeEnvironment(location string) phoenix.Environments {
+	contents, err := ioutil.ReadFile(location)
+	if err != nil {
+		return phoenix.Environments{}
+	}
+
+	env, err := phoenix.LoadEnvironments(contents)
+	if err != nil || len(env) <= 0 {
+		conf, _ := phoenix.LoadConfiguration(contents)
+		env[phoenix.DefaultEnvironment] = conf
+	}
+	return env
 }
 
 func reportArgumentsError(directory, domain, accessToken string) {

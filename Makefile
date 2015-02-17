@@ -1,4 +1,4 @@
-SUBPROJECTS = theme-manipulate theme-watch theme-configure theme
+SUBPROJECTS = theme
 
 all: deps
 	for subproject in $(SUBPROJECTS); \

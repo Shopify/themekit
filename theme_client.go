@@ -110,6 +110,10 @@ func NewThemeClient(config Configuration) ThemeClient {
 	return ThemeClient{config: config, client: newHttpClient(config)}
 }
 
+func (t ThemeClient) GetConfiguration() Configuration {
+	return t.config
+}
+
 func (t ThemeClient) AssetList() chan Asset {
 	results := make(chan Asset)
 	go func() {
