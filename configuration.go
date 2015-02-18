@@ -29,6 +29,7 @@ const (
 )
 
 func LoadConfigurationFromCurrentDirectory() (conf Configuration, err error) {
+	fmt.Println(RedText("[Deprecated] LoadConfigurationFromCurrentDirectory will be removed in the next release. Use Environments instead."))
 	dir, err := os.Getwd()
 	if err != nil {
 		return Configuration{}, err
@@ -41,26 +42,31 @@ func LoadConfigurationFromCurrentDirectory() (conf Configuration, err error) {
 func LoadConfiguration(contents []byte) (conf Configuration, err error) {
 	err = yaml.Unmarshal(contents, &conf)
 	if err == nil {
-		if conf.BucketSize <= 0 {
-			conf.BucketSize = DefaultBucketSize
-		}
-		if conf.RefillRate <= 0 {
-			conf.RefillRate = DefaultRefillRate
-		}
-		if conf.Concurrency <= 0 {
-			conf.Concurrency = DefaultConcurrency
-		}
-
-		conf.Url = fmt.Sprintf("https://%s/admin", conf.Domain)
-		if conf.ThemeId != 0 {
-			conf.Url = fmt.Sprintf("%s/themes/%d", conf.Url, conf.ThemeId)
-		}
-
+		return conf.Initialize(), err
 	}
 	return
 }
 
+func (conf Configuration) Initialize() Configuration {
+	if conf.BucketSize <= 0 {
+		conf.BucketSize = DefaultBucketSize
+	}
+	if conf.RefillRate <= 0 {
+		conf.RefillRate = DefaultRefillRate
+	}
+	if conf.Concurrency <= 0 {
+		conf.Concurrency = DefaultConcurrency
+	}
+
+	conf.Url = fmt.Sprintf("https://%s/admin", conf.Domain)
+	if conf.ThemeId != 0 {
+		conf.Url = fmt.Sprintf("%s/themes/%d", conf.Url, conf.ThemeId)
+	}
+	return conf
+}
+
 func LoadConfigurationFromFile(location string) (conf Configuration, err error) {
+	fmt.Println(RedText("[Deprecated] LoadConfigurationFromFile will be removed in the next release. Use Environments instead."))
 	contents, err := ioutil.ReadFile(location)
 	if err == nil {
 		conf, err = LoadConfiguration(contents)
@@ -98,5 +104,5 @@ func (conf Configuration) AddHeaders(req *http.Request) {
 }
 
 func (c Configuration) String() string {
-	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d>", c.AccessToken, c.Domain, c.BucketSize, c.RefillRate)
+	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", c.AccessToken, c.Domain, c.BucketSize, c.RefillRate, c.Url)
 }

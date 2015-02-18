@@ -1,0 +1,30 @@
+development:
+  store: example.myshopify.com
+  access_token: abracadabra
+  theme_id: 1
+  ignore_files:
+  - charmander
+  - bulbasaur
+  - squirtle
+  refill_rate: 0
+  bucket_size: 0
+default:
+  store: example.myshopify.com
+  access_token: abracadabra
+  theme_id: 2
+  ignore_files:
+  - charmander
+  - bulbasaur
+  - squirtle
+  refill_rate: 0
+  bucket_size: 0
+production:
+  store: example.myshopify.com
+  access_token: abracadabra
+  theme_id: 3
+  ignore_files:
+  - charmander
+  - bulbasaur
+  - squirtle
+  refill_rate: 0
+  bucket_size: 0
