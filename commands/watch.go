@@ -49,7 +49,7 @@ func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.The
 	for {
 		asset := <-queue
 		if asset.Asset().IsValid() {
-			message := fmt.Sprintf("Recieved %s event on '%s'", asset.Type(), asset.Asset().Key)
+			message := fmt.Sprintf("Received %s event on '%s'", asset.Type(), asset.Asset().Key)
 			fmt.Println(message)
 			fmt.Println(client.Perform(asset))
 		}
