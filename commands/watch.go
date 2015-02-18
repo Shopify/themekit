@@ -9,11 +9,11 @@ import (
 
 func WatchCommand(args map[string]interface{}) chan bool {
 	var ok bool
-	var config phoenix.Configuration
+	var client phoenix.ThemeClient
 	var dir string
 
-	if config, ok = args["configuration"].(phoenix.Configuration); !ok {
-		phoenix.HaltAndCatchFire(errors.New("configuration is not of valid type"))
+	if client, ok = args["themeClient"].(phoenix.ThemeClient); !ok {
+		phoenix.HaltAndCatchFire(errors.New("themeClient is not of valid type"))
 	}
 
 	if args["directory"] == nil {
@@ -22,16 +22,16 @@ func WatchCommand(args map[string]interface{}) chan bool {
 		phoenix.HaltAndCatchFire(errors.New("directory is not of valid type"))
 	}
 
-	return Watch(config, dir)
+	return Watch(client, dir)
 }
 
-func Watch(config phoenix.Configuration, dir string) (done chan bool) {
+func Watch(client phoenix.ThemeClient, dir string) (done chan bool) {
 	done = make(chan bool)
+	config := client.GetConfiguration()
 
 	bucket := phoenix.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
 	bucket.TopUp()
 	foreman := phoenix.NewForeman(bucket)
-	client := phoenix.NewThemeClient(config)
 	watcher := constructFileWatcher(dir, config)
 	foreman.JobQueue = watcher
 	foreman.IssueWork()

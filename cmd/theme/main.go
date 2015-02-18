@@ -91,8 +91,8 @@ func FileManipulationCommandParser(cmd string, args []string) (result map[string
 	var environment, directory string
 
 	set = makeFlagSet(cmd)
-	set.StringVar(&environment, "environment", phoenix.DefaultEnvironment, "environment to run command")
-	set.StringVar(&directory, "directory", currentDir, "directory that config.yml is located")
+	set.StringVar(&environment, "env", phoenix.DefaultEnvironment, "environment to run command")
+	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
 	set.Parse(args)
 
 	result["themeClient"] = loadThemeClient(directory, environment)
@@ -106,23 +106,24 @@ func WatchCommandParser(cmd string, args []string) (result map[string]interface{
 	var environment, directory string
 
 	set = makeFlagSet(cmd)
-	set.StringVar(&environment, "environment", phoenix.DefaultEnvironment, "environment to run command")
-	set.StringVar(&directory, "directory", currentDir, "directory that config.yml is located")
+	set.StringVar(&environment, "env", phoenix.DefaultEnvironment, "environment to run command")
+	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
 	set.Parse(args)
 
-	result["configuration"] = loadThemeClient(directory, environment).GetConfiguration()
+	result["themeClient"] = loadThemeClient(directory, environment)
 
 	return
 }
 
 func ConfigurationCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
+	currentDir, _ := os.Getwd()
 	var directory, environment, domain, accessToken string
 	var bucketSize, refillRate int
 
 	set = makeFlagSet(cmd)
-	set.StringVar(&directory, "directory", "", "directory to create config.yml")
-	set.StringVar(&environment, "environment", phoenix.DefaultEnvironment, "environment for this configuration")
+	set.StringVar(&directory, "dir", currentDir, "directory to create config.yml")
+	set.StringVar(&environment, "env", phoenix.DefaultEnvironment, "environment for this configuration")
 	set.StringVar(&domain, "domain", "", "your myshopify domain")
 	set.StringVar(&accessToken, "access_token", "", "accessToken (or password) to make successful API calls")
 	set.IntVar(&bucketSize, "bucketSize", phoenix.DefaultBucketSize, "leaky bucket capacity")
@@ -164,13 +165,13 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) phoenix.Theme
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {
 
-	set := makeFlagSet(command)
+	set := makeFlagSet("")
 	set.StringVar(&command, "command", "download", CommandDescription(commandDefault))
 	set.Parse(args)
 
 	if len(args) != set.NArg() {
 		rest = args[len(args)-set.NArg():]
-	} else if len(args) > 0 && commandMapping[args[0]] != nil {
+	} else if len(args) > 0 {
 		command = args[0]
 		rest = args[1:]
 	}
@@ -193,8 +194,10 @@ func verifyCommand(command string, args []string) {
 	}
 
 	if CannotProcessCommandWithoutAdditionalArguments(command, args) {
-		errors = append(errors, fmt.Sprintf("\t- '%s' cannot run without additional arguments", command))
-		parserMapping[command](command, []string{"-h"})
+		if parser, ok := parserMapping[command]; ok {
+			errors = append(errors, fmt.Sprintf("\t- '%s' cannot run without additional arguments", command))
+			parser(command, []string{"-h"})
+		}
 	}
 
 	if len(errors) > 0 {
