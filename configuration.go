@@ -58,11 +58,15 @@ func (conf Configuration) Initialize() Configuration {
 		conf.Concurrency = DefaultConcurrency
 	}
 
-	conf.Url = fmt.Sprintf("https://%s/admin", conf.Domain)
+	conf.Url = conf.AdminUrl()
 	if conf.ThemeId != 0 {
 		conf.Url = fmt.Sprintf("%s/themes/%d", conf.Url, conf.ThemeId)
 	}
 	return conf
+}
+
+func (conf Configuration) AdminUrl() string {
+	return fmt.Sprintf("https://%s/admin", conf.Domain)
 }
 
 func LoadConfigurationFromFile(location string) (conf Configuration, err error) {

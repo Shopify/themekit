@@ -1,6 +1,7 @@
 package phoenix
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
@@ -12,7 +13,10 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
 
 type ThemeClient struct {
@@ -153,6 +157,47 @@ func (t ThemeClient) Asset(filename string) Asset {
 	return asset["asset"]
 }
 
+func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient, wg sync.WaitGroup) {
+	wg.Add(1)
+	path := fmt.Sprintf("%s/themes.json", t.config.AdminUrl())
+	data := map[string]string{
+		"name": name,
+		"src":  zipLocation,
+		"role": "unpublished",
+	}
+	encoded, err := json.Marshal(data)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	resp, err := t.client.Post(path, "application/json", bytes.NewBuffer(encoded))
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	defer resp.Body.Close()
+	data = map[string]string{}
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	err = json.Unmarshal(contents, &data)
+	config := t.GetConfiguration()
+	themeId := data["theme_id"]
+	go func() {
+		defer wg.Done()
+		for true {
+			if t.doneProcessing(themeId) {
+				return
+			} else {
+				time.Sleep(250 * time.Millisecond)
+			}
+		}
+	}()
+	id, _ := strconv.Atoi(themeId)
+	config.ThemeId = int64(id)
+	tc = NewThemeClient(config.Initialize())
+	return tc, wg
+}
+
 func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan string) {
 	done = make(chan bool)
 	messages = make(chan string)
@@ -236,6 +281,10 @@ func processResponse(r *http.Response, err error, event AssetEvent) string {
 	} else {
 		return fmt.Sprintf("[%d]Could not peform %s to %s at %s", code, eventType, key, host)
 	}
+}
+
+func (t ThemeClient) doneProcessing(themeId string) bool {
+	return true
 }
 
 type AssetError struct {
