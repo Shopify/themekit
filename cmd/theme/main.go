@@ -30,6 +30,7 @@ var permittedCommands = map[string]string{
 	"replace [<file> ...]":        "Overwrite theme file(s)",
 	"watch":                       "Watch directory for changes and update remote theme",
 	"configure":                   "Create a configuration file",
+	"bootstrap":                   "Bootstrap a new theme using Shopify Timber",
 }
 
 type CommandParser func(string, []string) (map[string]interface{}, *flag.FlagSet)
@@ -41,6 +42,7 @@ var parserMapping = map[string]CommandParser{
 	"replace":   FileManipulationCommandParser,
 	"watch":     WatchCommandParser,
 	"configure": ConfigurationCommandParser,
+	"bootstrap": BootstrapParser,
 }
 
 type Command func(map[string]interface{}) (done chan bool)
@@ -52,6 +54,7 @@ var commandMapping = map[string]Command{
 	"replace":   commands.ReplaceCommand,
 	"watch":     commands.WatchCommand,
 	"configure": commands.ConfigureCommand,
+	"bootstrap": commands.BootstrapCommand,
 }
 
 func CommandDescription(defaultCommand string) string {
@@ -136,6 +139,29 @@ func ConfigurationCommandParser(cmd string, args []string) (result map[string]in
 	result["access_token"] = accessToken
 	result["bucket_size"] = bucketSize
 	result["refill_rate"] = refillRate
+	return
+}
+
+func BootstrapParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
+	result = make(map[string]interface{})
+	currentDir, _ := os.Getwd()
+	var version, directory, environment, prefix string
+	var setThemeId bool
+
+	set = makeFlagSet(cmd)
+	set.StringVar(&directory, "dir", currentDir, "location of config.yml")
+	set.BoolVar(&setThemeId, "setid", true, "update config.yml with ID of created Theme")
+	set.StringVar(&environment, "env", phoenix.DefaultEnvironment, "environment to execute command")
+	set.StringVar(&version, "version", commands.LatestRelease, "version of Shopify Timber to use")
+	set.StringVar(&prefix, "prefix", "", "prefix to the Timber theme being created")
+	set.Parse(args)
+
+	result["version"] = version
+	result["directory"] = directory
+	result["environment"] = environment
+	result["prefix"] = prefix
+	result["setThemeId"] = setThemeId
+	result["themeClient"] = loadThemeClient(directory, environment)
 	return
 }
 

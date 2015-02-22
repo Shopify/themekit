@@ -13,7 +13,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -157,45 +156,32 @@ func (t ThemeClient) Asset(filename string) Asset {
 	return asset["asset"]
 }
 
-func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient, wg sync.WaitGroup) {
+func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
+	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", t.config.AdminUrl())
-	data := map[string]string{
+	content := map[string]string{
 		"name": name,
 		"src":  zipLocation,
 		"role": "unpublished",
 	}
-	encoded, err := json.Marshal(data)
-	if err != nil {
-		HaltAndCatchFire(err)
+	data := map[string]map[string]string{
+		"theme": content,
 	}
-	resp, err := t.client.Post(path, "application/json", bytes.NewBuffer(encoded))
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	defer resp.Body.Close()
-	data = map[string]string{}
-	contents, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	err = json.Unmarshal(contents, &data)
-	config := t.GetConfiguration()
-	themeId := data["theme_id"]
+	theme := t.sendData("POST", path, data)
+	floatId, _ := theme["theme"]["id"].(float64)
+	id := int64(floatId)
+
 	go func() {
-		defer wg.Done()
-		for true {
-			if t.doneProcessing(themeId) {
-				return
-			} else {
-				time.Sleep(250 * time.Millisecond)
-			}
+		for !t.isDoneProcessing(id) {
+			time.Sleep(250 * time.Millisecond)
 		}
+		wg.Done()
 	}()
-	id, _ := strconv.Atoi(themeId)
-	config.ThemeId = int64(id)
-	tc = NewThemeClient(config.Initialize())
-	return tc, wg
+	wg.Wait()
+	config := t.GetConfiguration()
+	config.ThemeId = id
+	return NewThemeClient(config.Initialize())
 }
 
 func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan string) {
@@ -249,6 +235,32 @@ func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error
 	return ioutil.ReadAll(resp.Body)
 }
 
+func (t ThemeClient) sendData(method, path string, body map[string]map[string]string) (result map[string]map[string]interface{}) {
+	encoded, err := json.Marshal(body)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	t.config.AddHeaders(req)
+	resp, err := t.client.Do(req)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	defer resp.Body.Close()
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	err = json.Unmarshal(contents, &result)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	return
+}
+
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
 	path := t.config.AssetPath()
 	data := map[string]Asset{"asset": event.Asset()}
@@ -283,8 +295,11 @@ func processResponse(r *http.Response, err error, event AssetEvent) string {
 	}
 }
 
-func (t ThemeClient) doneProcessing(themeId string) bool {
-	return true
+func (t ThemeClient) isDoneProcessing(themeId int64) bool {
+	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminUrl(), themeId)
+	theme := t.sendData("GET", path, map[string]map[string]string{})
+	done, _ := theme["theme"]["previewable"].(bool)
+	return done
 }
 
 type AssetError struct {

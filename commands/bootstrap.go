@@ -16,18 +16,34 @@ const (
 )
 
 func BootstrapCommand(args map[string]interface{}) (done chan bool) {
-	return
+	var client phoenix.ThemeClient
+	var version, dir, env, prefix string
+	var setThemeId bool
+	extractString(&version, "version", args)
+	extractString(&dir, "directory", args)
+	extractString(&env, "environment", args)
+	extractString(&prefix, "prefix", args)
+	extractBool(&setThemeId, "setThemeId", args)
+	extractThemeClient(&client, args)
+
+	return Bootstrap(client, prefix, version, dir, env, setThemeId)
 }
 
-func Bootstrap(client phoenix.ThemeClient, version string) (done chan bool) {
+func Bootstrap(client phoenix.ThemeClient, prefix, version, directory, environment string, setThemeId bool) (done chan bool) {
 	var zipLocation string
 	if version == MasterBranch {
 		zipLocation = zipPath(MasterBranch)
 	} else {
 		zipLocation = zipPathForVersion(version)
 	}
-	clientForNewTheme, wg := client.CreateTheme(version, zipLocation)
-	wg.Wait()
+	name := "Timber-" + version
+	if len(prefix) > 0 {
+		name = prefix + "-" + name
+	}
+	clientForNewTheme := client.CreateTheme(name, zipLocation)
+	if setThemeId {
+		AddConfiguration(directory, environment, clientForNewTheme.GetConfiguration())
+	}
 
 	return Download(clientForNewTheme, []string{})
 }
@@ -78,5 +94,4 @@ func logAndDie(feed phoenix.Feed, version string) {
 		fmt.Println("  - " + entry.Title)
 	}
 	os.Exit(1)
-
 }
