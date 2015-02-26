@@ -1,6 +1,7 @@
 package phoenix
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
@@ -209,7 +210,7 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 	data := map[string]Asset{"asset": event.Asset()}
 	encoded, err := json.Marshal(data)
 
-	req, err := http.NewRequest(method, path, strings.NewReader(string(encoded)))
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
 
 	if err != nil {
 		log.Fatal(err)
