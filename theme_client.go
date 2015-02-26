@@ -18,6 +18,8 @@ import (
 	"time"
 )
 
+const CreateThemeMaxRetries int = 3
+
 type ThemeClient struct {
 	config Configuration
 	client *http.Client
@@ -168,7 +170,23 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 	data := map[string]map[string]string{
 		"theme": content,
 	}
-	theme := t.sendData("POST", path, data)
+	retries := 0
+	theme := func() (r map[string]map[string]interface{}) {
+		for retries < CreateThemeMaxRetries && len(r) <= 0 {
+			r = t.sendData("POST", path, data)
+			retries++
+			if len(r) <= 0 {
+				msg := fmt.Sprintf("[%d/%d] Could not create theme. Retrying...", retries, CreateThemeMaxRetries)
+				fmt.Println(YellowText(msg))
+			}
+		}
+		if retries >= CreateThemeMaxRetries {
+			err := errors.New(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
+			HaltAndCatchFire(err)
+		}
+		return
+	}()
+
 	floatId, _ := theme["theme"]["id"].(float64)
 	id := int64(floatId)
 
@@ -246,6 +264,10 @@ func (t ThemeClient) sendData(method, path string, body map[string]map[string]st
 	}
 	t.config.AddHeaders(req)
 	resp, err := t.client.Do(req)
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return map[string]map[string]interface{}{}
+	}
+
 	if err != nil {
 		HaltAndCatchFire(err)
 	}

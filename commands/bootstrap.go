@@ -86,7 +86,7 @@ func findReleaseWith(feed phoenix.Feed, version string) phoenix.Entry {
 }
 
 func logAndDie(feed phoenix.Feed, version string) {
-	fmt.Println(phoenix.RedText("Invalid Timber Version - " + version))
+	fmt.Println(phoenix.RedText("Invalid Timber Version: " + version))
 	fmt.Println("Available Versions Are:")
 	fmt.Println("  - master")
 	fmt.Println("  - latest")
