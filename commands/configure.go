@@ -33,9 +33,12 @@ func ConfigureCommand(args map[string]interface{}) (done chan bool) {
 }
 
 func Configure(dir, environment, domain, accessToken string, bucketSize, refillRate int) {
-	environmentLocation := filepath.Join(dir, "config.yml")
 	config := phoenix.Configuration{Domain: domain, AccessToken: accessToken, BucketSize: bucketSize, RefillRate: refillRate}
+	AddConfiguration(dir, environment, config)
+}
 
+func AddConfiguration(dir, environment string, config phoenix.Configuration) {
+	environmentLocation := filepath.Join(dir, "config.yml")
 	env := loadOrInitializeEnvironment(environmentLocation)
 	env.SetConfiguration(environment, config)
 

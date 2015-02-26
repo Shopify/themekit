@@ -1,6 +1,7 @@
 package phoenix
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
@@ -13,7 +14,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 )
+
+const CreateThemeMaxRetries int = 3
 
 type ThemeClient struct {
 	config Configuration
@@ -153,6 +158,50 @@ func (t ThemeClient) Asset(filename string) Asset {
 	return asset["asset"]
 }
 
+func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	path := fmt.Sprintf("%s/themes.json", t.config.AdminUrl())
+	content := map[string]string{
+		"name": name,
+		"src":  zipLocation,
+		"role": "unpublished",
+	}
+	data := map[string]map[string]string{
+		"theme": content,
+	}
+	retries := 0
+	theme := func() (r map[string]map[string]interface{}) {
+		for retries < CreateThemeMaxRetries && len(r) <= 0 {
+			r = t.sendData("POST", path, data)
+			retries++
+			if len(r) <= 0 {
+				msg := fmt.Sprintf("[%d/%d] Could not create theme. Retrying...", retries, CreateThemeMaxRetries)
+				fmt.Println(YellowText(msg))
+			}
+		}
+		if retries >= CreateThemeMaxRetries {
+			err := errors.New(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
+			HaltAndCatchFire(err)
+		}
+		return
+	}()
+
+	floatId, _ := theme["theme"]["id"].(float64)
+	id := int64(floatId)
+
+	go func() {
+		for !t.isDoneProcessing(id) {
+			time.Sleep(250 * time.Millisecond)
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+	config := t.GetConfiguration()
+	config.ThemeId = id
+	return NewThemeClient(config.Initialize())
+}
+
 func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan string) {
 	done = make(chan bool)
 	messages = make(chan string)
@@ -204,6 +253,36 @@ func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error
 	return ioutil.ReadAll(resp.Body)
 }
 
+func (t ThemeClient) sendData(method, path string, body map[string]map[string]string) (result map[string]map[string]interface{}) {
+	encoded, err := json.Marshal(body)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	t.config.AddHeaders(req)
+	resp, err := t.client.Do(req)
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return map[string]map[string]interface{}{}
+	}
+
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	defer resp.Body.Close()
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	err = json.Unmarshal(contents, &result)
+	if err != nil {
+		HaltAndCatchFire(err)
+	}
+	return
+}
+
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
 	path := t.config.AssetPath()
 	data := map[string]Asset{"asset": event.Asset()}
@@ -236,6 +315,13 @@ func processResponse(r *http.Response, err error, event AssetEvent) string {
 	} else {
 		return fmt.Sprintf("[%d]Could not peform %s to %s at %s", code, eventType, key, host)
 	}
+}
+
+func (t ThemeClient) isDoneProcessing(themeId int64) bool {
+	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminUrl(), themeId)
+	theme := t.sendData("GET", path, map[string]map[string]string{})
+	done, _ := theme["theme"]["previewable"].(bool)
+	return done
 }
 
 type AssetError struct {
