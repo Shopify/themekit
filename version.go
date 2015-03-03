@@ -1,6 +1,6 @@
 package phoenix
 
-const PhoenixVersion string = "v0.1.0"
+const PhoenixVersion string = "v0.1.2"
 
 func LibraryInfo() []string {
 	return []string{
