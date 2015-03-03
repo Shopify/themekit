@@ -14,7 +14,11 @@ func Replace(client phoenix.ThemeClient, filenames []string) chan bool {
 	events := make(chan phoenix.AssetEvent)
 	done, messages := client.Process(events)
 
-	go logMessages(messages)
+	go func() {
+		for {
+			fmt.Println(<-messages)
+		}
+	}()
 
 	assets = assetList(client, filenames)
 	go removeAndUpload(assets, events)
@@ -47,16 +51,5 @@ func removeAndUpload(assets chan phoenix.Asset, assetEvents chan phoenix.AssetEv
 			close(assetEvents)
 			return
 		}
-	}
-}
-
-func logMessages(messages chan string) {
-	var message string
-	for {
-		message = <-messages
-		if len(message) <= 0 {
-			return
-		}
-		fmt.Println(message)
 	}
 }

@@ -202,9 +202,9 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 	return NewThemeClient(config.Initialize())
 }
 
-func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan string) {
+func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan ThemeEvent) {
 	done = make(chan bool)
-	messages = make(chan string)
+	messages = make(chan ThemeEvent)
 	go func() {
 		for {
 			job, more := <-events
@@ -220,7 +220,7 @@ func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages c
 	return
 }
 
-func (t ThemeClient) Perform(asset AssetEvent) string {
+func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
 	var event string
 	switch asset.Type() {
 	case Update:
@@ -298,23 +298,8 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 	return t.client.Do(req)
 }
 
-func processResponse(r *http.Response, err error, event AssetEvent) string {
-	asset := event.Asset()
-	if err != nil {
-		return err.Error()
-	}
-	host := BlueText(r.Request.URL.Host)
-	key := BlueText(asset.Key)
-	eventType := YellowText(event.Type().String())
-	code := r.StatusCode
-	if code >= 200 && code < 300 {
-		return fmt.Sprintf("Successfully performed %s operation for file %s to %s", eventType, key, host)
-	} else if code == 422 {
-		errorMessage := ExtractErrorMessage(ioutil.ReadAll(r.Body))
-		return fmt.Sprintf("Could not upload %s:\n\t%s", key, errorMessage)
-	} else {
-		return fmt.Sprintf("[%d]Could not peform %s to %s at %s", code, eventType, key, host)
-	}
+func processResponse(r *http.Response, err error, event AssetEvent) ThemeEvent {
+	return NewAPIThemeEvent(r, event, err)
 }
 
 func (t ThemeClient) isDoneProcessing(themeId int64) bool {
@@ -324,22 +309,8 @@ func (t ThemeClient) isDoneProcessing(themeId int64) bool {
 	return done
 }
 
-type AssetError struct {
-	Messages []string `json:"asset"`
-}
-
 func ExtractErrorMessage(data []byte, err error) string {
-	if err != nil {
-		return err.Error()
-	}
-
-	var assetErrors map[string]AssetError
-	err = json.Unmarshal(data, &assetErrors)
-
-	if err != nil {
-		return err.Error()
-	}
-	return RedText(strings.Join(assetErrors["errors"].Messages, "\n"))
+	return extractAssetAPIErrors(data, err).Error()
 }
 
 func newHttpClient(config Configuration) (client *http.Client) {
