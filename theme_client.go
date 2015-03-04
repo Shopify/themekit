@@ -31,6 +31,14 @@ type Asset struct {
 	Attachment string `json:"attachment,omitempty"`
 }
 
+type Theme struct {
+	Name        string `json:"name"`
+	Source      string `json:"src,omitempty"`
+	Role        string `json:"role,omitempty"`
+	Id          int64  `json:"id,omitempty"`
+	Previewable bool   `json:"previewable,omitempty"`
+}
+
 func (a Asset) String() string {
 	return fmt.Sprintf("key: %s | value: %s | attachment: %s", a.Key, a.Value, a.Attachment)
 }
@@ -162,22 +170,21 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", t.config.AdminUrl())
-	content := map[string]string{
-		"name": name,
-		"src":  zipLocation,
-		"role": "unpublished",
+	contents := map[string]Theme{
+		"theme": Theme{Name: name, Source: zipLocation, Role: "unpublished"},
 	}
-	data := map[string]map[string]string{
-		"theme": content,
-	}
+
 	retries := 0
-	theme := func() (r map[string]map[string]interface{}) {
-		for retries < CreateThemeMaxRetries && len(r) <= 0 {
-			r = t.sendData("POST", path, data)
-			retries++
-			if len(r) <= 0 {
-				msg := fmt.Sprintf("[%d/%d] Could not create theme. Retrying...", retries, CreateThemeMaxRetries)
+	themeEvent := func() (themeEvent APIThemeEvent) {
+		ready := false
+		data, _ := json.Marshal(contents)
+		for retries < CreateThemeMaxRetries && !ready {
+			if themeEvent = t.sendData("POST", path, data); !themeEvent.Successful() {
+				retries++
+				msg := fmt.Sprintf("[%d/%d] %s", retries, CreateThemeMaxRetries, themeEvent)
 				fmt.Println(YellowText(msg))
+			} else {
+				ready = true
 			}
 		}
 		if retries >= CreateThemeMaxRetries {
@@ -187,18 +194,16 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 		return
 	}()
 
-	floatId, _ := theme["theme"]["id"].(float64)
-	id := int64(floatId)
-
 	go func() {
-		for !t.isDoneProcessing(id) {
+		for !t.isDoneProcessing(themeEvent.ThemeId) {
 			time.Sleep(250 * time.Millisecond)
 		}
 		wg.Done()
 	}()
+
 	wg.Wait()
 	config := t.GetConfiguration()
-	config.ThemeId = id
+	config.ThemeId = themeEvent.ThemeId
 	return NewThemeClient(config.Initialize())
 }
 
@@ -253,34 +258,17 @@ func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error
 	return ioutil.ReadAll(resp.Body)
 }
 
-func (t ThemeClient) sendData(method, path string, body map[string]map[string]string) (result map[string]map[string]interface{}) {
-	encoded, err := json.Marshal(body)
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
+func (t ThemeClient) sendData(method, path string, body []byte) (result APIThemeEvent) {
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
 		HaltAndCatchFire(err)
 	}
 	t.config.AddHeaders(req)
 	resp, err := t.client.Do(req)
-	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return map[string]map[string]interface{}{}
+	if result = NewAPIThemeEvent(resp, err); result.Successful() {
+		defer resp.Body.Close()
 	}
-
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	defer resp.Body.Close()
-	contents, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	err = json.Unmarshal(contents, &result)
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	return
+	return result
 }
 
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
@@ -299,14 +287,13 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 }
 
 func processResponse(r *http.Response, err error, event AssetEvent) ThemeEvent {
-	return NewAPIThemeEvent(r, event, err)
+	return NewAPIAssetEvent(r, event, err)
 }
 
 func (t ThemeClient) isDoneProcessing(themeId int64) bool {
 	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminUrl(), themeId)
-	theme := t.sendData("GET", path, map[string]map[string]string{})
-	done, _ := theme["theme"]["previewable"].(bool)
-	return done
+	themeEvent := t.sendData("GET", path, []byte{})
+	return themeEvent.Previewable
 }
 
 func ExtractErrorMessage(data []byte, err error) string {
