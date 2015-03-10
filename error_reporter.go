@@ -1,12 +1,35 @@
 package phoenix
 
-import "sync"
+import (
+	"errors"
+	"fmt"
+	"log"
+	"sync"
+)
 
 type ErrorReporter interface {
 	Report(error)
 }
 
-var reporter ErrorReporter
+type nullReporter struct{}
+type ConsoleReporter struct{}
+type HaltExecutionReporter struct{}
+
+func (n nullReporter) Report(e error) {}
+
+func (c ConsoleReporter) Report(e error) {
+	fmt.Println(RedText(e.Error()))
+}
+
+func (h HaltExecutionReporter) Report(e error) {
+	c := ConsoleReporter{}
+	libraryInfo := fmt.Sprintf("%s%s%s", MessageSeparator, LibraryInfo(), MessageSeparator)
+	c.Report(errors.New(libraryInfo))
+	c.Report(e)
+	log.Fatal(e)
+}
+
+var reporter ErrorReporter = nullReporter{}
 var errorQueue chan error = make(chan error)
 var mutex *sync.Mutex = &sync.Mutex{}
 
@@ -34,7 +57,7 @@ func SetErrorReporter(r ErrorReporter) {
 	}()
 }
 
-func notifyError(err error) {
+func NotifyError(err error) {
 	synchronized(mutex, func() {
 		go func() {
 			errorQueue <- err

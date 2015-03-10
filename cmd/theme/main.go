@@ -77,7 +77,12 @@ func CommandDescription(defaultCommand string) string {
 	return strings.Join(commandDescription, "\n")
 }
 
+func setupErrorReporter() {
+	phoenix.SetErrorReporter(phoenix.HaltExecutionReporter{})
+}
+
 func main() {
+	setupErrorReporter()
 	command, rest := SetupAndParseArgs(os.Args[1:])
 	verifyCommand(command, rest)
 
@@ -173,7 +178,7 @@ func loadThemeClient(directory, env string) phoenix.ThemeClient {
 func loadThemeClientWithRetry(directory, env string, isRetry bool) phoenix.ThemeClient {
 	environments, err := phoenix.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
 	if err != nil {
-		phoenix.HaltAndCatchFire(err)
+		phoenix.NotifyError(err)
 	}
 	config, err := environments.GetConfiguration(env)
 	if err != nil && !isRetry {
@@ -183,7 +188,7 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) phoenix.Theme
 		client := loadThemeClientWithRetry(directory, env, true)
 		return client
 	} else if err != nil {
-		phoenix.HaltAndCatchFire(err)
+		phoenix.NotifyError(err)
 	}
 
 	return phoenix.NewThemeClient(config)

@@ -44,7 +44,7 @@ func AddConfiguration(dir, environment string, config phoenix.Configuration) {
 
 	err := env.Save(environmentLocation)
 	if err != nil {
-		phoenix.HaltAndCatchFire(err)
+		phoenix.NotifyError(err)
 	}
 }
 
@@ -64,7 +64,7 @@ func MigrateConfiguration(dir string) {
 	env := loadOrInitializeEnvironment(environmentLocation)
 	err := env.Save(environmentLocation)
 	if err != nil {
-		phoenix.HaltAndCatchFire(err)
+		phoenix.NotifyError(err)
 	}
 }
 

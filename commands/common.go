@@ -14,7 +14,7 @@ func extractString(s *string, key string, args map[string]interface{}) {
 
 	if *s, ok = args[key].(string); !ok {
 		errMsg := fmt.Sprintf("%s is not of valid type", key)
-		phoenix.HaltAndCatchFire(errors.New(errMsg))
+		phoenix.NotifyError(errors.New(errMsg))
 	}
 }
 
@@ -26,7 +26,7 @@ func extractInt(s *int, key string, args map[string]interface{}) {
 
 	if *s, ok = args[key].(int); !ok {
 		errMsg := fmt.Sprintf("%s is not of valid type", key)
-		phoenix.HaltAndCatchFire(errors.New(errMsg))
+		phoenix.NotifyError(errors.New(errMsg))
 	}
 }
 
@@ -38,7 +38,7 @@ func extractBool(s *bool, key string, args map[string]interface{}) {
 
 	if *s, ok = args[key].(bool); !ok {
 		errMsg := fmt.Sprintf("%s is not of valid type", key)
-		phoenix.HaltAndCatchFire(errors.New(errMsg))
+		phoenix.NotifyError(errors.New(errMsg))
 	}
 }
 
@@ -49,7 +49,7 @@ func extractThemeClient(t *phoenix.ThemeClient, args map[string]interface{}) {
 	}
 
 	if *t, ok = args["themeClient"].(phoenix.ThemeClient); !ok {
-		phoenix.HaltAndCatchFire(errors.New("themeClient is not of a valid type"))
+		phoenix.NotifyError(errors.New("themeClient is not of a valid type"))
 	}
 }
 
@@ -60,7 +60,7 @@ func toClientAndFilesAsync(args map[string]interface{}, fn func(phoenix.ThemeCli
 	extractThemeClient(&themeClient, args)
 
 	if filenames, ok = args["filenames"].([]string); !ok {
-		phoenix.HaltAndCatchFire(errors.New("filenames are not of valid type"))
+		phoenix.NotifyError(errors.New("filenames are not of valid type"))
 	}
 	return fn(themeClient, filenames)
 }

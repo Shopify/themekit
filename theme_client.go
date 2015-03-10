@@ -189,7 +189,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 		}
 		if retries >= CreateThemeMaxRetries {
 			err := errors.New(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
-			HaltAndCatchFire(err)
+			NotifyError(err)
 		}
 		return
 	}()
@@ -261,7 +261,7 @@ func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error
 func (t ThemeClient) sendData(method, path string, body []byte) (result APIThemeEvent) {
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
-		HaltAndCatchFire(err)
+		NotifyError(err)
 	}
 	t.config.AddHeaders(req)
 	resp, err := t.client.Do(req)
