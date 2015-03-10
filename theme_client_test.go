@@ -87,7 +87,7 @@ func TestRetrievingASingleAsset(t *testing.T) {
 
 func TestExtractErrorMessage(t *testing.T) {
 	contents := []byte(TestFixture("asset_error"))
-	expectedMessage := RedText("Liquid syntax error (line 10): 'comment' tag was never closed")
+	expectedMessage := "Liquid syntax error (line 10): 'comment' tag was never closed"
 	assert.Equal(t, expectedMessage, ExtractErrorMessage(contents, nil))
 }
 
@@ -99,7 +99,7 @@ func conf(server *httptest.Server) Configuration {
 	return Configuration{Url: server.URL, AccessToken: "abra"}
 }
 
-func drain(channel chan string) {
+func drain(channel chan ThemeEvent) {
 	for {
 		_, more := <-channel
 		if !more {

@@ -3,7 +3,6 @@ package phoenix
 import (
 	"bytes"
 	"crypto/tls"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,9 +10,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 )
@@ -25,75 +21,12 @@ type ThemeClient struct {
 	client *http.Client
 }
 
-type Asset struct {
-	Key        string `json:"key"`
-	Value      string `json:"value,omitempty"`
-	Attachment string `json:"attachment,omitempty"`
-}
-
 type Theme struct {
 	Name        string `json:"name"`
 	Source      string `json:"src,omitempty"`
 	Role        string `json:"role,omitempty"`
 	Id          int64  `json:"id,omitempty"`
 	Previewable bool   `json:"previewable,omitempty"`
-}
-
-func (a Asset) String() string {
-	return fmt.Sprintf("key: %s | value: %s | attachment: %s", a.Key, a.Value, a.Attachment)
-}
-
-func (a Asset) IsValid() bool {
-	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)
-}
-
-func toSlash(path string) string {
-	newpath := filepath.ToSlash(path)
-	if strings.Index(newpath, "\\") >= 0 {
-		newpath = strings.Replace(newpath, "\\", "/", -1)
-	}
-	return newpath
-}
-
-func LoadAsset(root, filename string) (asset Asset, err error) {
-	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
-	file, err := os.Open(path)
-	info, err := os.Stat(path)
-	if err != nil {
-		return
-	}
-
-	if info.IsDir() {
-		err = errors.New("File is a directory")
-		return
-	}
-
-	buffer := make([]byte, info.Size())
-	_, err = file.Read(buffer)
-	if err != nil {
-		return
-	}
-
-	asset = Asset{Key: toSlash(filename)}
-	if contentTypeFor(buffer) == "text" {
-		asset.Value = string(buffer)
-	} else {
-		asset.Attachment = encode64(buffer)
-	}
-	return
-}
-
-func contentTypeFor(data []byte) string {
-	contentType := http.DetectContentType(data)
-	if strings.Contains(contentType, "text") {
-		return "text"
-	} else {
-		return "binary"
-	}
-}
-
-func encode64(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data)
 }
 
 type EventType int
