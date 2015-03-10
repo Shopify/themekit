@@ -6,7 +6,6 @@ import (
 	"github.com/ryanuber/go-glob"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	re "regexp"
 	syn "regexp/syntax"
@@ -43,7 +42,7 @@ func NewEventFilterFromReaders(readers []io.Reader) EventFilter {
 	for _, reader := range readers {
 		data, err := ioutil.ReadAll(reader)
 		if err != nil {
-			log.Fatal(err)
+			NotifyError(err)
 		}
 		otherPatterns := strings.Split(string(data), "\n")
 		patterns = append(patterns, otherPatterns...)
@@ -115,7 +114,7 @@ func filenamesToReaders(ignores []string) []io.Reader {
 		file, err := os.Open(name)
 		defer file.Close()
 		if err != nil {
-			log.Fatal(err, "-", name)
+			NotifyError(err)
 		}
 		files[i] = file
 	}

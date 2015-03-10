@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"sync"
@@ -60,8 +59,8 @@ func (t ThemeClient) GetConfiguration() Configuration {
 	return t.config
 }
 
-func (t ThemeClient) AssetList() chan Asset {
-	results := make(chan Asset)
+func (t ThemeClient) AssetList() (results chan Asset, err error) {
+	results = make(chan Asset)
 	go func() {
 		queryBuilder := func(path string) string {
 			return path
@@ -71,7 +70,8 @@ func (t ThemeClient) AssetList() chan Asset {
 		var assets map[string][]Asset
 		err = json.Unmarshal(bytes, &assets)
 		if err != nil {
-			log.Fatal(err)
+			close(results)
+			return
 		}
 
 		for _, asset := range assets["assets"] {
@@ -79,12 +79,12 @@ func (t ThemeClient) AssetList() chan Asset {
 		}
 		close(results)
 	}()
-	return results
+	return
 }
 
-type AssetRetrieval func(filename string) Asset
+type AssetRetrieval func(filename string) (Asset, error)
 
-func (t ThemeClient) Asset(filename string) Asset {
+func (t ThemeClient) Asset(filename string) (Asset, error) {
 	queryBuilder := func(path string) string {
 		return fmt.Sprintf("%s&asset[key]=%s", path, filename)
 	}
@@ -93,10 +93,10 @@ func (t ThemeClient) Asset(filename string) Asset {
 	var asset map[string]Asset
 	err = json.Unmarshal(bytes, &asset)
 	if err != nil {
-		log.Fatal(err)
+		return Asset{}, err
 	}
 
-	return asset["asset"]
+	return asset["asset"], nil
 }
 
 func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
@@ -179,14 +179,14 @@ func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error
 
 	req, err := http.NewRequest("GET", path, nil)
 	if err != nil {
-		log.Fatal("Invalid Request", err)
+		return []byte{}, err
 	}
 
 	t.config.AddHeaders(req)
 	resp, err := t.client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
-		log.Fatal("Invalid response", err)
+		return []byte{}, err
 	}
 	return ioutil.ReadAll(resp.Body)
 }
@@ -212,7 +212,7 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	t.config.AddHeaders(req)

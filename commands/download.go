@@ -17,7 +17,11 @@ func Download(client phoenix.ThemeClient, filenames []string) (done chan bool) {
 	done = make(chan bool)
 
 	if len(filenames) <= 0 {
-		go downloadAllFiles(client.AssetList(), done)
+		if assets, err := client.AssetList(); err != nil {
+			phoenix.NotifyError(err)
+		} else {
+			go downloadAllFiles(assets, done)
+		}
 	} else {
 		go downloadFiles(client.Asset, filenames, done)
 	}
@@ -39,8 +43,11 @@ func downloadAllFiles(assets chan phoenix.Asset, done chan bool) {
 
 func downloadFiles(retrievalFunction phoenix.AssetRetrieval, filenames []string, done chan bool) {
 	for _, filename := range filenames {
-		asset := retrievalFunction(filename)
-		writeToDisk(asset)
+		if asset, err := retrievalFunction(filename); err != nil {
+			phoenix.NotifyError(err)
+		} else {
+			writeToDisk(asset)
+		}
 	}
 	done <- true
 	return
