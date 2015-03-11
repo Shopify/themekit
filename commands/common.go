@@ -64,3 +64,11 @@ func toClientAndFilesAsync(args map[string]interface{}, fn func(phoenix.ThemeCli
 	}
 	return fn(themeClient, filenames)
 }
+
+func drainErrors(errs chan error) {
+	for {
+		if err := <-errs; err != nil {
+			phoenix.NotifyError(err)
+		}
+	}
+}

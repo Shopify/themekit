@@ -17,11 +17,9 @@ func Download(client phoenix.ThemeClient, filenames []string) (done chan bool) {
 	done = make(chan bool)
 
 	if len(filenames) <= 0 {
-		if assets, err := client.AssetList(); err != nil {
-			phoenix.NotifyError(err)
-		} else {
-			go downloadAllFiles(assets, done)
-		}
+		assets, errs := client.AssetList()
+		go drainErrors(errs)
+		go downloadAllFiles(assets, done)
 	} else {
 		go downloadFiles(client.Asset, filenames, done)
 	}

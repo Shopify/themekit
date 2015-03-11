@@ -59,18 +59,24 @@ func (t ThemeClient) GetConfiguration() Configuration {
 	return t.config
 }
 
-func (t ThemeClient) AssetList() (results chan Asset, err error) {
+func (t ThemeClient) AssetList() (results chan Asset, errs chan error) {
 	results = make(chan Asset)
+	errs = make(chan error)
 	go func() {
 		queryBuilder := func(path string) string {
 			return path
 		}
 
 		bytes, err := t.query(queryBuilder)
+		if err != nil {
+			errs <- err
+			return
+		}
+
 		var assets map[string][]Asset
 		err = json.Unmarshal(bytes, &assets)
 		if err != nil {
-			close(results)
+			errs <- err
 			return
 		}
 
@@ -78,6 +84,7 @@ func (t ThemeClient) AssetList() (results chan Asset, err error) {
 			results <- asset
 		}
 		close(results)
+		close(errs)
 	}()
 	return
 }
@@ -184,9 +191,10 @@ func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error
 
 	t.config.AddHeaders(req)
 	resp, err := t.client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return []byte{}, err
+	} else {
+		defer resp.Body.Close()
 	}
 	return ioutil.ReadAll(resp.Body)
 }

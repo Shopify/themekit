@@ -70,7 +70,7 @@ func TestRetrievingAnAssetList(t *testing.T) {
 	}))
 
 	client := NewThemeClient(conf(ts))
-	assets := client.AssetList()
+	assets, _ := client.AssetList()
 	assert.Equal(t, 2, count(assets))
 }
 
@@ -81,7 +81,7 @@ func TestRetrievingASingleAsset(t *testing.T) {
 	}))
 
 	client := NewThemeClient(conf(ts))
-	asset := client.Asset("assets/foo.txt")
+	asset, _ := client.Asset("assets/foo.txt")
 	assert.Equal(t, "hello world", asset.Value)
 }
 

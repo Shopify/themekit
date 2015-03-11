@@ -18,21 +18,21 @@ func Replace(client phoenix.ThemeClient, filenames []string) chan bool {
 			fmt.Println(<-messages)
 		}
 	}()
+	assets, errs := assetList(client, filenames)
+	go drainErrors(errs)
+	go removeAndUpload(assets, events)
 
-	if assets, err := assetList(client, filenames); err != nil {
-		phoenix.NotifyError(err)
-	} else {
-		go removeAndUpload(assets, events)
-	}
 	return done
 }
 
-func assetList(client phoenix.ThemeClient, filenames []string) (chan phoenix.Asset, error) {
+func assetList(client phoenix.ThemeClient, filenames []string) (chan phoenix.Asset, chan error) {
 	if len(filenames) == 0 {
 		return client.AssetList()
 	}
 
 	assets := make(chan phoenix.Asset)
+	errs := make(chan error)
+	close(errs)
 	go func() {
 		for _, filename := range filenames {
 			asset := phoenix.Asset{Key: filename}
@@ -40,7 +40,7 @@ func assetList(client phoenix.ThemeClient, filenames []string) (chan phoenix.Ass
 		}
 		close(assets)
 	}()
-	return assets, nil
+	return assets, errs
 }
 
 func removeAndUpload(assets chan phoenix.Asset, assetEvents chan phoenix.AssetEvent) {

@@ -25,7 +25,6 @@ func (h HaltExecutionReporter) Report(e error) {
 	c := ConsoleReporter{}
 	libraryInfo := fmt.Sprintf("%s%s%s", MessageSeparator, LibraryInfo(), MessageSeparator)
 	c.Report(errors.New(libraryInfo))
-	c.Report(e)
 	log.Fatal(e)
 }
 
