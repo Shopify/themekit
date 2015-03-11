@@ -62,7 +62,7 @@ func fwLoadAsset(event fsnotify.Event) Asset {
 	asset, err := LoadAsset(root, filename)
 	if err != nil {
 		if os.IsExist(err) {
-			HaltAndCatchFire(err)
+			NotifyError(err)
 		} else {
 			asset = Asset{}
 		}

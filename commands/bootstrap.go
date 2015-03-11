@@ -31,6 +31,12 @@ func BootstrapCommand(args map[string]interface{}) (done chan bool) {
 
 func Bootstrap(client phoenix.ThemeClient, prefix, version, directory, environment string, setThemeId bool) (done chan bool) {
 	var zipLocation string
+
+	pwd, _ := os.Getwd()
+	if pwd != directory {
+		os.Chdir(directory)
+	}
+
 	if version == MasterBranch {
 		zipLocation = zipPath(MasterBranch)
 	} else {
@@ -45,6 +51,7 @@ func Bootstrap(client phoenix.ThemeClient, prefix, version, directory, environme
 		AddConfiguration(directory, environment, clientForNewTheme.GetConfiguration())
 	}
 
+	os.Chdir(pwd)
 	return Download(clientForNewTheme, []string{})
 }
 

@@ -11,7 +11,7 @@ func RemoveCommand(args map[string]interface{}) chan bool {
 }
 
 func Remove(client phoenix.ThemeClient, filenames []string) (done chan bool) {
-	var messages chan string
+	var messages chan phoenix.ThemeEvent
 	events := make(chan phoenix.AssetEvent)
 	done, messages = client.Process(events)
 

@@ -13,13 +13,13 @@ func WatchCommand(args map[string]interface{}) chan bool {
 	var dir string
 
 	if client, ok = args["themeClient"].(phoenix.ThemeClient); !ok {
-		phoenix.HaltAndCatchFire(errors.New("themeClient is not of valid type"))
+		phoenix.NotifyError(errors.New("themeClient is not of valid type"))
 	}
 
 	if args["directory"] == nil {
 		dir, _ = os.Getwd()
 	} else if dir, ok = args["directory"].(string); !ok {
-		phoenix.HaltAndCatchFire(errors.New("directory is not of valid type"))
+		phoenix.NotifyError(errors.New("directory is not of valid type"))
 	}
 
 	return Watch(client, dir)

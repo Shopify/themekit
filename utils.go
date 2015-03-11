@@ -44,9 +44,3 @@ func BinaryTestData() []byte {
 	png.Encode(buff, img)
 	return buff.Bytes()
 }
-
-func HaltAndCatchFire(err error) {
-	errorMessage := fmt.Sprintf("%s%s%s", MessageSeparator, LibraryInfo(), MessageSeparator)
-	fmt.Println(RedText(errorMessage))
-	log.Fatal(err)
-}

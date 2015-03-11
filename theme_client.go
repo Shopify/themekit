@@ -3,17 +3,12 @@ package phoenix
 import (
 	"bytes"
 	"crypto/tls"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 )
@@ -25,67 +20,12 @@ type ThemeClient struct {
 	client *http.Client
 }
 
-type Asset struct {
-	Key        string `json:"key"`
-	Value      string `json:"value,omitempty"`
-	Attachment string `json:"attachment,omitempty"`
-}
-
-func (a Asset) String() string {
-	return fmt.Sprintf("key: %s | value: %s | attachment: %s", a.Key, a.Value, a.Attachment)
-}
-
-func (a Asset) IsValid() bool {
-	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)
-}
-
-func toSlash(path string) string {
-	newpath := filepath.ToSlash(path)
-	if strings.Index(newpath, "\\") >= 0 {
-		newpath = strings.Replace(newpath, "\\", "/", -1)
-	}
-	return newpath
-}
-
-func LoadAsset(root, filename string) (asset Asset, err error) {
-	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
-	file, err := os.Open(path)
-	info, err := os.Stat(path)
-	if err != nil {
-		return
-	}
-
-	if info.IsDir() {
-		err = errors.New("File is a directory")
-		return
-	}
-
-	buffer := make([]byte, info.Size())
-	_, err = file.Read(buffer)
-	if err != nil {
-		return
-	}
-
-	asset = Asset{Key: toSlash(filename)}
-	if contentTypeFor(buffer) == "text" {
-		asset.Value = string(buffer)
-	} else {
-		asset.Attachment = encode64(buffer)
-	}
-	return
-}
-
-func contentTypeFor(data []byte) string {
-	contentType := http.DetectContentType(data)
-	if strings.Contains(contentType, "text") {
-		return "text"
-	} else {
-		return "binary"
-	}
-}
-
-func encode64(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data)
+type Theme struct {
+	Name        string `json:"name"`
+	Source      string `json:"src,omitempty"`
+	Role        string `json:"role,omitempty"`
+	Id          int64  `json:"id,omitempty"`
+	Previewable bool   `json:"previewable,omitempty"`
 }
 
 type EventType int
@@ -119,8 +59,8 @@ func (t ThemeClient) GetConfiguration() Configuration {
 	return t.config
 }
 
-func (t ThemeClient) AssetList() chan Asset {
-	results := make(chan Asset)
+func (t ThemeClient) AssetList() (results chan Asset, err error) {
+	results = make(chan Asset)
 	go func() {
 		queryBuilder := func(path string) string {
 			return path
@@ -130,7 +70,8 @@ func (t ThemeClient) AssetList() chan Asset {
 		var assets map[string][]Asset
 		err = json.Unmarshal(bytes, &assets)
 		if err != nil {
-			log.Fatal(err)
+			close(results)
+			return
 		}
 
 		for _, asset := range assets["assets"] {
@@ -138,12 +79,12 @@ func (t ThemeClient) AssetList() chan Asset {
 		}
 		close(results)
 	}()
-	return results
+	return
 }
 
-type AssetRetrieval func(filename string) Asset
+type AssetRetrieval func(filename string) (Asset, error)
 
-func (t ThemeClient) Asset(filename string) Asset {
+func (t ThemeClient) Asset(filename string) (Asset, error) {
 	queryBuilder := func(path string) string {
 		return fmt.Sprintf("%s&asset[key]=%s", path, filename)
 	}
@@ -152,59 +93,56 @@ func (t ThemeClient) Asset(filename string) Asset {
 	var asset map[string]Asset
 	err = json.Unmarshal(bytes, &asset)
 	if err != nil {
-		log.Fatal(err)
+		return Asset{}, err
 	}
 
-	return asset["asset"]
+	return asset["asset"], nil
 }
 
 func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", t.config.AdminUrl())
-	content := map[string]string{
-		"name": name,
-		"src":  zipLocation,
-		"role": "unpublished",
+	contents := map[string]Theme{
+		"theme": Theme{Name: name, Source: zipLocation, Role: "unpublished"},
 	}
-	data := map[string]map[string]string{
-		"theme": content,
-	}
+
 	retries := 0
-	theme := func() (r map[string]map[string]interface{}) {
-		for retries < CreateThemeMaxRetries && len(r) <= 0 {
-			r = t.sendData("POST", path, data)
-			retries++
-			if len(r) <= 0 {
-				msg := fmt.Sprintf("[%d/%d] Could not create theme. Retrying...", retries, CreateThemeMaxRetries)
+	themeEvent := func() (themeEvent APIThemeEvent) {
+		ready := false
+		data, _ := json.Marshal(contents)
+		for retries < CreateThemeMaxRetries && !ready {
+			if themeEvent = t.sendData("POST", path, data); !themeEvent.Successful() {
+				retries++
+				msg := fmt.Sprintf("[%d/%d] %s", retries, CreateThemeMaxRetries, themeEvent)
 				fmt.Println(YellowText(msg))
+			} else {
+				ready = true
 			}
 		}
 		if retries >= CreateThemeMaxRetries {
 			err := errors.New(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
-			HaltAndCatchFire(err)
+			NotifyError(err)
 		}
 		return
 	}()
 
-	floatId, _ := theme["theme"]["id"].(float64)
-	id := int64(floatId)
-
 	go func() {
-		for !t.isDoneProcessing(id) {
+		for !t.isDoneProcessing(themeEvent.ThemeId) {
 			time.Sleep(250 * time.Millisecond)
 		}
 		wg.Done()
 	}()
+
 	wg.Wait()
 	config := t.GetConfiguration()
-	config.ThemeId = id
+	config.ThemeId = themeEvent.ThemeId
 	return NewThemeClient(config.Initialize())
 }
 
-func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan string) {
+func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan ThemeEvent) {
 	done = make(chan bool)
-	messages = make(chan string)
+	messages = make(chan ThemeEvent)
 	go func() {
 		for {
 			job, more := <-events
@@ -220,7 +158,7 @@ func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages c
 	return
 }
 
-func (t ThemeClient) Perform(asset AssetEvent) string {
+func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
 	var event string
 	switch asset.Type() {
 	case Update:
@@ -241,46 +179,29 @@ func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error
 
 	req, err := http.NewRequest("GET", path, nil)
 	if err != nil {
-		log.Fatal("Invalid Request", err)
+		return []byte{}, err
 	}
 
 	t.config.AddHeaders(req)
 	resp, err := t.client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
-		log.Fatal("Invalid response", err)
+		return []byte{}, err
 	}
 	return ioutil.ReadAll(resp.Body)
 }
 
-func (t ThemeClient) sendData(method, path string, body map[string]map[string]string) (result map[string]map[string]interface{}) {
-	encoded, err := json.Marshal(body)
+func (t ThemeClient) sendData(method, path string, body []byte) (result APIThemeEvent) {
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
-	if err != nil {
-		HaltAndCatchFire(err)
+		NotifyError(err)
 	}
 	t.config.AddHeaders(req)
 	resp, err := t.client.Do(req)
-	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return map[string]map[string]interface{}{}
+	if result = NewAPIThemeEvent(resp, err); result.Successful() {
+		defer resp.Body.Close()
 	}
-
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	defer resp.Body.Close()
-	contents, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	err = json.Unmarshal(contents, &result)
-	if err != nil {
-		HaltAndCatchFire(err)
-	}
-	return
+	return result
 }
 
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
@@ -291,55 +212,25 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	t.config.AddHeaders(req)
 	return t.client.Do(req)
 }
 
-func processResponse(r *http.Response, err error, event AssetEvent) string {
-	asset := event.Asset()
-	if err != nil {
-		return err.Error()
-	}
-	host := BlueText(r.Request.URL.Host)
-	key := BlueText(asset.Key)
-	eventType := YellowText(event.Type().String())
-	code := r.StatusCode
-	if code >= 200 && code < 300 {
-		return fmt.Sprintf("Successfully performed %s operation for file %s to %s", eventType, key, host)
-	} else if code == 422 {
-		errorMessage := ExtractErrorMessage(ioutil.ReadAll(r.Body))
-		return fmt.Sprintf("Could not upload %s:\n\t%s", key, errorMessage)
-	} else {
-		return fmt.Sprintf("[%d]Could not peform %s to %s at %s", code, eventType, key, host)
-	}
+func processResponse(r *http.Response, err error, event AssetEvent) ThemeEvent {
+	return NewAPIAssetEvent(r, event, err)
 }
 
 func (t ThemeClient) isDoneProcessing(themeId int64) bool {
 	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminUrl(), themeId)
-	theme := t.sendData("GET", path, map[string]map[string]string{})
-	done, _ := theme["theme"]["previewable"].(bool)
-	return done
-}
-
-type AssetError struct {
-	Messages []string `json:"asset"`
+	themeEvent := t.sendData("GET", path, []byte{})
+	return themeEvent.Previewable
 }
 
 func ExtractErrorMessage(data []byte, err error) string {
-	if err != nil {
-		return err.Error()
-	}
-
-	var assetErrors map[string]AssetError
-	err = json.Unmarshal(data, &assetErrors)
-
-	if err != nil {
-		return err.Error()
-	}
-	return RedText(strings.Join(assetErrors["errors"].Messages, "\n"))
+	return extractAssetAPIErrors(data, err).Error()
 }
 
 func newHttpClient(config Configuration) (client *http.Client) {
