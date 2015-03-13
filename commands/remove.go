@@ -11,9 +11,8 @@ func RemoveCommand(args map[string]interface{}) chan bool {
 }
 
 func Remove(client phoenix.ThemeClient, filenames []string) (done chan bool) {
-	var messages chan phoenix.ThemeEvent
 	events := make(chan phoenix.AssetEvent)
-	done, messages = client.Process(events)
+	done, _ = client.Process(events)
 
 	go func() {
 		for _, filename := range filenames {
@@ -24,15 +23,6 @@ func Remove(client phoenix.ThemeClient, filenames []string) (done chan bool) {
 		close(events)
 	}()
 
-	go func() {
-		for {
-			message, more := <-messages
-			if !more {
-				return
-			}
-			fmt.Println(message)
-		}
-	}()
 	return done
 }
 

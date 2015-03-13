@@ -12,6 +12,8 @@ import (
 
 const commandDefault string = "download [<file> ...]"
 
+var globalEventLog chan phoenix.ThemeEvent
+
 var permittedZeroArgCommands = map[string]bool{
 	"download": true,
 	"replace":  true,
@@ -45,7 +47,7 @@ var parserMapping = map[string]CommandParser{
 	"bootstrap": BootstrapParser,
 }
 
-type Command func(map[string]interface{}) (done chan bool)
+type Command func(map[string]interface{}) chan bool
 
 var commandMapping = map[string]Command{
 	"upload":    commands.UploadCommand,
@@ -81,15 +83,30 @@ func setupErrorReporter() {
 	phoenix.SetErrorReporter(phoenix.HaltExecutionReporter{})
 }
 
+func setupGlobalEventLog() {
+	globalEventLog = make(chan phoenix.ThemeEvent)
+}
+
 func main() {
+	setupGlobalEventLog()
 	setupErrorReporter()
 	command, rest := SetupAndParseArgs(os.Args[1:])
 	verifyCommand(command, rest)
 
 	args, _ := parserMapping[command](command, rest)
+	args["eventLog"] = globalEventLog
 
 	operation := commandMapping[command]
 	done := operation(args)
+	go func() {
+		for {
+			event, more := <-globalEventLog
+			if !more {
+				return
+			}
+			fmt.Println(event)
+		}
+	}()
 	<-done
 }
 

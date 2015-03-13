@@ -106,12 +106,17 @@ func (t ThemeClient) Asset(filename string) (Asset, error) {
 	return asset["asset"], nil
 }
 
-func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
+func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient, log chan ThemeEvent) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", t.config.AdminUrl())
 	contents := map[string]Theme{
 		"theme": Theme{Name: name, Source: zipLocation, Role: "unpublished"},
+	}
+
+	log = make(chan ThemeEvent)
+	logEvent := func(t ThemeEvent) {
+		log <- t
 	}
 
 	retries := 0
@@ -121,8 +126,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 		for retries < CreateThemeMaxRetries && !ready {
 			if themeEvent = t.sendData("POST", path, data); !themeEvent.Successful() {
 				retries++
-				msg := fmt.Sprintf("[%d/%d] %s", retries, CreateThemeMaxRetries, themeEvent)
-				fmt.Println(YellowText(msg))
+				go logEvent(themeEvent)
 			} else {
 				ready = true
 			}
@@ -134,6 +138,8 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 		return
 	}()
 
+	go logEvent(themeEvent)
+
 	go func() {
 		for !t.isDoneProcessing(themeEvent.ThemeId) {
 			time.Sleep(250 * time.Millisecond)
@@ -144,7 +150,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient) {
 	wg.Wait()
 	config := t.GetConfiguration()
 	config.ThemeId = themeEvent.ThemeId
-	return NewThemeClient(config.Initialize())
+	return NewThemeClient(config.Initialize()), log
 }
 
 func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan ThemeEvent) {

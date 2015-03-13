@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"fmt"
+	"bytes"
+	"errors"
 	"github.com/csaunders/phoenix"
-	"log"
 	"net/http"
 	"os"
 )
@@ -15,7 +15,7 @@ const (
 	TimberFeedPath = "https://github.com/Shopify/Timber/releases.atom"
 )
 
-func BootstrapCommand(args map[string]interface{}) (done chan bool) {
+func BootstrapCommand(args map[string]interface{}) chan bool {
 	var client phoenix.ThemeClient
 	var version, dir, env, prefix string
 	var setThemeId bool
@@ -29,76 +29,103 @@ func BootstrapCommand(args map[string]interface{}) (done chan bool) {
 	return Bootstrap(client, prefix, version, dir, env, setThemeId)
 }
 
-func Bootstrap(client phoenix.ThemeClient, prefix, version, directory, environment string, setThemeId bool) (done chan bool) {
-	var zipLocation string
+func Bootstrap(client phoenix.ThemeClient, prefix, version, directory, environment string, setThemeId bool) chan bool {
+	done := make(chan bool)
+	eventLog := make(chan phoenix.ThemeEvent)
+	go func() {
+		doneCh := doBootstrap(client, prefix, version, directory, environment, setThemeId, eventLog)
+		done <- <-doneCh
+	}()
+	return done
+}
 
+func doBootstrap(client phoenix.ThemeClient, prefix, version, directory, environment string, setThemeId bool, eventLog chan phoenix.ThemeEvent) chan bool {
 	pwd, _ := os.Getwd()
 	if pwd != directory {
 		os.Chdir(directory)
 	}
 
-	if version == MasterBranch {
-		zipLocation = zipPath(MasterBranch)
-	} else {
-		zipLocation = zipPathForVersion(version)
+	zipLocation, err := zipPathForVersion(version)
+	if err != nil {
+		phoenix.NotifyError(err)
+		done := make(chan bool)
+		close(done)
+		close(eventLog)
+		return done
 	}
+
 	name := "Timber-" + version
 	if len(prefix) > 0 {
 		name = prefix + "-" + name
 	}
-	clientForNewTheme := client.CreateTheme(name, zipLocation)
+	clientForNewTheme, themeEvents := client.CreateTheme(name, zipLocation)
+	mergeEvents(eventLog, []chan phoenix.ThemeEvent{themeEvents})
 	if setThemeId {
 		AddConfiguration(directory, environment, clientForNewTheme.GetConfiguration())
 	}
 
 	os.Chdir(pwd)
-	return Download(clientForNewTheme, []string{})
+	done := Download(clientForNewTheme, []string{})
+
+	return done
 }
 
 func zipPath(version string) string {
 	return ThemeZipRoot + version + ".zip"
 }
 
-func zipPathForVersion(version string) string {
-	feed := downloadAtomFeed()
-	entry := findReleaseWith(feed, version)
-	return zipPath(entry.Title)
+func zipPathForVersion(version string) (string, error) {
+	if version == MasterBranch {
+		return zipPath(MasterBranch), nil
+	}
+
+	feed, err := downloadAtomFeed()
+	if err != nil {
+		return "", err
+	}
+
+	entry, err := findReleaseWith(feed, version)
+	if err != nil {
+		return "", err
+	}
+
+	return zipPath(entry.Title), nil
 }
 
-func downloadAtomFeed() phoenix.Feed {
+func downloadAtomFeed() (phoenix.Feed, error) {
 	resp, err := http.Get(TimberFeedPath)
 	if err != nil {
-		log.Fatal(err)
+		return phoenix.Feed{}, err
 	}
 	defer resp.Body.Close()
 
 	feed, err := phoenix.LoadFeed(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return phoenix.Feed{}, err
 	}
-	return feed
+	return feed, nil
 }
 
-func findReleaseWith(feed phoenix.Feed, version string) phoenix.Entry {
+func findReleaseWith(feed phoenix.Feed, version string) (phoenix.Entry, error) {
 	if version == LatestRelease {
-		return feed.LatestEntry()
+		return feed.LatestEntry(), nil
 	}
 	for _, entry := range feed.Entries {
 		if entry.Title == version {
-			return entry
+			return entry, nil
 		}
 	}
-	logAndDie(feed, version)
-	return phoenix.Entry{}
+	return phoenix.Entry{Title: "Invalid Feed"}, buildInvalidVersionError(feed, version)
 }
 
-func logAndDie(feed phoenix.Feed, version string) {
-	fmt.Println(phoenix.RedText("Invalid Timber Version: " + version))
-	fmt.Println("Available Versions Are:")
-	fmt.Println("  - master")
-	fmt.Println("  - latest")
+func buildInvalidVersionError(feed phoenix.Feed, version string) error {
+	buff := bytes.NewBuffer([]byte{})
+	buff.Write([]byte(phoenix.RedText("Invalid Timber Version: " + version)))
+	buff.Write([]byte("\nAvailable Versions Are:"))
+	buff.Write([]byte("\n  - master"))
+	buff.Write([]byte("\n  - latest"))
 	for _, entry := range feed.Entries {
-		fmt.Println("  - " + entry.Title)
+		buff.Write([]byte("\n  - " + entry.Title))
 	}
-	os.Exit(1)
+	return errors.New(buff.String())
 }

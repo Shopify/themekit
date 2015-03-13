@@ -27,12 +27,14 @@ type APIAssetEvent struct {
 	EventType string `json:"event_type"`
 	Code      int    `json:"status_code"`
 	err       error  `json:"error,omitempty"`
+	etype     string `json:"type"`
 }
 
 func NewAPIAssetEvent(r *http.Response, e AssetEvent, err error) APIAssetEvent {
 	event := APIAssetEvent{
 		AssetKey:  e.Asset().Key,
 		EventType: e.Type().String(),
+		etype:     "APIAssetEvent",
 	}
 	if err != nil {
 		event.Host = "Host Unknown"
@@ -82,13 +84,14 @@ type APIThemeEvent struct {
 	Code        int    `json:"status_code"`
 	Previewable bool   `json:"previewable,omitempty"`
 	err         error  `json:"error,omitempty"`
+	etype       string `json:"type"`
 }
 
 func NewAPIThemeEvent(r *http.Response, err error) APIThemeEvent {
 	if err != nil {
-		return APIThemeEvent{Host: "Unknown Host", Code: ThemeEventErrorCode, err: err}
+		return APIThemeEvent{Host: "Unknown Host", Code: ThemeEventErrorCode, err: err, etype: "APIThemeEvent"}
 	}
-	event := APIThemeEvent{Host: r.Request.URL.Host, Code: r.StatusCode}
+	event := APIThemeEvent{Host: r.Request.URL.Host, Code: r.StatusCode, etype: "APIThemeEvent"}
 
 	if event.Successful() {
 		populateThemeData(&event, r)
@@ -100,7 +103,7 @@ func NewAPIThemeEvent(r *http.Response, err error) APIThemeEvent {
 
 func (t APIThemeEvent) String() string {
 	if t.Successful() {
-		return fmt.Sprintf("[%d]Theme called '%s' with id of %d for shop %s", t.Code, t.ThemeName, t.ThemeId, t.Host)
+		return fmt.Sprintf("[%d]Modifications made to theme '%s' with id of %d on shop %s", t.Code, t.ThemeName, t.ThemeId, t.Host)
 	} else {
 		return fmt.Sprintf("[%d]Encoutered error with request to %s\n\t%s", t.Code, t.Host, t.err)
 	}

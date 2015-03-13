@@ -1,10 +1,17 @@
 package commands
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/csaunders/phoenix"
 )
+
+type BasicOptions struct {
+	Client    phoenix.ThemeClient
+	Filenames []string
+	EventLog  chan phoenix.ThemeEvent
+}
 
 func extractString(s *string, key string, args map[string]interface{}) {
 	var ok bool
@@ -16,6 +23,16 @@ func extractString(s *string, key string, args map[string]interface{}) {
 		errMsg := fmt.Sprintf("%s is not of valid type", key)
 		phoenix.NotifyError(errors.New(errMsg))
 	}
+}
+
+func extractStringSlice(key string, args map[string]interface{}) []string {
+	var ok bool
+	var strs []string
+	if strs, ok = args[key].([]string); !ok {
+		errMsg := fmt.Sprintf("%s is not of valid type", key)
+		phoenix.NotifyError(errors.New(errMsg))
+	}
+	return strs
 }
 
 func extractInt(s *int, key string, args map[string]interface{}) {
@@ -69,6 +86,60 @@ func drainErrors(errs chan error) {
 	for {
 		if err := <-errs; err != nil {
 			phoenix.NotifyError(err)
+		} else {
+			break
 		}
 	}
+}
+
+func mergeEvents(dest chan phoenix.ThemeEvent, chans []chan phoenix.ThemeEvent) {
+	go func() {
+		for _, ch := range chans {
+			var ok = true
+			for ok {
+				if ev, ok := <-ch; ok {
+					dest <- ev
+				}
+			}
+		}
+	}()
+}
+
+func logEvent(event phoenix.ThemeEvent, eventLog chan phoenix.ThemeEvent) {
+	go func() {
+		eventLog <- event
+	}()
+}
+
+type basicEvent struct {
+	Formatter func(b basicEvent) string
+	EventType string `json:"event_type"`
+	Target    string `json:"target"`
+	Title     string `json:"title"`
+	etype     string `json:"type"`
+}
+
+func message(content string) phoenix.ThemeEvent {
+	return basicEvent{
+		Formatter: func(b basicEvent) string { return content },
+		EventType: "message",
+		Title:     "Notice",
+		etype:     "basicEvent",
+	}
+}
+
+func (b basicEvent) String() string {
+	return b.Formatter(b)
+}
+
+func (b basicEvent) Successful() bool {
+	return true
+}
+
+func (b basicEvent) Error() error {
+	return nil
+}
+
+func (b basicEvent) AsJSON() ([]byte, error) {
+	return json.Marshal(b)
 }

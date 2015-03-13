@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"github.com/csaunders/phoenix"
 )
 
@@ -11,13 +10,8 @@ func ReplaceCommand(args map[string]interface{}) chan bool {
 
 func Replace(client phoenix.ThemeClient, filenames []string) chan bool {
 	events := make(chan phoenix.AssetEvent)
-	done, messages := client.Process(events)
+	done, _ := client.Process(events)
 
-	go func() {
-		for {
-			fmt.Println(<-messages)
-		}
-	}()
 	assets, errs := assetList(client, filenames)
 	go drainErrors(errs)
 	go removeAndUpload(assets, events)
