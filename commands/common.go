@@ -13,6 +13,13 @@ type BasicOptions struct {
 	EventLog  chan phoenix.ThemeEvent
 }
 
+func (bo *BasicOptions) getEventLog() chan phoenix.ThemeEvent {
+	if bo.EventLog == nil {
+		bo.EventLog = make(chan phoenix.ThemeEvent)
+	}
+	return bo.EventLog
+}
+
 func extractString(s *string, key string, args map[string]interface{}) {
 	var ok bool
 	if args[key] == nil {
@@ -68,6 +75,22 @@ func extractThemeClient(t *phoenix.ThemeClient, args map[string]interface{}) {
 	if *t, ok = args["themeClient"].(phoenix.ThemeClient); !ok {
 		phoenix.NotifyError(errors.New("themeClient is not of a valid type"))
 	}
+}
+
+func extractEventLog(el *chan phoenix.ThemeEvent, args map[string]interface{}) {
+	var ok bool
+
+	if *el, ok = args["eventLog"].(chan phoenix.ThemeEvent); !ok {
+		phoenix.NotifyError(errors.New("eventLog is not of a valid type"))
+	}
+}
+
+func extractBasicOptions(args map[string]interface{}) BasicOptions {
+	options := BasicOptions{}
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+	options.Filenames = extractStringSlice("filenames", args)
+	return options
 }
 
 func toClientAndFilesAsync(args map[string]interface{}, fn func(phoenix.ThemeClient, []string) chan bool) chan bool {

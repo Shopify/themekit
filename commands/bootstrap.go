@@ -15,57 +15,68 @@ const (
 	TimberFeedPath = "https://github.com/Shopify/Timber/releases.atom"
 )
 
-func BootstrapCommand(args map[string]interface{}) chan bool {
-	var client phoenix.ThemeClient
-	var version, dir, env, prefix string
-	var setThemeId bool
-	extractString(&version, "version", args)
-	extractString(&dir, "directory", args)
-	extractString(&env, "environment", args)
-	extractString(&prefix, "prefix", args)
-	extractBool(&setThemeId, "setThemeId", args)
-	extractThemeClient(&client, args)
-
-	return Bootstrap(client, prefix, version, dir, env, setThemeId)
+type BootstrapOptions struct {
+	BasicOptions
+	Version     string
+	Directory   string
+	Environment string
+	Prefix      string
+	SetThemeId  bool
 }
 
-func Bootstrap(client phoenix.ThemeClient, prefix, version, directory, environment string, setThemeId bool) chan bool {
+func BootstrapCommand(args map[string]interface{}) chan bool {
+	options := BootstrapOptions{}
+
+	extractString(&options.Version, "version", args)
+	extractString(&options.Directory, "directory", args)
+	extractString(&options.Environment, "environment", args)
+	extractString(&options.Prefix, "prefix", args)
+	extractBool(&options.SetThemeId, "setThemeId", args)
+	extractThemeClient(&options.Client, args)
+
+	return Bootstrap(options)
+}
+
+func Bootstrap(options BootstrapOptions) chan bool {
 	done := make(chan bool)
-	eventLog := make(chan phoenix.ThemeEvent)
 	go func() {
-		doneCh := doBootstrap(client, prefix, version, directory, environment, setThemeId, eventLog)
+		doneCh := doBootstrap(options)
 		done <- <-doneCh
 	}()
 	return done
 }
 
-func doBootstrap(client phoenix.ThemeClient, prefix, version, directory, environment string, setThemeId bool, eventLog chan phoenix.ThemeEvent) chan bool {
+func doBootstrap(options BootstrapOptions) chan bool {
 	pwd, _ := os.Getwd()
-	if pwd != directory {
-		os.Chdir(directory)
+	if pwd != options.Directory {
+		os.Chdir(options.Directory)
 	}
 
-	zipLocation, err := zipPathForVersion(version)
+	zipLocation, err := zipPathForVersion(options.Version)
 	if err != nil {
 		phoenix.NotifyError(err)
 		done := make(chan bool)
 		close(done)
-		close(eventLog)
 		return done
 	}
 
-	name := "Timber-" + version
-	if len(prefix) > 0 {
-		name = prefix + "-" + name
+	name := "Timber-" + options.Version
+	if len(options.Prefix) > 0 {
+		name = options.Prefix + "-" + name
 	}
-	clientForNewTheme, themeEvents := client.CreateTheme(name, zipLocation)
-	mergeEvents(eventLog, []chan phoenix.ThemeEvent{themeEvents})
-	if setThemeId {
-		AddConfiguration(directory, environment, clientForNewTheme.GetConfiguration())
+	clientForNewTheme, themeEvents := options.Client.CreateTheme(name, zipLocation)
+	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{themeEvents})
+	if options.SetThemeId {
+		AddConfiguration(options.Directory, options.Environment, clientForNewTheme.GetConfiguration())
 	}
 
 	os.Chdir(pwd)
-	done := Download(clientForNewTheme, []string{})
+
+	downloadOptions := DownloadOptions{}
+	downloadOptions.Client = clientForNewTheme
+	downloadOptions.EventLog = options.getEventLog()
+
+	done := Download(downloadOptions)
 
 	return done
 }

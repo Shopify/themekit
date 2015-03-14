@@ -1,40 +1,38 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"github.com/csaunders/phoenix"
 	"os"
 )
 
-func WatchCommand(args map[string]interface{}) chan bool {
-	var ok bool
-	var client phoenix.ThemeClient
-	var dir string
-
-	if client, ok = args["themeClient"].(phoenix.ThemeClient); !ok {
-		phoenix.NotifyError(errors.New("themeClient is not of valid type"))
-	}
-
-	if args["directory"] == nil {
-		dir, _ = os.Getwd()
-	} else if dir, ok = args["directory"].(string); !ok {
-		phoenix.NotifyError(errors.New("directory is not of valid type"))
-	}
-
-	return Watch(client, dir)
+type WatchOptions struct {
+	BasicOptions
+	Directory string
 }
 
-func Watch(client phoenix.ThemeClient, dir string) chan bool {
+func WatchCommand(args map[string]interface{}) chan bool {
+	currentDir, _ := os.Getwd()
+
+	options := WatchOptions{Directory: currentDir}
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+	extractString(&options.Directory, "directory", args)
+
+	return Watch(options)
+}
+
+func Watch(options WatchOptions) chan bool {
 	done := make(chan bool)
-	eventLog := make(chan phoenix.ThemeEvent)
+	eventLog := options.getEventLog()
+	client := options.Client
 
 	config := client.GetConfiguration()
 
 	bucket := phoenix.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
 	bucket.TopUp()
 	foreman := phoenix.NewForeman(bucket)
-	watcher := constructFileWatcher(dir, config)
+	watcher := constructFileWatcher(options.Directory, config)
 	foreman.JobQueue = watcher
 	foreman.IssueWork()
 

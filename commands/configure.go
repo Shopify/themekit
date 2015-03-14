@@ -24,7 +24,7 @@ func (co ConfigurationOptions) areInvalid() bool {
 	return co.Domain == "" || co.AccessToken == ""
 }
 
-func (co ConfigurationOptions) buildConfiguration() phoenix.Configuration {
+func (co ConfigurationOptions) defaultConfigurationOptions() phoenix.Configuration {
 	return phoenix.Configuration{
 		Domain:      co.Domain,
 		AccessToken: co.AccessToken,
@@ -48,10 +48,9 @@ func (co ConfigurationOptions) configurationErrors() error {
 	return nil
 }
 
-func ConfigureCommand(args map[string]interface{}) chan bool {
+func defaultOptions() ConfigurationOptions {
 	currentDir, _ := os.Getwd()
-
-	options := ConfigurationOptions{
+	return ConfigurationOptions{
 		Domain:      "",
 		AccessToken: "",
 		Directory:   currentDir,
@@ -59,6 +58,10 @@ func ConfigureCommand(args map[string]interface{}) chan bool {
 		BucketSize:  phoenix.DefaultBucketSize,
 		RefillRate:  phoenix.DefaultRefillRate,
 	}
+}
+
+func ConfigureCommand(args map[string]interface{}) chan bool {
+	options := defaultOptions()
 
 	extractString(&options.Environment, "environment", args)
 	extractString(&options.Directory, "directory", args)
@@ -66,6 +69,7 @@ func ConfigureCommand(args map[string]interface{}) chan bool {
 	extractString(&options.AccessToken, "access_token", args)
 	extractInt(&options.BucketSize, "bucket_size", args)
 	extractInt(&options.RefillRate, "refill_rate", args)
+	extractEventLog(&options.EventLog, args)
 
 	if options.areInvalid() {
 		phoenix.NotifyError(options.configurationErrors())
@@ -78,7 +82,7 @@ func ConfigureCommand(args map[string]interface{}) chan bool {
 }
 
 func Configure(options ConfigurationOptions) {
-	config := options.buildConfiguration()
+	config := options.defaultConfigurationOptions()
 	AddConfiguration(options.Directory, options.Environment, config)
 }
 

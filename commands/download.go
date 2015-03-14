@@ -9,20 +9,29 @@ import (
 	"path/filepath"
 )
 
-func DownloadCommand(args map[string]interface{}) chan bool {
-	return toClientAndFilesAsync(args, Download)
+type DownloadOptions struct {
+	BasicOptions
 }
 
-func Download(client phoenix.ThemeClient, filenames []string) (done chan bool) {
-	done = make(chan bool)
-	eventLog := make(chan phoenix.ThemeEvent)
+func DownloadCommand(args map[string]interface{}) chan bool {
+	options := DownloadOptions{}
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+	options.Filenames = extractStringSlice("filenames", args)
 
-	if len(filenames) <= 0 {
-		assets, errs := client.AssetList()
+	return Download(options)
+}
+
+func Download(options DownloadOptions) (done chan bool) {
+	done = make(chan bool)
+	eventLog := options.getEventLog()
+
+	if len(options.Filenames) <= 0 {
+		assets, errs := options.Client.AssetList()
 		go drainErrors(errs)
 		go downloadAllFiles(assets, done, eventLog)
 	} else {
-		go downloadFiles(client.Asset, filenames, done, eventLog)
+		go downloadFiles(options.Client.Asset, options.Filenames, done, eventLog)
 	}
 
 	return done
