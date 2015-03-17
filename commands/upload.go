@@ -5,15 +5,25 @@ import (
 	"os"
 )
 
-func UploadCommand(args map[string]interface{}) chan bool {
-	return toClientAndFilesAsync(args, Upload)
+type UploadOptions struct {
+	BasicOptions
 }
 
-func Upload(client phoenix.ThemeClient, filenames []string) chan bool {
-	files := make(chan phoenix.AssetEvent)
-	go readAndPrepareFiles(filenames, files)
+func UploadCommand(args map[string]interface{}) chan bool {
+	options := ReplaceOptions{}
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+	options.Filenames = extractStringSlice("filenames", args)
 
-	done, _ := client.Process(files)
+	return Upload(options)
+}
+
+func Upload(options ReplaceOptions) chan bool {
+	files := make(chan phoenix.AssetEvent)
+	go readAndPrepareFiles(options.Filenames, files)
+
+	done, events := options.Client.Process(files)
+	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{events})
 	return done
 }
 

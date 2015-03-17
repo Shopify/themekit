@@ -33,6 +33,7 @@ func BootstrapCommand(args map[string]interface{}) chan bool {
 	extractString(&options.Prefix, "prefix", args)
 	extractBool(&options.SetThemeId, "setThemeId", args)
 	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
 
 	return Bootstrap(options)
 }

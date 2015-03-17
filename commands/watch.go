@@ -55,7 +55,11 @@ func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.The
 				Target:    asset.Asset().Key,
 				etype:     "fsevent",
 				Formatter: func(b basicEvent) string {
-					return fmt.Sprintf("Received %s event on '%s'", b.EventType, b.Target)
+					return fmt.Sprintf(
+						"Received %s event on %s",
+						phoenix.GreenText(b.EventType),
+						phoenix.BlueText(b.Target),
+					)
 				},
 			}
 			logEvent(workerEvent, eventLog)

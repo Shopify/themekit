@@ -4,15 +4,25 @@ import (
 	"github.com/csaunders/phoenix"
 )
 
-func ReplaceCommand(args map[string]interface{}) chan bool {
-	return toClientAndFilesAsync(args, Replace)
+type ReplaceOptions struct {
+	BasicOptions
 }
 
-func Replace(client phoenix.ThemeClient, filenames []string) chan bool {
-	events := make(chan phoenix.AssetEvent)
-	done, _ := client.Process(events)
+func ReplaceCommand(args map[string]interface{}) chan bool {
+	options := ReplaceOptions{}
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+	options.Filenames = extractStringSlice("filenames", args)
 
-	assets, errs := assetList(client, filenames)
+	return Replace(options)
+}
+
+func Replace(options ReplaceOptions) chan bool {
+	events := make(chan phoenix.AssetEvent)
+	done, logs := options.Client.Process(events)
+	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{logs})
+
+	assets, errs := assetList(options.Client, options.Filenames)
 	go drainErrors(errs)
 	go removeAndUpload(assets, events)
 

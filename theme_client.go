@@ -106,7 +106,7 @@ func (t ThemeClient) Asset(filename string) (Asset, error) {
 	return asset["asset"], nil
 }
 
-func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient, log chan ThemeEvent) {
+func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan ThemeEvent) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", t.config.AdminUrl())
@@ -114,7 +114,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient, log 
 		"theme": Theme{Name: name, Source: zipLocation, Role: "unpublished"},
 	}
 
-	log = make(chan ThemeEvent)
+	log := make(chan ThemeEvent)
 	logEvent := func(t ThemeEvent) {
 		log <- t
 	}
@@ -126,10 +126,10 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient, log 
 		for retries < CreateThemeMaxRetries && !ready {
 			if themeEvent = t.sendData("POST", path, data); !themeEvent.Successful() {
 				retries++
-				go logEvent(themeEvent)
 			} else {
 				ready = true
 			}
+			go logEvent(themeEvent)
 		}
 		if retries >= CreateThemeMaxRetries {
 			err := errors.New(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
@@ -137,8 +137,6 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (tc ThemeClient, log 
 		}
 		return
 	}()
-
-	go logEvent(themeEvent)
 
 	go func() {
 		for !t.isDoneProcessing(themeEvent.ThemeId) {

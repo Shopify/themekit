@@ -114,7 +114,7 @@ func writeToDisk(asset phoenix.Asset, eventLog chan phoenix.ThemeEvent) {
 			Target:    filename,
 			etype:     "fsevent",
 			Formatter: func(b basicEvent) string {
-				return fmt.Sprintf("Successfully wrote %s to disk", b.Target)
+				return phoenix.GreenText(fmt.Sprintf("Successfully wrote %s to disk", b.Target))
 			},
 		}
 		logEvent(event, eventLog)

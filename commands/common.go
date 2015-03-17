@@ -124,6 +124,7 @@ func mergeEvents(dest chan phoenix.ThemeEvent, chans []chan phoenix.ThemeEvent) 
 					dest <- ev
 				}
 			}
+			close(ch)
 		}
 	}()
 }
