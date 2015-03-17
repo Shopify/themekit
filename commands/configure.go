@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"github.com/csaunders/phoenix"
 	"io/ioutil"
@@ -9,32 +10,80 @@ import (
 	"strings"
 )
 
-func ConfigureCommand(args map[string]interface{}) (done chan bool) {
-	currentDir, _ := os.Getwd()
-	environment := phoenix.DefaultEnvironment
-	var dir, domain, accessToken string = currentDir, "", ""
-	var bucketSize, refillRate int = phoenix.DefaultBucketSize, phoenix.DefaultRefillRate
-
-	extractString(&environment, "environment", args)
-	extractString(&dir, "directory", args)
-	extractString(&domain, "domain", args)
-	extractString(&accessToken, "access_token", args)
-	extractInt(&bucketSize, "bucket_size", args)
-	extractInt(&refillRate, "refill_rate", args)
-
-	if domain == "" || accessToken == "" {
-		reportArgumentsError(dir, domain, accessToken)
-	}
-
-	Configure(dir, environment, domain, accessToken, bucketSize, refillRate)
-	done = make(chan bool)
-	close(done)
-	return
+type ConfigurationOptions struct {
+	BasicOptions
+	Directory   string
+	Environment string
+	Domain      string
+	AccessToken string
+	BucketSize  int
+	RefillRate  int
 }
 
-func Configure(dir, environment, domain, accessToken string, bucketSize, refillRate int) {
-	config := phoenix.Configuration{Domain: domain, AccessToken: accessToken, BucketSize: bucketSize, RefillRate: refillRate}
-	AddConfiguration(dir, environment, config)
+func (co ConfigurationOptions) areInvalid() bool {
+	return co.Domain == "" || co.AccessToken == ""
+}
+
+func (co ConfigurationOptions) defaultConfigurationOptions() phoenix.Configuration {
+	return phoenix.Configuration{
+		Domain:      co.Domain,
+		AccessToken: co.AccessToken,
+		BucketSize:  co.BucketSize,
+		RefillRate:  co.RefillRate,
+	}
+}
+
+func (co ConfigurationOptions) configurationErrors() error {
+	var errs = []string{}
+	if len(co.Domain) <= 0 {
+		errs = append(errs, "\t-domain cannot be blank")
+	}
+	if len(co.AccessToken) <= 0 {
+		errs = append(errs, "\t-access_token cannot be blank")
+	}
+	if len(errs) > 0 {
+		fullPath := filepath.Join(co.Directory, "config.yml")
+		return errors.New(fmt.Sprintf("Cannot create %s!\nErrors:\n%s", fullPath, strings.Join(errs, "\n")))
+	}
+	return nil
+}
+
+func defaultOptions() ConfigurationOptions {
+	currentDir, _ := os.Getwd()
+	return ConfigurationOptions{
+		Domain:      "",
+		AccessToken: "",
+		Directory:   currentDir,
+		Environment: phoenix.DefaultEnvironment,
+		BucketSize:  phoenix.DefaultBucketSize,
+		RefillRate:  phoenix.DefaultRefillRate,
+	}
+}
+
+func ConfigureCommand(args map[string]interface{}) chan bool {
+	options := defaultOptions()
+
+	extractString(&options.Environment, "environment", args)
+	extractString(&options.Directory, "directory", args)
+	extractString(&options.Domain, "domain", args)
+	extractString(&options.AccessToken, "access_token", args)
+	extractInt(&options.BucketSize, "bucket_size", args)
+	extractInt(&options.RefillRate, "refill_rate", args)
+	extractEventLog(&options.EventLog, args)
+
+	if options.areInvalid() {
+		phoenix.NotifyError(options.configurationErrors())
+	}
+
+	Configure(options)
+	done := make(chan bool)
+	close(done)
+	return done
+}
+
+func Configure(options ConfigurationOptions) {
+	config := options.defaultConfigurationOptions()
+	AddConfiguration(options.Directory, options.Environment, config)
 }
 
 func AddConfiguration(dir, environment string, config phoenix.Configuration) {
@@ -48,14 +97,16 @@ func AddConfiguration(dir, environment string, config phoenix.Configuration) {
 	}
 }
 
-func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool) {
+func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool, log chan phoenix.ThemeEvent) {
 	dir, _ := os.Getwd()
 	extractString(&dir, "directory", args)
 
 	MigrateConfiguration(dir)
 
 	done = make(chan bool)
+	log = make(chan phoenix.ThemeEvent)
 	close(done)
+	close(log)
 	return
 }
 
@@ -80,20 +131,4 @@ func loadOrInitializeEnvironment(location string) phoenix.Environments {
 		env[phoenix.DefaultEnvironment] = conf
 	}
 	return env
-}
-
-func reportArgumentsError(directory, domain, accessToken string) {
-	var errors = []string{}
-	if len(domain) <= 0 {
-		errors = append(errors, "\t-domain cannot be blank")
-	}
-	if len(accessToken) <= 0 {
-		errors = append(errors, "\t-access_token cannot be blank")
-	}
-	if len(errors) > 0 {
-		fullPath := filepath.Join(directory, "config.yml")
-		errorMessage := phoenix.RedText(fmt.Sprintf("Cannot create %s!\nErrors:\n%s", fullPath, strings.Join(errors, "\n")))
-		fmt.Println(errorMessage)
-		os.Exit(1)
-	}
 }

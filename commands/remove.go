@@ -6,17 +6,27 @@ import (
 	"os"
 )
 
-func RemoveCommand(args map[string]interface{}) chan bool {
-	return toClientAndFilesAsync(args, Remove)
+type RemoveOptions struct {
+	BasicOptions
 }
 
-func Remove(client phoenix.ThemeClient, filenames []string) (done chan bool) {
-	var messages chan phoenix.ThemeEvent
+func RemoveCommand(args map[string]interface{}) chan bool {
+	options := RemoveOptions{}
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+	options.Filenames = extractStringSlice("filenames", args)
+
+	return Remove(options)
+}
+
+func Remove(options RemoveOptions) chan bool {
 	events := make(chan phoenix.AssetEvent)
-	done, messages = client.Process(events)
+	done, logs := options.Client.Process(events)
+
+	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{logs})
 
 	go func() {
-		for _, filename := range filenames {
+		for _, filename := range options.Filenames {
 			asset := phoenix.Asset{Key: filename}
 			events <- phoenix.NewRemovalEvent(asset)
 			removeFile(filename)
@@ -24,15 +34,6 @@ func Remove(client phoenix.ThemeClient, filenames []string) (done chan bool) {
 		close(events)
 	}()
 
-	go func() {
-		for {
-			message, more := <-messages
-			if !more {
-				return
-			}
-			fmt.Println(message)
-		}
-	}()
 	return done
 }
 

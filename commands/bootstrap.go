@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"fmt"
+	"bytes"
+	"errors"
 	"github.com/csaunders/phoenix"
-	"log"
 	"net/http"
 	"os"
 )
@@ -15,90 +15,129 @@ const (
 	TimberFeedPath = "https://github.com/Shopify/Timber/releases.atom"
 )
 
-func BootstrapCommand(args map[string]interface{}) (done chan bool) {
-	var client phoenix.ThemeClient
-	var version, dir, env, prefix string
-	var setThemeId bool
-	extractString(&version, "version", args)
-	extractString(&dir, "directory", args)
-	extractString(&env, "environment", args)
-	extractString(&prefix, "prefix", args)
-	extractBool(&setThemeId, "setThemeId", args)
-	extractThemeClient(&client, args)
-
-	return Bootstrap(client, prefix, version, dir, env, setThemeId)
+type BootstrapOptions struct {
+	BasicOptions
+	Version     string
+	Directory   string
+	Environment string
+	Prefix      string
+	SetThemeId  bool
 }
 
-func Bootstrap(client phoenix.ThemeClient, prefix, version, directory, environment string, setThemeId bool) (done chan bool) {
-	var zipLocation string
+func BootstrapCommand(args map[string]interface{}) chan bool {
+	options := BootstrapOptions{}
 
+	extractString(&options.Version, "version", args)
+	extractString(&options.Directory, "directory", args)
+	extractString(&options.Environment, "environment", args)
+	extractString(&options.Prefix, "prefix", args)
+	extractBool(&options.SetThemeId, "setThemeId", args)
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+
+	return Bootstrap(options)
+}
+
+func Bootstrap(options BootstrapOptions) chan bool {
+	done := make(chan bool)
+	go func() {
+		doneCh := doBootstrap(options)
+		done <- <-doneCh
+	}()
+	return done
+}
+
+func doBootstrap(options BootstrapOptions) chan bool {
 	pwd, _ := os.Getwd()
-	if pwd != directory {
-		os.Chdir(directory)
+	if pwd != options.Directory {
+		os.Chdir(options.Directory)
 	}
 
-	if version == MasterBranch {
-		zipLocation = zipPath(MasterBranch)
-	} else {
-		zipLocation = zipPathForVersion(version)
+	zipLocation, err := zipPathForVersion(options.Version)
+	if err != nil {
+		phoenix.NotifyError(err)
+		done := make(chan bool)
+		close(done)
+		return done
 	}
-	name := "Timber-" + version
-	if len(prefix) > 0 {
-		name = prefix + "-" + name
+
+	name := "Timber-" + options.Version
+	if len(options.Prefix) > 0 {
+		name = options.Prefix + "-" + name
 	}
-	clientForNewTheme := client.CreateTheme(name, zipLocation)
-	if setThemeId {
-		AddConfiguration(directory, environment, clientForNewTheme.GetConfiguration())
+	clientForNewTheme, themeEvents := options.Client.CreateTheme(name, zipLocation)
+	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{themeEvents})
+	if options.SetThemeId {
+		AddConfiguration(options.Directory, options.Environment, clientForNewTheme.GetConfiguration())
 	}
 
 	os.Chdir(pwd)
-	return Download(clientForNewTheme, []string{})
+
+	downloadOptions := DownloadOptions{}
+	downloadOptions.Client = clientForNewTheme
+	downloadOptions.EventLog = options.getEventLog()
+
+	done := Download(downloadOptions)
+
+	return done
 }
 
 func zipPath(version string) string {
 	return ThemeZipRoot + version + ".zip"
 }
 
-func zipPathForVersion(version string) string {
-	feed := downloadAtomFeed()
-	entry := findReleaseWith(feed, version)
-	return zipPath(entry.Title)
+func zipPathForVersion(version string) (string, error) {
+	if version == MasterBranch {
+		return zipPath(MasterBranch), nil
+	}
+
+	feed, err := downloadAtomFeed()
+	if err != nil {
+		return "", err
+	}
+
+	entry, err := findReleaseWith(feed, version)
+	if err != nil {
+		return "", err
+	}
+
+	return zipPath(entry.Title), nil
 }
 
-func downloadAtomFeed() phoenix.Feed {
+func downloadAtomFeed() (phoenix.Feed, error) {
 	resp, err := http.Get(TimberFeedPath)
 	if err != nil {
-		log.Fatal(err)
+		return phoenix.Feed{}, err
 	}
 	defer resp.Body.Close()
 
 	feed, err := phoenix.LoadFeed(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return phoenix.Feed{}, err
 	}
-	return feed
+	return feed, nil
 }
 
-func findReleaseWith(feed phoenix.Feed, version string) phoenix.Entry {
+func findReleaseWith(feed phoenix.Feed, version string) (phoenix.Entry, error) {
 	if version == LatestRelease {
-		return feed.LatestEntry()
+		return feed.LatestEntry(), nil
 	}
 	for _, entry := range feed.Entries {
 		if entry.Title == version {
-			return entry
+			return entry, nil
 		}
 	}
-	logAndDie(feed, version)
-	return phoenix.Entry{}
+	return phoenix.Entry{Title: "Invalid Feed"}, buildInvalidVersionError(feed, version)
 }
 
-func logAndDie(feed phoenix.Feed, version string) {
-	fmt.Println(phoenix.RedText("Invalid Timber Version: " + version))
-	fmt.Println("Available Versions Are:")
-	fmt.Println("  - master")
-	fmt.Println("  - latest")
+func buildInvalidVersionError(feed phoenix.Feed, version string) error {
+	buff := bytes.NewBuffer([]byte{})
+	buff.Write([]byte(phoenix.RedText("Invalid Timber Version: " + version)))
+	buff.Write([]byte("\nAvailable Versions Are:"))
+	buff.Write([]byte("\n  - master"))
+	buff.Write([]byte("\n  - latest"))
 	for _, entry := range feed.Entries {
-		fmt.Println("  - " + entry.Title)
+		buff.Write([]byte("\n  - " + entry.Title))
 	}
-	os.Exit(1)
+	return errors.New(buff.String())
 }

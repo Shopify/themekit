@@ -2,36 +2,46 @@ package commands
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/csaunders/phoenix"
-	"log"
 	"os"
 	"path/filepath"
 )
 
-func DownloadCommand(args map[string]interface{}) chan bool {
-	return toClientAndFilesAsync(args, Download)
+type DownloadOptions struct {
+	BasicOptions
 }
 
-func Download(client phoenix.ThemeClient, filenames []string) (done chan bool) {
-	done = make(chan bool)
+func DownloadCommand(args map[string]interface{}) chan bool {
+	options := DownloadOptions{}
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+	options.Filenames = extractStringSlice("filenames", args)
 
-	if len(filenames) <= 0 {
-		assets, errs := client.AssetList()
+	return Download(options)
+}
+
+func Download(options DownloadOptions) (done chan bool) {
+	done = make(chan bool)
+	eventLog := options.getEventLog()
+
+	if len(options.Filenames) <= 0 {
+		assets, errs := options.Client.AssetList()
 		go drainErrors(errs)
-		go downloadAllFiles(assets, done)
+		go downloadAllFiles(assets, done, eventLog)
 	} else {
-		go downloadFiles(client.Asset, filenames, done)
+		go downloadFiles(options.Client.Asset, options.Filenames, done, eventLog)
 	}
 
 	return done
 }
 
-func downloadAllFiles(assets chan phoenix.Asset, done chan bool) {
+func downloadAllFiles(assets chan phoenix.Asset, done chan bool, eventLog chan phoenix.ThemeEvent) {
 	for {
 		asset, more := <-assets
 		if more {
-			writeToDisk(asset)
+			writeToDisk(asset, eventLog)
 		} else {
 			done <- true
 			return
@@ -39,41 +49,45 @@ func downloadAllFiles(assets chan phoenix.Asset, done chan bool) {
 	}
 }
 
-func downloadFiles(retrievalFunction phoenix.AssetRetrieval, filenames []string, done chan bool) {
+func downloadFiles(retrievalFunction phoenix.AssetRetrieval, filenames []string, done chan bool, eventLog chan phoenix.ThemeEvent) {
 	for _, filename := range filenames {
 		if asset, err := retrievalFunction(filename); err != nil {
 			phoenix.NotifyError(err)
 		} else {
-			writeToDisk(asset)
+			writeToDisk(asset, eventLog)
 		}
 	}
 	done <- true
 	return
 }
 
-func writeToDisk(asset phoenix.Asset) {
+func writeToDisk(asset phoenix.Asset, eventLog chan phoenix.ThemeEvent) {
 	dir, err := os.Getwd()
 	if err != nil {
-		log.Fatal("Could not get current working directory ", err)
+		phoenix.NotifyError(err)
+		return
 	}
 
 	perms, err := os.Stat(dir)
 	if err != nil {
-		log.Fatal("Could not get directory information ", err)
+		phoenix.NotifyError(err)
+		return
 	}
 
 	filename := fmt.Sprintf("%s/%s", dir, asset.Key)
 	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
 	if err != nil {
-		log.Fatal("Could not create parent directory ", err)
+		phoenix.NotifyError(err)
+		return
 	}
 
 	file, err := os.Create(filename)
+	if err != nil {
+		phoenix.NotifyError(err)
+		return
+	}
 	defer file.Sync()
 	defer file.Close()
-	if err != nil {
-		log.Fatal("Could not create ", filename, err)
-	}
 
 	var data []byte
 	switch {
@@ -82,7 +96,7 @@ func writeToDisk(asset phoenix.Asset) {
 	case len(asset.Attachment) > 0:
 		data, err = base64.StdEncoding.DecodeString(asset.Attachment)
 		if err != nil {
-			fmt.Println(fmt.Sprintf("Could not decode %s. error: %s", asset.Key, err))
+			phoenix.NotifyError(errors.New(fmt.Sprintf("Could not decode %s. error: %s", asset.Key, err)))
 			return
 		}
 	}
@@ -92,6 +106,17 @@ func writeToDisk(asset phoenix.Asset) {
 	}
 
 	if err != nil {
-		log.Fatal("Could not write file to disk ", err)
+		phoenix.NotifyError(err)
+	} else {
+		event := basicEvent{
+			Title:     "FS Event",
+			EventType: "Write",
+			Target:    filename,
+			etype:     "fsevent",
+			Formatter: func(b basicEvent) string {
+				return phoenix.GreenText(fmt.Sprintf("Successfully wrote %s to disk", b.Target))
+			},
+		}
+		logEvent(event, eventLog)
 	}
 }

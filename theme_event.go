@@ -27,12 +27,14 @@ type APIAssetEvent struct {
 	EventType string `json:"event_type"`
 	Code      int    `json:"status_code"`
 	err       error  `json:"error,omitempty"`
+	etype     string `json:"type"`
 }
 
 func NewAPIAssetEvent(r *http.Response, e AssetEvent, err error) APIAssetEvent {
 	event := APIAssetEvent{
 		AssetKey:  e.Asset().Key,
 		EventType: e.Type().String(),
+		etype:     "APIAssetEvent",
 	}
 	if err != nil {
 		event.Host = "Host Unknown"
@@ -51,11 +53,23 @@ func NewAPIAssetEvent(r *http.Response, e AssetEvent, err error) APIAssetEvent {
 
 func (a APIAssetEvent) String() string {
 	if a.Successful() {
-		return fmt.Sprintf("Successfully performed %s operation for file %s to %s", a.EventType, BlueText(a.AssetKey), BlueText(a.Host))
+		return fmt.Sprintf(
+			"Successfully performed %s operation for file %s to %s",
+			GreenText(a.EventType),
+			BlueText(a.AssetKey),
+			YellowText(a.Host),
+		)
 	} else if a.Code == 422 {
-		return fmt.Sprintf("Could not upload %s:\n\t%s", a.AssetKey, a.err)
+		return RedText(fmt.Sprintf("Could not upload %s:\n\t%s", a.AssetKey, a.err))
 	} else {
-		return fmt.Sprintf("[%d]Could not perform %s to %s at %s\n\t%s", a.Code, YellowText(a.EventType), BlueText(a.AssetKey), BlueText(a.Host), a.err)
+		return fmt.Sprintf(
+			"[%s]Could not perform %s to %s at %s\n\t%s",
+			RedText(fmt.Sprintf("%d", a.Code)),
+			YellowText(a.EventType),
+			BlueText(a.AssetKey),
+			YellowText(a.Host),
+			a.err,
+		)
 	}
 }
 
@@ -82,13 +96,14 @@ type APIThemeEvent struct {
 	Code        int    `json:"status_code"`
 	Previewable bool   `json:"previewable,omitempty"`
 	err         error  `json:"error,omitempty"`
+	etype       string `json:"type"`
 }
 
 func NewAPIThemeEvent(r *http.Response, err error) APIThemeEvent {
 	if err != nil {
-		return APIThemeEvent{Host: "Unknown Host", Code: ThemeEventErrorCode, err: err}
+		return APIThemeEvent{Host: "Unknown Host", Code: ThemeEventErrorCode, err: err, etype: "APIThemeEvent"}
 	}
-	event := APIThemeEvent{Host: r.Request.URL.Host, Code: r.StatusCode}
+	event := APIThemeEvent{Host: r.Request.URL.Host, Code: r.StatusCode, etype: "APIThemeEvent"}
 
 	if event.Successful() {
 		populateThemeData(&event, r)
@@ -100,9 +115,20 @@ func NewAPIThemeEvent(r *http.Response, err error) APIThemeEvent {
 
 func (t APIThemeEvent) String() string {
 	if t.Successful() {
-		return fmt.Sprintf("[%d]Theme called '%s' with id of %d for shop %s", t.Code, t.ThemeName, t.ThemeId, t.Host)
+		return fmt.Sprintf(
+			"[%s]Modifications made to theme '%s' with id of %s on shop %s",
+			GreenText(fmt.Sprintf("%d", t.Code)),
+			BlueText(t.ThemeName),
+			BlueText(fmt.Sprintf("%d", t.ThemeId)),
+			YellowText(t.Host),
+		)
 	} else {
-		return fmt.Sprintf("[%d]Encoutered error with request to %s\n\t%s", t.Code, t.Host, t.err)
+		return fmt.Sprintf(
+			"[%s]Encoutered error with request to %s\n\t%s",
+			RedText(fmt.Sprintf("%d", t.Code)),
+			YellowText(t.Host),
+			t.err,
+		)
 	}
 }
 

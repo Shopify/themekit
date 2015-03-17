@@ -24,6 +24,10 @@ func BlueText(s string) string {
 	return fmt.Sprintf("\033[34m%s\033[0m", s)
 }
 
+func GreenText(s string) string {
+	return fmt.Sprintf("\033[32m%s\033[0m", s)
+}
+
 func TestFixture(name string) string {
 	path := fmt.Sprintf("fixtures/%s.json", name)
 	file, err := os.Open(path)

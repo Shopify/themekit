@@ -1,32 +1,30 @@
 package commands
 
 import (
-	"fmt"
 	"github.com/csaunders/phoenix"
-	"log"
 	"os"
 )
 
-func UploadCommand(args map[string]interface{}) chan bool {
-	return toClientAndFilesAsync(args, Upload)
+type UploadOptions struct {
+	BasicOptions
 }
 
-func Upload(client phoenix.ThemeClient, filenames []string) (done chan bool) {
+func UploadCommand(args map[string]interface{}) chan bool {
+	options := ReplaceOptions{}
+	extractThemeClient(&options.Client, args)
+	extractEventLog(&options.EventLog, args)
+	options.Filenames = extractStringSlice("filenames", args)
+
+	return Upload(options)
+}
+
+func Upload(options ReplaceOptions) chan bool {
 	files := make(chan phoenix.AssetEvent)
-	go readAndPrepareFiles(filenames, files)
+	go readAndPrepareFiles(options.Filenames, files)
 
-	done, messages := client.Process(files)
-	go func() {
-		for {
-			message, more := <-messages
-			if !more {
-				return
-			}
-			fmt.Println(message)
-		}
-	}()
-
-	return
+	done, events := options.Client.Process(files)
+	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{events})
+	return done
 }
 
 func readAndPrepareFiles(filenames []string, results chan phoenix.AssetEvent) {
@@ -35,7 +33,7 @@ func readAndPrepareFiles(filenames []string, results chan phoenix.AssetEvent) {
 		if err == nil {
 			results <- phoenix.NewUploadEvent(asset)
 		} else if err.Error() != "File is a directory" {
-			log.Panic(err)
+			phoenix.NotifyError(err)
 		}
 	}
 	close(results)
