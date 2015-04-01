@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= @config[:project_name] %> - <%= @item[:title] %></title>
+
+    <link href='http://fonts.googleapis.com/css?family=Muli' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" href="<%= @items['/stylesheet/'].path %>">
+    <link rel="stylesheet" href="<%= @items['/simplegrid/'].path %>">
+    <link rel="stylesheet" href="<%= @items['/github/'].path %>">
+  </head>
+  <body>
+    <header class="col-1-1">
+      <a class="header-link" href="/"><h1><%= @config[:project_name] %></h1></a>
+
+      <ul class="col-1-1 inline">
+        <li>
+          <a class="install" href="/install">Installation</a>
+        </li>
+
+        <li>
+          <a class="docs" href="/docs">Documentation</a>
+        </li>
+
+        <li>
+          <a class="contrib" href="<%= @config[:repository] %>">Contribute</a>
+        </li>
+
+        <li>
+          <a class="report" href="<%= @config[:repository] %>/issues">Report Issue</a>
+        </li>
+      </div>
+    </header>
+
+
+    <div class="container">
+      <%= yield %>
+    </div>
+  </body>
+</html>

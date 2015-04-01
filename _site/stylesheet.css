@@ -1,0 +1,89 @@
+* {
+  font-family: 'Muli', sans-serif;
+}
+
+code {
+  font-family: 'Source Code Pro', monospace;
+}
+
+header {
+  text-align: center;
+}
+
+header h1 {
+  font-size: 10em;
+  margin: 0;
+  line-height: 1em;
+  margin-top: 0.25em;
+}
+
+header ul {
+  font-size: 2em;
+}
+
+a.header-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+ul.inline li {
+  display: inline;
+  margin: 0 1em;
+  list-style: none;
+}
+
+.nostyle { list-style: none; }
+
+.inline a {
+  color: #616C66;
+  text-decoration: none;
+}
+
+.install:hover {
+  border-bottom: 5px solid #694E97;
+}
+
+.docs:hover {
+  border-bottom: 5px solid #707EC9;
+}
+
+.contrib:hover {
+  border-bottom: 5px solid #F5974A;
+}
+
+.report:hover {
+  border-bottom: 5px solid #F5534A;
+}
+
+.container {
+  width: 1020px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media only screen and (max-width: 767px) {
+  header h1 {
+    font-size: 5em;
+  }
+
+  ul.inline {
+    margin: 0;
+    padding: 0;
+  }
+  ul.inline li {
+    width: 100%;
+    display: block;
+    margin: 0;
+  }
+
+  .container {
+    width: 100%;
+    margin: 0;
+    padding: 1em;
+  }
+}
