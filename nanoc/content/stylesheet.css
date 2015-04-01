@@ -2,8 +2,26 @@
   font-family: 'Muli', sans-serif;
 }
 
-code {
+body {
+  margin-bottom: 2em;
+}
+
+pre {
+  overflow: scroll;
+  margin: 0 1.5em;
+  padding: 0.75em;
+  background-color: #dedede;
+}
+
+code *, code {
   font-family: 'Source Code Pro', monospace;
+  font-size: 15pt;
+  background-color: #dedede;
+}
+
+p code, li code {
+  font-size: inherit;
+  padding: 0.1em 0.2em;
 }
 
 header {
@@ -15,6 +33,25 @@ header h1 {
   margin: 0;
   line-height: 1em;
   margin-top: 0.25em;
+}
+
+h1 > a, h2 > a, h3 > a, h4 > a, h5 > a {
+  text-decoration: none;
+  color: inherit;
+}
+
+h1 > i, h2 > i, h3 > i, h4 > i, h5 > i {
+  display: block;
+  padding-left: 0.5em;
+  visibility: hidden;
+}
+
+h1:hover > i, h2:hover > i, h3:hover > i, h4:hover > i, h5:hover > i {
+  visibility: visible;
+}
+
+li {
+  padding-top: 0.5em;
 }
 
 header ul {

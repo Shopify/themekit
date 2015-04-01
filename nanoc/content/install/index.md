@@ -38,7 +38,7 @@ If you are using <strong>Windows</strong> follow <%= link_to 'these instruction'
     <li class="nostyle">
       <pre><code>
 #!bash
-      export PATH=$PATH:~/Applications/bin
+export PATH=$PATH:~/Applications/bin
       </code></pre>
     </li>
   </ul>

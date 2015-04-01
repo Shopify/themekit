@@ -33,6 +33,8 @@ route '*' do
   if item[:extension] == 'css'
     # Write item with identifier /foo/ to /foo.css
     item.identifier.chop + '.css'
+  elsif ext = %w(eot svg ttf woff woff2 otf).find{|ext| ext == item[:extension]}
+    item.identifier.chop
   elsif item.binary?
     # Write item with identifier /foo/ to /foo.ext
     item.identifier.chop + '.' + item[:extension]
