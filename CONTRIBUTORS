@@ -10,7 +10,7 @@
 
 You can easily obtain the source code and all dependencies by typing the following into a console:
 
-  go get -u github.com/csaunders/phoenix
+  go get -u github.com/csaunders/themekit
 
 # Authors
 
