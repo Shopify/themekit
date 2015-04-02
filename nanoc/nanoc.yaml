@@ -20,7 +20,7 @@ index_filenames: [ 'index.html' ]
 enable_output_diff: false
 
 project_name: Theme Kit
-repository: https://github.com/csaunders/phoenix
+repository: https://github.com/csaunders/themekit
 
 prune:
   # Whether to automatically remove files not managed by nanoc from the output
