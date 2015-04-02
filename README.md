@@ -1,7 +1,7 @@
 # Phoenix
 ## Shopify Theme Manipulation Utilities and Libraries
 
-[Read more about it on the website](http://csaunders.github.io/phoenix)
+[Read more about it on the website](http://themekit.cat)
 
 ### Utilities
 
