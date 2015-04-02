@@ -19,7 +19,7 @@ compile '*' do
     filter :colorize_syntax, default_colorizer: :pygmentsrb, pygmentsrb: {}
     filter :kramdown
     layout 'default'
-  elsif item[:extension] == 'css'
+  elsif %w(css js).include?(item[:extension])
     # don’t filter stylesheets
   elsif item.binary?
     # don’t filter binary items
@@ -33,7 +33,7 @@ route '*' do
   if item[:extension] == 'css'
     # Write item with identifier /foo/ to /foo.css
     item.identifier.chop + '.css'
-  elsif ext = %w(eot svg ttf woff woff2 otf).find{|ext| ext == item[:extension]}
+  elsif ext = %w(eot svg ttf woff woff2 otf js).find{|ext| ext == item[:extension]}
     item.identifier.chop
   elsif item.binary?
     # Write item with identifier /foo/ to /foo.ext
