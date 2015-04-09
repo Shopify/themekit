@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v1"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -27,17 +26,6 @@ const (
 	DefaultRefillRate  int = 2
 	DefaultConcurrency int = 2
 )
-
-func LoadConfigurationFromCurrentDirectory() (conf Configuration, err error) {
-	fmt.Println(RedText("[Deprecated] LoadConfigurationFromCurrentDirectory will be removed in the next release. Use Environments instead."))
-	dir, err := os.Getwd()
-	if err != nil {
-		return Configuration{}, err
-	}
-
-	config, err := LoadConfigurationFromFile(fmt.Sprintf("%s/config.yml", dir))
-	return config, err
-}
 
 func LoadConfiguration(contents []byte) (conf Configuration, err error) {
 	err = yaml.Unmarshal(contents, &conf)
@@ -67,16 +55,6 @@ func (conf Configuration) Initialize() Configuration {
 
 func (conf Configuration) AdminUrl() string {
 	return fmt.Sprintf("https://%s/admin", conf.Domain)
-}
-
-func LoadConfigurationFromFile(location string) (conf Configuration, err error) {
-	fmt.Println(RedText("[Deprecated] LoadConfigurationFromFile will be removed in the next release. Use Environments instead."))
-	contents, err := ioutil.ReadFile(location)
-	if err == nil {
-		conf, err = LoadConfiguration(contents)
-	}
-
-	return
 }
 
 func (conf Configuration) Write(w io.Writer) error {
