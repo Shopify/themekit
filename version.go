@@ -1,11 +1,11 @@
 package themekit
 
-const PhoenixVersion string = "v0.1.2"
+const ThemeKitVersion string = "v0.2.1"
 
 func LibraryInfo() []string {
 	return []string{
-		"Phoenix - Shopify Theme Utilities",
-		PhoenixVersion,
+		"ThemeKit - Shopify Theme Utilities",
+		ThemeKitVersion,
 		"Author: Chris Saunders",
 	}
 }
