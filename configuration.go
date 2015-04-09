@@ -1,4 +1,4 @@
-package phoenix
+package themekit
 
 import (
 	"fmt"
@@ -104,7 +104,7 @@ func (conf Configuration) AddHeaders(req *http.Request) {
 	req.Header.Add("X-Shopify-Access-Token", conf.AccessToken)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("User-Agent", "go/phoenix")
+	req.Header.Add("User-Agent", "go/themekit")
 }
 
 func (c Configuration) String() string {

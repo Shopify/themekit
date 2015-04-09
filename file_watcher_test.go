@@ -1,4 +1,4 @@
-package phoenix
+package themekit
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -51,10 +51,10 @@ func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents(
 		fsnotify.Create: Update,
 		fsnotify.Remove: Remove,
 	}
-	for fsEvent, phoenixEvent := range writes {
+	for fsEvent, themekitEvent := range writes {
 		event := fsnotify.Event{Name: "fixtures/whatever.txt", Op: fsEvent}
 		assetEvent := HandleEvent(event)
-		assert.Equal(s.T(), phoenixEvent, assetEvent.Type())
+		assert.Equal(s.T(), themekitEvent, assetEvent.Type())
 	}
 }
 

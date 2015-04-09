@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/csaunders/phoenix"
+	"github.com/csaunders/themekit"
 	"os"
 )
 
@@ -29,9 +29,9 @@ func Watch(options WatchOptions) chan bool {
 
 	config := client.GetConfiguration()
 
-	bucket := phoenix.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
+	bucket := themekit.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
 	bucket.TopUp()
-	foreman := phoenix.NewForeman(bucket)
+	foreman := themekit.NewForeman(bucket)
 	watcher := constructFileWatcher(options.Directory, config)
 	foreman.JobQueue = watcher
 	foreman.IssueWork()
@@ -44,7 +44,7 @@ func Watch(options WatchOptions) chan bool {
 	return done
 }
 
-func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.ThemeClient, eventLog chan phoenix.ThemeEvent) {
+func spawnWorker(workerId int, queue chan themekit.AssetEvent, client themekit.ThemeClient, eventLog chan themekit.ThemeEvent) {
 	logEvent(workerSpawnEvent(workerId), eventLog)
 	for {
 		asset := <-queue
@@ -57,8 +57,8 @@ func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.The
 				Formatter: func(b basicEvent) string {
 					return fmt.Sprintf(
 						"Received %s event on %s",
-						phoenix.GreenText(b.EventType),
-						phoenix.BlueText(b.Target),
+						themekit.GreenText(b.EventType),
+						themekit.BlueText(b.Target),
 					)
 				},
 			}
@@ -68,12 +68,12 @@ func spawnWorker(workerId int, queue chan phoenix.AssetEvent, client phoenix.The
 	}
 }
 
-func constructFileWatcher(dir string, config phoenix.Configuration) chan phoenix.AssetEvent {
-	filter := phoenix.NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores)
-	return phoenix.NewFileWatcher(dir, true, filter)
+func constructFileWatcher(dir string, config themekit.Configuration) chan themekit.AssetEvent {
+	filter := themekit.NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores)
+	return themekit.NewFileWatcher(dir, true, filter)
 }
 
-func workerSpawnEvent(workerId int) phoenix.ThemeEvent {
+func workerSpawnEvent(workerId int) themekit.ThemeEvent {
 	return basicEvent{
 		Title:     "Worker",
 		Target:    fmt.Sprintf("%d", workerId),

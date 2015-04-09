@@ -1,4 +1,4 @@
-package phoenix
+package themekit
 
 type Foreman struct {
 	bucket      *LeakyBucket

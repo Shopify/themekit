@@ -3,7 +3,7 @@ package commands
 import (
 	"bytes"
 	"errors"
-	"github.com/csaunders/phoenix"
+	"github.com/csaunders/themekit"
 	"net/http"
 	"os"
 )
@@ -55,7 +55,7 @@ func doBootstrap(options BootstrapOptions) chan bool {
 
 	zipLocation, err := zipPathForVersion(options.Version)
 	if err != nil {
-		phoenix.NotifyError(err)
+		themekit.NotifyError(err)
 		done := make(chan bool)
 		close(done)
 		return done
@@ -66,7 +66,7 @@ func doBootstrap(options BootstrapOptions) chan bool {
 		name = options.Prefix + "-" + name
 	}
 	clientForNewTheme, themeEvents := options.Client.CreateTheme(name, zipLocation)
-	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{themeEvents})
+	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{themeEvents})
 	if options.SetThemeId {
 		AddConfiguration(options.Directory, options.Environment, clientForNewTheme.GetConfiguration())
 	}
@@ -104,21 +104,21 @@ func zipPathForVersion(version string) (string, error) {
 	return zipPath(entry.Title), nil
 }
 
-func downloadAtomFeed() (phoenix.Feed, error) {
+func downloadAtomFeed() (themekit.Feed, error) {
 	resp, err := http.Get(TimberFeedPath)
 	if err != nil {
-		return phoenix.Feed{}, err
+		return themekit.Feed{}, err
 	}
 	defer resp.Body.Close()
 
-	feed, err := phoenix.LoadFeed(resp.Body)
+	feed, err := themekit.LoadFeed(resp.Body)
 	if err != nil {
-		return phoenix.Feed{}, err
+		return themekit.Feed{}, err
 	}
 	return feed, nil
 }
 
-func findReleaseWith(feed phoenix.Feed, version string) (phoenix.Entry, error) {
+func findReleaseWith(feed themekit.Feed, version string) (themekit.Entry, error) {
 	if version == LatestRelease {
 		return feed.LatestEntry(), nil
 	}
@@ -127,12 +127,12 @@ func findReleaseWith(feed phoenix.Feed, version string) (phoenix.Entry, error) {
 			return entry, nil
 		}
 	}
-	return phoenix.Entry{Title: "Invalid Feed"}, buildInvalidVersionError(feed, version)
+	return themekit.Entry{Title: "Invalid Feed"}, buildInvalidVersionError(feed, version)
 }
 
-func buildInvalidVersionError(feed phoenix.Feed, version string) error {
+func buildInvalidVersionError(feed themekit.Feed, version string) error {
 	buff := bytes.NewBuffer([]byte{})
-	buff.Write([]byte(phoenix.RedText("Invalid Timber Version: " + version)))
+	buff.Write([]byte(themekit.RedText("Invalid Timber Version: " + version)))
 	buff.Write([]byte("\nAvailable Versions Are:"))
 	buff.Write([]byte("\n  - master"))
 	buff.Write([]byte("\n  - latest"))

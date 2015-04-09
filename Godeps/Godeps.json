@@ -1,0 +1,27 @@
+{
+	"ImportPath": "github.com/csaunders/themekit",
+	"GoVersion": "go1.3.3",
+	"Deps": [
+		{
+			"ImportPath": "github.com/ryanuber/go-glob",
+			"Rev": "0067a9abd927e50aed5190662702f81231413ae0"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Rev": "b641a3539ba5b6e1470224e8dbccd383936519b4"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/suite",
+			"Rev": "b641a3539ba5b6e1470224e8dbccd383936519b4"
+		},
+		{
+			"ImportPath": "gopkg.in/fsnotify.v1",
+			"Comment": "v1.2.0",
+			"Rev": "96c060f6a6b7e0d6f75fddd10efeaca3e5d1bcb0"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v1",
+			"Rev": "feb4ca79644e8e7e39c06095246ee54b1282c118"
+		}
+	]
+}

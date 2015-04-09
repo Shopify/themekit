@@ -1,21 +1,18 @@
 SUBPROJECTS = theme
 
-all: deps
+all:
 	for subproject in $(SUBPROJECTS); \
 	do \
 		mkdir -p build/development; \
-	  go build -o build/development/$${subproject} cmd/$${subproject}/*.go; \
+	  godep go build -o build/development/$${subproject} cmd/$${subproject}/*.go; \
   done
 
 build:
 	for subproject in $(SUBPROJECTS); \
 	do \
 	  mkdir -p build/dist/${GOOS}-${GOARCH}; \
-		go build -o build/dist/${GOOS}-${GOARCH}/$${subproject} cmd/$${subproject}/*.go; \
+		godep go build -o build/dist/${GOOS}-${GOARCH}/$${subproject} cmd/$${subproject}/*.go; \
 	done
-
-deps:
-	go get ./...
 
 clean:
 	rm -rf build/
@@ -42,5 +39,5 @@ linux:
 zip:
 	./compress
 
-dist: deps windows mac linux zip
+dist: windows mac linux zip
 

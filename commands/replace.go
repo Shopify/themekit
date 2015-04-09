@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/csaunders/phoenix"
+	"github.com/csaunders/themekit"
 )
 
 type ReplaceOptions struct {
@@ -18,9 +18,9 @@ func ReplaceCommand(args map[string]interface{}) chan bool {
 }
 
 func Replace(options ReplaceOptions) chan bool {
-	events := make(chan phoenix.AssetEvent)
+	events := make(chan themekit.AssetEvent)
 	done, logs := options.Client.Process(events)
-	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{logs})
+	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{logs})
 
 	assets, errs := assetList(options.Client, options.Filenames)
 	go drainErrors(errs)
@@ -29,17 +29,17 @@ func Replace(options ReplaceOptions) chan bool {
 	return done
 }
 
-func assetList(client phoenix.ThemeClient, filenames []string) (chan phoenix.Asset, chan error) {
+func assetList(client themekit.ThemeClient, filenames []string) (chan themekit.Asset, chan error) {
 	if len(filenames) == 0 {
 		return client.AssetList()
 	}
 
-	assets := make(chan phoenix.Asset)
+	assets := make(chan themekit.Asset)
 	errs := make(chan error)
 	close(errs)
 	go func() {
 		for _, filename := range filenames {
-			asset := phoenix.Asset{Key: filename}
+			asset := themekit.Asset{Key: filename}
 			assets <- asset
 		}
 		close(assets)
@@ -47,12 +47,12 @@ func assetList(client phoenix.ThemeClient, filenames []string) (chan phoenix.Ass
 	return assets, errs
 }
 
-func removeAndUpload(assets chan phoenix.Asset, assetEvents chan phoenix.AssetEvent) {
+func removeAndUpload(assets chan themekit.Asset, assetEvents chan themekit.AssetEvent) {
 	for {
 		asset, more := <-assets
 		if more {
-			assetEvents <- phoenix.NewRemovalEvent(asset)
-			assetEvents <- phoenix.NewUploadEvent(asset)
+			assetEvents <- themekit.NewRemovalEvent(asset)
+			assetEvents <- themekit.NewUploadEvent(asset)
 		} else {
 			close(assetEvents)
 			return

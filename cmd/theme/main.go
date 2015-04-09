@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/csaunders/phoenix"
-	"github.com/csaunders/phoenix/commands"
+	"github.com/csaunders/themekit"
+	"github.com/csaunders/themekit/commands"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +12,7 @@ import (
 
 const commandDefault string = "download [<file> ...]"
 
-var globalEventLog chan phoenix.ThemeEvent
+var globalEventLog chan themekit.ThemeEvent
 
 var permittedZeroArgCommands = map[string]bool{
 	"download": true,
@@ -80,11 +80,11 @@ func CommandDescription(defaultCommand string) string {
 }
 
 func setupErrorReporter() {
-	phoenix.SetErrorReporter(phoenix.HaltExecutionReporter{})
+	themekit.SetErrorReporter(themekit.HaltExecutionReporter{})
 }
 
 func setupGlobalEventLog() {
-	globalEventLog = make(chan phoenix.ThemeEvent)
+	globalEventLog = make(chan themekit.ThemeEvent)
 }
 
 func main() {
@@ -116,7 +116,7 @@ func FileManipulationCommandParser(cmd string, args []string) (result map[string
 	var environment, directory string
 
 	set = makeFlagSet(cmd)
-	set.StringVar(&environment, "env", phoenix.DefaultEnvironment, "environment to run command")
+	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to run command")
 	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
 	set.Parse(args)
 
@@ -131,7 +131,7 @@ func WatchCommandParser(cmd string, args []string) (result map[string]interface{
 	var environment, directory string
 
 	set = makeFlagSet(cmd)
-	set.StringVar(&environment, "env", phoenix.DefaultEnvironment, "environment to run command")
+	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to run command")
 	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
 	set.Parse(args)
 
@@ -148,11 +148,11 @@ func ConfigurationCommandParser(cmd string, args []string) (result map[string]in
 
 	set = makeFlagSet(cmd)
 	set.StringVar(&directory, "dir", currentDir, "directory to create config.yml")
-	set.StringVar(&environment, "env", phoenix.DefaultEnvironment, "environment for this configuration")
+	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment for this configuration")
 	set.StringVar(&domain, "domain", "", "your myshopify domain")
 	set.StringVar(&accessToken, "access_token", "", "accessToken (or password) to make successful API calls")
-	set.IntVar(&bucketSize, "bucketSize", phoenix.DefaultBucketSize, "leaky bucket capacity")
-	set.IntVar(&refillRate, "refillRate", phoenix.DefaultRefillRate, "leaky bucket refill rate / second")
+	set.IntVar(&bucketSize, "bucketSize", themekit.DefaultBucketSize, "leaky bucket capacity")
+	set.IntVar(&refillRate, "refillRate", themekit.DefaultRefillRate, "leaky bucket refill rate / second")
 	set.Parse(args)
 
 	result["directory"] = directory
@@ -173,7 +173,7 @@ func BootstrapParser(cmd string, args []string) (result map[string]interface{}, 
 	set = makeFlagSet(cmd)
 	set.StringVar(&directory, "dir", currentDir, "location of config.yml")
 	set.BoolVar(&setThemeId, "setid", true, "update config.yml with ID of created Theme")
-	set.StringVar(&environment, "env", phoenix.DefaultEnvironment, "environment to execute command")
+	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to execute command")
 	set.StringVar(&version, "version", commands.LatestRelease, "version of Shopify Timber to use")
 	set.StringVar(&prefix, "prefix", "", "prefix to the Timber theme being created")
 	set.Parse(args)
@@ -187,28 +187,28 @@ func BootstrapParser(cmd string, args []string) (result map[string]interface{}, 
 	return
 }
 
-func loadThemeClient(directory, env string) phoenix.ThemeClient {
+func loadThemeClient(directory, env string) themekit.ThemeClient {
 	client := loadThemeClientWithRetry(directory, env, false)
 	return client
 }
 
-func loadThemeClientWithRetry(directory, env string, isRetry bool) phoenix.ThemeClient {
-	environments, err := phoenix.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
+func loadThemeClientWithRetry(directory, env string, isRetry bool) themekit.ThemeClient {
+	environments, err := themekit.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
 	if err != nil {
-		phoenix.NotifyError(err)
+		themekit.NotifyError(err)
 	}
 	config, err := environments.GetConfiguration(env)
 	if err != nil && !isRetry {
-		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", phoenix.DefaultEnvironment)
-		fmt.Println(phoenix.YellowText(upgradeMessage))
+		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", themekit.DefaultEnvironment)
+		fmt.Println(themekit.YellowText(upgradeMessage))
 		commands.MigrateConfiguration(directory)
 		client := loadThemeClientWithRetry(directory, env, true)
 		return client
 	} else if err != nil {
-		phoenix.NotifyError(err)
+		themekit.NotifyError(err)
 	}
 
-	return phoenix.NewThemeClient(config)
+	return themekit.NewThemeClient(config)
 }
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {
@@ -250,7 +250,7 @@ func verifyCommand(command string, args []string) {
 
 	if len(errors) > 0 {
 		errorMessage := fmt.Sprintf("Invalid Invocation!\n%s", strings.Join(errors, "\n"))
-		fmt.Println(phoenix.RedText(errorMessage))
+		fmt.Println(themekit.RedText(errorMessage))
 		SetupAndParseArgs([]string{"--help"})
 		os.Exit(1)
 	}

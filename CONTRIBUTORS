@@ -6,11 +6,23 @@
 - Submit pull request and mention maintainers
   - Current Maintainers: @csaunders
 
+# Pre-Requisites
+
+In order to work on this project **you'll need to have godep installed** on your system. This can easily
+be done by running the following command:
+
+  go get github.com/tools/godep
+
+Please see the [godep documentation](https://github.com/tools/godep) for more details.
+
 # Getting the Source Code
 
 You can easily obtain the source code and all dependencies by typing the following into a console:
 
   go get -u github.com/csaunders/themekit
+
+Switch to that directory and run the Makefile. This will create a `build/development` directory which will
+contain the program. The Makefile will use `godep` to ensure that the builds are reliable for your system.
 
 # Authors
 

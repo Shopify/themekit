@@ -4,18 +4,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/csaunders/phoenix"
+	"github.com/csaunders/themekit"
 )
 
 type BasicOptions struct {
-	Client    phoenix.ThemeClient
+	Client    themekit.ThemeClient
 	Filenames []string
-	EventLog  chan phoenix.ThemeEvent
+	EventLog  chan themekit.ThemeEvent
 }
 
-func (bo *BasicOptions) getEventLog() chan phoenix.ThemeEvent {
+func (bo *BasicOptions) getEventLog() chan themekit.ThemeEvent {
 	if bo.EventLog == nil {
-		bo.EventLog = make(chan phoenix.ThemeEvent)
+		bo.EventLog = make(chan themekit.ThemeEvent)
 	}
 	return bo.EventLog
 }
@@ -28,7 +28,7 @@ func extractString(s *string, key string, args map[string]interface{}) {
 
 	if *s, ok = args[key].(string); !ok {
 		errMsg := fmt.Sprintf("%s is not of valid type", key)
-		phoenix.NotifyError(errors.New(errMsg))
+		themekit.NotifyError(errors.New(errMsg))
 	}
 }
 
@@ -37,7 +37,7 @@ func extractStringSlice(key string, args map[string]interface{}) []string {
 	var strs []string
 	if strs, ok = args[key].([]string); !ok {
 		errMsg := fmt.Sprintf("%s is not of valid type", key)
-		phoenix.NotifyError(errors.New(errMsg))
+		themekit.NotifyError(errors.New(errMsg))
 	}
 	return strs
 }
@@ -50,7 +50,7 @@ func extractInt(s *int, key string, args map[string]interface{}) {
 
 	if *s, ok = args[key].(int); !ok {
 		errMsg := fmt.Sprintf("%s is not of valid type", key)
-		phoenix.NotifyError(errors.New(errMsg))
+		themekit.NotifyError(errors.New(errMsg))
 	}
 }
 
@@ -62,26 +62,26 @@ func extractBool(s *bool, key string, args map[string]interface{}) {
 
 	if *s, ok = args[key].(bool); !ok {
 		errMsg := fmt.Sprintf("%s is not of valid type", key)
-		phoenix.NotifyError(errors.New(errMsg))
+		themekit.NotifyError(errors.New(errMsg))
 	}
 }
 
-func extractThemeClient(t *phoenix.ThemeClient, args map[string]interface{}) {
+func extractThemeClient(t *themekit.ThemeClient, args map[string]interface{}) {
 	var ok bool
 	if args["themeClient"] == nil {
 		return
 	}
 
-	if *t, ok = args["themeClient"].(phoenix.ThemeClient); !ok {
-		phoenix.NotifyError(errors.New("themeClient is not of a valid type"))
+	if *t, ok = args["themeClient"].(themekit.ThemeClient); !ok {
+		themekit.NotifyError(errors.New("themeClient is not of a valid type"))
 	}
 }
 
-func extractEventLog(el *chan phoenix.ThemeEvent, args map[string]interface{}) {
+func extractEventLog(el *chan themekit.ThemeEvent, args map[string]interface{}) {
 	var ok bool
 
-	if *el, ok = args["eventLog"].(chan phoenix.ThemeEvent); !ok {
-		phoenix.NotifyError(errors.New("eventLog is not of a valid type"))
+	if *el, ok = args["eventLog"].(chan themekit.ThemeEvent); !ok {
+		themekit.NotifyError(errors.New("eventLog is not of a valid type"))
 	}
 }
 
@@ -93,14 +93,14 @@ func extractBasicOptions(args map[string]interface{}) BasicOptions {
 	return options
 }
 
-func toClientAndFilesAsync(args map[string]interface{}, fn func(phoenix.ThemeClient, []string) chan bool) chan bool {
+func toClientAndFilesAsync(args map[string]interface{}, fn func(themekit.ThemeClient, []string) chan bool) chan bool {
 	var ok bool
-	var themeClient phoenix.ThemeClient
+	var themeClient themekit.ThemeClient
 	var filenames []string
 	extractThemeClient(&themeClient, args)
 
 	if filenames, ok = args["filenames"].([]string); !ok {
-		phoenix.NotifyError(errors.New("filenames are not of valid type"))
+		themekit.NotifyError(errors.New("filenames are not of valid type"))
 	}
 	return fn(themeClient, filenames)
 }
@@ -108,14 +108,14 @@ func toClientAndFilesAsync(args map[string]interface{}, fn func(phoenix.ThemeCli
 func drainErrors(errs chan error) {
 	for {
 		if err := <-errs; err != nil {
-			phoenix.NotifyError(err)
+			themekit.NotifyError(err)
 		} else {
 			break
 		}
 	}
 }
 
-func mergeEvents(dest chan phoenix.ThemeEvent, chans []chan phoenix.ThemeEvent) {
+func mergeEvents(dest chan themekit.ThemeEvent, chans []chan themekit.ThemeEvent) {
 	go func() {
 		for _, ch := range chans {
 			var ok = true
@@ -129,7 +129,7 @@ func mergeEvents(dest chan phoenix.ThemeEvent, chans []chan phoenix.ThemeEvent) 
 	}()
 }
 
-func logEvent(event phoenix.ThemeEvent, eventLog chan phoenix.ThemeEvent) {
+func logEvent(event themekit.ThemeEvent, eventLog chan themekit.ThemeEvent) {
 	go func() {
 		eventLog <- event
 	}()
@@ -143,7 +143,7 @@ type basicEvent struct {
 	etype     string `json:"type"`
 }
 
-func message(content string) phoenix.ThemeEvent {
+func message(content string) themekit.ThemeEvent {
 	return basicEvent{
 		Formatter: func(b basicEvent) string { return content },
 		EventType: "message",

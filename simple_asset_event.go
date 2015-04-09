@@ -1,4 +1,4 @@
-package phoenix
+package themekit
 
 type SimpleAssetEvent struct {
 	asset     Asset

@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/csaunders/phoenix"
+	"github.com/csaunders/themekit"
 	"os"
 )
 
@@ -19,31 +19,31 @@ func UploadCommand(args map[string]interface{}) chan bool {
 }
 
 func Upload(options ReplaceOptions) chan bool {
-	files := make(chan phoenix.AssetEvent)
+	files := make(chan themekit.AssetEvent)
 	go readAndPrepareFiles(options.Filenames, files)
 
 	done, events := options.Client.Process(files)
-	mergeEvents(options.getEventLog(), []chan phoenix.ThemeEvent{events})
+	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{events})
 	return done
 }
 
-func readAndPrepareFiles(filenames []string, results chan phoenix.AssetEvent) {
+func readAndPrepareFiles(filenames []string, results chan themekit.AssetEvent) {
 	for _, filename := range filenames {
 		asset, err := loadAsset(filename)
 		if err == nil {
-			results <- phoenix.NewUploadEvent(asset)
+			results <- themekit.NewUploadEvent(asset)
 		} else if err.Error() != "File is a directory" {
-			phoenix.NotifyError(err)
+			themekit.NotifyError(err)
 		}
 	}
 	close(results)
 }
 
-func loadAsset(filename string) (asset phoenix.Asset, err error) {
+func loadAsset(filename string) (asset themekit.Asset, err error) {
 	root, err := os.Getwd()
 	if err != nil {
 		return
 	}
 
-	return phoenix.LoadAsset(root, filename)
+	return themekit.LoadAsset(root, filename)
 }

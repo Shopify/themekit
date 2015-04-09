@@ -1,4 +1,4 @@
-package phoenix
+package themekit
 
 const PhoenixVersion string = "v0.1.2"
 

@@ -1,4 +1,4 @@
-package phoenix
+package themekit
 
 import (
 	"errors"

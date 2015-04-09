@@ -3,7 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"github.com/csaunders/phoenix"
+	"github.com/csaunders/themekit"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,8 +24,8 @@ func (co ConfigurationOptions) areInvalid() bool {
 	return co.Domain == "" || co.AccessToken == ""
 }
 
-func (co ConfigurationOptions) defaultConfigurationOptions() phoenix.Configuration {
-	return phoenix.Configuration{
+func (co ConfigurationOptions) defaultConfigurationOptions() themekit.Configuration {
+	return themekit.Configuration{
 		Domain:      co.Domain,
 		AccessToken: co.AccessToken,
 		BucketSize:  co.BucketSize,
@@ -54,9 +54,9 @@ func defaultOptions() ConfigurationOptions {
 		Domain:      "",
 		AccessToken: "",
 		Directory:   currentDir,
-		Environment: phoenix.DefaultEnvironment,
-		BucketSize:  phoenix.DefaultBucketSize,
-		RefillRate:  phoenix.DefaultRefillRate,
+		Environment: themekit.DefaultEnvironment,
+		BucketSize:  themekit.DefaultBucketSize,
+		RefillRate:  themekit.DefaultRefillRate,
 	}
 }
 
@@ -72,7 +72,7 @@ func ConfigureCommand(args map[string]interface{}) chan bool {
 	extractEventLog(&options.EventLog, args)
 
 	if options.areInvalid() {
-		phoenix.NotifyError(options.configurationErrors())
+		themekit.NotifyError(options.configurationErrors())
 	}
 
 	Configure(options)
@@ -86,25 +86,25 @@ func Configure(options ConfigurationOptions) {
 	AddConfiguration(options.Directory, options.Environment, config)
 }
 
-func AddConfiguration(dir, environment string, config phoenix.Configuration) {
+func AddConfiguration(dir, environment string, config themekit.Configuration) {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env := loadOrInitializeEnvironment(environmentLocation)
 	env.SetConfiguration(environment, config)
 
 	err := env.Save(environmentLocation)
 	if err != nil {
-		phoenix.NotifyError(err)
+		themekit.NotifyError(err)
 	}
 }
 
-func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool, log chan phoenix.ThemeEvent) {
+func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool, log chan themekit.ThemeEvent) {
 	dir, _ := os.Getwd()
 	extractString(&dir, "directory", args)
 
 	MigrateConfiguration(dir)
 
 	done = make(chan bool)
-	log = make(chan phoenix.ThemeEvent)
+	log = make(chan themekit.ThemeEvent)
 	close(done)
 	close(log)
 	return
@@ -115,20 +115,20 @@ func MigrateConfiguration(dir string) {
 	env := loadOrInitializeEnvironment(environmentLocation)
 	err := env.Save(environmentLocation)
 	if err != nil {
-		phoenix.NotifyError(err)
+		themekit.NotifyError(err)
 	}
 }
 
-func loadOrInitializeEnvironment(location string) phoenix.Environments {
+func loadOrInitializeEnvironment(location string) themekit.Environments {
 	contents, err := ioutil.ReadFile(location)
 	if err != nil {
-		return phoenix.Environments{}
+		return themekit.Environments{}
 	}
 
-	env, err := phoenix.LoadEnvironments(contents)
+	env, err := themekit.LoadEnvironments(contents)
 	if err != nil || len(env) <= 0 {
-		conf, _ := phoenix.LoadConfiguration(contents)
-		env[phoenix.DefaultEnvironment] = conf
+		conf, _ := themekit.LoadConfiguration(contents)
+		env[themekit.DefaultEnvironment] = conf
 	}
 	return env
 }
