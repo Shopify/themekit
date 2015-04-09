@@ -14,7 +14,7 @@ If you are using <strong>Windows</strong> follow <%= link_to 'these instruction'
 <hr />
 
 
-<a name="unix-like"></a>
+<a id="unix-like"></a>
 
 # Installing on Mac OS & Linux
 
@@ -48,7 +48,7 @@ export PATH=$PATH:~/Applications/bin
 
 - Verify that <%= @config[:project_name] %> has been installed by typing `theme --help` and [you should see output similar to this.](#expected-command-output)
 
-<a name="windows"></a>
+<a id="windows"></a>
 
 # Installing on Windows
 
@@ -63,7 +63,7 @@ export PATH=$PATH:~/Applications/bin
 - Click **OK** until all the windows are gone.
 - To verify that <%= @config[:project_name] %> has been installed, open `cmd.exe` and type in `theme --help`. [You should see output similar to this.](#expected-command-output)
 
-<a name="expected-command-output"></a>
+<a id="expected-command-output"></a>
 
 # Expected output when running `theme --help`
 

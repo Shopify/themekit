@@ -29,11 +29,11 @@
         </li>
 
         <li>
-          <a class="contrib" href="https://github.com/csaunders/phoenix">Contribute</a>
+          <a class="contrib" href="https://github.com/csaunders/themekit">Contribute</a>
         </li>
 
         <li>
-          <a class="report" href="https://github.com/csaunders/phoenix/issues">Report Issue</a>
+          <a class="report" href="https://github.com/csaunders/themekit/issues">Report Issue</a>
         </li>
       </div>
     </header>
@@ -56,7 +56,7 @@
   </li>
 </ul>
 
-<h2 id="a-nameoverview-hrefoverviewoverviewai-classfa-fa-bookmarki"><a name="overview" href="#overview">Overview</a><i class="fa fa-bookmark"></i></h2>
+<h2 id="a-idoverview-hrefoverviewoverviewai-classfa-fa-bookmarki"><a id="overview" href="#overview">Overview</a><i class="fa fa-bookmark"></i></h2>
 
 <p>Theme Kit comes with a number of utilities that you can use to interact with a theme on Shopify. To see the list
 of commands that are available, enter the following command into your terminal:</p>
@@ -83,7 +83,7 @@ of commands that are available, enter the following command into your terminal:<
     download <span class="o">[</span> ...<span class="o">]</span>:
         Download file<span class="o">(</span>s<span class="o">)</span> from theme <span class="o">[</span>default<span class="o">]</span></code></pre>
 
-<h2 id="a-namecommands-hrefcommandscommandsai-classfa-fa-bookmarki"><a name="commands" href="#commands">Commands</a><i class="fa fa-bookmark"></i></h2>
+<h2 id="a-idcommands-hrefcommandscommandsai-classfa-fa-bookmarki"><a id="commands" href="#commands">Commands</a><i class="fa fa-bookmark"></i></h2>
 
 <ol>
   <li><a href="#common-args">Common Arguments</a></li>
@@ -98,7 +98,7 @@ of commands that are available, enter the following command into your terminal:<
 
 <hr />
 
-<h3 id="a-namecommon-args-hrefcommon-argscommon-argumentsai-classfa-fa-bookmarki"><a name="common-args" href="#common-args">Common Arguments</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idcommon-args-hrefcommon-argscommon-argumentsai-classfa-fa-bookmarki"><a id="common-args" href="#common-args">Common Arguments</a><i class="fa fa-bookmark"></i></h3>
 
 <p>There are some arguments that you can pass into every command:</p>
 
@@ -107,7 +107,7 @@ of commands that are available, enter the following command into your terminal:<
   <li><code>dir</code>: The directory that the configuration file will live. This allows you to update multiple themes without having to change into each themes directory.</li>
 </ol>
 
-<h3 id="a-nameconfigure-hrefconfigureconfigureai-classfa-fa-bookmarki"><a name="configure" href="#configure">Configure</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idconfigure-hrefconfigureconfigureai-classfa-fa-bookmarki"><a id="configure" href="#configure">Configure</a><i class="fa fa-bookmark"></i></h3>
 
 <p>Use this command to create or update configuration files. If you don’t want to run the command in the directory that will contain the configuration file you will need to specify the directory manually.</p>
 
@@ -125,7 +125,7 @@ of commands that are available, enter the following command into your terminal:<
   <li><code>refillRate</code>: The rate at which tickets are restored in the leaky bucket (per second)</li>
 </ol>
 
-<h3 id="a-namebootstrap-hrefbootstrapbootstrapai-classfa-fa-bookmarki"><a name="bootstrap" href="#bootstrap">Bootstrap</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idbootstrap-hrefbootstrapbootstrapai-classfa-fa-bookmarki"><a id="bootstrap" href="#bootstrap">Bootstrap</a><i class="fa fa-bookmark"></i></h3>
 
 <p>If you are starting a new theme and want to have some sane defaults, you can use the bootstrap command. It will create a new theme based on <a href="https://github.com/shopify/timber">Timber</a>, update your configuration file for that theme and download it to your computer.</p>
 
@@ -139,39 +139,39 @@ of commands that are available, enter the following command into your terminal:<
   <li><code>version</code>: The version of Timber that you want to use for developing a theme. By default it will use the <a href="https://github.com/Shopify/Timber/releases">latest stable release</a>. Latest master can also be used by setting the version flag (i.e. <code>--version=master</code>)</li>
 </ol>
 
-<h3 id="a-namewatch-hrefwatchwatchai-classfa-fa-bookmarki"><a name="watch" href="#watch">Watch</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idwatch-hrefwatchwatchai-classfa-fa-bookmarki"><a id="watch" href="#watch">Watch</a><i class="fa fa-bookmark"></i></h3>
 
 <p>Theme watch will start a process that will watch the specified directory for changes and upload them to the specified Shopify theme. Any changes will be logged to the terminal and the status of the upload will be logged as well. The program can be stopped by simply typing <code>ctrl+C</code>.</p>
 
 <p>By default watch starts up two workers who will perform the upload, allowing for faster uploads to Shopify. The number of workers can be changed in your <a href="#config-files">configuration file</a> though be aware that you may run the risk of slowdowns due to the leaky bucket getting drained.</p>
 
-<h3 id="a-namedownload-hrefdownloaddownloadai-classfa-fa-bookmarki"><a name="download" href="#download">Download</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-iddownload-hrefdownloaddownloadai-classfa-fa-bookmarki"><a id="download" href="#download">Download</a><i class="fa fa-bookmark"></i></h3>
 
 <p>If called without any arguments, it will download the entire theme. Otherwise if you specify the files you want to download, then only those files will be retrieved. For example if you wanted to download the <code>404</code> and <code>article</code> liquid templates you could enter the following command:</p>
 
 <pre><code>theme download templates/404.liquid templates/article.liquid`</code></pre>
 
-<h3 id="a-nameremove-hrefremoveremoveai-classfa-fa-bookmarki"><a name="remove" href="#remove">Remove</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idremove-hrefremoveremoveai-classfa-fa-bookmarki"><a id="remove" href="#remove">Remove</a><i class="fa fa-bookmark"></i></h3>
 
 <p>Deletes theme files both locally and on Shopify. This command must be called with at least one filename.</p>
 
-<h3 id="a-namereplace-hrefreplacereplaceai-classfa-fa-bookmarki"><a name="replace" href="#replace">Replace</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idreplace-hrefreplacereplaceai-classfa-fa-bookmarki"><a id="replace" href="#replace">Replace</a><i class="fa fa-bookmark"></i></h3>
 
 <p>Removes remote files and replaces them with local files. Equivalent to upload, so this may go away or change in the future. This command requires at least one filename.</p>
 
-<h3 id="a-nameupload-hrefuploaduploadai-classfa-fa-bookmarki"><a name="upload" href="#upload">Upload</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idupload-hrefuploaduploadai-classfa-fa-bookmarki"><a id="upload" href="#upload">Upload</a><i class="fa fa-bookmark"></i></h3>
 
 <p>Upload specified files to Shopify theme. This command requires at least one filename.</p>
 
 <hr />
 
-<h2 id="a-nameconfig-file-hrefconfig-fileconfigurationai-classfa-fa-bookmarki"><a name="config-file" href="#config-file">Configuration</a><i class="fa fa-bookmark"></i></h2>
+<h2 id="a-idconfig-file-hrefconfig-fileconfigurationai-classfa-fa-bookmarki"><a id="config-file" href="#config-file">Configuration</a><i class="fa fa-bookmark"></i></h2>
 
-<h3 id="a-nameenvironments-hrefenvironmentsenvironmentsai-classfa-fa-bookmarki"><a name="environments" href="#environments">Environments</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idenvironments-hrefenvironmentsenvironmentsai-classfa-fa-bookmarki"><a id="environments" href="#environments">Environments</a><i class="fa fa-bookmark"></i></h3>
 
 <p>Environments allow you to manage where to upload your theme changes to. This helps reduce the errors that could happen when swapping between environments by directly modifying the config file. Environments are named whatever you want and will all contain roughly the same information, though perhaps with some minor changes (store, theme id, etc.)</p>
 
-<h3 id="a-nameconfig-variables-hrefconfig-variablesconfiguration-variablesai-classfa-fa-bookmarki"><a name="config-variables" href="#config-variables">Configuration Variables</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idconfig-variables-hrefconfig-variablesconfiguration-variablesai-classfa-fa-bookmarki"><a id="config-variables" href="#config-variables">Configuration Variables</a><i class="fa fa-bookmark"></i></h3>
 
 <p>A configuration can contain a number of things on top of what can be added by invoking <code>theme configure</code>.</p>
 
@@ -179,7 +179,7 @@ of commands that are available, enter the following command into your terminal:<
   <li><code>theme_id</code>: The ID of the theme to upload changes to. <strong>Beware</strong> that if this is blank all changes will be uploaded to your user visible theme.</li>
   <li><code>access_token</code>: API credentials to update and manipulate themes on Shopify</li>
   <li><code>store</code>: Your <code>.myshopify.com</code> domain (i.e. pokeshop.myshopify.com). Note that you <strong>do not</strong> need to include <code>http://</code> or <code>https://</code></li>
-  <li><code>ignore_files</code>: A list of specific files to ignore (i.e. <code>config/settings.html</code>)</li>
+  <li><code>ignore_files</code>: A list of specific files to ignore (i.e. <code>config/settings.html</code>). You can also ignore based on patterns (such as all png files), but those patterns will need to be wrapped in double quotes (i.e. <code>"*.png"</code>).</li>
   <li><code>ignores</code>: A list of files containing patterns of files that should be ignored. These files are somewhat similar to the <a href="https://www.kernel.org/pub/software/scm/git/docs/gitignore.html">.gitignore file</a></li>
   <li><code>bucket_size</code>: The size of your Access Tokens bucket. By default this is 40 and cannot be configured by the shop.</li>
   <li><code>refill_rate</code>: The rate at which tickets are replenished by the Shopify API (per second). By default this is 2 and cannot be configured by the shop.</li>
@@ -187,7 +187,7 @@ of commands that are available, enter the following command into your terminal:<
   <li><code>proxy</code>: Proxy server to route HTTP requests through. If you’ve run into a bug this can be paired up with <a href="http://mitmproxy.org/">mitmproxy</a> to provide further insight into what is going on. You may be asked to use this feature when making bug reports.</li>
 </ul>
 
-<h3 id="a-nameignore-file-hrefignore-filethe-ignore-fileai-classfa-fa-bookmarki"><a name="ignore-file" href="#ignore-file">The Ignore File</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idignore-file-hrefignore-filethe-ignore-fileai-classfa-fa-bookmarki"><a id="ignore-file" href="#ignore-file">The Ignore File</a><i class="fa fa-bookmark"></i></h3>
 
 <p>Ignore files are simply lists of patterns or files you’d like to skip when uploading or downloading files. This can be useful for
 situations where your build system generates a lot of temporary files, or files that Shopify won’t allow. If you have a build system that generates temporary files in a directory called <code>build</code>, your ignorefile could look like this:</p>
@@ -195,7 +195,7 @@ situations where your build system generates a lot of temporary files, or files 
 <pre><code class="language-text">build/*
 settings.html</code></pre>
 
-<h3 id="a-nameconfig-example-hrefconfig-exampleexample-configurationai-classfa-fa-bookmarki"><a name="config-example" href="#config-example">Example Configuration</a><i class="fa fa-bookmark"></i></h3>
+<h3 id="a-idconfig-example-hrefconfig-exampleexample-configurationai-classfa-fa-bookmarki"><a id="config-example" href="#config-example">Example Configuration</a><i class="fa fa-bookmark"></i></h3>
 
 <p>The following is a comprehensive example of what the contents of a configuration might look like.</p>
 
@@ -215,6 +215,8 @@ settings.html</code></pre>
     <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">myignores</span>
   <span class="l-Scalar-Plain">ignore_files</span><span class="p-Indicator">:</span>
     <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">config/settings.html</span>
+    <span class="p-Indicator">-</span> <span class="s">"*.png"</span>
+    <span class="p-Indicator">-</span> <span class="s">"*.jpg"</span>
   <span class="l-Scalar-Plain">refill_rate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">2</span>
   <span class="l-Scalar-Plain">bucket_size</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">40</span>
   <span class="l-Scalar-Plain">concurrency</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">4</span>
