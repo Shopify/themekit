@@ -9,11 +9,17 @@ import (
 )
 
 const goodEnv string = "./fixtures/valid_config.yml"
+const badPatternEnv string = "./fixtures/bad_pattern_config.yml"
 
 func TestLoadingEnvironmentsFromAFile(t *testing.T) {
 	env, err := LoadEnvironmentsFromFile(goodEnv)
 	assert.NoError(t, err, "An error should not have been raised")
 	assert.Equal(t, 3, len(env))
+}
+
+func TestLoadingAConfigurationThatContainsErrors(t *testing.T) {
+	_, err := LoadEnvironmentsFromFile(badPatternEnv)
+	assert.NotNil(t, err)
 }
 
 func TestRetrievingAConfigurationFromAnEnvironment(t *testing.T) {

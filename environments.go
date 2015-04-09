@@ -14,6 +14,7 @@ const DefaultEnvironment string = "development"
 type Environments map[string]Configuration
 
 func LoadEnvironments(contents []byte) (envs Environments, err error) {
+	envs = make(Environments)
 	err = yaml.Unmarshal(contents, &envs)
 	if err == nil {
 		for key, conf := range envs {

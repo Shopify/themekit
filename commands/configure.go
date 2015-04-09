@@ -88,10 +88,14 @@ func Configure(options ConfigurationOptions) {
 
 func AddConfiguration(dir, environment string, config themekit.Configuration) {
 	environmentLocation := filepath.Join(dir, "config.yml")
-	env := loadOrInitializeEnvironment(environmentLocation)
+	env, err := loadOrInitializeEnvironment(environmentLocation)
+	if err != nil {
+		themekit.NotifyError(err)
+		return
+	}
 	env.SetConfiguration(environment, config)
 
-	err := env.Save(environmentLocation)
+	err = env.Save(environmentLocation)
 	if err != nil {
 		themekit.NotifyError(err)
 	}
@@ -110,25 +114,32 @@ func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool, l
 	return
 }
 
-func MigrateConfiguration(dir string) {
+func MigrateConfiguration(dir string) error {
 	environmentLocation := filepath.Join(dir, "config.yml")
-	env := loadOrInitializeEnvironment(environmentLocation)
-	err := env.Save(environmentLocation)
+	env, err := loadOrInitializeEnvironment(environmentLocation)
 	if err != nil {
 		themekit.NotifyError(err)
+		return err
 	}
+
+	err = env.Save(environmentLocation)
+	return err
 }
 
-func loadOrInitializeEnvironment(location string) themekit.Environments {
+func loadOrInitializeEnvironment(location string) (themekit.Environments, error) {
 	contents, err := ioutil.ReadFile(location)
 	if err != nil {
-		return themekit.Environments{}
+		return themekit.Environments{}, err
 	}
 
 	env, err := themekit.LoadEnvironments(contents)
-	if err != nil || len(env) <= 0 {
+	if (err != nil && canProcessWithError(err)) || len(env) <= 0 {
 		conf, _ := themekit.LoadConfiguration(contents)
 		env[themekit.DefaultEnvironment] = conf
 	}
-	return env
+	return env, err
+}
+
+func canProcessWithError(e error) bool {
+	return strings.Contains(e.Error(), "YAML error") == false
 }

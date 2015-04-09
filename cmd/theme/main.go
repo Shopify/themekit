@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/csaunders/themekit"
@@ -120,7 +121,13 @@ func FileManipulationCommandParser(cmd string, args []string) (result map[string
 	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
 	set.Parse(args)
 
-	result["themeClient"] = loadThemeClient(directory, environment)
+	client, err := loadThemeClient(directory, environment)
+	if err != nil {
+		themekit.NotifyError(err)
+		return
+	}
+
+	result["themeClient"] = client
 	result["filenames"] = args[len(args)-set.NArg():]
 	return
 }
@@ -135,7 +142,13 @@ func WatchCommandParser(cmd string, args []string) (result map[string]interface{
 	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
 	set.Parse(args)
 
-	result["themeClient"] = loadThemeClient(directory, environment)
+	client, err := loadThemeClient(directory, environment)
+	if err != nil {
+		themekit.NotifyError(err)
+		return
+	}
+
+	result["themeClient"] = client
 
 	return
 }
@@ -183,32 +196,43 @@ func BootstrapParser(cmd string, args []string) (result map[string]interface{}, 
 	result["environment"] = environment
 	result["prefix"] = prefix
 	result["setThemeId"] = setThemeId
-	result["themeClient"] = loadThemeClient(directory, environment)
+
+	client, err := loadThemeClient(directory, environment)
+	if err != nil {
+		themekit.NotifyError(err)
+		return
+	}
+	result["themeClient"] = client
 	return
 }
 
-func loadThemeClient(directory, env string) themekit.ThemeClient {
-	client := loadThemeClientWithRetry(directory, env, false)
-	return client
+func loadThemeClient(directory, env string) (themekit.ThemeClient, error) {
+	client, err := loadThemeClientWithRetry(directory, env, false)
+	if err != nil && strings.Contains(err.Error(), "YAML error") {
+		err = errors.New(fmt.Sprintf("configuration error: does your configuration properly escape wildcards? \n\t\t\t%s", err))
+	}
+	return client, err
 }
 
-func loadThemeClientWithRetry(directory, env string, isRetry bool) themekit.ThemeClient {
+func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.ThemeClient, error) {
 	environments, err := themekit.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
 	if err != nil {
-		themekit.NotifyError(err)
+		return themekit.ThemeClient{}, err
 	}
 	config, err := environments.GetConfiguration(env)
 	if err != nil && !isRetry {
 		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", themekit.DefaultEnvironment)
 		fmt.Println(themekit.YellowText(upgradeMessage))
-		commands.MigrateConfiguration(directory)
-		client := loadThemeClientWithRetry(directory, env, true)
-		return client
+		err := commands.MigrateConfiguration(directory)
+		if err != nil {
+			return themekit.ThemeClient{}, err
+		}
+		return loadThemeClientWithRetry(directory, env, true)
 	} else if err != nil {
-		themekit.NotifyError(err)
+		return themekit.ThemeClient{}, err
 	}
 
-	return themekit.NewThemeClient(config)
+	return themekit.NewThemeClient(config), nil
 }
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {
