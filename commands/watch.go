@@ -70,7 +70,11 @@ func spawnWorker(workerId int, queue chan themekit.AssetEvent, client themekit.T
 
 func constructFileWatcher(dir string, config themekit.Configuration) chan themekit.AssetEvent {
 	filter := themekit.NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores)
-	return themekit.NewFileWatcher(dir, true, filter)
+	watcher, err := themekit.NewFileWatcher(dir, true, filter)
+	if err != nil {
+		themekit.NotifyError(err)
+	}
+	return watcher
 }
 
 func workerSpawnEvent(workerId int) themekit.ThemeEvent {

@@ -45,13 +45,12 @@ func (f FsAssetEvent) String() string {
 	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
 }
 
-func NewFileWatcher(dir string, recur bool, filter EventFilter) (processor chan AssetEvent) {
+func NewFileWatcher(dir string, recur bool, filter EventFilter) (chan AssetEvent, error) {
 	if recur {
-		processor, _ = watchDirRecur(dir, filter)
+		return watchDirRecur(dir, filter)
 	} else {
-		processor, _ = watchDir(dir, filter)
+		return watchDir(dir, filter)
 	}
-	return
 }
 
 func fwLoadAsset(event fsnotify.Event) Asset {
@@ -146,6 +145,11 @@ func watchDirRecur(dir string, filter EventFilter) (results chan AssetEvent, err
 
 func watchDir(dir string, filter EventFilter) (results chan AssetEvent, err error) {
 	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		results = make(chan AssetEvent)
+		close(results)
+		return results, err
+	}
 	err = watcher.Add(dir)
 	if err != nil {
 		results = make(chan AssetEvent)

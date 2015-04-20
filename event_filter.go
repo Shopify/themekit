@@ -14,14 +14,20 @@ import (
 
 const ConfigurationFilename string = "config\\.yml"
 
+var defaultRegexes []*re.Regexp = []*re.Regexp{
+	re.MustCompile(`\.*`),
+}
+
+var defaultGlobs []string = []string{}
+
 type EventFilter struct {
 	filters []*re.Regexp
 	globs   []string
 }
 
 func NewEventFilter(rawPatterns []string) EventFilter {
-	filters := []*re.Regexp{}
-	globs := []string{}
+	filters := defaultRegexes
+	globs := defaultGlobs
 	for _, pat := range rawPatterns {
 		if len(pat) <= 0 {
 			continue
