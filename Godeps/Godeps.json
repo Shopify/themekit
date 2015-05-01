@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/csaunders/themekit",
-	"GoVersion": "go1.3.3",
+	"GoVersion": "go1.4.2",
 	"Deps": [
 		{
 			"ImportPath": "github.com/ryanuber/go-glob",
