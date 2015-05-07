@@ -21,6 +21,25 @@ type ThemeEvent interface {
 	AsJSON() ([]byte, error)
 }
 
+type NoOpEvent struct {
+}
+
+func (e NoOpEvent) String() string {
+	return ""
+}
+
+func (e NoOpEvent) Successful() bool {
+	return false
+}
+
+func (e NoOpEvent) Error() error {
+	return nil
+}
+
+func (e NoOpEvent) AsJSON() ([]byte, error) {
+	return []byte{}, errors.New("cannot encode NoOpEvents")
+}
+
 type APIAssetEvent struct {
 	Host      string `json:"host"`
 	AssetKey  string `json:"asset_key"`

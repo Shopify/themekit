@@ -106,7 +106,9 @@ func main() {
 			if !more {
 				return
 			}
-			fmt.Println(event)
+			if len(event.String()) > 0 {
+				fmt.Println(event)
+			}
 		}
 	}()
 	<-done

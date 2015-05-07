@@ -39,6 +39,23 @@ func TestPerformWithRemoveAssetEvent(t *testing.T) {
 	client.Perform(asset)
 }
 
+func TestPerformWithAssetEventThatDoesNotPassTheFilter(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Log("The request should never have been sent")
+		t.Fail()
+	}))
+	defer ts.Close()
+	config := conf(ts)
+	config.IgnoredFiles = []string{"snickerdoodle.txt"}
+	config.Ignores = []string{}
+
+	asset := Asset{Key: "snickerdoodle.txt", Value: "not important"}
+	event := TestEvent{asset: asset, eventType: Update}
+
+	client := NewThemeClient(config)
+	client.Perform(event)
+}
+
 func TestProcessingAnEventsChannel(t *testing.T) {
 	results := map[string]int{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

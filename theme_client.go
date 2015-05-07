@@ -163,9 +163,7 @@ func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages c
 		for {
 			job, more := <-events
 			if more {
-				if !t.filter.MatchesFilter(job.Asset().Key) {
-					messages <- t.Perform(job)
-				}
+				messages <- t.Perform(job)
 			} else {
 				close(messages)
 				done <- true
@@ -177,6 +175,9 @@ func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages c
 }
 
 func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
+	if t.filter.MatchesFilter(asset.Asset().Key) {
+		return NoOpEvent{}
+	}
 	var event string
 	switch asset.Type() {
 	case Update:
