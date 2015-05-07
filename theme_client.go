@@ -18,6 +18,7 @@ const CreateThemeMaxRetries int = 3
 type ThemeClient struct {
 	config Configuration
 	client *http.Client
+	filter EventFilter
 }
 
 type Theme struct {
@@ -52,7 +53,11 @@ type AssetEvent interface {
 }
 
 func NewThemeClient(config Configuration) ThemeClient {
-	return ThemeClient{config: config, client: newHttpClient(config)}
+	return ThemeClient{
+		config: config,
+		client: newHttpClient(config),
+		filter: NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores),
+	}
 }
 
 func (t ThemeClient) GetConfiguration() Configuration {
@@ -158,7 +163,9 @@ func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages c
 		for {
 			job, more := <-events
 			if more {
-				messages <- t.Perform(job)
+				if !t.filter.MatchesFilter(job.Asset().Key) {
+					messages <- t.Perform(job)
+				}
 			} else {
 				close(messages)
 				done <- true
