@@ -11,7 +11,7 @@ build:
 	for subproject in $(SUBPROJECTS); \
 	do \
 	  mkdir -p build/dist/${GOOS}-${GOARCH}; \
-		godep go build -o build/dist/${GOOS}-${GOARCH}/$${subproject} cmd/$${subproject}/*.go; \
+		godep go build -o build/dist/${GOOS}-${GOARCH}/$${subproject}${EXT} cmd/$${subproject}/*.go; \
 	done
 
 clean:
@@ -26,8 +26,8 @@ build32:
 	export GOARCH=386; $(MAKE) build
 
 windows:
-	export GOOS=windows; $(MAKE) build64
-	export GOOS=windows; $(MAKE) build32
+	export GOOS=windows; export EXT=.exe; $(MAKE) build64
+	export GOOS=windows; export EXT=.exe; $(MAKE) build32
 
 mac:
 	export GOOS=darwin; $(MAKE) build64
