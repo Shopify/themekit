@@ -2,10 +2,11 @@ package themekit
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEventFilterRejectsEventsThatMatch(t *testing.T) {
@@ -41,6 +42,13 @@ func TestFilterRemovesEmptyStrings(t *testing.T) {
 	eventFilter := NewEventFilterFromReaders([]io.Reader{})
 	inputEvents := []string{"hello", "", "world"}
 	expectedEvents := []string{"hello", "world"}
+	assertFilter(t, eventFilter, inputEvents, expectedEvents)
+}
+
+func TestDefaultFilters(t *testing.T) {
+	eventFilter := NewEventFilterFromReaders([]io.Reader{})
+	inputEvents := []string{".git/HEAD", ".DS_Store", "config.yml", "templates/products.liquid"}
+	expectedEvents := []string{"templates/products.liquid"}
 	assertFilter(t, eventFilter, inputEvents, expectedEvents)
 }
 

@@ -16,6 +16,7 @@ const commandDefault string = "download [<file> ...]"
 var globalEventLog chan themekit.ThemeEvent
 
 var permittedZeroArgCommands = map[string]bool{
+	"upload":   true,
 	"download": true,
 	"replace":  true,
 	"watch":    true,
@@ -105,7 +106,9 @@ func main() {
 			if !more {
 				return
 			}
-			fmt.Println(event)
+			if len(event.String()) > 0 {
+				fmt.Println(event)
+			}
 		}
 	}()
 	<-done
