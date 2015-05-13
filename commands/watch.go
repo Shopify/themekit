@@ -2,13 +2,16 @@ package commands
 
 import (
 	"fmt"
-	"github.com/csaunders/themekit"
 	"os"
+	"time"
+
+	"github.com/csaunders/themekit"
 )
 
 type WatchOptions struct {
 	BasicOptions
-	Directory string
+	Directory  string
+	NotifyFile string
 }
 
 func WatchCommand(args map[string]interface{}) chan bool {
@@ -18,6 +21,7 @@ func WatchCommand(args map[string]interface{}) chan bool {
 	extractThemeClient(&options.Client, args)
 	extractEventLog(&options.EventLog, args)
 	extractString(&options.Directory, "directory", args)
+	extractString(&options.NotifyFile, "notifyFile", args)
 
 	return Watch(options)
 }
@@ -32,6 +36,12 @@ func Watch(options WatchOptions) chan bool {
 	bucket := themekit.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
 	bucket.TopUp()
 	foreman := themekit.NewForeman(bucket)
+	foreman.OnIdle = func() {
+		if len(options.NotifyFile) > 0 {
+			os.Create(options.NotifyFile)
+			os.Chtimes(options.NotifyFile, time.Now(), time.Now())
+		}
+	}
 	watcher := constructFileWatcher(options.Directory, config)
 	foreman.JobQueue = watcher
 	foreman.IssueWork()
