@@ -138,11 +138,12 @@ func FileManipulationCommandParser(cmd string, args []string) (result map[string
 func WatchCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
 	currentDir, _ := os.Getwd()
-	var environment, directory string
+	var environment, directory, notifyFile string
 
 	set = makeFlagSet(cmd)
 	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to run command")
 	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
+	set.StringVar(&notifyFile, "notify", "", "file to touch when workers have gone idle")
 	set.Parse(args)
 
 	client, err := loadThemeClient(directory, environment)
@@ -152,6 +153,7 @@ func WatchCommandParser(cmd string, args []string) (result map[string]interface{
 	}
 
 	result["themeClient"] = client
+	result["notifyFile"] = notifyFile
 
 	return
 }
