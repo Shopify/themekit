@@ -1,13 +1,15 @@
 package commands
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
-	"github.com/csaunders/themekit"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/csaunders/themekit"
 )
 
 type ConfigurationOptions struct {
@@ -112,6 +114,32 @@ func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool, l
 	close(done)
 	close(log)
 	return
+}
+
+func PrepareConfigurationMigration(dir string) (func() bool, func() error) {
+	environmentLocation := filepath.Join(dir, "config.yml")
+	env, err := loadOrInitializeEnvironment(environmentLocation)
+	if err != nil {
+		themekit.NotifyError(err)
+		return func() bool { return false }, func() error { return err }
+	}
+
+	confirmationFn := func() bool {
+		before, _ := ioutil.ReadFile(environmentLocation)
+		after := env.String()
+		fmt.Println(themekit.YellowText("Compare changes to configuration:"))
+		fmt.Println(themekit.YellowText("Before:\n"), themekit.GreenText(string(before)))
+		fmt.Println(themekit.YellowText("After:\n"), themekit.RedText(after))
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Println(themekit.YellowText("Does this look correct? (y/n)"))
+		text, _ := reader.ReadString('\n')
+		return text == "y"
+	}
+
+	saveFn := func() error {
+		return env.Save(environmentLocation)
+	}
+	return confirmationFn, saveFn
 }
 
 func MigrateConfiguration(dir string) error {

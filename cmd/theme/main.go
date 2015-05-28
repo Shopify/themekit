@@ -228,11 +228,12 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.The
 	if err != nil && !isRetry {
 		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", themekit.DefaultEnvironment)
 		fmt.Println(themekit.YellowText(upgradeMessage))
-		err := commands.MigrateConfiguration(directory)
-		if err != nil {
-			return themekit.ThemeClient{}, err
+		confirmationfn, savefn := commands.PrepareConfigurationMigration(directory)
+
+		if confirmationfn() && savefn() == nil {
+			return loadThemeClientWithRetry(directory, env, true)
 		}
-		return loadThemeClientWithRetry(directory, env, true)
+		return themekit.ThemeClient{}, errors.New("loadThemeClientWithRetry: could not load or migrate the configuration")
 	} else if err != nil {
 		return themekit.ThemeClient{}, err
 	}
