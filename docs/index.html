@@ -145,6 +145,10 @@ of commands that are available, enter the following command into your terminal:<
 
 <p>By default watch starts up two workers who will perform the upload, allowing for faster uploads to Shopify. The number of workers can be changed in your <a href="#config-files">configuration file</a> though be aware that you may run the risk of slowdowns due to the leaky bucket getting drained.</p>
 
+<p>To ease integrating the watcher with tools such as <a href="http://livereload.com/">LiveReload</a>, you can provide an the optional <code>--notify</code> argument to a file you want to have updated when the workers have gone idle. For example, if you had LiveReload watching for update made to a file at <code>/tmp/theme.update</code> you would enter the following command:</p>
+
+<pre><code>theme watch --notify=/tmp/theme.update</code></pre>
+
 <h3 id="a-iddownload-hrefdownloaddownloadai-classfa-fa-bookmarki"><a id="download" href="#download">Download</a><i class="fa fa-bookmark"></i></h3>
 
 <p>If called without any arguments, it will download the entire theme. Otherwise if you specify the files you want to download, then only those files will be retrieved. For example if you wanted to download the <code>404</code> and <code>article</code> liquid templates you could enter the following command:</p>

@@ -98,6 +98,10 @@ Theme watch will start a process that will watch the specified directory for cha
 
 By default watch starts up two workers who will perform the upload, allowing for faster uploads to Shopify. The number of workers can be changed in your [configuration file](#config-files) though be aware that you may run the risk of slowdowns due to the leaky bucket getting drained.
 
+To ease integrating the watcher with tools such as [LiveReload](http://livereload.com/), you can provide an the optional `--notify` argument to a file you want to have updated when the workers have gone idle. For example, if you had LiveReload watching for update made to a file at `/tmp/theme.update` you would enter the following command:
+
+<pre><code>theme watch --notify=/tmp/theme.update</code></pre>
+
 ### <a id="download" href="#download">Download</a><i class="fa fa-bookmark"></i>
 
 If called without any arguments, it will download the entire theme. Otherwise if you specify the files you want to download, then only those files will be retrieved. For example if you wanted to download the `404` and `article` liquid templates you could enter the following command:
