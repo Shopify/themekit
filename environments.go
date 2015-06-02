@@ -44,6 +44,14 @@ func (e Environments) Write(w io.Writer) error {
 	return err
 }
 
+func (e Environments) String() string {
+	bytes, err := yaml.Marshal(e)
+	if err != nil {
+		return "environments: cannot serialize"
+	}
+	return string(bytes)
+}
+
 func (e Environments) Save(location string) error {
 	file, err := os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	defer file.Close()
