@@ -91,10 +91,6 @@ func Configure(options ConfigurationOptions) {
 func AddConfiguration(dir, environment string, config themekit.Configuration) {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)
-	if err != nil {
-		themekit.NotifyError(err)
-		return
-	}
 	env.SetConfiguration(environment, config)
 
 	err = env.Save(environmentLocation)
