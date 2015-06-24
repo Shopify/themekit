@@ -1,6 +1,6 @@
 package themekit
 
-const ThemeKitVersion string = "v0.2.3"
+const ThemeKitVersion string = "v0.2.5"
 
 func LibraryInfo() []string {
 	return []string{
