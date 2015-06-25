@@ -138,22 +138,36 @@ func FileManipulationCommandParser(cmd string, args []string) (result map[string
 func WatchCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
 	currentDir, _ := os.Getwd()
+	var allEnvironments bool
 	var environment, directory, notifyFile string
+	var environments themekit.Environments
 
 	set = makeFlagSet(cmd)
 	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to run command")
+	set.BoolVar(&allEnvironments, "allenvs", false, "start watchers for all environments")
 	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
 	set.StringVar(&notifyFile, "notify", "", "file to touch when workers have gone idle")
 	set.Parse(args)
 
-	client, err := loadThemeClient(directory, environment)
-	if err != nil {
-		themekit.NotifyError(err)
-		return
+	if len(environment) != 0 && allEnvironments {
+		environment = ""
 	}
 
-	result["themeClient"] = client
 	result["notifyFile"] = notifyFile
+	environments, err := loadEnvironments(directory)
+	if allEnvironments && err == nil {
+		result["environments"] = environments
+	}
+
+	if len(environment) > 0 {
+		client, err := loadThemeClient(directory, environment)
+		if err != nil {
+			themekit.NotifyError(err)
+			return
+		}
+
+		result["themeClient"] = client
+	}
 
 	return
 }
@@ -220,7 +234,7 @@ func loadThemeClient(directory, env string) (themekit.ThemeClient, error) {
 }
 
 func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.ThemeClient, error) {
-	environments, err := themekit.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
+	environments, err := loadEnvironments(directory)
 	if err != nil {
 		return themekit.ThemeClient{}, err
 	}
@@ -239,6 +253,10 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.The
 	}
 
 	return themekit.NewThemeClient(config), nil
+}
+
+func loadEnvironments(directory string) (themekit.Environments, error) {
+	return themekit.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
 }
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {

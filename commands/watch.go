@@ -12,12 +12,14 @@ type WatchOptions struct {
 	BasicOptions
 	Directory  string
 	NotifyFile string
+	Clients    []themekit.ThemeClient
 }
 
 func WatchCommand(args map[string]interface{}) chan bool {
 	currentDir, _ := os.Getwd()
 
 	options := WatchOptions{Directory: currentDir}
+	options.Clients = extractThemeClients(args)
 	extractThemeClient(&options.Client, args)
 	extractEventLog(&options.EventLog, args)
 	extractString(&options.Directory, "directory", args)
@@ -26,11 +28,32 @@ func WatchCommand(args map[string]interface{}) chan bool {
 	return Watch(options)
 }
 
+func isSingleEnvironment(options WatchOptions) bool {
+	return len(options.Clients) == 0
+}
+
 func Watch(options WatchOptions) chan bool {
+	if isSingleEnvironment(options) {
+		options.Clients = []themekit.ThemeClient{options.Client}
+	}
+
 	done := make(chan bool)
 	eventLog := options.getEventLog()
-	client := options.Client
 
+	for _, client := range options.Clients {
+		config := client.GetConfiguration()
+		concurrency := config.Concurrency
+		logEvent(message(fmt.Sprintf("Spawning %d workers for %s", concurrency, config.Domain)), eventLog)
+
+		options.Client = client
+		watchForChangesAndIssueWork(options, eventLog)
+	}
+
+	return done
+}
+
+func watchForChangesAndIssueWork(options WatchOptions, eventLog chan themekit.ThemeEvent) {
+	client := options.Client
 	config := client.GetConfiguration()
 
 	bucket := themekit.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
@@ -46,16 +69,14 @@ func Watch(options WatchOptions) chan bool {
 	foreman.JobQueue = watcher
 	foreman.IssueWork()
 
-	logEvent(message(fmt.Sprintf("Spawning %d workers", config.Concurrency)), eventLog)
 	for i := 0; i < config.Concurrency; i++ {
-		go spawnWorker(i, foreman.WorkerQueue, client, eventLog)
+		workerName := fmt.Sprintf("%s Worker #%d", config.Domain, i)
+		go spawnWorker(workerName, foreman.WorkerQueue, client, eventLog)
 	}
-
-	return done
 }
 
-func spawnWorker(workerId int, queue chan themekit.AssetEvent, client themekit.ThemeClient, eventLog chan themekit.ThemeEvent) {
-	logEvent(workerSpawnEvent(workerId), eventLog)
+func spawnWorker(workerName string, queue chan themekit.AssetEvent, client themekit.ThemeClient, eventLog chan themekit.ThemeEvent) {
+	logEvent(workerSpawnEvent(workerName), eventLog)
 	for {
 		asset := <-queue
 		if asset.Asset().IsValid() {
@@ -87,14 +108,14 @@ func constructFileWatcher(dir string, config themekit.Configuration) chan themek
 	return watcher
 }
 
-func workerSpawnEvent(workerId int) themekit.ThemeEvent {
+func workerSpawnEvent(workerName string) themekit.ThemeEvent {
 	return basicEvent{
 		Title:     "Worker",
-		Target:    fmt.Sprintf("%d", workerId),
+		Target:    workerName,
 		etype:     "basicEvent",
 		EventType: "worker",
 		Formatter: func(b basicEvent) string {
-			return fmt.Sprintf("%s #%s ready to upload local changes", b.Title, b.Target)
+			return fmt.Sprintf("%s ready to upload local changes", b.Target)
 		},
 	}
 }
