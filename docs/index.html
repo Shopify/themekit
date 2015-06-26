@@ -149,6 +149,10 @@ of commands that are available, enter the following command into your terminal:<
 
 <pre><code>theme watch --notify=/tmp/theme.update</code></pre>
 
+<p><strong>Concurrent Uploads to multiple Environments</strong></p>
+
+<p>Another command that can be useful for theme development is the <code>--allenvs</code> flag. By passing in this flag to the <code>theme watch</code> command, themekit will create watchers for every environment in your <a href="#config-files">configuration file</a>. <strong>Note</strong> currently there is no way to opt-out specific configurations, which means that changes made here will be sent to all your configured themes which may include production versions.</p>
+
 <h3 id="a-iddownload-hrefdownloaddownloadai-classfa-fa-bookmarki"><a id="download" href="#download">Download</a><i class="fa fa-bookmark"></i></h3>
 
 <p>If called without any arguments, it will download the entire theme. Otherwise if you specify the files you want to download, then only those files will be retrieved. For example if you wanted to download the <code>404</code> and <code>article</code> liquid templates you could enter the following command:</p>

@@ -102,6 +102,10 @@ To ease integrating the watcher with tools such as [LiveReload](http://livereloa
 
 <pre><code>theme watch --notify=/tmp/theme.update</code></pre>
 
+**Concurrent Uploads to multiple Environments**
+
+Another command that can be useful for theme development is the `--allenvs` flag. By passing in this flag to the `theme watch` command, themekit will create watchers for every environment in your [configuration file](#config-files). **Note** currently there is no way to opt-out specific configurations, which means that changes made here will be sent to all your configured themes which may include production versions.
+
 ### <a id="download" href="#download">Download</a><i class="fa fa-bookmark"></i>
 
 If called without any arguments, it will download the entire theme. Otherwise if you specify the files you want to download, then only those files will be retrieved. For example if you wanted to download the `404` and `article` liquid templates you could enter the following command:
