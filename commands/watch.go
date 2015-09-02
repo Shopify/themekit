@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/csaunders/themekit"
+	"github.com/Shopify/themekit"
 )
 
 type WatchOptions struct {

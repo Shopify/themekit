@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/csaunders/themekit"
+	"github.com/Shopify/themekit"
 	"os"
 	"path/filepath"
 )

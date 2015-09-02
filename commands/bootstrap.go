@@ -3,7 +3,7 @@ package commands
 import (
 	"bytes"
 	"errors"
-	"github.com/csaunders/themekit"
+	"github.com/Shopify/themekit"
 	"net/http"
 	"os"
 )

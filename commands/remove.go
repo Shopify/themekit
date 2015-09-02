@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/csaunders/themekit"
+	"github.com/Shopify/themekit"
 	"os"
 )
 

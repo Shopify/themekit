@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/csaunders/themekit"
+	"github.com/Shopify/themekit"
 )
 
 type ReplaceOptions struct {

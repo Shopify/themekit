@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/csaunders/themekit"
+	"github.com/Shopify/themekit"
 )
 
 type UploadOptions struct {
