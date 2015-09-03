@@ -3,6 +3,7 @@ package themekit
 import (
 	"bytes"
 	"fmt"
+	"github.com/fatih/color"
 	"image"
 	"image/png"
 	"io/ioutil"
@@ -12,21 +13,10 @@ import (
 
 const MessageSeparator string = "\n----------------------------------------------------------------\n"
 
-func RedText(s string) string {
-	return fmt.Sprintf("\033[31m%s\033[0m", s)
-}
-
-func YellowText(s string) string {
-	return fmt.Sprintf("\033[33m%s\033[0m", s)
-}
-
-func BlueText(s string) string {
-	return fmt.Sprintf("\033[34m%s\033[0m", s)
-}
-
-func GreenText(s string) string {
-	return fmt.Sprintf("\033[32m%s\033[0m", s)
-}
+var RedText = color.New(color.FgRed).SprintFunc()
+var YellowText = color.New(color.FgYellow).SprintFunc()
+var BlueText = color.New(color.FgBlue).SprintFunc()
+var GreenText = color.New(color.FgGreen).SprintFunc()
 
 func TestFixture(name string) string {
 	path := fmt.Sprintf("fixtures/%s.json", name)
