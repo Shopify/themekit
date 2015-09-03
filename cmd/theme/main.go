@@ -239,7 +239,14 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.The
 		return themekit.ThemeClient{}, err
 	}
 	config, err := environments.GetConfiguration(env)
-	if err != nil && !isRetry {
+	if err != nil && len(environments) > 0 {
+		invalidEnvMsg := fmt.Sprintf("'%s' is not a valid environment. The following environments are available within config.yml:", env)
+		fmt.Println(themekit.RedText(invalidEnvMsg))
+		for e, _ := range environments {
+			fmt.Println(themekit.RedText(fmt.Sprintf(" - %s", e)))
+		}
+		os.Exit(1)
+	} else if err != nil && !isRetry {
 		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", themekit.DefaultEnvironment)
 		fmt.Println(themekit.YellowText(upgradeMessage))
 		confirmationfn, savefn := commands.PrepareConfigurationMigration(directory)
@@ -247,6 +254,7 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.The
 		if confirmationfn() && savefn() == nil {
 			return loadThemeClientWithRetry(directory, env, true)
 		}
+
 		return themekit.ThemeClient{}, errors.New("loadThemeClientWithRetry: could not load or migrate the configuration")
 	} else if err != nil {
 		return themekit.ThemeClient{}, err

@@ -129,7 +129,7 @@ func PrepareConfigurationMigration(dir string) (func() bool, func() error) {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Println(themekit.YellowText("Does this look correct? (y/n)"))
 		text, _ := reader.ReadString('\n')
-		return text == "y"
+		return strings.TrimSpace(text) == "y"
 	}
 
 	saveFn := func() error {
