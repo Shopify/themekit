@@ -17,10 +17,18 @@ func (s *FileWatcherSuite) TearDownTest() {
 }
 
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
-	event := fsnotify.Event{Name: "fixtures/whatever.txt"}
-	asset := fwLoadAsset(event)
-	assert.Equal(s.T(), asset.Key, "fixtures/whatever.txt")
-	assert.Equal(s.T(), "whatever\n", asset.Value)
+	var tests = []struct {
+		input    fsnotify.Event
+		expected Asset
+	}{
+		{fsnotify.Event{Name: "fixtures/layout/theme.liquid"}, Asset{Key: "layout/theme.liquid", Value: "Liquid Theme\n"}},
+		{fsnotify.Event{Name: "fixtures/templates/customers/account.liquid"}, Asset{Key: "templates/customers/account.liquid", Value: "Account Page\n"}},
+	}
+	for _, test := range tests {
+		actual := fwLoadAsset(test.input)
+		assert.Equal(s.T(), test.expected.Key, actual.Key)
+		assert.Equal(s.T(), test.expected.Value, actual.Value)
+	}
 }
 
 func (s *FileWatcherSuite) TestDeterminingContentTypesOfFiles() {

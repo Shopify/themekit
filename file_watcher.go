@@ -55,7 +55,6 @@ func NewFileWatcher(dir string, recur bool, filter EventFilter) (chan AssetEvent
 
 func fwLoadAsset(event fsnotify.Event) Asset {
 	root := filepath.Dir(event.Name)
-	fileParentDir := filepath.Base(root)
 	filename := filepath.Base(event.Name)
 
 	asset, err := LoadAsset(root, filename)
@@ -66,7 +65,7 @@ func fwLoadAsset(event fsnotify.Event) Asset {
 			asset = Asset{}
 		}
 	}
-	asset.Key = fmt.Sprintf("%s/%s", fileParentDir, filename)
+	asset.Key = extractAssetKey(event.Name)
 	return asset
 }
 
