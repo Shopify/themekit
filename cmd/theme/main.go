@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"flag"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const commandDefault string = "download [<file> ...]"
@@ -100,18 +102,27 @@ func main() {
 
 	operation := commandMapping[command]
 	done := operation(args)
+	output := bufio.NewWriter(os.Stdout)
 	go func() {
+		ticked := false
 		for {
-			event, more := <-globalEventLog
-			if !more {
-				return
-			}
-			if len(event.String()) > 0 {
-				fmt.Println(event)
+			select {
+			case event := <-globalEventLog:
+				if len(event.String()) > 0 {
+					output.Write([]byte(fmt.Sprintf("%s\n", event)))
+					output.Flush()
+				}
+			case <-time.Tick(1000 * time.Millisecond):
+				if !ticked {
+					ticked = true
+					done <- true
+				}
 			}
 		}
 	}()
 	<-done
+	<-done
+	output.Flush()
 }
 
 func FileManipulationCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {

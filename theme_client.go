@@ -29,6 +29,12 @@ type Theme struct {
 	Previewable bool   `json:"previewable,omitempty"`
 }
 
+type apiResponse struct {
+	code int
+	body []byte
+	err  error
+}
+
 type EventType int
 
 func (e EventType) String() string {
@@ -40,6 +46,16 @@ func (e EventType) String() string {
 	default:
 		return "Unknown"
 	}
+}
+
+type NonFatalNetworkError struct {
+	Code    int
+	Verb    string
+	Message string
+}
+
+func (e NonFatalNetworkError) Error() string {
+	return fmt.Sprintf("%d %s %s", e.Code, e.Verb, e.Message)
 }
 
 const (
@@ -64,6 +80,10 @@ func (t ThemeClient) GetConfiguration() Configuration {
 	return t.config
 }
 
+func (t ThemeClient) LeakyBucket() *LeakyBucket {
+	return NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
+}
+
 func (t ThemeClient) AssetList() (results chan Asset, errs chan error) {
 	results = make(chan Asset)
 	errs = make(chan error)
@@ -72,14 +92,13 @@ func (t ThemeClient) AssetList() (results chan Asset, errs chan error) {
 			return path
 		}
 
-		bytes, err := t.query(queryBuilder)
-		if err != nil {
-			errs <- err
-			return
+		resp := t.query(queryBuilder)
+		if resp.err != nil {
+			errs <- resp.err
 		}
 
 		var assets map[string][]Asset
-		err = json.Unmarshal(bytes, &assets)
+		err := json.Unmarshal(resp.body, &assets)
 		if err != nil {
 			errs <- err
 			return
@@ -101,9 +120,15 @@ func (t ThemeClient) Asset(filename string) (Asset, error) {
 		return fmt.Sprintf("%s&asset[key]=%s", path, filename)
 	}
 
-	bytes, err := t.query(queryBuilder)
+	resp := t.query(queryBuilder)
+	if resp.err != nil {
+		return Asset{}, resp.err
+	}
+	if resp.code >= 400 {
+		return Asset{}, NonFatalNetworkError{Code: resp.code, Verb: "GET", Message: "not found"}
+	}
 	var asset map[string]Asset
-	err = json.Unmarshal(bytes, &asset)
+	err := json.Unmarshal(resp.body, &asset)
 	if err != nil {
 		return Asset{}, err
 	}
@@ -192,23 +217,24 @@ func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
 	return processResponse(resp, err, asset)
 }
 
-func (t ThemeClient) query(queryBuilder func(path string) string) ([]byte, error) {
+func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
 	path := fmt.Sprintf("%s?fields=key,attachment,value", t.config.AssetPath())
 	path = queryBuilder(path)
 
 	req, err := http.NewRequest("GET", path, nil)
 	if err != nil {
-		return []byte{}, err
+		return apiResponse{err: err}
 	}
 
 	t.config.AddHeaders(req)
 	resp, err := t.client.Do(req)
 	if err != nil {
-		return []byte{}, err
+		return apiResponse{err: err}
 	} else {
 		defer resp.Body.Close()
 	}
-	return ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	return apiResponse{code: resp.StatusCode, body: body, err: err}
 }
 
 func (t ThemeClient) sendData(method, path string, body []byte) (result APIThemeEvent) {
