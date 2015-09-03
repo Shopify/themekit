@@ -55,9 +55,9 @@ func Watch(options WatchOptions) chan bool {
 func watchForChangesAndIssueWork(options WatchOptions, eventLog chan themekit.ThemeEvent) {
 	client := options.Client
 	config := client.GetConfiguration()
-
-	bucket := themekit.NewLeakyBucket(config.BucketSize, config.RefillRate, 1)
+	bucket := client.LeakyBucket()
 	bucket.TopUp()
+
 	foreman := themekit.NewForeman(bucket)
 	foreman.OnIdle = func() {
 		if len(options.NotifyFile) > 0 {

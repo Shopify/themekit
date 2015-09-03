@@ -80,6 +80,18 @@ func (a APIAssetEvent) String() string {
 		)
 	} else if a.Code == 422 {
 		return RedText(fmt.Sprintf("Could not upload %s:\n\t%s", a.AssetKey, a.err))
+	} else if a.Code == 403 {
+		return fmt.Sprintf(
+			"[%s]Cannot remove files that would make a theme invalid. %s",
+			RedText(fmt.Sprintf("%d", a.Code)),
+			BlueText(a.AssetKey),
+		)
+	} else if a.Code == 404 {
+		return fmt.Sprintf(
+			"[%s]Could not complete operation because %s does not exist",
+			RedText(fmt.Sprintf("%d", a.Code)),
+			BlueText(a.AssetKey),
+		)
 	} else {
 		return fmt.Sprintf(
 			"[%s]Could not perform %s to %s at %s\n\t%s",
@@ -93,7 +105,7 @@ func (a APIAssetEvent) String() string {
 }
 
 func (a APIAssetEvent) Successful() bool {
-	return a.Code >= 200 && a.Code <= 300
+	return a.Code >= 200 && a.Code < 300
 }
 
 func (a APIAssetEvent) Error() error {
