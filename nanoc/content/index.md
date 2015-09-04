@@ -14,6 +14,14 @@ title: Shopify Themes for Everyone
 
 ## Downloads
 
+### On Linux or Mac?
+
+Run this script in your console to easily install and setup <%= @config[:project_name] %>.
+
+`<%= @config[:install_unix_script] %>`
+
+### Prefer to install things manually?
+
 With <%= @config[:project_name] %> setup is easy, just download the app for your platform, unzip and
 run it from the command line.
 

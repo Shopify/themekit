@@ -21,6 +21,7 @@ enable_output_diff: false
 
 project_name: Theme Kit
 repository: https://github.com/csaunders/themekit
+install_unix_script: "curl https://raw.githubusercontent.com/Shopify/themekit/installers/install | python"
 
 prune:
   # Whether to automatically remove files not managed by nanoc from the output

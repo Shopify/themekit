@@ -2,7 +2,17 @@
 title: Installation Guide
 ---
 
-# Installation Guide
+# Automatic Installation
+
+If you are on **Mac or Linux** you can use the following installation script to automatically download and install
+<%= @config[:project_name] %> for you. You will need to make a small change to your shell initialization file
+(i.e. `.bashrc`) before `theme` will show up in your console:
+
+`<%= @config[:install_unix_script] %>`
+
+An automated installer for Windows will be coming soon.
+
+# Manual Installation Guide
 
 Download and Unzip the <%= link_to 'latest release from Github', "#{@config[:repository]}/releases" %>
 
