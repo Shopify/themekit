@@ -22,6 +22,7 @@ var permittedZeroArgCommands = map[string]bool{
 	"download": true,
 	"replace":  true,
 	"watch":    true,
+	"version":  true,
 }
 
 var commandDescriptionPrefix = []string{
@@ -37,6 +38,7 @@ var permittedCommands = map[string]string{
 	"watch":                       "Watch directory for changes and update remote theme",
 	"configure":                   "Create a configuration file",
 	"bootstrap":                   "Bootstrap a new theme using Shopify Timber",
+	"version":                     "Display themekit version",
 }
 
 type CommandParser func(string, []string) (map[string]interface{}, *flag.FlagSet)
@@ -49,6 +51,7 @@ var parserMapping = map[string]CommandParser{
 	"watch":     WatchCommandParser,
 	"configure": ConfigurationCommandParser,
 	"bootstrap": BootstrapParser,
+	"version":   NoOpParser,
 }
 
 type Command func(map[string]interface{}) chan bool
@@ -61,6 +64,7 @@ var commandMapping = map[string]Command{
 	"watch":     commands.WatchCommand,
 	"configure": commands.ConfigureCommand,
 	"bootstrap": commands.BootstrapCommand,
+	"version":   commands.VersionCommand,
 }
 
 func CommandDescription(defaultCommand string) string {
@@ -123,6 +127,10 @@ func main() {
 	<-done
 	<-done
 	output.Flush()
+}
+
+func NoOpParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
+	return make(map[string]interface{}), nil
 }
 
 func FileManipulationCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
