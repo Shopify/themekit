@@ -23,6 +23,7 @@ var permittedZeroArgCommands = map[string]bool{
 	"replace":  true,
 	"watch":    true,
 	"version":  true,
+	"update":   true,
 }
 
 var commandDescriptionPrefix = []string{
@@ -39,6 +40,7 @@ var permittedCommands = map[string]string{
 	"configure":                   "Create a configuration file",
 	"bootstrap":                   "Bootstrap a new theme using Shopify Timber",
 	"version":                     "Display themekit version",
+	"update":                      "Update application",
 }
 
 type CommandParser func(string, []string) (map[string]interface{}, *flag.FlagSet)
@@ -52,6 +54,7 @@ var parserMapping = map[string]CommandParser{
 	"configure": ConfigurationCommandParser,
 	"bootstrap": BootstrapParser,
 	"version":   NoOpParser,
+	"update":    NoOpParser,
 }
 
 type Command func(map[string]interface{}) chan bool
@@ -65,6 +68,7 @@ var commandMapping = map[string]Command{
 	"configure": commands.ConfigureCommand,
 	"bootstrap": commands.BootstrapCommand,
 	"version":   commands.VersionCommand,
+	"update":    commands.UpdateCommand,
 }
 
 func CommandDescription(defaultCommand string) string {
