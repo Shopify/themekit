@@ -39,5 +39,7 @@ linux:
 zip:
 	./compress
 
-dist: windows mac linux zip
+upload_to_s3:
+	./release
 
+dist: clean windows mac linux zip upload_to_s3

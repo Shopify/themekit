@@ -1,0 +1,175 @@
+#!/usr/bin/env ruby
+require 'fog'
+require 'dotenv'
+require 'json'
+require 'digest'
+require 'set'
+require 'git'
+
+Dotenv.load
+
+ALL_RELEASES = "releases/all.json"
+LATEST_RELEASE = "releases/latest.json"
+GIT_DIR = File.expand_path(__FILE__ + "/..")
+
+class FileManager
+  attr_reader :bucket
+  def initialize(bucket)
+    @bucket = bucket
+  end
+
+  def upload!(filename, content)
+    file = bucket.files.new(
+      key: filename,
+      body: content,
+      public: true
+    )
+    file.save
+  end
+
+  def url(filename)
+    bucket.files.get(filename).public_url
+  end
+
+  def fetch(filename, default: "")
+    return bucket.files.get(filename).body if bucket.files.head(filename)
+    return default
+  end
+end
+
+class Repository
+  def initialize
+    @git = Git.open(GIT_DIR)
+  end
+
+  def latest_version
+    @git.tags.last.name
+  end
+end
+
+class Release
+  attr_reader :platform, :file, :version
+  attr_accessor :location
+  def initialize(version, platform, filename)
+    @platform = platform
+    @version = version
+    @file = File.open(filename, 'rb')
+  end
+
+  def full_name
+    [version, platform, File.basename(file.path)].join('/')
+  end
+
+  def data
+    file.rewind
+    file.read
+  end
+
+  def hexdigest
+    Digest::MD5.hexdigest(data)
+  end
+
+  def as_hash
+    {
+      "name" => platform,
+      "url" => location,
+      "digest" => hexdigest
+    }
+  end
+end
+
+class ReleaseGenerator
+  attr_reader :version, :releases, :storage_manager
+  DIST_DIR = File.expand_path(__FILE__ + "/../build/dist")
+  BUILDS = %w(darwin-amd64 linux-386 linux-amd64 windows-386 windows-amd64)
+
+  def initialize(version, storage_manager)
+    ensure_builds_have_been_created
+    @version = version
+    @releases = prepare_releases
+    @storage_manager = storage_manager
+  end
+
+  def upload!
+    ensure_release_is_necessary
+    releases.each do |release|
+      storage_manager.upload!(release.full_name, release.data)
+      release.location = storage_manager.url(release.full_name)
+    end
+  end
+
+  def ensure_builds_have_been_created
+    return if File.exist?(DIST_DIR)
+    puts "Distribution build at #{DIST_DIR} has not been created. Run 'make dist' before attempting to create a new release"
+    exit(1)
+  end
+
+  def ensure_release_is_necessary
+    feed = JSON.parse(storage_manager.fetch(ALL_RELEASES, default:  '[]'))
+    if feed.find { |r| r['version'] == version }
+      puts "v#{version} has already been deployed. If this was intended to be a new release, ensure version.go has been updated and add an appropriate tag to git"
+      exit(1)
+    end
+  end
+
+  def prepare_releases
+    BUILDS.map do |platform|
+      build_location = File.expand_path(DIST_DIR + "/#{platform}")
+      binary = Dir.entries(build_location).find { |name| name =~ /theme/ }
+      Release.new(version, platform, [build_location, binary].join('/'))
+    end
+  end
+end
+
+class FeedGenerator
+  attr_reader :version, :releases, :storage_manager
+  def initialize(version, releases, storage_manager)
+    @version = version
+    @releases = releases
+    @storage_manager = storage_manager
+  end
+
+  def upload!
+    storage_manager.upload!(LATEST_RELEASE, latest_feed)
+    storage_manager.upload!(ALL_RELEASES, entire_feed)
+  end
+
+  def latest_feed
+    as_hash.to_json
+  end
+
+  def entire_feed
+    full_feed = JSON.parse(storage_manager.fetch(ALL_RELEASES, default: "[]"))
+    full_feed << as_hash
+    full_feed.each_with_object(Set.new) do |release, memo|
+      memo << release
+    end.to_a.to_json
+  end
+
+  def as_hash
+    {
+      "version" => version,
+      "platforms" => releases.map(&:as_hash)
+    }
+  end
+end
+
+connection = Fog::Storage.new(
+  provider: 'AWS',
+  aws_access_key_id: ENV['AWS_KEY_ID'],
+  aws_secret_access_key: ENV['AWS_SECRET_KEY']
+)
+
+bucket = connection.directories.create(
+  key: ENV['AWS_BUCKET_NAME'],
+  public: true
+)
+manager = FileManager.new(bucket)
+repo = Repository.new
+version = repo.latest_version
+
+release_generator = ReleaseGenerator.new(version, manager)
+release_generator.upload!
+
+feed_generator = FeedGenerator.new(version, release_generator.releases, manager)
+feed_generator.upload!
