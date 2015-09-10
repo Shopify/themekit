@@ -121,7 +121,7 @@ class Installer(object):
         print
         print "For example to add themekit to your .bashrc:"
         print
-        print '\techo "PATH=%s:$PATH" > ~/.bashrc' % self.installlocation
+        print '''\techo 'PATH="%s:$PATH"' >> ~/.bashrc''' % self.installlocation
         print '\tsource ~/.bashrc'
         print
         print 'To verify themekit is working simply type "theme -h"'
