@@ -16,10 +16,11 @@ An automated installer for Windows will be coming soon.
 
 Download and Unzip the <%= link_to 'latest release from Github', "#{@config[:repository]}/releases" %>
 
-If you are using <strong>Mac OS or Linux</strong> follow <%= link_to 'these instruction', '#unix-like' %>
+If you are using <strong>Mac OS or Linux</strong> follow <%= link_to 'these instructions', '#unix-like' %>
 
-If you are using <strong>Windows</strong> follow <%= link_to 'these instruction', '#windows' %>
+If you are using <strong>Windows</strong> follow <%= link_to 'these instructions', '#windows' %>
 
+If you want to <strong>install from source</strong> follow <%= link_to 'these instructions', '#install-from-source' %>
 
 <hr />
 
@@ -30,7 +31,7 @@ If you are using <strong>Windows</strong> follow <%= link_to 'these instruction'
 
 - Create a directory called `Applications/bin`. You can enter the command in a terminal window to create it:
 
-  `mkdir -p ~/Applications`
+  <pre><code>mkdir -p ~/Applications</code></pre>
 
 - Open the `~Applications/bin` directory and move the downloaded `theme` program into it. On Mac OS you can enter the following command to open both teh the `bin` and `Download` directories.
 
@@ -73,6 +74,31 @@ export PATH=$PATH:~/Applications/bin
 - Click **OK** until all the windows are gone.
 - To verify that <%= @config[:project_name] %> has been installed, open `cmd.exe` and type in `theme --help`. [You should see output similar to this.](#expected-command-output)
 
+# Install from Source
+
+Before you can get started you will need to <%= link_to 'install Go for your platform', 'https://golang.org/dl/' %>. With
+go installed, also <%= link_to 'verify go has been installed correctly', 'https://golang.org/doc/install#testing' %>.
+
+You will also need to have <%= link_to 'git installed', 'https://git-scm.com/downloads' %> in order to properly download themekit and it's dependencies.
+
+You will need to add the `bin` directory within your go installation to your PATH. On a unix-like system using Bash,
+you'd do something like this:
+
+<pre><code>
+export PATH=PATH-TO-YOUR-GO-FOLDER/bin:$PATH &#62;&#62; ~/.bashrc
+source ~/.bashrc
+</code></pre>
+
+Download themekit:
+
+<pre><code>go get github.com/Shopify/themekit</code></pre>
+
+Install themekit:
+
+<pre><code>go install github.com/Shopify/themekit/cmd/theme</code></pre>
+
+To verify that <%= @config[:project_name] %> has been installed by typing `theme --help`. [You should see output similar to this.](#expected-command-output)
+
 <a id="expected-command-output"></a>
 
 # Expected output when running `theme --help`
@@ -99,3 +125,5 @@ Usage of theme:
     watch:
         Watch directory for changes and update remote theme
 </code></pre>
+
+<a id="install-from-source"></a>

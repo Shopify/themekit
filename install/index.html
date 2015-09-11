@@ -55,9 +55,11 @@ Theme Kit for you. You will need to make a small change to your shell initializa
 
 <p>Download and Unzip the <a href="https://github.com/csaunders/themekit/releases">latest release from Github</a></p>
 
-<p>If you are using <strong>Mac OS or Linux</strong> follow <a href="#unix-like">these instruction</a></p>
+<p>If you are using <strong>Mac OS or Linux</strong> follow <a href="#unix-like">these instructions</a></p>
 
-<p>If you are using <strong>Windows</strong> follow <a href="#windows">these instruction</a></p>
+<p>If you are using <strong>Windows</strong> follow <a href="#windows">these instructions</a></p>
+
+<p>If you want to <strong>install from source</strong> follow <a href="#install-from-source">these instructions</a></p>
 
 <hr />
 
@@ -69,7 +71,7 @@ Theme Kit for you. You will need to make a small change to your shell initializa
   <li>
     <p>Create a directory called <code>Applications/bin</code>. You can enter the command in a terminal window to create it:</p>
 
-    <p><code>mkdir -p ~/Applications</code></p>
+    <pre><code>mkdir -p ~/Applications</code></pre>
   </li>
   <li>
     <p>Open the <code>~Applications/bin</code> directory and move the downloaded <code>theme</code> program into it. On Mac OS you can enter the following command to open both teh the <code>bin</code> and <code>Download</code> directories.</p>
@@ -123,6 +125,31 @@ Theme Kit for you. You will need to make a small change to your shell initializa
   <li>To verify that Theme Kit has been installed, open <code>cmd.exe</code> and type in <code>theme --help</code>. <a href="#expected-command-output">You should see output similar to this.</a></li>
 </ul>
 
+<h1 id="install-from-source">Install from Source</h1>
+
+<p>Before you can get started you will need to <a href="https://golang.org/dl/">install Go for your platform</a>. With
+go installed, also <a href="https://golang.org/doc/install#testing">verify go has been installed correctly</a>.</p>
+
+<p>You will also need to have <a href="https://git-scm.com/downloads">git installed</a> in order to properly download themekit and it’s dependencies.</p>
+
+<p>You will need to add the <code>bin</code> directory within your go installation to your PATH. On a unix-like system using Bash,
+you’d do something like this:</p>
+
+<pre><code>
+export PATH=PATH-TO-YOUR-GO-FOLDER/bin:$PATH &gt;&gt; ~/.bashrc
+source ~/.bashrc
+</code></pre>
+
+<p>Download themekit:</p>
+
+<pre><code>go get github.com/Shopify/themekit</code></pre>
+
+<p>Install themekit:</p>
+
+<pre><code>go install github.com/Shopify/themekit/cmd/theme</code></pre>
+
+<p>To verify that Theme Kit has been installed by typing <code>theme --help</code>. <a href="#expected-command-output">You should see output similar to this.</a></p>
+
 <p><a id="expected-command-output"></a></p>
 
 <h1 id="expected-output-when-running-theme---help">Expected output when running <code>theme --help</code></h1>
@@ -146,6 +173,8 @@ Theme Kit for you. You will need to make a small change to your shell initializa
         Overwrite theme file(s)
     watch:
         Watch directory for changes and update remote theme</code></pre>
+
+<p><a id="install-from-source"></a></p>
 
     </div>
   </body>
