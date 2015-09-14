@@ -3,17 +3,16 @@ require 'fog'
 require 'dotenv'
 require 'json'
 require 'digest'
-require 'set'
 require 'git'
 
 Dotenv.load
 
-ALL_RELEASES = "releases/all.json"
-LATEST_RELEASE = "releases/latest.json"
-GIT_DIR = File.expand_path(__FILE__ + "/..")
-
 class FileManager
+  ALL_RELEASES = "releases/all.json"
+  LATEST_RELEASE = "releases/latest.json"
+
   attr_reader :bucket
+
   def initialize(bucket)
     @bucket = bucket
   end
@@ -28,16 +27,22 @@ class FileManager
   end
 
   def url(filename)
-    bucket.files.get(filename).public_url
+    get_file(filename).public_url
   end
 
   def fetch(filename, default: "")
-    return bucket.files.get(filename).body if bucket.files.head(filename)
-    return default
+    bucket.files.head(filename) ? get_file(filename).body : default
+  end
+
+  private
+  def get_file(name)
+    bucket.files.get(name)
   end
 end
 
 class Repository
+  GIT_DIR = File.expand_path(__FILE__ + "/..")
+
   def initialize
     @git = Git.open(GIT_DIR)
   end
@@ -48,25 +53,17 @@ class Repository
 end
 
 class Release
-  attr_reader :platform, :file, :version
+  attr_reader :platform, :file, :version, :full_name, :data
   attr_accessor :location
-  def initialize(version, platform, filename)
+
+  def initialize(version: nil, platform: nil, filename: nil)
     @platform = platform
     @version = version
-    @file = File.open(filename, 'rb')
-  end
-
-  def full_name
-    [version, platform, File.basename(file.path)].join('/')
-  end
-
-  def data
-    file.rewind
-    file.read
+    load_file(filename)
   end
 
   def hexdigest
-    Digest::MD5.hexdigest(data)
+    @hexdigest ||= Digest::MD5.hexdigest(data)
   end
 
   def as_hash
@@ -76,10 +73,19 @@ class Release
       "digest" => hexdigest
     }
   end
+
+  private
+  def load_file(filename)
+    file = File.open(filename, 'rb')
+    @full_name = [version, platform, File.basename(file.path)].join('/')
+    @data = file.read
+    file.close
+  end
 end
 
 class ReleaseGenerator
   attr_reader :version, :releases, :storage_manager
+
   DIST_DIR = File.expand_path(__FILE__ + "/../build/dist")
   BUILDS = %w(darwin-amd64 linux-386 linux-amd64 windows-386 windows-amd64)
 
@@ -98,6 +104,8 @@ class ReleaseGenerator
     end
   end
 
+  private
+
   def ensure_builds_have_been_created
     return if File.exist?(DIST_DIR)
     puts "Distribution build at #{DIST_DIR} has not been created. Run 'make dist' before attempting to create a new release"
@@ -105,7 +113,7 @@ class ReleaseGenerator
   end
 
   def ensure_release_is_necessary
-    feed = JSON.parse(storage_manager.fetch(ALL_RELEASES, default:  '[]'))
+    feed = JSON.parse(storage_manager.fetch(FileManager::ALL_RELEASES, default:  [].to_json))
     if feed.find { |r| r['version'] == version }
       puts "v#{version} has already been deployed. If this was intended to be a new release, ensure version.go has been updated and add an appropriate tag to git"
       exit(1)
@@ -116,13 +124,14 @@ class ReleaseGenerator
     BUILDS.map do |platform|
       build_location = File.expand_path(DIST_DIR + "/#{platform}")
       binary = Dir.entries(build_location).find { |name| name =~ /theme/ }
-      Release.new(version, platform, [build_location, binary].join('/'))
+      Release.new(version: version, platform: platform, filename: [build_location, binary].join('/'))
     end
   end
 end
 
 class FeedGenerator
   attr_reader :version, :releases, :storage_manager
+
   def initialize(version, releases, storage_manager)
     @version = version
     @releases = releases
@@ -130,20 +139,20 @@ class FeedGenerator
   end
 
   def upload!
-    storage_manager.upload!(LATEST_RELEASE, latest_feed)
-    storage_manager.upload!(ALL_RELEASES, entire_feed)
+    storage_manager.upload!(FileManager::LATEST_RELEASE, latest_feed)
+    storage_manager.upload!(FileManager::ALL_RELEASES, entire_feed)
   end
+
+  private
 
   def latest_feed
     as_hash.to_json
   end
 
   def entire_feed
-    full_feed = JSON.parse(storage_manager.fetch(ALL_RELEASES, default: "[]"))
+    full_feed = JSON.parse(storage_manager.fetch(FileManager::ALL_RELEASES, default: [].to_json))
     full_feed << as_hash
-    full_feed.each_with_object(Set.new) do |release, memo|
-      memo << release
-    end.to_a.to_json
+    full_feed.uniq.to_json
   end
 
   def as_hash
