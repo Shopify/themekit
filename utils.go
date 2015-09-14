@@ -19,6 +19,10 @@ var BlueText = color.New(color.FgBlue).SprintFunc()
 var GreenText = color.New(color.FgGreen).SprintFunc()
 
 func TestFixture(name string) string {
+	return string(RawTestFixture(name))
+}
+
+func RawTestFixture(name string) []byte {
 	path := fmt.Sprintf("fixtures/%s.json", name)
 	file, err := os.Open(path)
 	defer file.Close()
@@ -29,7 +33,7 @@ func TestFixture(name string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return string(bytes)
+	return bytes
 }
 
 func BinaryTestData() []byte {

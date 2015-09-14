@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 )
 
@@ -91,6 +92,26 @@ func TestRetrievingAnAssetList(t *testing.T) {
 	assert.Equal(t, 2, count(assets))
 }
 
+func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, TestFixture("assets_response_from_shopify"))
+	}))
+
+	var expected map[string][]Asset
+	json.Unmarshal(RawTestFixture("expected_asset_list_output"), &expected)
+	sort.Sort(ByAsset(expected["assets"]))
+
+	client := NewThemeClient(conf(ts))
+	assetsChan, _ := client.AssetList()
+	actual := makeSlice(assetsChan)
+	sort.Sort(ByAsset(actual))
+
+	assert.Equal(t, len(expected["assets"]), len(actual))
+	for index, expected := range expected["assets"] {
+		assert.Equal(t, expected, actual[index])
+	}
+}
+
 func TestRetrievingASingleAsset(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "fields=key,attachment,value&asset[key]=assets/foo.txt", r.URL.RawQuery)
@@ -106,6 +127,24 @@ func TestExtractErrorMessage(t *testing.T) {
 	contents := []byte(TestFixture("asset_error"))
 	expectedMessage := "Liquid syntax error (line 10): 'comment' tag was never closed"
 	assert.Equal(t, expectedMessage, ExtractErrorMessage(contents, nil))
+}
+
+func TestIgnoringCompiledAssets(t *testing.T) {
+	input := []Asset{
+		{Key: "assets/ajaxify.js"},
+		{Key: "assets/ajaxify.js.liquid"},
+		{Key: "assets/checkout.css"},
+		{Key: "assets/checkout.css.liquid"},
+		{Key: "templates/article.liquid"},
+		{Key: "templates/product.liquid"},
+	}
+	expected := []Asset{
+		{Key: "assets/ajaxify.js.liquid"},
+		{Key: "assets/checkout.css.liquid"},
+		{Key: "templates/article.liquid"},
+		{Key: "templates/product.liquid"},
+	}
+	assert.Equal(t, expected, ignoreCompiledAssets(input))
 }
 
 func asset() Asset {
@@ -133,6 +172,17 @@ func count(channel chan Asset) int {
 			return count
 		}
 		count++
+	}
+}
+
+func makeSlice(channel chan Asset) []Asset {
+	assets := []Asset{}
+	for {
+		asset, more := <-channel
+		if !more {
+			return assets
+		}
+		assets = append(assets, asset)
 	}
 }
 
