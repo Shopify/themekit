@@ -91,6 +91,22 @@ func TestRetrievingAnAssetList(t *testing.T) {
 	assert.Equal(t, 2, count(assets))
 }
 
+func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, TestFixture("assets_response_from_shopify"))
+	}))
+
+	var expected map[string][]Asset
+	json.Unmarshal(RawTestFixture("expected_asset_list_output"), &expected)
+
+	client := NewThemeClient(conf(ts))
+	actualAssets, _ := client.AssetList()
+	for _, expected := range expected["assets"] {
+		actual := <-actualAssets
+		assert.Equal(t, expected, actual)
+	}
+}
+
 func TestRetrievingASingleAsset(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "fields=key,attachment,value&asset[key]=assets/foo.txt", r.URL.RawQuery)
@@ -106,6 +122,24 @@ func TestExtractErrorMessage(t *testing.T) {
 	contents := []byte(TestFixture("asset_error"))
 	expectedMessage := "Liquid syntax error (line 10): 'comment' tag was never closed"
 	assert.Equal(t, expectedMessage, ExtractErrorMessage(contents, nil))
+}
+
+func TestIgnoringCompiledAssets(t *testing.T) {
+	input := []Asset{
+		{Key: "assets/ajaxify.js"},
+		{Key: "assets/ajaxify.js.liquid"},
+		{Key: "assets/checkout.css"},
+		{Key: "assets/checkout.css.liquid"},
+		{Key: "templates/article.liquid"},
+		{Key: "templates/product.liquid"},
+	}
+	expected := []Asset{
+		{Key: "assets/ajaxify.js.liquid"},
+		{Key: "assets/checkout.css.liquid"},
+		{Key: "templates/article.liquid"},
+		{Key: "templates/product.liquid"},
+	}
+	assert.Equal(t, expected, ignoreCompiledAssets(input))
 }
 
 func asset() Asset {

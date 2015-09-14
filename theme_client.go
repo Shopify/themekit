@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
@@ -104,7 +105,9 @@ func (t ThemeClient) AssetList() (results chan Asset, errs chan error) {
 			return
 		}
 
-		for _, asset := range assets["assets"] {
+		sanitizedAssets := ignoreCompiledAssets(assets["assets"])
+
+		for _, asset := range sanitizedAssets {
 			results <- asset
 		}
 		close(results)
@@ -291,4 +294,24 @@ func newHttpClient(config Configuration) (client *http.Client) {
 		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyUrl), TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	}
 	return
+}
+
+func ignoreCompiledAssets(assets []Asset) []Asset {
+	newSize := 0
+	results := make([]Asset, len(assets))
+	isCompiled := func(a Asset, rest []Asset) bool {
+		for _, other := range rest {
+			if strings.Contains(other.Key, a.Key) {
+				return true
+			}
+		}
+		return false
+	}
+	for index, asset := range assets {
+		if !isCompiled(asset, assets[index+1:]) {
+			results[newSize] = asset
+			newSize++
+		}
+	}
+	return results[:newSize]
 }
