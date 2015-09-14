@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 )
 
@@ -98,12 +99,16 @@ func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
 
 	var expected map[string][]Asset
 	json.Unmarshal(RawTestFixture("expected_asset_list_output"), &expected)
+	sort.Sort(ByAsset(expected["assets"]))
 
 	client := NewThemeClient(conf(ts))
-	actualAssets, _ := client.AssetList()
-	for _, expected := range expected["assets"] {
-		actual := <-actualAssets
-		assert.Equal(t, expected, actual)
+	assetsChan, _ := client.AssetList()
+	actual := makeSlice(assetsChan)
+	sort.Sort(ByAsset(actual))
+
+	assert.Equal(t, len(expected["assets"]), len(actual))
+	for index, expected := range expected["assets"] {
+		assert.Equal(t, expected, actual[index])
 	}
 }
 
@@ -167,6 +172,17 @@ func count(channel chan Asset) int {
 			return count
 		}
 		count++
+	}
+}
+
+func makeSlice(channel chan Asset) []Asset {
+	assets := []Asset{}
+	for {
+		asset, more := <-channel
+		if !more {
+			return assets
+		}
+		assets = append(assets, asset)
 	}
 }
 

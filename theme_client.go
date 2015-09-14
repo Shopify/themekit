@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -105,6 +106,7 @@ func (t ThemeClient) AssetList() (results chan Asset, errs chan error) {
 			return
 		}
 
+		sort.Sort(ByAsset(assets["assets"]))
 		sanitizedAssets := ignoreCompiledAssets(assets["assets"])
 
 		for _, asset := range sanitizedAssets {

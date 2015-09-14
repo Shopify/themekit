@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -137,4 +138,23 @@ func (s *LoadAssetSuite) noteAllocatedFile(name string) {
 func TestLoadAssetSuite(t *testing.T) {
 	LoadAsset("foo", "bar")
 	suite.Run(t, new(LoadAssetSuite))
+}
+
+func TestSortListOfAssets(t *testing.T) {
+	input := []Asset{
+		Asset{Key: "assets/ajaxify.js.liquid"},
+		Asset{Key: "assets/ajaxify.js"},
+		Asset{Key: "assets/ajaxify.css"},
+		Asset{Key: "assets/ajaxify.css.liquid"},
+		Asset{Key: "layouts/customers.liquid"},
+	}
+	expected := []Asset{
+		Asset{Key: "assets/ajaxify.css"},
+		Asset{Key: "assets/ajaxify.css.liquid"},
+		Asset{Key: "assets/ajaxify.js"},
+		Asset{Key: "assets/ajaxify.js.liquid"},
+		Asset{Key: "layouts/customers.liquid"},
+	}
+	sort.Sort(ByAsset(input))
+	assert.Equal(t, expected, input)
 }

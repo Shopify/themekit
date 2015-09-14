@@ -24,6 +24,21 @@ func (a Asset) IsValid() bool {
 	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)
 }
 
+// Implementing sort.Interface
+type ByAsset []Asset
+
+func (assets ByAsset) Len() int {
+	return len(assets)
+}
+
+func (assets ByAsset) Swap(i, j int) {
+	assets[i], assets[j] = assets[j], assets[i]
+}
+
+func (assets ByAsset) Less(i, j int) bool {
+	return assets[i].Key < assets[j].Key
+}
+
 func LoadAsset(root, filename string) (asset Asset, err error) {
 	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
 	file, err := os.Open(path)

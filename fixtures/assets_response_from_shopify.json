@@ -1,10 +1,10 @@
 {
   "assets": [
     {
-      "key": "assets\/ajaxify.js"
+      "key": "assets\/ajaxify.js.liquid"
     },
     {
-      "key": "assets\/ajaxify.js.liquid"
+      "key": "assets\/ajaxify.js"
     },
     {
       "key": "assets\/ajaxify.scss"
