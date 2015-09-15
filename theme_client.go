@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -116,6 +117,36 @@ func (t ThemeClient) AssetList() (results chan Asset, errs chan error) {
 		close(errs)
 	}()
 	return
+}
+
+func (t ThemeClient) AssetListSync() []Asset {
+	ch, _ := t.AssetList()
+	results := []Asset{}
+	for {
+		asset, more := <-ch
+		if !more {
+			return results
+		}
+		results = append(results, asset)
+	}
+}
+
+func (t ThemeClient) LocalAssets(dir string) []Asset {
+	dir = fmt.Sprintf("%s%s", dir, string(filepath.Separator))
+	glob := fmt.Sprintf("%s**%s*", dir, string(filepath.Separator))
+	files, _ := filepath.Glob(glob)
+
+	assets := []Asset{}
+	for _, file := range files {
+		if !t.filter.MatchesFilter(file) {
+			assetKey := strings.Replace(file, dir, "", -1)
+			asset, err := LoadAsset(dir, assetKey)
+			if err == nil {
+				assets = append(assets, asset)
+			}
+		}
+	}
+	return assets
 }
 
 type AssetRetrieval func(filename string) (Asset, error)

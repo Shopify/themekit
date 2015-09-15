@@ -23,44 +23,43 @@ func Replace(options ReplaceOptions) chan bool {
 	rawEvents, throttledEvents := prepareChannel(options)
 	done, logs := options.Client.Process(throttledEvents)
 	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{logs})
-
-	assets, errs := assetList(options.Client, options.Filenames)
-	go drainErrors(errs)
-	go removeAndUpload(assets, rawEvents)
-
+	enqueueEvents(options.Client, options.Filenames, rawEvents)
 	return done
 }
 
-func assetList(client themekit.ThemeClient, filenames []string) (chan themekit.Asset, chan error) {
+func enqueueEvents(client themekit.ThemeClient, filenames []string, events chan themekit.AssetEvent) {
+	root, _ := os.Getwd()
 	if len(filenames) == 0 {
-		return client.AssetList()
+		go fullReplace(client.AssetListSync(), client.LocalAssets(root), events)
+		return
 	}
-
-	assets := make(chan themekit.Asset)
-	errs := make(chan error)
-	close(errs)
 	go func() {
-		root, _ := os.Getwd()
 		for _, filename := range filenames {
-			asset, _ := themekit.LoadAsset(root, filename)
-			assets <- asset
+			asset, err := themekit.LoadAsset(root, filename)
+			if err == nil {
+				events <- themekit.NewUploadEvent(asset)
+			}
 		}
-		close(assets)
+		close(events)
 	}()
-	return assets, errs
 }
 
-func removeAndUpload(assets chan themekit.Asset, assetEvents chan themekit.AssetEvent) {
-	for {
-		asset, more := <-assets
-		if more {
-			assetEvents <- themekit.NewRemovalEvent(asset)
-			assetEvents <- themekit.NewUploadEvent(asset)
-		} else {
-			close(assetEvents)
-			return
+func fullReplace(remoteAssets, localAssets []themekit.Asset, events chan themekit.AssetEvent) {
+	assetsActions := map[string]themekit.AssetEvent{}
+	generateActions := func(assets []themekit.Asset, assetEventFn func(asset themekit.Asset) themekit.SimpleAssetEvent) {
+		for _, asset := range assets {
+			assetsActions[asset.Key] = assetEventFn(asset)
 		}
 	}
+	generateActions(remoteAssets, themekit.NewRemovalEvent)
+	generateActions(localAssets, themekit.NewUploadEvent)
+	go func() {
+		for _, event := range assetsActions {
+			events <- event
+		}
+		close(events)
+	}()
+
 }
 
 func prepareChannel(options ReplaceOptions) (rawEvents, throttledEvents chan themekit.AssetEvent) {
