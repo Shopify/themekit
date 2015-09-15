@@ -46,6 +46,7 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 	if err != nil {
 		return
 	}
+	defer file.Close()
 
 	if info.IsDir() {
 		err = errors.New("File is a directory")
