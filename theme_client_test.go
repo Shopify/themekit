@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sort"
 	"testing"
 )
@@ -90,6 +91,15 @@ func TestRetrievingAnAssetList(t *testing.T) {
 	client := NewThemeClient(conf(ts))
 	assets, _ := client.AssetList()
 	assert.Equal(t, 2, count(assets))
+}
+
+func TestRetrievingLocalAssets(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	client := NewThemeClient(conf(ts))
+
+	dir, _ := os.Getwd()
+	assets := client.LocalAssets(fmt.Sprintf("%s/fixtures/templates", dir))
+	assert.Equal(t, 1, len(assets))
 }
 
 func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
