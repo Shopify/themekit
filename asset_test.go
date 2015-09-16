@@ -90,7 +90,7 @@ func (s *LoadAssetSuite) TestWhenFileIsADirectory() {
 
 	asset, err := LoadAsset(root, filename)
 	assert.NotNil(s.T(), err, "The error should not be nil if a directory was given to LoadAsset")
-	assert.Equal(s.T(), "File is a directory", err.Error())
+	assert.Equal(s.T(), "LoadAsset: File is a directory", err.Error())
 	assert.False(s.T(), asset.IsValid(), "The asset returned should not be valid")
 }
 

@@ -23,6 +23,7 @@ func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
 	}{
 		{fsnotify.Event{Name: "fixtures/layout/theme.liquid"}, Asset{Key: "layout/theme.liquid", Value: "Liquid Theme\n"}},
 		{fsnotify.Event{Name: "fixtures/templates/customers/account.liquid"}, Asset{Key: "templates/customers/account.liquid", Value: "Account Page\n"}},
+		{fsnotify.Event{Name: "fixtures/snippets/layout-something.liquid"}, Asset{Key: "snippets/layout-something.liquid", Value: "Something Liquid\n"}},
 	}
 	for _, test := range tests {
 		actual := fwLoadAsset(test.input)
