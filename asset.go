@@ -40,23 +40,27 @@ func (assets ByAsset) Less(i, j int) bool {
 }
 
 func LoadAsset(root, filename string) (asset Asset, err error) {
+	asset = Asset{}
 	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
 	file, err := os.Open(path)
+	if err != nil {
+		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
+	}
 	info, err := os.Stat(path)
 	if err != nil {
-		return
+		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
 	}
 	defer file.Close()
 
 	if info.IsDir() {
-		err = errors.New("File is a directory")
+		err = errors.New("LoadAsset: File is a directory")
 		return
 	}
 
 	buffer := make([]byte, info.Size())
 	_, err = file.Read(buffer)
 	if err != nil {
-		return
+		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
 	}
 
 	asset = Asset{Key: toSlash(filename)}
