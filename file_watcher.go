@@ -73,7 +73,7 @@ func HandleEvent(event fsnotify.Event) FsAssetEvent {
 	var eventType EventType
 	asset := fwLoadAsset(event)
 	switch event.Op {
-	case fsnotify.Create, fsnotify.Chmod:
+	case fsnotify.Create:
 		eventType = Update
 	case fsnotify.Remove:
 		eventType = Remove
@@ -110,6 +110,10 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 		duplicateEventTimeout := map[string]int64{}
 		for {
 			event := <-events
+
+			if event.Op == fsnotify.Chmod {
+				continue
+			}
 
 			if !filter.MatchesFilter(event.Name) {
 				fsevent := HandleEvent(event)
