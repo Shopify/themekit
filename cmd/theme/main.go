@@ -287,17 +287,14 @@ func loadEnvironments(directory string) (themekit.Environments, error) {
 }
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {
-
 	set := makeFlagSet("")
-	set.StringVar(&command, "command", "download", CommandDescription(commandDefault))
+	set.Usage = func() {
+		fmt.Println(CommandDescription(commandDefault))
+	}
 	set.Parse(args)
 
-	if len(args) != set.NArg() {
-		rest = args[len(args)-set.NArg():]
-	} else if len(args) > 0 {
-		command = args[0]
-		rest = args[1:]
-	}
+	command = args[0]
+	rest = args[1:]
 	return
 }
 
