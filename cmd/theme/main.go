@@ -165,13 +165,7 @@ func FileManipulationCommandParser(cmd string, args []string) (result map[string
 	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
 	set.Parse(args)
 
-	client, err := loadThemeClient(directory, environment)
-	if err != nil {
-		themekit.NotifyError(err)
-		return
-	}
-
-	result["themeClient"] = client
+	result["themeClient"] = loadThemeClient(directory, environment)
 	result["filenames"] = args[len(args)-set.NArg():]
 	return
 }
@@ -200,16 +194,7 @@ func WatchCommandParser(cmd string, args []string) (result map[string]interface{
 		result["environments"] = environments
 	}
 
-	if len(environment) > 0 {
-		client, err := loadThemeClient(directory, environment)
-		if err != nil {
-			themekit.NotifyError(err)
-			return
-		}
-
-		result["themeClient"] = client
-	}
-
+	result["themeClient"] = loadThemeClient(directory, environment)
 	return
 }
 
@@ -256,22 +241,14 @@ func BootstrapParser(cmd string, args []string) (result map[string]interface{}, 
 	result["environment"] = environment
 	result["prefix"] = prefix
 	result["setThemeId"] = setThemeId
-
-	client, err := loadThemeClient(directory, environment)
-	if err != nil {
-		themekit.NotifyError(err)
-		return
-	}
-	result["themeClient"] = client
+	result["themeClient"] = loadThemeClient(directory, environment)
 	return
 }
 
-func loadThemeClient(directory, env string) (themekit.ThemeClient, error) {
+func loadThemeClient(directory, env string) themekit.ThemeClient {
 	client, err := loadThemeClientWithRetry(directory, env, false)
-	if err != nil && strings.Contains(err.Error(), "YAML error") {
-		err = errors.New(fmt.Sprintf("configuration error: does your configuration properly escape wildcards? \n\t\t\t%s", err))
-	}
-	return client, err
+	handleError(err)
+	return client
 }
 
 func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.ThemeClient, error) {
@@ -355,4 +332,17 @@ func makeFlagSet(command string) *flag.FlagSet {
 		command = " " + command
 	}
 	return flag.NewFlagSet(fmt.Sprintf("theme%s", command), flag.ExitOnError)
+}
+
+func handleError(err error) {
+	if err == nil {
+		return
+	}
+
+	if strings.Contains(err.Error(), "YAML error") {
+		err = errors.New(fmt.Sprintf("configuration error: does your configuration properly escape wildcards? \n\t\t\t%s", err))
+	} else if strings.Contains(err.Error(), "no such file or directory") {
+		err = errors.New(fmt.Sprintf("configuration error: %s", err))
+	}
+	themekit.NotifyErrorImmediately(err)
 }

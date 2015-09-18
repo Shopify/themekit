@@ -56,6 +56,12 @@ func SetErrorReporter(r ErrorReporter) {
 	}()
 }
 
+func NotifyErrorImmediately(err error) {
+	synchronized(mutex, func() {
+		reporter.Report(err)
+	})
+}
+
 func NotifyError(err error) {
 	synchronized(mutex, func() {
 		go func() {
