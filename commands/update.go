@@ -31,11 +31,17 @@ func (r release) IsApplicable() bool {
 	return themekit.TKVersion.Compare(Version(r)) == themekit.VersionLessThan
 }
 
+func IsNewReleaseAvailable() bool {
+	latestRelease, err := downloadReleaseForPlatform()
+	if err != nil {
+		return false
+	}
+	return latestRelease.IsApplicable()
+}
+
 func UpdateCommand(args map[string]interface{}) chan bool {
-	resp, err := http.Get(LatestReleasesUrl)
+	latestRelease, err := downloadReleaseForPlatform()
 	if err == nil {
-		defer resp.Body.Close()
-		latestRelease, _ := parseManifest(resp.Body)
 		if latestRelease.IsApplicable() {
 			fmt.Println("Updating from", themekit.TKVersion, "to", Version(latestRelease))
 			releaseForPlatform := findAppropriateRelease(latestRelease)
@@ -45,6 +51,15 @@ func UpdateCommand(args map[string]interface{}) chan bool {
 	res := make(chan bool)
 	close(res)
 	return res
+}
+
+func downloadReleaseForPlatform() (release, error) {
+	resp, err := http.Get(LatestReleasesUrl)
+	if err != nil {
+		return release{}, err
+	}
+	defer resp.Body.Close()
+	return parseManifest(resp.Body)
 }
 
 func parseManifest(r io.Reader) (release, error) {
