@@ -71,19 +71,15 @@ class Installer(object):
         self.installlocation = os.path.expanduser(installlocation)
 
     def install(self):
-        if not self.alreadyinstalled():
-            self.__createdir()
-            print "Downloading themekit from %s/%s" % (self.host, self.path)
-            self.__download()
-            print "Installing themekit to %s" % self.installlocation
-            self.__unzip()
-            print "Removing temporary files from disk"
-            self.__clean()
-            print
+        self.__createdir()
+        print "Downloading themekit from %s/%s" % (self.host, self.path)
+        self.__download()
+        print "Installing themekit to %s" % self.installlocation
+        self.__unzip()
+        print "Removing temporary files from disk"
+        self.__clean()
+        print
         self.__pathinstall()
-
-    def alreadyinstalled(self):
-        return os.path.exists(os.path.join(self.installlocation, 'theme'))
 
     def __createdir(self):
         if not os.path.exists(self.installlocation):
