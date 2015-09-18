@@ -22,6 +22,7 @@ const updateAvailableMessage string = `| An update for Theme Kit is available |
 | theme update                         |`
 
 const commandDefault string = "download [<file> ...]"
+const defaultCommand string = "download"
 
 var globalEventLog chan themekit.ThemeEvent
 
@@ -286,6 +287,9 @@ func loadEnvironments(directory string) (themekit.Environments, error) {
 }
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {
+	if len(args) <= 0 {
+		return defaultCommand, []string{}
+	}
 	set := makeFlagSet("")
 	set.Usage = func() {
 		fmt.Println(CommandDescription(commandDefault))
