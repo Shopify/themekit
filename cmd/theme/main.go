@@ -21,9 +21,6 @@ const updateAvailableMessage string = `| An update for Theme Kit is available |
 |                                      |
 | theme update                         |`
 
-const commandDefault string = "download [<file> ...]"
-const defaultCommand string = "download"
-
 var globalEventLog chan themekit.ThemeEvent
 
 var permittedZeroArgCommands = map[string]bool{
@@ -36,8 +33,8 @@ var permittedZeroArgCommands = map[string]bool{
 }
 
 var commandDescriptionPrefix = []string{
-	"An operation to be performed against the theme.",
-	"  Valid commands are:",
+	"Usage: theme <operation> [<additional arguments> ...]",
+	"  Valid operations are:",
 }
 
 var permittedCommands = map[string]string{
@@ -80,7 +77,7 @@ var commandMapping = map[string]Command{
 	"update":    commands.UpdateCommand,
 }
 
-func CommandDescription(defaultCommand string) string {
+func CommandDescription() string {
 	commandDescription := make([]string, len(commandDescriptionPrefix)+len(permittedCommands))
 	pos := 0
 	for i := range commandDescriptionPrefix {
@@ -89,11 +86,7 @@ func CommandDescription(defaultCommand string) string {
 	}
 
 	for cmd, desc := range permittedCommands {
-		def := ""
-		if cmd == defaultCommand {
-			def = " [default]"
-		}
-		commandDescription[pos] = fmt.Sprintf("    %s:\n        %s%s", cmd, desc, def)
+		commandDescription[pos] = fmt.Sprintf("    %s:\n        %s", cmd, desc)
 		pos++
 	}
 
@@ -288,11 +281,11 @@ func loadEnvironments(directory string) (themekit.Environments, error) {
 
 func SetupAndParseArgs(args []string) (command string, rest []string) {
 	if len(args) <= 0 {
-		return defaultCommand, []string{}
+		return "", []string{"--help"}
 	}
 	set := makeFlagSet("")
 	set.Usage = func() {
-		fmt.Println(CommandDescription(commandDefault))
+		fmt.Println(CommandDescription())
 	}
 	set.Parse(args)
 
@@ -313,7 +306,11 @@ func verifyCommand(command string, args []string) {
 	errors := []string{}
 
 	if CommandIsInvalid(command) {
-		errors = append(errors, fmt.Sprintf("\t-'%s' is not a valid command", command))
+		if len(command) <= 0 {
+			errors = append(errors, "  An operation must be provided")
+		} else {
+			errors = append(errors, fmt.Sprintf("  -'%s' is not a valid command", command))
+		}
 	}
 
 	if CannotProcessCommandWithoutAdditionalArguments(command, args) {
