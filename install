@@ -64,7 +64,7 @@ class Releases(object):
         return HTTPSClient.get(Releases.FEED_HOST, Releases.FEED_PATH)
 
 class Installer(object):
-    def __init__(self, ziplocation, installlocation="~/.themekit"):
+    def __init__(self, ziplocation, installlocation="~/Applications/bin"):
         self.host, self.path, self.root = ziplocation
         self.root = self.root.replace('.zip', '')
         self.zipfile = os.path.basename(self.path)
