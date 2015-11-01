@@ -95,6 +95,8 @@ func Encode64(data []byte) string {
 }
 
 func extractAssetKey(filename string) string {
+	filename = filepath.ToSlash(filename)
+	
 	for _, dir := range assetLocations {
 		split := strings.SplitAfterN(filename, dir, 2)
 		if len(split) > 1 {
