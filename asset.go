@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,11 +18,19 @@ type Asset struct {
 }
 
 func (a Asset) String() string {
-	return fmt.Sprintf("key: %s | value: %s | attachment: %s", a.Key, a.Value, a.Attachment)
+	return fmt.Sprintf("key: %s | value: %d bytes | attachment: %d bytes", a.Key, len([]byte(a.Value)), len([]byte(a.Attachment)))
 }
 
 func (a Asset) IsValid() bool {
 	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)
+}
+
+func (a Asset) Size() int {
+	if len(a.Value) > 0 {
+		return len(a.Value)
+	} else {
+		return len(a.Attachment)
+	}
 }
 
 // Implementing sort.Interface
@@ -46,19 +55,19 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 	if err != nil {
 		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
 	}
+	defer file.Close()
+
 	info, err := os.Stat(path)
 	if err != nil {
 		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
 	}
-	defer file.Close()
 
 	if info.IsDir() {
 		err = errors.New("LoadAsset: File is a directory")
 		return
 	}
 
-	buffer := make([]byte, info.Size())
-	_, err = file.Read(buffer)
+	buffer, err := ioutil.ReadAll(file)
 	if err != nil {
 		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
 	}

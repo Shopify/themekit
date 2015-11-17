@@ -250,6 +250,7 @@ func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
 	if err == nil {
 		defer resp.Body.Close()
 	}
+
 	return processResponse(resp, err, asset)
 }
 
@@ -289,7 +290,11 @@ func (t ThemeClient) sendData(method, path string, body []byte) (result APITheme
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
 	path := t.config.AssetPath()
 	data := map[string]Asset{"asset": event.Asset()}
+
 	encoded, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
 
