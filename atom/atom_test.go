@@ -1,4 +1,4 @@
-package themekit
+package atom
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -7,10 +7,10 @@ import (
 )
 
 func loadFeedForTesting(t *testing.T) Feed {
-	stream, err := os.Open("fixtures/releases.atom")
-	assert.Nil(t, err, "Could not load 'fixtures/releases.atom'")
+	stream, err := os.Open("releases.atom")
+	assert.Nil(t, err, "Could not load 'releases.atom'")
 	feed, err := LoadFeed(stream)
-	assert.Nil(t, err, "Could not parse 'fixtures/releases.atom'")
+	assert.Nil(t, err, "Could not parse 'releases.atom'")
 	return feed
 }
 
