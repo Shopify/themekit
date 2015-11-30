@@ -2,12 +2,13 @@ package commands
 
 import (
 	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/bucket"
 	"os"
 )
 
 type ReplaceOptions struct {
 	BasicOptions
-	Bucket *themekit.LeakyBucket
+	Bucket *bucket.LeakyBucket
 }
 
 func ReplaceCommand(args map[string]interface{}) chan bool {

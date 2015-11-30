@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Shopify/themekit/bucket"
 )
 
 const CreateThemeMaxRetries int = 3
@@ -83,8 +85,8 @@ func (t ThemeClient) GetConfiguration() Configuration {
 	return t.config
 }
 
-func (t ThemeClient) LeakyBucket() *LeakyBucket {
-	return NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
+func (t ThemeClient) LeakyBucket() *bucket.LeakyBucket {
+	return bucket.NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
 }
 
 func (t ThemeClient) AssetList() (results chan Asset, errs chan error) {

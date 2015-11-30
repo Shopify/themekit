@@ -1,18 +1,22 @@
 package themekit
 
-import "time"
+import (
+	"time"
+
+	"github.com/Shopify/themekit/bucket"
+)
 
 type Foreman struct {
-	bucket      *LeakyBucket
+	leakyBucket *bucket.LeakyBucket
 	halt        chan bool
 	JobQueue    chan AssetEvent
 	WorkerQueue chan AssetEvent
 	OnIdle      func()
 }
 
-func NewForeman(bucket *LeakyBucket) Foreman {
+func NewForeman(leakyBucket *bucket.LeakyBucket) Foreman {
 	return Foreman{
-		bucket:      bucket,
+		leakyBucket: leakyBucket,
 		halt:        make(chan bool),
 		JobQueue:    make(chan AssetEvent),
 		WorkerQueue: make(chan AssetEvent),
@@ -21,13 +25,13 @@ func NewForeman(bucket *LeakyBucket) Foreman {
 }
 
 func (f Foreman) IssueWork() {
-	f.bucket.StartDripping()
+	f.leakyBucket.StartDripping()
 	go func() {
 		notifyProcessed := false
 		for {
 			select {
 			case job := <-f.JobQueue:
-				f.bucket.GetDrop()
+				f.leakyBucket.GetDrop()
 				notifyProcessed = true
 				go func() {
 					f.WorkerQueue <- job
@@ -45,7 +49,7 @@ func (f Foreman) IssueWork() {
 }
 
 func (f Foreman) Halt() {
-	f.bucket.StopDripping()
+	f.leakyBucket.StopDripping()
 	go func() {
 		f.halt <- true
 	}()
