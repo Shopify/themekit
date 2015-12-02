@@ -53,13 +53,13 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
 	file, err := os.Open(path)
 	if err != nil {
-		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
+		return asset, fmt.Errorf("LoadAsset: %s", err)
 	}
 	defer file.Close()
 
 	info, err := os.Stat(path)
 	if err != nil {
-		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
+		return asset, fmt.Errorf("LoadAsset: %s", err)
 	}
 
 	if info.IsDir() {
@@ -69,7 +69,7 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 
 	buffer, err := ioutil.ReadAll(file)
 	if err != nil {
-		return asset, errors.New(fmt.Sprintf("LoadAsset: %s", err))
+		return asset, fmt.Errorf("LoadAsset: %s", err)
 	}
 
 	asset = Asset{Key: toSlash(filename)}

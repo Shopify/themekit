@@ -1,4 +1,4 @@
-package themekit
+package bucket
 
 import (
 	"github.com/stretchr/testify/assert"

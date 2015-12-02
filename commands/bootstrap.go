@@ -3,9 +3,11 @@ package commands
 import (
 	"bytes"
 	"errors"
-	"github.com/Shopify/themekit"
 	"net/http"
 	"os"
+
+	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/atom"
 )
 
 const (
@@ -104,21 +106,21 @@ func zipPathForVersion(version string) (string, error) {
 	return zipPath(entry.Title), nil
 }
 
-func downloadAtomFeed() (themekit.Feed, error) {
+func downloadAtomFeed() (atom.Feed, error) {
 	resp, err := http.Get(TimberFeedPath)
 	if err != nil {
-		return themekit.Feed{}, err
+		return atom.Feed{}, err
 	}
 	defer resp.Body.Close()
 
-	feed, err := themekit.LoadFeed(resp.Body)
+	feed, err := atom.LoadFeed(resp.Body)
 	if err != nil {
-		return themekit.Feed{}, err
+		return atom.Feed{}, err
 	}
 	return feed, nil
 }
 
-func findReleaseWith(feed themekit.Feed, version string) (themekit.Entry, error) {
+func findReleaseWith(feed atom.Feed, version string) (atom.Entry, error) {
 	if version == LatestRelease {
 		return feed.LatestEntry(), nil
 	}
@@ -127,10 +129,10 @@ func findReleaseWith(feed themekit.Feed, version string) (themekit.Entry, error)
 			return entry, nil
 		}
 	}
-	return themekit.Entry{Title: "Invalid Feed"}, buildInvalidVersionError(feed, version)
+	return atom.Entry{Title: "Invalid Feed"}, buildInvalidVersionError(feed, version)
 }
 
-func buildInvalidVersionError(feed themekit.Feed, version string) error {
+func buildInvalidVersionError(feed atom.Feed, version string) error {
 	buff := bytes.NewBuffer([]byte{})
 	buff.Write([]byte(themekit.RedText("Invalid Timber Version: " + version)))
 	buff.Write([]byte("\nAvailable Versions Are:"))

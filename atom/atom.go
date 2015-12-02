@@ -1,9 +1,8 @@
-package themekit
+package atom
 
 import (
 	"encoding/xml"
 	"io"
-	"io/ioutil"
 )
 
 type Feed struct {
@@ -40,8 +39,8 @@ type Text struct {
 
 func LoadFeed(r io.Reader) (Feed, error) {
 	var atom Feed
-	content, err := ioutil.ReadAll(r)
-	err = xml.Unmarshal(content, &atom)
+	decoder := xml.NewDecoder(r)
+	err := decoder.Decode(&atom)
 	return atom, err
 }
 
