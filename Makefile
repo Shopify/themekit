@@ -14,6 +14,13 @@ build:
 		godep go build -o build/dist/${GOOS}-${GOARCH}/$${subproject}${EXT} cmd/$${subproject}/*.go; \
 	done
 
+test:
+	go test \
+	github.com/Shopify/themekit \
+	github.com/Shopify/themekit/atom \
+	github.com/Shopify/themekit/bucket \
+	github.com/Shopify/themekit/commands
+
 clean:
 	rm -rf build/
 
