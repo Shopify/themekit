@@ -159,6 +159,19 @@ func TestIgnoringCompiledAssets(t *testing.T) {
 	assert.Equal(t, expected, ignoreCompiledAssets(input))
 }
 
+func TestThemeClientAssetListOnUnauthorized(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}))
+	client := NewThemeClient(conf(ts))
+
+	_, errs := client.AssetList()
+
+	err := <-errs
+	assert.NotNil(t, err)
+	assert.Equal(t, "Server responded with HTTP 401; please check your credentials.", err.Error())
+}
+
 func asset() theme.Asset {
 	return theme.Asset{Key: "assets/hello.txt", Value: "Hello World"}
 }

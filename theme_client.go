@@ -85,6 +85,8 @@ func (t ThemeClient) AssetList() (results chan theme.Asset, errs chan error) {
 	results = make(chan theme.Asset)
 	errs = make(chan error)
 	go func() {
+		defer close(results)
+		defer close(errs)
 		queryBuilder := func(path string) string {
 			return path
 		}
@@ -92,6 +94,15 @@ func (t ThemeClient) AssetList() (results chan theme.Asset, errs chan error) {
 		resp := t.query(queryBuilder)
 		if resp.err != nil {
 			errs <- resp.err
+		}
+
+		if resp.code >= 400 && resp.code < 500 {
+			errs <- fmt.Errorf("Server responded with HTTP %d; please check your credentials.", resp.code)
+			return
+		}
+		if resp.code >= 500 {
+			errs <- fmt.Errorf("Server responded with HTTP %d; try again in a few minutes.", resp.code)
+			return
 		}
 
 		var assets map[string][]theme.Asset
@@ -107,8 +118,6 @@ func (t ThemeClient) AssetList() (results chan theme.Asset, errs chan error) {
 		for _, asset := range sanitizedAssets {
 			results <- asset
 		}
-		close(results)
-		close(errs)
 	}()
 	return
 }
@@ -300,6 +309,7 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 }
 
 func processResponse(r *http.Response, err error, event AssetEvent) ThemeEvent {
+	fmt.Printf("Got response %d %s \n", r.StatusCode, r.Status)
 	return NewAPIAssetEvent(r, event, err)
 }
 
