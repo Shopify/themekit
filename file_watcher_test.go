@@ -6,6 +6,8 @@ import (
 	"gopkg.in/fsnotify.v1"
 	"io/ioutil"
 	"testing"
+
+	"github.com/Shopify/themekit/theme"
 )
 
 type FileWatcherSuite struct {
@@ -19,11 +21,11 @@ func (s *FileWatcherSuite) TearDownTest() {
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
 	var tests = []struct {
 		input    fsnotify.Event
-		expected Asset
+		expected theme.Asset
 	}{
-		{fsnotify.Event{Name: "fixtures/layout/theme.liquid"}, Asset{Key: "layout/theme.liquid", Value: "Liquid Theme\n"}},
-		{fsnotify.Event{Name: "fixtures/templates/customers/account.liquid"}, Asset{Key: "templates/customers/account.liquid", Value: "Account Page\n"}},
-		{fsnotify.Event{Name: "fixtures/snippets/layout-something.liquid"}, Asset{Key: "snippets/layout-something.liquid", Value: "Something Liquid\n"}},
+		{fsnotify.Event{Name: "fixtures/layout/theme.liquid"}, theme.Asset{Key: "layout/theme.liquid", Value: "Liquid Theme\n"}},
+		{fsnotify.Event{Name: "fixtures/templates/customers/account.liquid"}, theme.Asset{Key: "templates/customers/account.liquid", Value: "Account Page\n"}},
+		{fsnotify.Event{Name: "fixtures/snippets/layout-something.liquid"}, theme.Asset{Key: "snippets/layout-something.liquid", Value: "Something Liquid\n"}},
 	}
 	for _, test := range tests {
 		actual := fwLoadAsset(test.input)

@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -45,7 +44,7 @@ func (co ConfigurationOptions) configurationErrors() error {
 	}
 	if len(errs) > 0 {
 		fullPath := filepath.Join(co.Directory, "config.yml")
-		return errors.New(fmt.Sprintf("Cannot create %s!\nErrors:\n%s", fullPath, strings.Join(errs, "\n")))
+		return fmt.Errorf("Cannot create %s!\nErrors:\n%s", fullPath, strings.Join(errs, "\n"))
 	}
 	return nil
 }

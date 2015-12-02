@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/theme"
 	"os"
 )
 
@@ -27,7 +28,7 @@ func Remove(options RemoveOptions) chan bool {
 
 	go func() {
 		for _, filename := range options.Filenames {
-			asset := themekit.Asset{Key: filename}
+			asset := theme.Asset{Key: filename}
 			events <- themekit.NewRemovalEvent(asset)
 			removeFile(filename)
 		}

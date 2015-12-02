@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/Shopify/themekit/theme"
 )
 
 // Using a 500 Error Code is disingenuous since
@@ -185,7 +187,7 @@ func (t *APIThemeEvent) markIfHasError(err error) bool {
 }
 
 func populateThemeData(e *APIThemeEvent, r *http.Response) {
-	var container map[string]Theme
+	var container map[string]theme.Theme
 	bytes, err := ioutil.ReadAll(r.Body)
 	if e.markIfHasError(err) {
 		return
