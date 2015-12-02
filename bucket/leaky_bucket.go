@@ -72,7 +72,7 @@ func (b *LeakyBucket) AddDrops() {
 func (b *LeakyBucket) GetDrop() {
 	<-b.bucket
 	b.locked(func() interface{} {
-		b.available -= 1
+		b.available--
 		return nil
 	})
 }

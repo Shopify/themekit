@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -200,7 +199,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 			go logEvent(themeEvent)
 		}
 		if retries >= CreateThemeMaxRetries {
-			err := errors.New(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
+			err := fmt.Errorf(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
 			NotifyError(err)
 		}
 		return
@@ -269,9 +268,8 @@ func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
 	resp, err := t.client.Do(req)
 	if err != nil {
 		return apiResponse{err: err}
-	} else {
-		defer resp.Body.Close()
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	return apiResponse{code: resp.StatusCode, body: body, err: err}
 }

@@ -29,8 +29,8 @@ func (h HaltExecutionReporter) Report(e error) {
 }
 
 var reporter ErrorReporter = nullReporter{}
-var errorQueue chan error = make(chan error)
-var mutex *sync.Mutex = &sync.Mutex{}
+var errorQueue = make(chan error)
+var mutex = &sync.Mutex{}
 
 func synchronized(m *sync.Mutex, fn func()) {
 	m.Lock()

@@ -1,7 +1,6 @@
 package themekit
 
 import (
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v1"
 	"io"
@@ -31,7 +30,7 @@ func (e Environments) SetConfiguration(environmentName string, conf Configuratio
 func (e Environments) GetConfiguration(environmentName string) (conf Configuration, err error) {
 	conf, exists := e[environmentName]
 	if !exists {
-		err = errors.New(fmt.Sprintf("%s does not exist in this environments list", environmentName))
+		err = fmt.Errorf("%s does not exist in this environments list", environmentName)
 	}
 	return
 }

@@ -12,14 +12,14 @@ import (
 	"strings"
 )
 
-const ConfigurationFilename string = "config\\.yml"
+const ConfigurationFilename = "config\\.yml"
 
-var defaultRegexes []*re.Regexp = []*re.Regexp{
+var defaultRegexes = []*re.Regexp{
 	re.MustCompile(`\.git/*`),
 	re.MustCompile(`\.DS_Store`),
 }
 
-var defaultGlobs []string = []string{}
+var defaultGlobs = []string{}
 
 type EventFilter struct {
 	filters []*re.Regexp
