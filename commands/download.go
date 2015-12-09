@@ -2,9 +2,9 @@ package commands
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/theme"
 	"os"
 	"path/filepath"
 )
@@ -37,7 +37,7 @@ func Download(options DownloadOptions) (done chan bool) {
 	return done
 }
 
-func downloadAllFiles(assets chan themekit.Asset, done chan bool, eventLog chan themekit.ThemeEvent) {
+func downloadAllFiles(assets chan theme.Asset, done chan bool, eventLog chan themekit.ThemeEvent) {
 	for {
 		asset, more := <-assets
 		if more {
@@ -61,7 +61,7 @@ func downloadFiles(retrievalFunction themekit.AssetRetrieval, filenames []string
 	return
 }
 
-func writeToDisk(asset themekit.Asset, eventLog chan themekit.ThemeEvent) {
+func writeToDisk(asset theme.Asset, eventLog chan themekit.ThemeEvent) {
 	dir, err := os.Getwd()
 	if err != nil {
 		themekit.NotifyError(err)
@@ -96,7 +96,7 @@ func writeToDisk(asset themekit.Asset, eventLog chan themekit.ThemeEvent) {
 	case len(asset.Attachment) > 0:
 		data, err = base64.StdEncoding.DecodeString(asset.Attachment)
 		if err != nil {
-			themekit.NotifyError(errors.New(fmt.Sprintf("Could not decode %s. error: %s", asset.Key, err)))
+			themekit.NotifyError(fmt.Errorf("Could not decode %s. error: %s", asset.Key, err))
 			return
 		}
 	}

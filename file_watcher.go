@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/Shopify/themekit/theme"
 )
 
 const EventTimeoutInMs int64 = 3000
@@ -17,7 +19,7 @@ const EventTimeoutInMs int64 = 3000
 var assetLocations = []string{"templates/customers/", "assets/", "config/", "layout/", "snippets/", "templates/", "locales/"}
 
 type FsAssetEvent struct {
-	asset     Asset
+	asset     theme.Asset
 	eventType EventType
 }
 
@@ -29,7 +31,7 @@ func RestoreReader() {
 	WatcherFileReader = ioutil.ReadFile
 }
 
-func (f FsAssetEvent) Asset() Asset {
+func (f FsAssetEvent) Asset() theme.Asset {
 	return f.asset
 }
 
@@ -53,16 +55,16 @@ func NewFileWatcher(dir string, recur bool, filter EventFilter) (chan AssetEvent
 	}
 }
 
-func fwLoadAsset(event fsnotify.Event) Asset {
+func fwLoadAsset(event fsnotify.Event) theme.Asset {
 	root := filepath.Dir(event.Name)
 	filename := filepath.Base(event.Name)
 
-	asset, err := LoadAsset(root, filename)
+	asset, err := theme.LoadAsset(root, filename)
 	if err != nil {
 		if os.IsExist(err) {
 			NotifyError(err)
 		} else {
-			asset = Asset{}
+			asset = theme.Asset{}
 		}
 	}
 	asset.Key = extractAssetKey(event.Name)
@@ -96,7 +98,7 @@ func Encode64(data []byte) string {
 
 func extractAssetKey(filename string) string {
 	filename = filepath.ToSlash(filename)
-	
+
 	for _, dir := range assetLocations {
 		split := strings.SplitAfterN(filename, dir, 2)
 		if len(split) > 1 {

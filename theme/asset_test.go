@@ -1,8 +1,11 @@
-package themekit
+package theme
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"image"
+	"image/png"
 	"io/ioutil"
 	"log"
 	"os"
@@ -157,4 +160,11 @@ func TestSortListOfAssets(t *testing.T) {
 	}
 	sort.Sort(ByAsset(input))
 	assert.Equal(t, expected, input)
+}
+
+func BinaryTestData() []byte {
+	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+	buff := bytes.NewBuffer([]byte{})
+	png.Encode(buff, img)
+	return buff.Bytes()
 }

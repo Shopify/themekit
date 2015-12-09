@@ -19,7 +19,8 @@ test:
 	github.com/Shopify/themekit \
 	github.com/Shopify/themekit/atom \
 	github.com/Shopify/themekit/bucket \
-	github.com/Shopify/themekit/commands
+	github.com/Shopify/themekit/commands \
+	github.com/Shopify/themekit/theme
 
 clean:
 	rm -rf build/

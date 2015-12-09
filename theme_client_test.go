@@ -10,14 +10,16 @@ import (
 	"os"
 	"sort"
 	"testing"
+
+	"github.com/Shopify/themekit/theme"
 )
 
 type TestEvent struct {
-	asset     Asset
+	asset     theme.Asset
 	eventType EventType
 }
 
-func (t TestEvent) Asset() Asset {
+func (t TestEvent) Asset() theme.Asset {
 	return t.asset
 }
 
@@ -51,7 +53,7 @@ func TestPerformWithAssetEventThatDoesNotPassTheFilter(t *testing.T) {
 	config.IgnoredFiles = []string{"snickerdoodle.txt"}
 	config.Ignores = []string{}
 
-	asset := Asset{Key: "snickerdoodle.txt", Value: "not important"}
+	asset := theme.Asset{Key: "snickerdoodle.txt", Value: "not important"}
 	event := TestEvent{asset: asset, eventType: Update}
 
 	client := NewThemeClient(config)
@@ -107,14 +109,14 @@ func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
 		fmt.Fprintf(w, TestFixture("assets_response_from_shopify"))
 	}))
 
-	var expected map[string][]Asset
+	var expected map[string][]theme.Asset
 	json.Unmarshal(RawTestFixture("expected_asset_list_output"), &expected)
-	sort.Sort(ByAsset(expected["assets"]))
+	sort.Sort(theme.ByAsset(expected["assets"]))
 
 	client := NewThemeClient(conf(ts))
 	assetsChan, _ := client.AssetList()
 	actual := makeSlice(assetsChan)
-	sort.Sort(ByAsset(actual))
+	sort.Sort(theme.ByAsset(actual))
 
 	assert.Equal(t, len(expected["assets"]), len(actual))
 	for index, expected := range expected["assets"] {
@@ -140,7 +142,7 @@ func TestExtractErrorMessage(t *testing.T) {
 }
 
 func TestIgnoringCompiledAssets(t *testing.T) {
-	input := []Asset{
+	input := []theme.Asset{
 		{Key: "assets/ajaxify.js"},
 		{Key: "assets/ajaxify.js.liquid"},
 		{Key: "assets/checkout.css"},
@@ -148,7 +150,7 @@ func TestIgnoringCompiledAssets(t *testing.T) {
 		{Key: "templates/article.liquid"},
 		{Key: "templates/product.liquid"},
 	}
-	expected := []Asset{
+	expected := []theme.Asset{
 		{Key: "assets/ajaxify.js.liquid"},
 		{Key: "assets/checkout.css.liquid"},
 		{Key: "templates/article.liquid"},
@@ -157,8 +159,21 @@ func TestIgnoringCompiledAssets(t *testing.T) {
 	assert.Equal(t, expected, ignoreCompiledAssets(input))
 }
 
-func asset() Asset {
-	return Asset{Key: "assets/hello.txt", Value: "Hello World"}
+func TestThemeClientAssetListOnUnauthorized(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}))
+	client := NewThemeClient(conf(ts))
+
+	_, errs := client.AssetList()
+
+	err := <-errs
+	assert.NotNil(t, err)
+	assert.Equal(t, "Server responded with HTTP 401; please check your credentials.", err.Error())
+}
+
+func asset() theme.Asset {
+	return theme.Asset{Key: "assets/hello.txt", Value: "Hello World"}
 }
 
 func conf(server *httptest.Server) Configuration {
@@ -174,7 +189,7 @@ func drain(channel chan ThemeEvent) {
 	}
 }
 
-func count(channel chan Asset) int {
+func count(channel chan theme.Asset) int {
 	count := 0
 	for {
 		_, more := <-channel
@@ -185,8 +200,8 @@ func count(channel chan Asset) int {
 	}
 }
 
-func makeSlice(channel chan Asset) []Asset {
-	assets := []Asset{}
+func makeSlice(channel chan theme.Asset) []theme.Asset {
+	assets := []theme.Asset{}
 	for {
 		asset, more := <-channel
 		if !more {

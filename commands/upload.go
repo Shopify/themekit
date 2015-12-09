@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/theme"
 )
 
 type UploadOptions struct {
@@ -46,13 +47,13 @@ func readAndPrepareFiles(filenames []string, results chan themekit.AssetEvent) {
 	close(results)
 }
 
-func loadAsset(filename string) (asset themekit.Asset, err error) {
+func loadAsset(filename string) (asset theme.Asset, err error) {
 	root, err := os.Getwd()
 	if err != nil {
 		return
 	}
 
-	return themekit.LoadAsset(root, filename)
+	return theme.LoadAsset(root, filename)
 }
 
 func extractFilenames(options UploadOptions, filenames []string) []string {

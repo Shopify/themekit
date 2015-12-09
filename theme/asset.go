@@ -1,4 +1,4 @@
-package themekit
+package theme
 
 import (
 	"encoding/base64"
