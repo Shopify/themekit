@@ -14,7 +14,7 @@ import (
 
 const EventTimeoutInMs int64 = 3000
 
-var assetLocations = []string{"templates/customers/", "assets/", "config/", "layout/", "snippets/", "templates/", "locales/"}
+var assetLocations = []string{"templates/customers/", "assets/", "config/", "layout/", "snippets/", "templates/", "locales/", "blocks/", "sections/"}
 
 type FsAssetEvent struct {
 	asset     Asset
@@ -96,7 +96,7 @@ func Encode64(data []byte) string {
 
 func extractAssetKey(filename string) string {
 	filename = filepath.ToSlash(filename)
-	
+
 	for _, dir := range assetLocations {
 		split := strings.SplitAfterN(filename, dir, 2)
 		if len(split) > 1 {
