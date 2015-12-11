@@ -47,8 +47,8 @@ type APIAssetEvent struct {
 	AssetKey  string `json:"asset_key"`
 	EventType string `json:"event_type"`
 	Code      int    `json:"status_code"`
-	err       error  `json:"error,omitempty"`
-	etype     string `json:"type"`
+	err       error  `json:"error,omitempty"` // TODO: err is unexported; json binding is not going to work
+	etype     string `json:"type"`            // TODO: same here, unexported, no json binding
 }
 
 func NewAPIAssetEvent(r *http.Response, e AssetEvent, err error) APIAssetEvent {

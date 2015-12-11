@@ -48,13 +48,48 @@ func (f FsAssetEvent) String() string {
 }
 
 func NewFileWatcher(dir string, recur bool, filter EventFilter) (chan AssetEvent, error) {
-	if recur {
-		return watchDirRecur(dir, filter)
-	} else {
-		return watchDir(dir, filter)
+	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.MatchesFilter)
+	if err != nil {
+		return nil, err
 	}
+
+	watcher, err := fsnotify.NewWatcher()
+	// TODO: the watcher should be closed at the end!!
+	if err != nil {
+		return nil, err
+	}
+
+	for _, path := range dirsToWatch {
+		if err := watcher.Add(path); err != nil {
+			return nil, fmt.Errorf("Could not watch directory %s: %s", path, err)
+		}
+	}
+
+	return convertFsEvents(watcher.Events, filter), nil
 }
 
+func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(string) bool) ([]string, error) {
+	var result []string
+	if !recursive {
+		result = append(result, start)
+		return result, nil
+	}
+
+	walkFunc := func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			return nil
+		}
+		if ignoreDirectory(path) {
+			return nil
+		}
+		result = append(result, path)
+		return nil
+	}
+	if err := filepath.Walk(start, walkFunc); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 func fwLoadAsset(event fsnotify.Event) theme.Asset {
 	root := filepath.Dir(event.Name)
 	filename := filepath.Base(event.Name)
@@ -119,6 +154,7 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 				continue
 			}
 
+			// TODO: we should add new directories to the watch list
 			if !filter.MatchesFilter(event.Name) {
 				fsevent := HandleEvent(event)
 				duplicateEventTimeoutKey := fsevent.String()
@@ -132,37 +168,4 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 		}
 	}()
 	return results
-}
-
-func watchDirRecur(dir string, filter EventFilter) (results chan AssetEvent, err error) {
-	results = make(chan AssetEvent)
-	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && !filter.MatchesFilter(path) {
-			channel, _ := watchDir(path, filter)
-			go func() {
-				for {
-					results <- <-channel
-				}
-			}()
-		}
-		return err
-	})
-	return
-}
-
-func watchDir(dir string, filter EventFilter) (results chan AssetEvent, err error) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		results = make(chan AssetEvent)
-		close(results)
-		return results, err
-	}
-	err = watcher.Add(dir)
-	if err != nil {
-		results = make(chan AssetEvent)
-		close(results)
-	} else {
-		results = convertFsEvents(watcher.Events, filter)
-	}
-	return
 }

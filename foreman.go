@@ -25,6 +25,7 @@ func NewForeman(leakyBucket *bucket.LeakyBucket) Foreman {
 }
 
 func (f Foreman) IssueWork() {
+
 	f.leakyBucket.StartDripping()
 	go func() {
 		notifyProcessed := false
@@ -33,9 +34,10 @@ func (f Foreman) IssueWork() {
 			case job := <-f.JobQueue:
 				f.leakyBucket.GetDrop()
 				notifyProcessed = true
-				go func() {
-					f.WorkerQueue <- job
-				}()
+				// TODO: this was a potential aliasing issue!
+				go func(jobToAdd AssetEvent) {
+					f.WorkerQueue <- jobToAdd
+				}(job)
 			case <-f.halt:
 				return
 			case <-time.Tick(1 * time.Second):
