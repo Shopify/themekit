@@ -3,6 +3,9 @@ package themekit
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -52,6 +55,17 @@ refill_rate: 4
 `
 	assert.Nil(t, err, "An error should not have been raised")
 	assert.Equal(t, expectedConfiguration, string(buffer.Bytes()))
+}
+
+func TestAddHeadersAddsPlatformAndArchitecture(t *testing.T) {
+	req, _ := http.NewRequest("GET", "/foo/bar", nil)
+
+	config := Configuration{Domain: "hello.myshopify.com", AccessToken: "secret", BucketSize: 10, RefillRate: 4}
+	config.AddHeaders(req)
+
+	userAgent := req.Header.Get("User-Agent")
+	assert.True(t, strings.Contains(userAgent, runtime.GOOS))
+	assert.True(t, strings.Contains(userAgent, runtime.GOARCH))
 }
 
 const (

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime"
 )
 
 type Configuration struct {
@@ -82,7 +83,7 @@ func (conf Configuration) AddHeaders(req *http.Request) {
 	req.Header.Add("X-Shopify-Access-Token", conf.AccessToken)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("User-Agent", "go/themekit")
+	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s)", runtime.GOOS, runtime.GOARCH))
 }
 
 func (c Configuration) String() string {
