@@ -4,14 +4,14 @@ all:
 	for subproject in $(SUBPROJECTS); \
 	do \
 		mkdir -p build/development; \
-	  godep go build -o build/development/$${subproject} cmd/$${subproject}/*.go; \
+	  godep go build -o build/development/$${subproject} github.com/Shopify/themekit/cmd/$${subproject}; \
   done
 
 build:
 	for subproject in $(SUBPROJECTS); \
 	do \
 	  mkdir -p build/dist/${GOOS}-${GOARCH}; \
-		godep go build -o build/dist/${GOOS}-${GOARCH}/$${subproject}${EXT} cmd/$${subproject}/*.go; \
+		godep go build -o build/dist/${GOOS}-${GOARCH}/$${subproject}${EXT} github.com/Shopify/themekit/cmd/$${subproject}; \
 	done
 
 test:
