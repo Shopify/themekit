@@ -33,7 +33,7 @@ contain the program. The Makefile will use `godep` to ensure that the builds are
   - For example: `git tag 0.0.1 && git push origin --tags`
 - Create a release using `make dist`
   - This will create binaries for all supported platforms and upload them to S3
-  - It will also update the [manifest file](https://shopify-themekit.s3.amazonaws.com/releases/all.json) as well as the [latest release file](https://s3.amazonaws.com/themekit-dist-dev/releases/latest.json)
+  - It will also update the [manifest file](https://shopify-themekit.s3.amazonaws.com/releases/all.json) as well as the [latest release file](https://shopify-themekit.s3.amazonaws.com/releases/latest.json)
 - Verify that both the manifest file and latest release file have been correctly updated
 - On Github create a new release for the tag and take note of any relevant changes
   - Include a brief summary of all the changes
