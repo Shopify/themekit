@@ -3,3 +3,5 @@ build
 tmp
 crash.log
 Godeps
+.env
+tags
