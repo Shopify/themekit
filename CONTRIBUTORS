@@ -24,6 +24,28 @@ You can easily obtain the source code and all dependencies by typing the followi
 Switch to that directory and run the Makefile. This will create a `build/development` directory which will
 contain the program. The Makefile will use `godep` to ensure that the builds are reliable for your system.
 
+# Creating Releases
+
+- Using [SemVer](http://semver.org/) update the version number in [version.go](version.go)
+- Before continuing, verify that all tests are passing and binaries build cleanly
+  - To easily verify everything you can simply enter the following: `make test && make`
+- Merge changes into master and create a tag named after the version
+  - For example: `git tag 0.0.1 && git push origin --tags`
+- Create a release using `make dist`
+  - This will create binaries for all supported platforms and upload them to S3
+  - It will also update the [manifest file](https://shopify-themekit.s3.amazonaws.com/releases/all.json) as well as the [latest release file](https://s3.amazonaws.com/themekit-dist-dev/releases/latest.json)
+- Verify that both the manifest file and latest release file have been correctly updated
+- On Github create a new release for the tag and take note of any relevant changes
+  - Include a brief summary of all the changes
+  - Include links off to the Pull Requests that introduced these changes
+  - Also upload the zipped binaries manually to Github so people can easily download them
+- Update the [themekit](http://themekit.cat) website
+  - `git checkout gh-pages && pushd nanoc`
+  - `nanoc compile && popd`
+  - `git add . && git commit -m "Updating website"`
+  - `git push origin gh-pages`
+
 # Authors
 
 - Chris Saunders <[Shopify](https://shopify.com)>
+- Jakob Külzer <[Shopify](https://shopify.com)>
