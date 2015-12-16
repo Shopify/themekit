@@ -1,0 +1,9 @@
+source 'https://rubygems.org'
+
+ruby '2.2.3'
+gem 'nanoc', '~> 3.7.3'
+gem 'nokogiri'
+gem 'pygments.rb'
+#gem 'posix-spawn'
+#gem 'yajl-ruby'
+gem 'kramdown'

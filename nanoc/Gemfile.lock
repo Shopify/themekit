@@ -1,0 +1,29 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    colored (1.2)
+    cri (2.7.0)
+      colored (~> 1.2)
+    kramdown (1.9.0)
+    mini_portile (0.6.2)
+    nanoc (3.7.5)
+      cri (~> 2.3)
+    nokogiri (1.6.6.2)
+      mini_portile (~> 0.6.0)
+    posix-spawn (0.3.11)
+    pygments.rb (0.6.3)
+      posix-spawn (~> 0.3.6)
+      yajl-ruby (~> 1.2.0)
+    yajl-ruby (1.2.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  kramdown
+  nanoc (~> 3.7.3)
+  nokogiri
+  pygments.rb
+
+BUNDLED WITH
+   1.10.6
