@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var TKVersion Version = Version{Major: 0, Minor: 3, Patch: 3}
+var TKVersion Version = Version{Major: 0, Minor: 3, Patch: 4}
 var ThemeKitVersion string = TKVersion.String()
 
 type VersionComparisonResult int
