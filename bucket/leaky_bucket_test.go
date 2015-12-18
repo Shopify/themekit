@@ -13,12 +13,15 @@ func TestFillingABucket(t *testing.T) {
 	config := Configuration{Size: bucketSize, Refill: refillAmount, Duration: time.Duration(refillDuration) * time.Millisecond}
 	bucket := NewLeakyBucketWithConfiguration(config)
 	assert.Equal(t, true, bucket.IsEmpty(), "The bucket should be empty")
+	assert.Equal(t, 0, bucket.Available())
 	assert.Equal(t, false, bucket.IsFull(), "The bucket has nothing in it. Therefore it is not full")
 	bucket.AddDrops()
+	assert.Equal(t, config.Refill, bucket.Available())
 	assert.Equal(t, false, bucket.IsEmpty(), "The bucket should have 1 drop in it but has %d instead", bucket.Available())
 	assert.Equal(t, false, bucket.IsFull(), "The bucket should not be full yet")
 	bucket.AddDrops()
 	assert.Equal(t, true, bucket.IsFull(), "The bucket should have 2 drops and be full but instead it has %d drops", bucket.Available())
+	assert.Equal(t, config.Size, bucket.Available())
 }
 
 func TestToppingUpABucket(t *testing.T) {
@@ -32,7 +35,9 @@ func TestToppingUpABucket(t *testing.T) {
 func TestGrabbingADropFromTheBucket(t *testing.T) {
 	config := Configuration{Size: 2, Refill: 1, Duration: time.Duration(10) * time.Millisecond}
 	bucket := NewLeakyBucketWithConfiguration(config)
+	assert.Equal(t, 0, bucket.Available(), "Bucket should be empty")
 	bucket.TopUp()
+	assert.Equal(t, bucket.Size, bucket.Available(), "Bucket should be full")
 	dropsChannel := make(chan bool)
 
 	go func() {
@@ -48,6 +53,7 @@ func TestGrabbingADropFromTheBucket(t *testing.T) {
 		t.Log("Expected a value to be written to the dropsChannel but it did not happen")
 		t.Fail()
 	}
+	assert.Equal(t, bucket.Size-1, bucket.Available(), "Bucket should be full")
 }
 
 func TestFillingAnAlreadyFullBucket(t *testing.T) {
