@@ -28,15 +28,15 @@ const (
 	DefaultConcurrency int = 2
 )
 
-func LoadConfiguration(contents []byte) (conf Configuration, err error) {
-	err = yaml.Unmarshal(contents, &conf)
-	if err == nil {
-		return conf.Initialize(), err
+func LoadConfiguration(contents []byte) (Configuration, error) {
+	var conf Configuration
+	if err := yaml.Unmarshal(contents, &conf); err != nil {
+		return conf, err
 	}
-	return
+	return conf.Initialize()
 }
 
-func (conf Configuration) Initialize() Configuration {
+func (conf Configuration) Initialize() (Configuration, error) {
 	if conf.BucketSize <= 0 {
 		conf.BucketSize = DefaultBucketSize
 	}
@@ -51,7 +51,14 @@ func (conf Configuration) Initialize() Configuration {
 	if conf.ThemeId != 0 {
 		conf.Url = fmt.Sprintf("%s/themes/%d", conf.Url, conf.ThemeId)
 	}
-	return conf
+
+	if len(conf.Domain) == 0 {
+		return conf, fmt.Errorf("missing domain")
+	}
+	if len(conf.AccessToken) == 0 {
+		return conf, fmt.Errorf("missing access_token")
+	}
+	return conf, nil
 }
 
 func (conf Configuration) AdminUrl() string {

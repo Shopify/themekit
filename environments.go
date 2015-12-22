@@ -17,7 +17,11 @@ func LoadEnvironments(contents []byte) (envs Environments, err error) {
 	err = yaml.Unmarshal(contents, &envs)
 	if err == nil {
 		for key, conf := range envs {
-			envs[key] = conf.Initialize()
+			environmentConfig, err := conf.Initialize()
+			if err != nil {
+				return nil, err
+			}
+			envs[key] = environmentConfig
 		}
 	}
 	return

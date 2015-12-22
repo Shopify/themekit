@@ -43,6 +43,21 @@ func TestLoadingAnUnsupportedConfiguration(t *testing.T) {
 	assert.Equal(t, "abracadabra", config.AccessToken)
 }
 
+func TestLoadingConfigurationWithMissingFields(t *testing.T) {
+	tests := []struct {
+		src, expectedError string
+	}{
+		{configurationWithoutAccessToken, "missing access_token"},
+		{configurationWithoutDomain, "missing domain"},
+	}
+
+	for _, data := range tests {
+		_, err := LoadConfiguration([]byte(data.src))
+		assert.NotNil(t, err)
+		assert.Equal(t, data.expectedError, err.Error())
+	}
+}
+
 func TestWritingAConfigurationFile(t *testing.T) {
 	buffer := new(bytes.Buffer)
 	config := Configuration{Domain: "hello.myshopify.com", AccessToken: "secret", BucketSize: 10, RefillRate: 4}
@@ -94,5 +109,14 @@ const (
   store: example.myshopify.com
   access_token: abracadabra
   theme_id: 12345
+  `
+
+	configurationWithoutAccessToken = `
+  store: foo.myshopify.com
+  theme_id: 123
+  `
+
+	configurationWithoutDomain = `
+  access_token: foobar
   `
 )
