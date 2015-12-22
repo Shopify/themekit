@@ -19,7 +19,7 @@ func LoadEnvironments(contents []byte) (envs Environments, err error) {
 		for key, conf := range envs {
 			environmentConfig, err := conf.Initialize()
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("could not load environment \"%s\": %s", key, err)
 			}
 			envs[key] = environmentConfig
 		}
