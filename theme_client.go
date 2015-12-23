@@ -215,9 +215,13 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 	}()
 
 	wg.Wait()
-	config := t.GetConfiguration()
+	config := t.GetConfiguration() // Shouldn't this configuration already be loaded and initialized?
 	config.ThemeId = themeEvent.ThemeId
-	return NewThemeClient(config.Initialize()), log
+	config, err := config.Initialize()
+	if err != nil {
+		// TODO: there's no way we can signal that something went wrong.
+	}
+	return NewThemeClient(config), log
 }
 
 func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan ThemeEvent) {
