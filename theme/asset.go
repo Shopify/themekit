@@ -48,6 +48,43 @@ func (assets ByAsset) Less(i, j int) bool {
 	return assets[i].Key < assets[j].Key
 }
 
+func findAllFiles(dir string) ([]string, error) {
+	files := make([]string, 0)
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		files = append(files, path)
+		return nil
+	})
+
+	return files, err
+}
+
+func LoadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset, error) {
+	files, err := findAllFiles(dir)
+	if err != nil {
+		panic(err)
+	}
+
+	assets := []Asset{}
+	for _, file := range files {
+		assetKey, err := filepath.Rel(dir, file)
+		if err != nil {
+			panic(err)
+		}
+		if !ignore(assetKey) {
+			asset, err := LoadAsset(dir, assetKey)
+			if err == nil {
+				assets = append(assets, asset)
+			}
+		}
+	}
+
+	return assets, nil
+}
+
 func LoadAsset(root, filename string) (asset Asset, err error) {
 	asset = Asset{}
 	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
