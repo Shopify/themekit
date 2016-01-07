@@ -12,7 +12,6 @@ func TestFullReplace(t *testing.T) {
 	assetWithValue := theme.Asset{"layout/layout.liquid", "value1", ""}
 	assetWithAttachment := theme.Asset{"layout/layout.liquid", "", "attachment"}
 	assetInSubdir := theme.Asset{"templates/customers/account.liquid", "", "attachment"}
-	assetInSubdirWithBackSlash := theme.Asset{"templates/customers\\account.liquid", "", "attachment"}
 
 	data := []struct {
 		local          []theme.Asset
@@ -29,7 +28,6 @@ func TestFullReplace(t *testing.T) {
 		{[]theme.Asset{assetInSubdir}, []theme.Asset{}, []themekit.AssetEvent{themekit.NewUploadEvent(assetInSubdir)}, "local asset in subdirectory only"},
 		{[]theme.Asset{}, []theme.Asset{assetInSubdir}, []themekit.AssetEvent{themekit.NewRemovalEvent(assetInSubdir)}, "remote asset in subdirectory only"},
 		{[]theme.Asset{assetInSubdir}, []theme.Asset{assetInSubdir}, []themekit.AssetEvent{themekit.NewUploadEvent(assetInSubdir)}, "local asset in subdirectory both local and remote"},
-		{[]theme.Asset{assetInSubdirWithBackSlash}, []theme.Asset{assetInSubdir}, []themekit.AssetEvent{themekit.NewUploadEvent(assetInSubdir)}, "local asset in subdirectory with backslash both local and remote"},
 	}
 
 	for _, d := range data {
