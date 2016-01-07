@@ -46,6 +46,8 @@ func enqueueEvents(client themekit.ThemeClient, filenames []string, events chan 
 	}()
 }
 
+// fullReplace takes slices with assets both from the local filesystem and the remote server and translates them
+// into a suitable set of events that updates the remote site to the local state.
 func fullReplace(remoteAssets, localAssets []theme.Asset, events chan themekit.AssetEvent) {
 	assetsActions := map[string]themekit.AssetEvent{}
 	generateActions := func(assets []theme.Asset, assetEventFn func(asset theme.Asset) themekit.SimpleAssetEvent) {

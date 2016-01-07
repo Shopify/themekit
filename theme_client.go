@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -136,8 +137,16 @@ func (t ThemeClient) AssetListSync() []theme.Asset {
 
 func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 	dir = fmt.Sprintf("%s%s", dir, string(filepath.Separator))
-	glob := fmt.Sprintf("%s**%s*", dir, string(filepath.Separator))
-	files, _ := filepath.Glob(glob)
+
+	files := make([]string, 0)
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		files = append(files, path)
+		return nil
+	})
 
 	assets := []theme.Asset{}
 	for _, file := range files {

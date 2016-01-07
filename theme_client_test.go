@@ -104,6 +104,15 @@ func TestRetrievingLocalAssets(t *testing.T) {
 	assert.Equal(t, 1, len(assets))
 }
 
+func TestRetrievingLocalAssetsWithSubdirectories(t *testing.T) {
+	client := NewThemeClient(Configuration{})
+
+	dir, _ := os.Getwd()
+	assets := client.LocalAssets(fmt.Sprintf("%s/fixtures/local_assets", dir))
+
+	assert.Equal(t, 3, len(assets))
+}
+
 func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, TestFixture("assets_response_from_shopify"))
