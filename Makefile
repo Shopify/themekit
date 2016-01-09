@@ -7,6 +7,9 @@ all:
 	  godep go build -o build/development/$${subproject} github.com/Shopify/themekit/cmd/$${subproject}; \
   done
 
+install: 
+	godep go install github.com/Shopify/themekit/cmd/theme 
+
 build:
 	for subproject in $(SUBPROJECTS); \
 	do \
