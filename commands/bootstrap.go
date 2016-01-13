@@ -23,7 +23,7 @@ type BootstrapOptions struct {
 	Directory   string
 	Environment string
 	Prefix      string
-	SetThemeId  bool
+	SetThemeID  bool
 }
 
 func BootstrapCommand(args map[string]interface{}) chan bool {
@@ -33,7 +33,7 @@ func BootstrapCommand(args map[string]interface{}) chan bool {
 	extractString(&options.Directory, "directory", args)
 	extractString(&options.Environment, "environment", args)
 	extractString(&options.Prefix, "prefix", args)
-	extractBool(&options.SetThemeId, "setThemeId", args)
+	extractBool(&options.SetThemeID, "setThemeId", args)
 	extractThemeClient(&options.Client, args)
 	extractEventLog(&options.EventLog, args)
 
@@ -69,7 +69,7 @@ func doBootstrap(options BootstrapOptions) chan bool {
 	}
 	clientForNewTheme, themeEvents := options.Client.CreateTheme(name, zipLocation)
 	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{themeEvents})
-	if options.SetThemeId {
+	if options.SetThemeID {
 		AddConfiguration(options.Directory, options.Environment, clientForNewTheme.GetConfiguration())
 	}
 
@@ -134,12 +134,12 @@ func findReleaseWith(feed atom.Feed, version string) (atom.Entry, error) {
 
 func buildInvalidVersionError(feed atom.Feed, version string) error {
 	buff := bytes.NewBuffer([]byte{})
-	buff.Write([]byte(themekit.RedText("Invalid Timber Version: " + version)))
-	buff.Write([]byte("\nAvailable Versions Are:"))
-	buff.Write([]byte("\n  - master"))
-	buff.Write([]byte("\n  - latest"))
+	buff.WriteString(themekit.RedText("Invalid Timber Version: " + version))
+	buff.WriteString("\nAvailable Versions Are:")
+	buff.WriteString("\n  - master")
+	buff.WriteString("\n  - latest")
 	for _, entry := range feed.Entries {
-		buff.Write([]byte("\n  - " + entry.Title))
+		buff.WriteString("\n  - " + entry.Title)
 	}
 	return errors.New(buff.String())
 }
