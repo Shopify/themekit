@@ -69,7 +69,7 @@ type AssetEvent interface {
 func NewThemeClient(config Configuration) ThemeClient {
 	return ThemeClient{
 		config: config,
-		client: newHttpClient(config),
+		client: newHTTPClient(config),
 		filter: NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores),
 	}
 }
@@ -138,7 +138,7 @@ func (t ThemeClient) AssetListSync() []theme.Asset {
 func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 	dir = fmt.Sprintf("%s%s", dir, string(filepath.Separator))
 
-	files := make([]string, 0)
+	var files []string
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -326,8 +326,8 @@ func processResponse(r *http.Response, err error, event AssetEvent) ThemeEvent {
 	return NewAPIAssetEvent(r, event, err)
 }
 
-func (t ThemeClient) isDoneProcessing(themeId int64) bool {
-	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminUrl(), themeId)
+func (t ThemeClient) isDoneProcessing(themeID int64) bool {
+	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminUrl(), themeID)
 	themeEvent := t.sendData("GET", path, []byte{})
 	return themeEvent.Previewable
 }
@@ -336,16 +336,16 @@ func ExtractErrorMessage(data []byte, err error) string {
 	return extractAssetAPIErrors(data, err).Error()
 }
 
-func newHttpClient(config Configuration) (client *http.Client) {
+func newHTTPClient(config Configuration) (client *http.Client) {
 	client = &http.Client{}
 	if len(config.Proxy) > 0 {
 		fmt.Println("Proxy URL detected from Configuration:", config.Proxy)
 		fmt.Println("SSL Certificate Validation will be disabled!")
-		proxyUrl, err := url.Parse(config.Proxy)
+		proxyURL, err := url.Parse(config.Proxy)
 		if err != nil {
 			fmt.Println("Proxy configuration invalid:", err)
 		}
-		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyUrl), TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	}
 	return
 }

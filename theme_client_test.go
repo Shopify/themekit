@@ -3,7 +3,6 @@ package themekit
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/themekit/theme"
+	"github.com/stretchr/testify/assert"
 )
 
 type TestEvent struct {
@@ -63,7 +63,7 @@ func TestPerformWithAssetEventThatDoesNotPassTheFilter(t *testing.T) {
 func TestProcessingAnEventsChannel(t *testing.T) {
 	results := map[string]int{}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		results[r.Method] += 1
+		results[r.Method]++
 	}))
 
 	stream := make(chan AssetEvent)
