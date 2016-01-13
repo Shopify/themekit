@@ -4,7 +4,7 @@
 - If feature/bug is deemed valid then fork repo
 - Implement patch to resolve issue, include tests to prevent regressions/validate patch/be super awesome
 - Submit pull request and mention maintainers
-  - Current Maintainers: @csaunders
+  - Current Maintainers: @ilikeorangutans, @chrisbutcher
 
 # Pre-Requisites
 
@@ -19,7 +19,7 @@ Please see the [godep documentation](https://github.com/tools/godep) for more de
 
 You can easily obtain the source code and all dependencies by typing the following into a console:
 
-  go get -u github.com/csaunders/themekit
+  go get -u github.com/Shopify/themekit
 
 Switch to that directory and run the Makefile. This will create a `build/development` directory which will
 contain the program. The Makefile will use `godep` to ensure that the builds are reliable for your system.
@@ -49,3 +49,4 @@ contain the program. The Makefile will use `godep` to ensure that the builds are
 
 - Chris Saunders <[Shopify](https://shopify.com)>
 - Jakob Külzer <[Shopify](https://shopify.com)>
+- Chris Butcher <[Shopify](https://shopify.com)>
