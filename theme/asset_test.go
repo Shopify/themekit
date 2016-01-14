@@ -2,8 +2,6 @@ package theme
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 	"image"
 	"image/png"
 	"io/ioutil"
@@ -13,6 +11,9 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
 type LoadAssetSuite struct {
@@ -108,7 +109,7 @@ func (s *LoadAssetSuite) allocateFileInDir(directory, content string) (root, fil
 	}
 
 	if len(content) > 0 {
-		file.Write([]byte(content))
+		file.WriteString(content)
 		file.Sync()
 		file.Seek(0, 0)
 	}

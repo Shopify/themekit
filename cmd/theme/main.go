@@ -5,12 +5,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/Shopify/themekit"
-	"github.com/Shopify/themekit/commands"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/commands"
 )
 
 const banner string = "----------------------------------------"
@@ -129,7 +130,7 @@ func main() {
 			select {
 			case event := <-globalEventLog:
 				if len(event.String()) > 0 {
-					output.Write([]byte(fmt.Sprintf("%s\n", event)))
+					output.WriteString(fmt.Sprintf("%s\n", event))
 					output.Flush()
 				}
 			case <-time.Tick(1000 * time.Millisecond):
@@ -220,11 +221,11 @@ func BootstrapParser(cmd string, args []string) (result map[string]interface{}, 
 	result = make(map[string]interface{})
 	currentDir, _ := os.Getwd()
 	var version, directory, environment, prefix string
-	var setThemeId bool
+	var setThemeID bool
 
 	set = makeFlagSet(cmd)
 	set.StringVar(&directory, "dir", currentDir, "location of config.yml")
-	set.BoolVar(&setThemeId, "setid", true, "update config.yml with ID of created Theme")
+	set.BoolVar(&setThemeID, "setid", true, "update config.yml with ID of created Theme")
 	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to execute command")
 	set.StringVar(&version, "version", commands.LatestRelease, "version of Shopify Timber to use")
 	set.StringVar(&prefix, "prefix", "", "prefix to the Timber theme being created")
@@ -234,7 +235,7 @@ func BootstrapParser(cmd string, args []string) (result map[string]interface{}, 
 	result["directory"] = directory
 	result["environment"] = environment
 	result["prefix"] = prefix
-	result["setThemeId"] = setThemeId
+	result["setThemeId"] = setThemeID
 	result["themeClient"] = loadThemeClient(directory, environment)
 	return
 }
@@ -254,7 +255,7 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.The
 	if err != nil && len(environments) > 0 {
 		invalidEnvMsg := fmt.Sprintf("'%s' is not a valid environment. The following environments are available within config.yml:", env)
 		fmt.Println(themekit.RedText(invalidEnvMsg))
-		for e, _ := range environments {
+		for e := range environments {
 			fmt.Println(themekit.RedText(fmt.Sprintf(" - %s", e)))
 		}
 		os.Exit(1)
@@ -341,9 +342,9 @@ func handleError(err error) {
 	}
 
 	if strings.Contains(err.Error(), "YAML error") {
-		err = errors.New(fmt.Sprintf("configuration error: does your configuration properly escape wildcards? \n\t\t\t%s", err))
+		err = fmt.Errorf("configuration error: does your configuration properly escape wildcards? \n\t\t\t%s", err)
 	} else if strings.Contains(err.Error(), "no such file or directory") {
-		err = errors.New(fmt.Sprintf("configuration error: %s", err))
+		err = fmt.Errorf("configuration error: %s", err)
 	}
 	themekit.NotifyErrorImmediately(err)
 }
