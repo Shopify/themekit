@@ -101,6 +101,7 @@ func TestRetrievingLocalAssets(t *testing.T) {
 
 	dir, _ := os.Getwd()
 	assets := client.LocalAssets(fmt.Sprintf("%s/fixtures/templates", dir))
+
 	assert.Equal(t, 1, len(assets))
 }
 

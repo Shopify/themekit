@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -138,26 +137,11 @@ func (t ThemeClient) AssetListSync() []theme.Asset {
 func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 	dir = fmt.Sprintf("%s%s", dir, string(filepath.Separator))
 
-	var files []string
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-
-		files = append(files, path)
-		return nil
-	})
-
-	assets := []theme.Asset{}
-	for _, file := range files {
-		if !t.filter.MatchesFilter(file) {
-			assetKey := strings.Replace(file, dir, "", -1)
-			asset, err := theme.LoadAsset(dir, assetKey)
-			if err == nil {
-				assets = append(assets, asset)
-			}
-		}
+	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.MatchesFilter)
+	if err != nil {
+		panic(err)
 	}
+
 	return assets
 }
 
@@ -322,7 +306,6 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 }
 
 func processResponse(r *http.Response, err error, event AssetEvent) ThemeEvent {
-	fmt.Printf("Got response %d %s \n", r.StatusCode, r.Status)
 	return NewAPIAssetEvent(r, event, err)
 }
 
