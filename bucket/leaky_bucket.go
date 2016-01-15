@@ -1,7 +1,6 @@
 package bucket
 
 import (
-	"log"
 	"time"
 )
 
@@ -70,7 +69,6 @@ func (b *LeakyBucket) AddDrops() {
 }
 
 func (b *LeakyBucket) GetDrop() {
-	log.Println("Getting drop ", len(b.bucket), "available")
 	<-b.bucket
 }
 
