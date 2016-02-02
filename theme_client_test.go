@@ -151,6 +151,12 @@ func TestExtractErrorMessage(t *testing.T) {
 	assert.Equal(t, expectedMessage, ExtractErrorMessage(contents, nil))
 }
 
+func TestExtractAPIErrorMessage(t *testing.T) {
+	contents := []byte(TestFixture("api_error"))
+	expectedMessage := "[API] Invalid API key or access token (unrecognized login or wrong password)"
+	assert.Equal(t, expectedMessage, ExtractErrorMessage(contents, nil))
+}
+
 func TestIgnoringCompiledAssets(t *testing.T) {
 	input := []theme.Asset{
 		{Key: "assets/ajaxify.js"},
