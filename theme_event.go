@@ -122,6 +122,10 @@ type AssetError struct {
 	Messages []string `json:"asset"`
 }
 
+type ApiError struct {
+	Errors string `json:"errors"`
+}
+
 type APIThemeEvent struct {
 	Host        string `json:"host"`
 	ThemeName   string `json:"name"`
@@ -217,7 +221,15 @@ func extractAssetAPIErrors(data []byte, err error) error {
 	err = json.Unmarshal(data, &assetErrors)
 
 	if err != nil {
-		return err
+		var apiError ApiError
+		err = json.Unmarshal(data, &apiError)
+
+		if err != nil {
+			return err
+		}
+		return errors.New(apiError.Errors)
+
+	} else {
+		return errors.New(strings.Join(assetErrors["errors"].Messages, "\n"))
 	}
-	return errors.New(strings.Join(assetErrors["errors"].Messages, "\n"))
 }
