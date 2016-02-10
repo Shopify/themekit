@@ -94,6 +94,9 @@ func (e EventFilter) Filter(events chan string) chan string {
 }
 
 func (e EventFilter) MatchesFilter(event string) bool {
+	if len(event) == 0 {
+		return false
+	}
 	for _, regexp := range e.filters {
 		if regexp.MatchString(event) {
 			return true

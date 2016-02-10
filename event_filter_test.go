@@ -52,6 +52,12 @@ func TestDefaultFilters(t *testing.T) {
 	assertFilter(t, eventFilter, inputEvents, expectedEvents)
 }
 
+func TestMatchesFilterWithEmptyInputDoesNotCrash(t *testing.T) {
+	eventFilter := NewEventFilter([]string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"})
+	// Shouldn't crash
+	eventFilter.MatchesFilter("")
+}
+
 func nextValue(channel chan string) string {
 	select {
 	case result := <-channel:
