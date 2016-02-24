@@ -5,13 +5,14 @@ import (
 	_ "crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/inconshreveable/go-update"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/inconshreveable/go-update"
 )
 
-var TKVersion Version = Version{Major: 0, Minor: 3, Patch: 5}
+var TKVersion Version = Version{Major: 0, Minor: 3, Patch: 6}
 var ThemeKitVersion string = TKVersion.String()
 
 type VersionComparisonResult int

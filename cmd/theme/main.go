@@ -196,14 +196,15 @@ func WatchCommandParser(cmd string, args []string) (result map[string]interface{
 func ConfigurationCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
 	result = make(map[string]interface{})
 	currentDir, _ := os.Getwd()
-	var directory, environment, domain, accessToken string
+	var directory, environment, domain, password, access_token string
 	var bucketSize, refillRate int
 
 	set = makeFlagSet(cmd)
 	set.StringVar(&directory, "dir", currentDir, "directory to create config.yml")
 	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment for this configuration")
 	set.StringVar(&domain, "domain", "", "your myshopify domain")
-	set.StringVar(&accessToken, "access_token", "", "accessToken (or password) to make successful API calls")
+	set.StringVar(&password, "password", "", "password (or access token) to make successful API calls")
+	set.StringVar(&access_token, "access_token", "", "access_token to make successful API calls (optional, and soon to be deprecated in favour of 'password')")
 	set.IntVar(&bucketSize, "bucketSize", themekit.DefaultBucketSize, "leaky bucket capacity")
 	set.IntVar(&refillRate, "refillRate", themekit.DefaultRefillRate, "leaky bucket refill rate / second")
 	set.Parse(args)
@@ -211,7 +212,8 @@ func ConfigurationCommandParser(cmd string, args []string) (result map[string]in
 	result["directory"] = directory
 	result["environment"] = environment
 	result["domain"] = domain
-	result["access_token"] = accessToken
+	result["password"] = password
+	result["access_token"] = access_token
 	result["bucket_size"] = bucketSize
 	result["refill_rate"] = refillRate
 	return

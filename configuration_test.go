@@ -2,11 +2,12 @@ package themekit
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadingAValidConfiguration(t *testing.T) {
@@ -47,7 +48,7 @@ func TestLoadingConfigurationWithMissingFields(t *testing.T) {
 	tests := []struct {
 		src, expectedError string
 	}{
-		{configurationWithoutAccessToken, "missing access_token"},
+		{configurationWithoutAccessTokenAndPassword, "missing password or access_token"},
 		{configurationWithoutDomain, "missing domain"},
 	}
 
@@ -111,7 +112,7 @@ const (
   theme_id: 12345
   `
 
-	configurationWithoutAccessToken = `
+	configurationWithoutAccessTokenAndPassword = `
   store: foo.myshopify.com
   theme_id: 123
   `
