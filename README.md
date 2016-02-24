@@ -1,5 +1,6 @@
 # Theme Kit
 ## Shopify Theme Manipulation Utilities and Libraries
+[![Go Report Card](https://goreportcard.com/badge/github.com/shopify/themekit)](https://goreportcard.com/report/github.com/shopify/themekit)
 
 [Read more about it on the website](http://themekit.cat)
 
