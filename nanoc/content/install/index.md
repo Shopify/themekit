@@ -6,7 +6,7 @@ title: Installation Guide
 
 If you are on **Mac or Linux** you can use the following installation script to automatically download and install
 <%= @config[:project_name] %> for you. You will need to make a small change to your shell initialization file
-(i.e. `.bashrc`) before `theme` will show up in your console:
+(i.e. `.bash_profile`) before `theme` will show up in your console:
 
 `<%= @config[:install_unix_script] %>`
 
@@ -31,25 +31,37 @@ If you want to <strong>install from source</strong> follow <%= link_to 'these in
 
 - Create a directory called `Applications/bin`. You can enter the command in a terminal window to create it:
 
-  <pre><code>mkdir -p ~/Applications</code></pre>
+  <pre><code>mkdir -p ~/Applications/bin</code></pre>
 
 - Open the `~Applications/bin` directory and move the downloaded `theme` program into it. On Mac OS you can enter the following command to open both teh the `bin` and `Download` directories.
 
   <pre><code>open ~/Applications/bin && open ~/Downloads</code></pre>
 
 - Open your configuration file for your terminal interface:
-  - If you are using Bash your file will either be called `.profile` or `.bashrc`
+  - If you are using Bash your file will be called `.profile` or `.bash_profile`
   - If you are using ZSH your file will be called `.zshrc`
   - If you are using another shell you probably know how to do this already
 
 - At the bottom of your file add the following:
-
 <li class="nostyle">
   <ul>
     <li class="nostyle">
       <pre><code>
 #!bash
 export PATH=$PATH:~/Applications/bin
+      </code></pre>
+    </li>
+  </ul>
+</li>
+
+- Or do this in a single command, using echo (substituting in your shell's configuration file as above):
+
+<li class="nostyle">
+  <ul>
+    <li class="nostyle">
+      <pre><code>
+#!bash
+echo "export PATH=$PATH:~/Applications/bin" >> ~/.bash_profile
       </code></pre>
     </li>
   </ul>
@@ -84,10 +96,17 @@ You will also need to have <%= link_to 'git installed', 'https://git-scm.com/dow
 You will need to add the `bin` directory within your go installation to your PATH. On a unix-like system using Bash,
 you'd do something like this:
 
-<pre><code>
-export PATH=PATH-TO-YOUR-GO-FOLDER/bin:$PATH &#62;&#62; ~/.bashrc
-source ~/.bashrc
+<li class="nostyle">
+  <ul>
+    <li class="nostyle">
+      <pre><code>
+#!bash
+export PATH=PATH-TO-YOUR-GO-FOLDER/bin:$PATH &#62;&#62; ~/.bash_profile
+source ~/.bash_profile
 </code></pre>
+</li>
+</ul>
+</li>
 
 Download themekit:
 

@@ -45,7 +45,7 @@
 
 <p>If you are on <strong>Mac or Linux</strong> you can use the following installation script to automatically download and install
 Theme Kit for you. You will need to make a small change to your shell initialization file
-(i.e. <code>.bashrc</code>) before <code>theme</code> will show up in your console:</p>
+(i.e. <code>.bash_profile</code>) before <code>theme</code> will show up in your console:</p>
 
 <p><code>curl https://raw.githubusercontent.com/Shopify/themekit/installers/install | python</code></p>
 
@@ -71,7 +71,7 @@ Theme Kit for you. You will need to make a small change to your shell initializa
   <li>
     <p>Create a directory called <code>Applications/bin</code>. You can enter the command in a terminal window to create it:</p>
 
-    <pre><code>mkdir -p ~/Applications</code></pre>
+    <pre><code>mkdir -p ~/Applications/bin</code></pre>
   </li>
   <li>
     <p>Open the <code>~Applications/bin</code> directory and move the downloaded <code>theme</code> program into it. On Mac OS you can enter the following command to open both teh the <code>bin</code> and <code>Download</code> directories.</p>
@@ -80,18 +80,29 @@ Theme Kit for you. You will need to make a small change to your shell initializa
   </li>
   <li>Open your configuration file for your terminal interface:
     <ul>
-      <li>If you are using Bash your file will either be called <code>.profile</code> or <code>.bashrc</code></li>
+      <li>If you are using Bash your file will be called <code>.profile</code> or <code>.bash_profile</code></li>
       <li>If you are using ZSH your file will be called <code>.zshrc</code></li>
       <li>If you are using another shell you probably know how to do this already</li>
     </ul>
   </li>
   <li>At the bottom of your file add the following:</li>
 </ul>
-
 <li class="nostyle">
   <ul>
     <li class="nostyle">
       <pre><code class="language-bash"><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:~/Applications/bin</code></pre>
+    </li>
+  </ul>
+</li>
+
+<ul>
+  <li>Or do this in a single command, using echo (substituting in your shell’s configuration file as above):</li>
+</ul>
+
+<li class="nostyle">
+  <ul>
+    <li class="nostyle">
+      <pre><code class="language-bash"><span class="nb">echo</span> <span class="s2">"export PATH=$PATH:~/Applications/bin"</span> &gt;&gt; ~/.bash_profile</code></pre>
     </li>
   </ul>
 </li>
@@ -135,10 +146,14 @@ go installed, also <a href="https://golang.org/doc/install#testing">verify go ha
 <p>You will need to add the <code>bin</code> directory within your go installation to your PATH. On a unix-like system using Bash,
 you’d do something like this:</p>
 
-<pre><code>
-export PATH=PATH-TO-YOUR-GO-FOLDER/bin:$PATH &gt;&gt; ~/.bashrc
-source ~/.bashrc
-</code></pre>
+<li class="nostyle">
+  <ul>
+    <li class="nostyle">
+      <pre><code class="language-bash"><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span>PATH-TO-YOUR-GO-FOLDER/bin:<span class="nv">$PATH</span> &gt;&gt; ~/.bash_profile
+<span class="nb">source</span> ~/.bash_profile</code></pre>
+</li>
+</ul>
+</li>
 
 <p>Download themekit:</p>
 
