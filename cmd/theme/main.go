@@ -275,6 +275,10 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.The
 		return themekit.ThemeClient{}, err
 	}
 
+	if len(config.AccessToken) > 0 {
+		fmt.Println("DEPRECATION WARNING: 'access_token' (in conf.yml) will soon be deprecated. Use 'password' instead, with the same Password value obtained from https://<your-subdomain>.myshopify.com/admin/apps/private/<app_id>")
+	}
+
 	return themekit.NewThemeClient(config), nil
 }
 
