@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 
 	"gopkg.in/yaml.v1"
 )
@@ -56,9 +57,12 @@ func (conf Configuration) Initialize() (Configuration, error) {
 
 	if len(conf.Domain) == 0 {
 		return conf, fmt.Errorf("missing domain")
+	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") {
+		return conf, fmt.Errorf("invalid domain, must end in '.myshopify.com'")
 	}
+
 	if len(conf.AccessToken) == 0 && len(conf.Password) == 0 {
-		return conf, fmt.Errorf("missing password or access_token")
+		return conf, fmt.Errorf("missing password or access_token (using 'password' is encouraged. 'access_token', which does the same thing will be deprecated soon)")
 	}
 	return conf, nil
 }
