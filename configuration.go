@@ -57,7 +57,7 @@ func (conf Configuration) Initialize() (Configuration, error) {
 
 	if len(conf.Domain) == 0 {
 		return conf, fmt.Errorf("missing domain")
-	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") {
+	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") && !strings.HasSuffix(conf.Domain, "myshopify.io") {
 		return conf, fmt.Errorf("invalid domain, must end in '.myshopify.com'")
 	}
 
