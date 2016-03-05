@@ -1,9 +1,10 @@
 package atom
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func loadFeedForTesting(t *testing.T) Feed {
@@ -23,8 +24,8 @@ func TestGettingTheLatestEntry(t *testing.T) {
 	feed := loadFeedForTesting(t)
 	latestEntry := feed.LatestEntry()
 
-	expectedId := "tag:github.com,2008:Repository/17219500/v2.0.2"
-	assert.Equal(t, expectedId, latestEntry.Id)
+	expectedID := "tag:github.com,2008:Repository/17219500/v2.0.2"
+	assert.Equal(t, expectedID, latestEntry.Id)
 
 	expectedHref := "/Shopify/Timber/releases/tag/v2.0.2"
 	assert.Equal(t, expectedHref, latestEntry.Link.Href)

@@ -1,17 +1,18 @@
 package commands
 
 import (
+	"testing"
+	"time"
+
 	"github.com/Shopify/themekit"
 	"github.com/Shopify/themekit/theme"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestFullReplace(t *testing.T) {
-	assetWithValue := theme.Asset{"layout/layout.liquid", "value1", ""}
-	assetWithAttachment := theme.Asset{"layout/layout.liquid", "", "attachment"}
-	assetInSubdir := theme.Asset{"templates/customers/account.liquid", "", "attachment"}
+	assetWithValue := theme.Asset{Key: "layout/layout.liquid", Value: "value1", Attachment: ""}
+	assetWithAttachment := theme.Asset{Key: "layout/layout.liquid", Value: "", Attachment: "attachment"}
+	assetInSubdir := theme.Asset{Key: "templates/customers/account.liquid", Value: "", Attachment: "attachment"}
 
 	data := []struct {
 		local          []theme.Asset

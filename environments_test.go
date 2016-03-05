@@ -1,11 +1,10 @@
 package themekit
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const goodEnv string = "./fixtures/valid_config.yml"
@@ -26,7 +25,7 @@ func TestRetrievingAConfigurationFromAnEnvironment(t *testing.T) {
 	env, err := LoadEnvironmentsFromFile(goodEnv)
 	conf, err := env.GetConfiguration("default")
 	assert.NoError(t, err, "Retrieving the 'default' env should not have raised an error")
-	assert.Equal(t, conf.ThemeId, 2)
+	assert.Equal(t, conf.ThemeID, 2)
 }
 
 func TestRetrievingAnInvalidConfigurationFromAnEnvironment(t *testing.T) {
@@ -49,9 +48,9 @@ func TestSettingAConfiguration(t *testing.T) {
 func TestWritingTheEnvironment(t *testing.T) {
 	fmt.Println("TestWritingTheEnvironment is flaky. Skipping...")
 	return
-	env, _ := LoadEnvironmentsFromFile(goodEnv)
-	buffer := new(bytes.Buffer)
-	expected, _ := ioutil.ReadFile(goodEnv)
-	env.Write(buffer)
-	assert.Equal(t, len(expected), len(buffer.Bytes()))
+	// env, _ := LoadEnvironmentsFromFile(goodEnv)
+	// buffer := new(bytes.Buffer)
+	// expected, _ := ioutil.ReadFile(goodEnv)
+	// env.Write(buffer)
+	// assert.Equal(t, len(expected), len(buffer.Bytes()))
 }

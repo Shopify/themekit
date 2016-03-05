@@ -6,6 +6,7 @@ import (
 	"github.com/Shopify/themekit/bucket"
 )
 
+// Foreman ... TODO
 type Foreman struct {
 	leakyBucket *bucket.LeakyBucket
 	halt        chan bool
@@ -14,6 +15,7 @@ type Foreman struct {
 	OnIdle      func()
 }
 
+// NewForeman ... TODO
 func NewForeman(leakyBucket *bucket.LeakyBucket) Foreman {
 	return Foreman{
 		leakyBucket: leakyBucket,
@@ -24,8 +26,8 @@ func NewForeman(leakyBucket *bucket.LeakyBucket) Foreman {
 	}
 }
 
+// IssueWork ... TODO
 func (f Foreman) IssueWork() {
-
 	f.leakyBucket.StartDripping()
 	go func() {
 		notifyProcessed := false
@@ -50,6 +52,7 @@ func (f Foreman) IssueWork() {
 	}()
 }
 
+// Halt ... TODO
 func (f Foreman) Halt() {
 	f.leakyBucket.StopDripping()
 	go func() {

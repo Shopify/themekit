@@ -11,12 +11,13 @@ import (
 	"gopkg.in/yaml.v1"
 )
 
+// Configuration ... TODO
 type Configuration struct {
-	ThemeId      int64    `yaml:"theme_id,omitempty"`
 	AccessToken  string   `yaml:"access_token,omitempty"`
 	Password     string   `yaml:"password,omitempty"`
+	ThemeID      int64    `yaml:"theme_id,omitempty"`
 	Domain       string   `yaml:"store"`
-	Url          string   `yaml:"-"`
+	URL          string   `yaml:"-"`
 	IgnoredFiles []string `yaml:"ignore_files,omitempty"`
 	BucketSize   int      `yaml:"bucket_size"`
 	RefillRate   int      `yaml:"refill_rate"`
@@ -26,11 +27,15 @@ type Configuration struct {
 }
 
 const (
-	DefaultBucketSize  int = 40
-	DefaultRefillRate  int = 2
+	// DefaultBucketSize ... TODO
+	DefaultBucketSize int = 40
+	// DefaultRefillRate ... TODO
+	DefaultRefillRate int = 2
+	// DefaultConcurrency ... TODO
 	DefaultConcurrency int = 2
 )
 
+// LoadConfiguration ... TODO
 func LoadConfiguration(contents []byte) (Configuration, error) {
 	var conf Configuration
 	if err := yaml.Unmarshal(contents, &conf); err != nil {
@@ -39,6 +44,7 @@ func LoadConfiguration(contents []byte) (Configuration, error) {
 	return conf.Initialize()
 }
 
+// Initialize ... TODO
 func (conf Configuration) Initialize() (Configuration, error) {
 	if conf.BucketSize <= 0 {
 		conf.BucketSize = DefaultBucketSize
@@ -50,9 +56,9 @@ func (conf Configuration) Initialize() (Configuration, error) {
 		conf.Concurrency = DefaultConcurrency
 	}
 
-	conf.Url = conf.AdminUrl()
-	if conf.ThemeId != 0 {
-		conf.Url = fmt.Sprintf("%s/themes/%d", conf.Url, conf.ThemeId)
+	conf.URL = conf.AdminURL()
+	if conf.ThemeID != 0 {
+		conf.URL = fmt.Sprintf("%s/themes/%d", conf.URL, conf.ThemeID)
 	}
 
 	if len(conf.Domain) == 0 {
@@ -67,7 +73,8 @@ func (conf Configuration) Initialize() (Configuration, error) {
 	return conf, nil
 }
 
-func (conf Configuration) AdminUrl() string {
+// AdminURL ... TODO
+func (conf Configuration) AdminURL() string {
 	return fmt.Sprintf("https://%s/admin", conf.Domain)
 }
 
@@ -79,6 +86,7 @@ func (conf Configuration) Write(w io.Writer) error {
 	return err
 }
 
+// Save ... TODO
 func (conf Configuration) Save(location string) error {
 	file, err := os.OpenFile(location, os.O_WRONLY|os.O_CREATE, 0644)
 	defer file.Close()
@@ -88,10 +96,12 @@ func (conf Configuration) Save(location string) error {
 	return err
 }
 
+// AssetPath ... TODO
 func (conf Configuration) AssetPath() string {
-	return fmt.Sprintf("%s/assets.json", conf.Url)
+	return fmt.Sprintf("%s/assets.json", conf.URL)
 }
 
+// AddHeaders ... TODO
 func (conf Configuration) AddHeaders(req *http.Request) {
 	var accessToken string
 	if len(conf.Password) > 0 {
@@ -106,6 +116,6 @@ func (conf Configuration) AddHeaders(req *http.Request) {
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s)", runtime.GOOS, runtime.GOARCH))
 }
 
-func (c Configuration) String() string {
-	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", c.AccessToken, c.Domain, c.BucketSize, c.RefillRate, c.Url)
+func (conf Configuration) String() string {
+	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", conf.AccessToken, conf.Domain, conf.BucketSize, conf.RefillRate, conf.URL)
 }

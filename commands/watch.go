@@ -8,64 +8,45 @@ import (
 	"github.com/Shopify/themekit"
 )
 
-type WatchOptions struct {
-	BasicOptions
-	Directory  string
-	NotifyFile string
-	Clients    []themekit.ThemeClient
-}
-
-func WatchCommand(args map[string]interface{}) chan bool {
-	currentDir, _ := os.Getwd()
-
-	options := WatchOptions{Directory: currentDir}
-	options.Clients = extractThemeClients(args)
-	extractThemeClient(&options.Client, args)
-	extractEventLog(&options.EventLog, args)
-	extractString(&options.Directory, "directory", args)
-	extractString(&options.NotifyFile, "notifyFile", args)
-
-	return Watch(options)
-}
-
-func isSingleEnvironment(options WatchOptions) bool {
-	return len(options.Clients) == 0
-}
-
-func Watch(options WatchOptions) chan bool {
-	if isSingleEnvironment(options) {
-		options.Clients = []themekit.ThemeClient{options.Client}
+// WatchCommand watches directories for changes, and updates the remote theme
+func WatchCommand(args Args) chan bool {
+	if isSingleEnvironment(args) {
+		args.ThemeClients = []themekit.ThemeClient{args.ThemeClient}
 	}
 
 	done := make(chan bool)
-	eventLog := options.getEventLog()
+	eventLog := args.EventLog
 
-	for _, client := range options.Clients {
+	for _, client := range args.ThemeClients {
 		config := client.GetConfiguration()
 		concurrency := config.Concurrency
 		logEvent(message(fmt.Sprintf("Spawning %d workers for %s", concurrency, config.Domain)), eventLog)
 
-		options.Client = client
-		watchForChangesAndIssueWork(options, eventLog)
+		args.ThemeClient = client
+		watchForChangesAndIssueWork(args, eventLog)
 	}
 
 	return done
 }
 
-func watchForChangesAndIssueWork(options WatchOptions, eventLog chan themekit.ThemeEvent) {
-	client := options.Client
+func isSingleEnvironment(args Args) bool {
+	return len(args.ThemeClients) == 0
+}
+
+func watchForChangesAndIssueWork(args Args, eventLog chan themekit.ThemeEvent) {
+	client := args.ThemeClient
 	config := client.GetConfiguration()
 	bucket := client.LeakyBucket()
 	bucket.TopUp()
 
 	foreman := themekit.NewForeman(bucket)
 	foreman.OnIdle = func() {
-		if len(options.NotifyFile) > 0 {
-			os.Create(options.NotifyFile)
-			os.Chtimes(options.NotifyFile, time.Now(), time.Now())
+		if len(args.NotifyFile) > 0 {
+			os.Create(args.NotifyFile)
+			os.Chtimes(args.NotifyFile, time.Now(), time.Now())
 		}
 	}
-	watcher := constructFileWatcher(options.Directory, config)
+	watcher := constructFileWatcher(args.Directory, config)
 	foreman.JobQueue = watcher
 	foreman.IssueWork()
 
@@ -84,7 +65,7 @@ func spawnWorker(workerName string, queue chan themekit.AssetEvent, client theme
 				Title:     "FS Event",
 				EventType: asset.Type().String(),
 				Target:    asset.Asset().Key,
-				etype:     "fsevent",
+				Etype:     "fsevent",
 				Formatter: func(b basicEvent) string {
 					return fmt.Sprintf(
 						"Received %s event on %s",
@@ -112,7 +93,7 @@ func workerSpawnEvent(workerName string) themekit.ThemeEvent {
 	return basicEvent{
 		Title:     "Worker",
 		Target:    workerName,
-		etype:     "basicEvent",
+		Etype:     "basicEvent",
 		EventType: "worker",
 		Formatter: func(b basicEvent) string {
 			return fmt.Sprintf("%s ready to upload local changes", b.Target)

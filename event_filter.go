@@ -3,16 +3,17 @@ package themekit
 import (
 	"bytes"
 	"fmt"
-	"github.com/ryanuber/go-glob"
 	"io"
 	"io/ioutil"
 	"os"
 	re "regexp"
 	syn "regexp/syntax"
 	"strings"
+
+	"github.com/ryanuber/go-glob"
 )
 
-const ConfigurationFilename = "config\\.yml"
+const configurationFilename = "config\\.yml"
 
 var defaultRegexes = []*re.Regexp{
 	re.MustCompile(`\.git/*`),
@@ -21,11 +22,13 @@ var defaultRegexes = []*re.Regexp{
 
 var defaultGlobs = []string{}
 
+// EventFilter ... TODO
 type EventFilter struct {
 	filters []*re.Regexp
 	globs   []string
 }
 
+// NewEventFilter ... TODO
 func NewEventFilter(rawPatterns []string) EventFilter {
 	filters := defaultRegexes
 	globs := defaultGlobs
@@ -40,10 +43,11 @@ func NewEventFilter(rawPatterns []string) EventFilter {
 			filters = append(filters, re.MustCompile(regex.String()))
 		}
 	}
-	filters = append(filters, re.MustCompile(ConfigurationFilename))
+	filters = append(filters, re.MustCompile(configurationFilename))
 	return EventFilter{filters: filters, globs: globs}
 }
 
+// NewEventFilterFromReaders ... TODO
 func NewEventFilterFromReaders(readers []io.Reader) EventFilter {
 	patterns := []string{}
 	for _, reader := range readers {
@@ -57,11 +61,13 @@ func NewEventFilterFromReaders(readers []io.Reader) EventFilter {
 	return NewEventFilter(patterns)
 }
 
+// NewEventFilterFromIgnoreFiles ... TODO
 func NewEventFilterFromIgnoreFiles(ignores []string) EventFilter {
 	files := filenamesToReaders(ignores)
 	return NewEventFilterFromReaders(files)
 }
 
+// NewEventFilterFromPatternsAndFiles ... TODO
 func NewEventFilterFromPatternsAndFiles(patterns []string, files []string) EventFilter {
 	readers := filenamesToReaders(files)
 	allReaders := make([]io.Reader, len(readers)+len(patterns))
@@ -77,6 +83,7 @@ func NewEventFilterFromPatternsAndFiles(patterns []string, files []string) Event
 	return NewEventFilterFromReaders(allReaders)
 }
 
+// Filter ... TODO
 func (e EventFilter) Filter(events chan string) chan string {
 	filtered := make(chan string)
 	go func() {
@@ -93,6 +100,7 @@ func (e EventFilter) Filter(events chan string) chan string {
 	return filtered
 }
 
+// MatchesFilter ... TODO
 func (e EventFilter) MatchesFilter(event string) bool {
 	if len(event) == 0 {
 		return false

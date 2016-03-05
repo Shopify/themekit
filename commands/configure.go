@@ -11,83 +11,25 @@ import (
 	"github.com/Shopify/themekit"
 )
 
-type ConfigurationOptions struct {
-	BasicOptions
-	Directory   string
-	Environment string
-	Domain      string
-	AccessToken string
-	Password    string
-	BucketSize  int
-	RefillRate  int
-}
-
-func (co ConfigurationOptions) defaultConfigurationOptions() themekit.Configuration {
-	return themekit.Configuration{
-		Domain:      co.Domain,
-		AccessToken: co.AccessToken,
-		Password:    co.Password,
-		BucketSize:  co.BucketSize,
-		RefillRate:  co.RefillRate,
-	}
-}
-
-func (co ConfigurationOptions) configurationErrors() error {
-	var errs = []string{}
-	if len(co.Domain) <= 0 {
-		errs = append(errs, "\t-domain cannot be blank")
-	}
-	if len(co.AccessToken) <= 0 && len(co.Password) <= 0 {
-		errs = append(errs, "\t-password or access_token cannot be blank")
-	}
-	if len(errs) > 0 {
-		fullPath := filepath.Join(co.Directory, "config.yml")
-		return fmt.Errorf("Cannot create %s!\nErrors:\n%s", fullPath, strings.Join(errs, "\n"))
-	}
-	return nil
-}
-
-func defaultOptions() ConfigurationOptions {
-	currentDir, _ := os.Getwd()
-	return ConfigurationOptions{
-		Domain:      "",
-		AccessToken: "",
-		Password:    "",
-		Directory:   currentDir,
-		Environment: themekit.DefaultEnvironment,
-		BucketSize:  themekit.DefaultBucketSize,
-		RefillRate:  themekit.DefaultRefillRate,
-	}
-}
-
-func ConfigureCommand(args map[string]interface{}) chan bool {
-	options := defaultOptions()
-
-	extractString(&options.Environment, "environment", args)
-	extractString(&options.Directory, "directory", args)
-	extractString(&options.Domain, "domain", args)
-	extractString(&options.AccessToken, "access_token", args)
-	extractString(&options.Password, "password", args)
-	extractInt(&options.BucketSize, "bucket_size", args)
-	extractInt(&options.RefillRate, "refill_rate", args)
-	extractEventLog(&options.EventLog, args)
-
-	if err := options.configurationErrors(); err != nil {
+// ConfigureCommand creates a configuration file
+func ConfigureCommand(args Args) chan bool {
+	if err := args.ConfigurationErrors(); err != nil {
 		themekit.NotifyError(err)
-		return nil
 	}
 
-	Configure(options)
+	Configure(args)
 	done := make(chan bool)
 	close(done)
 	return done
 }
 
-func Configure(options ConfigurationOptions) {
-	config := options.defaultConfigurationOptions()
-	AddConfiguration(options.Directory, options.Environment, config)
+// Configure ... TODO
+func Configure(args Args) {
+	config := args.DefaultConfigurationOptions()
+	AddConfiguration(args.Directory, args.Environment, config)
 }
 
+// AddConfiguration ... TODO
 func AddConfiguration(dir, environment string, config themekit.Configuration) {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)
@@ -99,11 +41,9 @@ func AddConfiguration(dir, environment string, config themekit.Configuration) {
 	}
 }
 
-func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool, log chan themekit.ThemeEvent) {
-	dir, _ := os.Getwd()
-	extractString(&dir, "directory", args)
-
-	MigrateConfiguration(dir)
+// MigrateConfigurationCommand ... TODO
+func MigrateConfigurationCommand(args Args) (done chan bool, log chan themekit.ThemeEvent) {
+	MigrateConfiguration(args.Directory)
 
 	done = make(chan bool)
 	log = make(chan themekit.ThemeEvent)
@@ -112,6 +52,7 @@ func MigrateConfigurationCommand(args map[string]interface{}) (done chan bool, l
 	return
 }
 
+// PrepareConfigurationMigration ... TODO
 func PrepareConfigurationMigration(dir string) (func() bool, func() error) {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)
@@ -138,6 +79,7 @@ func PrepareConfigurationMigration(dir string) (func() bool, func() error) {
 	return confirmationFn, saveFn
 }
 
+// MigrateConfiguration ... TODO
 func MigrateConfiguration(dir string) error {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)

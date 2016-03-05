@@ -3,35 +3,24 @@ package commands
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/Shopify/themekit"
-	"github.com/Shopify/themekit/theme"
 	"os"
 	"path/filepath"
+
+	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/theme"
 )
 
-type DownloadOptions struct {
-	BasicOptions
-}
-
-func DownloadCommand(args map[string]interface{}) chan bool {
-	options := DownloadOptions{}
-	extractThemeClient(&options.Client, args)
-	extractEventLog(&options.EventLog, args)
-	options.Filenames = extractStringSlice("filenames", args)
-
-	return Download(options)
-}
-
-func Download(options DownloadOptions) (done chan bool) {
+// DownloadCommand downloads file(s) from theme
+func DownloadCommand(args Args) (done chan bool) {
 	done = make(chan bool)
-	eventLog := options.getEventLog()
+	eventLog := args.EventLog
 
-	if len(options.Filenames) <= 0 {
-		assets, errs := options.Client.AssetList()
+	if len(args.Filenames) <= 0 {
+		assets, errs := args.ThemeClient.AssetList()
 		go drainErrors(errs)
 		go downloadAllFiles(assets, done, eventLog)
 	} else {
-		go downloadFiles(options.Client.Asset, options.Filenames, done, eventLog)
+		go downloadFiles(args.ThemeClient.Asset, args.Filenames, done, eventLog)
 	}
 
 	return done
@@ -112,7 +101,7 @@ func writeToDisk(asset theme.Asset, eventLog chan themekit.ThemeEvent) {
 			Title:     "FS Event",
 			EventType: "Write",
 			Target:    filename,
-			etype:     "fsevent",
+			Etype:     "fsevent",
 			Formatter: func(b basicEvent) string {
 				return themekit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", b.Target))
 			},
@@ -127,7 +116,7 @@ func handleError(filename string, err error, eventLog chan themekit.ThemeEvent) 
 			Title:     "Non-Fatal Network Error",
 			EventType: nonFatal.Verb,
 			Target:    filename,
-			etype:     "fsevent",
+			Etype:     "fsevent",
 			Formatter: func(b basicEvent) string {
 				return fmt.Sprintf(
 					"[%s] Could not complete %s for %s",

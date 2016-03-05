@@ -187,7 +187,7 @@ func asset() theme.Asset {
 }
 
 func conf(server *httptest.Server) Configuration {
-	return Configuration{Url: server.URL, AccessToken: "abra"}
+	return Configuration{URL: server.URL, AccessToken: "abra"}
 }
 
 func drain(channel chan ThemeEvent) {

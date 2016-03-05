@@ -10,28 +10,13 @@ import (
 	"github.com/Shopify/themekit/theme"
 )
 
-type UploadOptions struct {
-	BasicOptions
-	Directory string
-}
-
-func UploadCommand(args map[string]interface{}) chan bool {
-	currentDir, _ := os.Getwd()
-	options := UploadOptions{Directory: currentDir}
-	extractThemeClient(&options.Client, args)
-	extractEventLog(&options.EventLog, args)
-	extractString(&options.Directory, "directory", args)
-	options.Filenames = extractFilenames(options, extractStringSlice("filenames", args))
-
-	return Upload(options)
-}
-
-func Upload(options UploadOptions) chan bool {
+// UploadCommand add file(s) to theme
+func UploadCommand(args Args) chan bool {
 	files := make(chan themekit.AssetEvent)
-	go readAndPrepareFiles(options.Filenames, files)
+	go readAndPrepareFiles(args.Filenames, files)
 
-	done, events := options.Client.Process(files)
-	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{events})
+	done, events := args.ThemeClient.Process(files)
+	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{events})
 	return done
 }
 
@@ -56,13 +41,13 @@ func loadAsset(filename string) (asset theme.Asset, err error) {
 	return theme.LoadAsset(root, filename)
 }
 
-func extractFilenames(options UploadOptions, filenames []string) []string {
+func extractFilenames(args Args, filenames []string) []string {
 	if len(filenames) > 0 {
 		return filenames
 	}
-	filepath.Walk(options.Directory, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(args.Directory, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
-			root := fmt.Sprintf("%s%s", options.Directory, string(filepath.Separator))
+			root := fmt.Sprintf("%s%s", args.Directory, string(filepath.Separator))
 			name := strings.Replace(path, root, "", -1)
 			filenames = append(filenames, name)
 		}

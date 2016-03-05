@@ -2,7 +2,6 @@ package themekit
 
 import (
 	"crypto"
-	_ "crypto/md5"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -12,17 +11,25 @@ import (
 	"github.com/inconshreveable/go-update"
 )
 
-var TKVersion Version = Version{Major: 0, Minor: 3, Patch: 6}
-var ThemeKitVersion string = TKVersion.String()
+// TKVersion ... TODO
+var TKVersion = Version{Major: 0, Minor: 3, Patch: 6}
 
+// ThemeKitVersion ... TODO
+var ThemeKitVersion = TKVersion.String()
+
+// VersionComparisonResult ... TODO
 type VersionComparisonResult int
 
 const (
-	VersionLessThan    VersionComparisonResult = -1
-	VersionEqual                               = 0
-	VersionGreaterThan                         = 1
+	// VersionLessThan .. TODO
+	VersionLessThan VersionComparisonResult = -1
+	// VersionEqual ... TODO
+	VersionEqual = 0
+	// VersionGreaterThan ... TODO
+	VersionGreaterThan = 1
 )
 
+// LibraryInfo ... TODO
 func LibraryInfo() []string {
 	return []string{
 		"ThemeKit - Shopify Theme Utilities",
@@ -31,6 +38,7 @@ func LibraryInfo() []string {
 	}
 }
 
+// Version ... TODO
 type Version struct {
 	Major int
 	Minor int
@@ -45,7 +53,7 @@ func (v Version) toArray() [3]int {
 	return [3]int{v.Major, v.Minor, v.Patch}
 }
 
-// I often get confused by comparison, so comparison results are going
+// Compare ... I often get confused by comparison, so comparison results are going
 // to be the same as what <=> would return in Ruby.
 // http://ruby-doc.org/core-1.9.3/Comparable.html
 func (v Version) Compare(o Version) VersionComparisonResult {
@@ -62,6 +70,7 @@ func (v Version) Compare(o Version) VersionComparisonResult {
 	return VersionEqual
 }
 
+// ParseVersionString ... TODO
 func ParseVersionString(ver string) Version {
 	sanitizedVer := strings.Replace(ver, "v", "", 1)
 	expandedVersionString := strings.Split(sanitizedVer, ".")
@@ -71,6 +80,7 @@ func ParseVersionString(ver string) Version {
 	return Version{Major: major, Minor: minor, Patch: patch}
 }
 
+// ApplyUpdate ... TODO
 func ApplyUpdate(updateURL, digest string) error {
 	checksum, err := hex.DecodeString(digest)
 	if err != nil {
@@ -89,7 +99,7 @@ func ApplyUpdate(updateURL, digest string) error {
 	})
 	if err != nil {
 		if rerr := update.RollbackError(err); rerr != nil {
-			fmt.Println("Failed to rollback from bad update: %v", rerr)
+			fmt.Printf("Failed to rollback from bad update: %v", rerr)
 		}
 	}
 	return err

@@ -3,7 +3,6 @@ package themekit
 import (
 	"encoding/base64"
 	"fmt"
-	"gopkg.in/fsnotify.v1"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -11,34 +10,42 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/fsnotify.v1"
+
 	"github.com/Shopify/themekit/theme"
 )
 
-const EventTimeoutInMs int64 = 3000
+const eventTimeoutInMs int64 = 3000
 
 var assetLocations = []string{"templates/customers/", "assets/", "config/", "layout/", "snippets/", "templates/", "locales/", "blocks/", "sections/"}
 
+// FsAssetEvent ... TODO
 type FsAssetEvent struct {
 	asset     theme.Asset
 	eventType EventType
 }
 
-type FileReader func(filename string) ([]byte, error)
+type fileReader func(filename string) ([]byte, error)
 
-var WatcherFileReader FileReader = ioutil.ReadFile
+// WatcherFileReader ... TODO
+var WatcherFileReader fileReader = ioutil.ReadFile
 
+// RestoreReader ... TODO
 func RestoreReader() {
 	WatcherFileReader = ioutil.ReadFile
 }
 
+// Asset ... TODO
 func (f FsAssetEvent) Asset() theme.Asset {
 	return f.asset
 }
 
+// Type ... TODO
 func (f FsAssetEvent) Type() EventType {
 	return f.eventType
 }
 
+// IsValid ... TODO
 func (f FsAssetEvent) IsValid() bool {
 	return f.eventType == Remove || f.asset.IsValid()
 }
@@ -47,6 +54,7 @@ func (f FsAssetEvent) String() string {
 	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
 }
 
+// NewFileWatcher ... TODO
 func NewFileWatcher(dir string, recur bool, filter EventFilter) (chan AssetEvent, error) {
 	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.MatchesFilter)
 	if err != nil {
@@ -106,6 +114,7 @@ func fwLoadAsset(event fsnotify.Event) theme.Asset {
 	return asset
 }
 
+// HandleEvent ... TODO
 func HandleEvent(event fsnotify.Event) FsAssetEvent {
 	var eventType EventType
 	asset := fwLoadAsset(event)
@@ -118,15 +127,17 @@ func HandleEvent(event fsnotify.Event) FsAssetEvent {
 	return FsAssetEvent{asset: asset, eventType: eventType}
 }
 
+// ContentTypeFor ... TODO
 func ContentTypeFor(data []byte) string {
 	contentType := http.DetectContentType(data)
 	if strings.Contains(contentType, "text") {
 		return "text"
-	} else {
-		return "binary"
 	}
+
+	return "binary"
 }
 
+// Encode64 ... TODO
 func Encode64(data []byte) string {
 	return base64.StdEncoding.EncodeToString(data)
 }
@@ -161,7 +172,7 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 				timestamp := (time.Now().UnixNano() / int64(time.Millisecond))
 
 				if duplicateEventTimeout[duplicateEventTimeoutKey] < timestamp && fsevent.IsValid() {
-					duplicateEventTimeout[duplicateEventTimeoutKey] = timestamp + EventTimeoutInMs
+					duplicateEventTimeout[duplicateEventTimeoutKey] = timestamp + eventTimeoutInMs
 					results <- fsevent
 				}
 			}

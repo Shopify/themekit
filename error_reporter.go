@@ -7,20 +7,27 @@ import (
 	"sync"
 )
 
+// ErrorReporter ... TODO
 type ErrorReporter interface {
 	Report(error)
 }
 
 type nullReporter struct{}
+
+// ConsoleReporter ... TODO
 type ConsoleReporter struct{}
+
+// HaltExecutionReporter ... TODO
 type HaltExecutionReporter struct{}
 
 func (n nullReporter) Report(e error) {}
 
+// Report ... TODO
 func (c ConsoleReporter) Report(e error) {
 	fmt.Println(RedText(e.Error()))
 }
 
+// Report ... TODO
 func (h HaltExecutionReporter) Report(e error) {
 	c := ConsoleReporter{}
 	libraryInfo := fmt.Sprintf("%s%s%s", MessageSeparator, LibraryInfo(), MessageSeparator)
@@ -38,6 +45,7 @@ func synchronized(m *sync.Mutex, fn func()) {
 	fn()
 }
 
+// SetErrorReporter ... TODO
 func SetErrorReporter(r ErrorReporter) {
 	synchronized(mutex, func() {
 		close(errorQueue)
@@ -48,7 +56,7 @@ func SetErrorReporter(r ErrorReporter) {
 	go func() {
 		for {
 			if err, ok := <-errorQueue; !ok {
-				return
+				break
 			} else {
 				reporter.Report(err)
 			}
@@ -56,12 +64,14 @@ func SetErrorReporter(r ErrorReporter) {
 	}()
 }
 
+// NotifyErrorImmediately ... TODO
 func NotifyErrorImmediately(err error) {
 	synchronized(mutex, func() {
 		reporter.Report(err)
 	})
 }
 
+// NotifyError ... TODO
 func NotifyError(err error) {
 	synchronized(mutex, func() {
 		go func() {

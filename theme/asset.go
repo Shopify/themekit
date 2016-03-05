@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// Asset ... TODO
 type Asset struct {
 	Key        string `json:"key"`
 	Value      string `json:"value,omitempty"`
@@ -21,19 +22,20 @@ func (a Asset) String() string {
 	return fmt.Sprintf("key: %s | value: %d bytes | attachment: %d bytes", a.Key, len([]byte(a.Value)), len([]byte(a.Attachment)))
 }
 
+// IsValid verifies that the Asset has a Key, and at least a Value or Attachment
 func (a Asset) IsValid() bool {
 	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)
 }
 
+// Size ... TODO
 func (a Asset) Size() int {
 	if len(a.Value) > 0 {
 		return len(a.Value)
-	} else {
-		return len(a.Attachment)
 	}
+	return len(a.Attachment)
 }
 
-// Implementing sort.Interface
+// ByAsset implements sort.Interface
 type ByAsset []Asset
 
 func (assets ByAsset) Len() int {
@@ -49,7 +51,7 @@ func (assets ByAsset) Less(i, j int) bool {
 }
 
 func findAllFiles(dir string) ([]string, error) {
-	files := make([]string, 0)
+	var files []string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -62,6 +64,7 @@ func findAllFiles(dir string) ([]string, error) {
 	return files, err
 }
 
+// LoadAssetsFromDirectory ... TODO
 func LoadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset, error) {
 	files, err := findAllFiles(dir)
 	if err != nil {
@@ -85,6 +88,7 @@ func LoadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset
 	return assets, nil
 }
 
+// LoadAsset ... TODO
 func LoadAsset(root, filename string) (asset Asset, err error) {
 	asset = Asset{}
 	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
@@ -134,7 +138,6 @@ func contentTypeFor(data []byte) string {
 	contentType := http.DetectContentType(data)
 	if strings.Contains(contentType, "text") {
 		return "text"
-	} else {
-		return "binary"
 	}
+	return "binary"
 }

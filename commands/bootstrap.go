@@ -11,51 +11,30 @@ import (
 )
 
 const (
-	MasterBranch   = "master"
+	masterBranch = "master"
+	// LatestRelease (github's latest release)
 	LatestRelease  = "latest"
-	ThemeZipRoot   = "https://github.com/Shopify/Timber/archive/"
-	TimberFeedPath = "https://github.com/Shopify/Timber/releases.atom"
+	themeZipRoot   = "https://github.com/Shopify/Timber/archive/"
+	timberFeedPath = "https://github.com/Shopify/Timber/releases.atom"
 )
 
-type BootstrapOptions struct {
-	BasicOptions
-	Version     string
-	Directory   string
-	Environment string
-	Prefix      string
-	SetThemeID  bool
-}
-
-func BootstrapCommand(args map[string]interface{}) chan bool {
-	options := BootstrapOptions{}
-
-	extractString(&options.Version, "version", args)
-	extractString(&options.Directory, "directory", args)
-	extractString(&options.Environment, "environment", args)
-	extractString(&options.Prefix, "prefix", args)
-	extractBool(&options.SetThemeID, "setThemeId", args)
-	extractThemeClient(&options.Client, args)
-	extractEventLog(&options.EventLog, args)
-
-	return Bootstrap(options)
-}
-
-func Bootstrap(options BootstrapOptions) chan bool {
+// BootstrapCommand bootstraps a new theme using Shopify Timber
+func BootstrapCommand(args Args) chan bool {
 	done := make(chan bool)
 	go func() {
-		doneCh := doBootstrap(options)
+		doneCh := doBootstrap(args)
 		done <- <-doneCh
 	}()
 	return done
 }
 
-func doBootstrap(options BootstrapOptions) chan bool {
+func doBootstrap(args Args) chan bool {
 	pwd, _ := os.Getwd()
-	if pwd != options.Directory {
-		os.Chdir(options.Directory)
+	if pwd != args.Directory {
+		os.Chdir(args.Directory)
 	}
 
-	zipLocation, err := zipPathForVersion(options.Version)
+	zipLocation, err := zipPathForVersion(args.Version)
 	if err != nil {
 		themekit.NotifyError(err)
 		done := make(chan bool)
@@ -63,34 +42,34 @@ func doBootstrap(options BootstrapOptions) chan bool {
 		return done
 	}
 
-	name := "Timber-" + options.Version
-	if len(options.Prefix) > 0 {
-		name = options.Prefix + "-" + name
+	name := "Timber-" + args.Version
+	if len(args.Prefix) > 0 {
+		name = args.Prefix + "-" + name
 	}
-	clientForNewTheme, themeEvents := options.Client.CreateTheme(name, zipLocation)
-	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{themeEvents})
-	if options.SetThemeID {
-		AddConfiguration(options.Directory, options.Environment, clientForNewTheme.GetConfiguration())
+	clientForNewTheme, themeEvents := args.ThemeClient.CreateTheme(name, zipLocation)
+	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{themeEvents})
+	if args.SetThemeID {
+		AddConfiguration(args.Directory, args.Environment, clientForNewTheme.GetConfiguration())
 	}
 
 	os.Chdir(pwd)
 
-	downloadOptions := DownloadOptions{}
-	downloadOptions.Client = clientForNewTheme
-	downloadOptions.EventLog = options.getEventLog()
+	downloadOptions := Args{}
+	downloadOptions.ThemeClient = clientForNewTheme
+	downloadOptions.EventLog = args.EventLog
 
-	done := Download(downloadOptions)
+	done := DownloadCommand(downloadOptions)
 
 	return done
 }
 
 func zipPath(version string) string {
-	return ThemeZipRoot + version + ".zip"
+	return themeZipRoot + version + ".zip"
 }
 
 func zipPathForVersion(version string) (string, error) {
-	if version == MasterBranch {
-		return zipPath(MasterBranch), nil
+	if version == masterBranch {
+		return zipPath(masterBranch), nil
 	}
 
 	feed, err := downloadAtomFeed()
@@ -107,7 +86,7 @@ func zipPathForVersion(version string) (string, error) {
 }
 
 func downloadAtomFeed() (atom.Feed, error) {
-	resp, err := http.Get(TimberFeedPath)
+	resp, err := http.Get(timberFeedPath)
 	if err != nil {
 		return atom.Feed{}, err
 	}
