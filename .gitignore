@@ -2,3 +2,5 @@ build/
 nanoc/
 .env
 tags
+
+.DS_Store
