@@ -49,10 +49,6 @@ h1:hover > i, h2:hover > i, h3:hover > i, h4:hover > i, h5:hover > i {
   visibility: visible;
 }
 
-li {
-  padding-top: 0.5em;
-}
-
 header ul {
   font-size: 2em;
 }

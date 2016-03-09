@@ -14,7 +14,7 @@ title: Documentation
 
 ## <a id="overview" href="#overview">Overview</a><i class="fa fa-bookmark"></i>
 
-<%= @config[:project_name] %> comes with a number of utilities that you can use to interact with a theme on Shopify. To see the list
+<%= @config[:project_name] %> comes with a number of utilities that you can use to interact one or more themes on Shopify. To see the list
 of commands that are available, enter the following command into your terminal:
 
 <pre><code>
@@ -64,7 +64,7 @@ Usage of theme:
 There are some arguments that you can pass into every command:
 
 1. `env`: The *environment* to register the configuration settings under. These are just free form text, so you can name it anything. Common names are `staging`, `production`, `test` and the default is `development`
-2. `dir`: The directory that the configuration file will live. This allows you to update multiple themes without having to change into each themes directory.
+2. `dir`: The directory that the configuration file (called `conf.yml`) will live. This allows you to update multiple themes without having to change into each themes directory.
 
 ### <a id="configure" href="#configure">Configure</a><i class="fa fa-bookmark"></i>
 
@@ -72,13 +72,13 @@ Use this command to create or update configuration files. If you don't want to r
 
 The following options **must be provided**:
 
-1. `access_token`: Your Shopify API Access Token. This is needed to make authenticated calls against the Shopify API. Create a Private Application and **use the value from the Password field**
-2. `domain`: Your `.myshopify.com` domain without any protocol or other information.
+1. `password`: Your Shopify Private App password. This is needed to make authenticated calls against the Shopify API. Create a Private Application and use the value from the **Password** field, obtained at `https://<your subdomain>.myshopify.com/admin/apps/private/<id>`
+2. `domain`: Your `<your subdomain>.myshopify.com` domain without any protocol or other information.
 
 Additional arguments you can provide:
 
 1. `bucketSize`: Shopify uses a leaky bucket strategy for rate limiting API access. If you have been granted additional API usage you can update that here. Internally it is used to prevent failures that can be caused by exhausted API limits.
-2. `refillRate`: The rate at which tickets are restored in the leaky bucket (per second)
+2. `refillRate`: The rate at which tickets are restored in the leaky bucket (per second).
 
 ### <a id="bootstrap" href="#bootstrap">Bootstrap</a><i class="fa fa-bookmark"></i>
 
@@ -96,7 +96,7 @@ The available options are as follows:
 
 Theme watch will start a process that will watch the specified directory for changes and upload them to the specified Shopify theme. Any changes will be logged to the terminal and the status of the upload will be logged as well. The program can be stopped by simply typing `ctrl+C`.
 
-By default watch starts up two workers who will perform the upload, allowing for faster uploads to Shopify. The number of workers can be changed in your [configuration file](#config-files) though be aware that you may run the risk of slowdowns due to the leaky bucket getting drained.
+By default watch starts up two workers who will perform the upload, allowing for faster uploads to Shopify. The number of workers can be changed in your [configuration file](#config-example) though be aware that you may run the risk of slowdowns due to the leaky bucket getting drained.
 
 To ease integrating the watcher with tools such as [LiveReload](http://livereload.com/), you can provide an the optional `--notify` argument to a file you want to have updated when the workers have gone idle. For example, if you had LiveReload watching for update made to a file at `/tmp/theme.update` you would enter the following command:
 
@@ -110,7 +110,7 @@ Another command that can be useful for theme development is the `--allenvs` flag
 
 If called without any arguments, it will download the entire theme. Otherwise if you specify the files you want to download, then only those files will be retrieved. For example if you wanted to download the `404` and `article` liquid templates you could enter the following command:
 
-<pre><code>theme download templates/404.liquid templates/article.liquid`</code></pre>
+<pre><code>theme download templates/404.liquid templates/article.liquid</code></pre>
 
 ### <a id="remove" href="#remove">Remove</a><i class="fa fa-bookmark"></i>
 
@@ -118,7 +118,7 @@ Deletes theme files both locally and on Shopify. This command must be called wit
 
 ### <a id="replace" href="#replace">Replace</a><i class="fa fa-bookmark"></i>
 
-Removes remote files and replaces them with local files. Equivalent to upload, so this may go away or change in the future. This command requires at least one filename.
+Removes remote files and replaces them with local files.
 
 ### <a id="upload" href="#upload">Upload</a><i class="fa fa-bookmark"></i>
 
@@ -137,7 +137,7 @@ Environments allow you to manage where to upload your theme changes to. This hel
 A configuration can contain a number of things on top of what can be added by invoking `theme configure`.
 
 - `theme_id`: The ID of the theme to upload changes to. **Beware** that if this is blank all changes will be uploaded to your user visible theme.
-- `access_token`: API credentials to update and manipulate themes on Shopify
+- `password`: API credentials to update and manipulate themes on Shopify
 -  `store`: Your `.myshopify.com` domain (i.e. pokeshop.myshopify.com). Note that you **do not** need to include `http://` or `https://`
 - `ignore_files`: A list of specific files to ignore (i.e. `config/settings.html`). You can also ignore based on patterns (such as all png files), but those patterns will need to be wrapped in double quotes (i.e. `"*.png"`).
 - `ignores`: A list of files containing patterns of files that should be ignored. These files are somewhat similar to the [.gitignore file](https://www.kernel.org/pub/software/scm/git/docs/gitignore.html)
@@ -165,15 +165,15 @@ The following is a comprehensive example of what the contents of a configuration
 #!yaml
 production:
   theme_id:
-  access_token: abracadabra
+  password: abracadabra
   store: pokeshop.myshopify.com
 staging:
   theme_id:
-  access_token: alakazam
+  password: alakazam
   store: pokeshop-staging.myshopify.com
 development:
   theme_id: 123
-  access_token: abracadabra
+  password: abracadabra
   store: pokeshop.myshopify.com
   ignores:
     - myignores

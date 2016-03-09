@@ -58,7 +58,7 @@
 
 <h2 id="a-idoverview-hrefoverviewoverviewai-classfa-fa-bookmarki"><a id="overview" href="#overview">Overview</a><i class="fa fa-bookmark"></i></h2>
 
-<p>Theme Kit comes with a number of utilities that you can use to interact with a theme on Shopify. To see the list
+<p>Theme Kit comes with a number of utilities that you can use to interact one or more themes on Shopify. To see the list
 of commands that are available, enter the following command into your terminal:</p>
 
 <pre><code class="language-bash">theme --help</code></pre>
@@ -104,7 +104,7 @@ of commands that are available, enter the following command into your terminal:<
 
 <ol>
   <li><code>env</code>: The <em>environment</em> to register the configuration settings under. These are just free form text, so you can name it anything. Common names are <code>staging</code>, <code>production</code>, <code>test</code> and the default is <code>development</code></li>
-  <li><code>dir</code>: The directory that the configuration file will live. This allows you to update multiple themes without having to change into each themes directory.</li>
+  <li><code>dir</code>: The directory that the configuration file (called <code>conf.yml</code>) will live. This allows you to update multiple themes without having to change into each themes directory.</li>
 </ol>
 
 <h3 id="a-idconfigure-hrefconfigureconfigureai-classfa-fa-bookmarki"><a id="configure" href="#configure">Configure</a><i class="fa fa-bookmark"></i></h3>
@@ -114,15 +114,15 @@ of commands that are available, enter the following command into your terminal:<
 <p>The following options <strong>must be provided</strong>:</p>
 
 <ol>
-  <li><code>access_token</code>: Your Shopify API Access Token. This is needed to make authenticated calls against the Shopify API. Create a Private Application and <strong>use the value from the Password field</strong></li>
-  <li><code>domain</code>: Your <code>.myshopify.com</code> domain without any protocol or other information.</li>
+  <li><code>password</code>: Your Shopify Private App password. This is needed to make authenticated calls against the Shopify API. Create a Private Application and use the value from the <strong>Password</strong> field, obtained at <code>https://&lt;your subdomain&gt;.myshopify.com/admin/apps/private/&lt;id&gt;</code></li>
+  <li><code>domain</code>: Your <code>&lt;your subdomain&gt;.myshopify.com</code> domain without any protocol or other information.</li>
 </ol>
 
 <p>Additional arguments you can provide:</p>
 
 <ol>
   <li><code>bucketSize</code>: Shopify uses a leaky bucket strategy for rate limiting API access. If you have been granted additional API usage you can update that here. Internally it is used to prevent failures that can be caused by exhausted API limits.</li>
-  <li><code>refillRate</code>: The rate at which tickets are restored in the leaky bucket (per second)</li>
+  <li><code>refillRate</code>: The rate at which tickets are restored in the leaky bucket (per second).</li>
 </ol>
 
 <h3 id="a-idbootstrap-hrefbootstrapbootstrapai-classfa-fa-bookmarki"><a id="bootstrap" href="#bootstrap">Bootstrap</a><i class="fa fa-bookmark"></i></h3>
@@ -143,7 +143,7 @@ of commands that are available, enter the following command into your terminal:<
 
 <p>Theme watch will start a process that will watch the specified directory for changes and upload them to the specified Shopify theme. Any changes will be logged to the terminal and the status of the upload will be logged as well. The program can be stopped by simply typing <code>ctrl+C</code>.</p>
 
-<p>By default watch starts up two workers who will perform the upload, allowing for faster uploads to Shopify. The number of workers can be changed in your <a href="#config-files">configuration file</a> though be aware that you may run the risk of slowdowns due to the leaky bucket getting drained.</p>
+<p>By default watch starts up two workers who will perform the upload, allowing for faster uploads to Shopify. The number of workers can be changed in your <a href="#config-example">configuration file</a> though be aware that you may run the risk of slowdowns due to the leaky bucket getting drained.</p>
 
 <p>To ease integrating the watcher with tools such as <a href="http://livereload.com/">LiveReload</a>, you can provide an the optional <code>--notify</code> argument to a file you want to have updated when the workers have gone idle. For example, if you had LiveReload watching for update made to a file at <code>/tmp/theme.update</code> you would enter the following command:</p>
 
@@ -157,7 +157,7 @@ of commands that are available, enter the following command into your terminal:<
 
 <p>If called without any arguments, it will download the entire theme. Otherwise if you specify the files you want to download, then only those files will be retrieved. For example if you wanted to download the <code>404</code> and <code>article</code> liquid templates you could enter the following command:</p>
 
-<pre><code>theme download templates/404.liquid templates/article.liquid`</code></pre>
+<pre><code>theme download templates/404.liquid templates/article.liquid</code></pre>
 
 <h3 id="a-idremove-hrefremoveremoveai-classfa-fa-bookmarki"><a id="remove" href="#remove">Remove</a><i class="fa fa-bookmark"></i></h3>
 
@@ -165,7 +165,7 @@ of commands that are available, enter the following command into your terminal:<
 
 <h3 id="a-idreplace-hrefreplacereplaceai-classfa-fa-bookmarki"><a id="replace" href="#replace">Replace</a><i class="fa fa-bookmark"></i></h3>
 
-<p>Removes remote files and replaces them with local files. Equivalent to upload, so this may go away or change in the future. This command requires at least one filename.</p>
+<p>Removes remote files and replaces them with local files.</p>
 
 <h3 id="a-idupload-hrefuploaduploadai-classfa-fa-bookmarki"><a id="upload" href="#upload">Upload</a><i class="fa fa-bookmark"></i></h3>
 
@@ -185,7 +185,7 @@ of commands that are available, enter the following command into your terminal:<
 
 <ul>
   <li><code>theme_id</code>: The ID of the theme to upload changes to. <strong>Beware</strong> that if this is blank all changes will be uploaded to your user visible theme.</li>
-  <li><code>access_token</code>: API credentials to update and manipulate themes on Shopify</li>
+  <li><code>password</code>: API credentials to update and manipulate themes on Shopify</li>
   <li><code>store</code>: Your <code>.myshopify.com</code> domain (i.e. pokeshop.myshopify.com). Note that you <strong>do not</strong> need to include <code>http://</code> or <code>https://</code></li>
   <li><code>ignore_files</code>: A list of specific files to ignore (i.e. <code>config/settings.html</code>). You can also ignore based on patterns (such as all png files), but those patterns will need to be wrapped in double quotes (i.e. <code>"*.png"</code>).</li>
   <li><code>ignores</code>: A list of files containing patterns of files that should be ignored. These files are somewhat similar to the <a href="https://www.kernel.org/pub/software/scm/git/docs/gitignore.html">.gitignore file</a></li>
@@ -209,15 +209,15 @@ settings.html</code></pre>
 
 <pre><code class="language-yaml"><span class="l-Scalar-Plain">production</span><span class="p-Indicator">:</span>
   <span class="l-Scalar-Plain">theme_id</span><span class="p-Indicator">:</span>
-  <span class="l-Scalar-Plain">access_token</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">abracadabra</span>
+  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">abracadabra</span>
   <span class="l-Scalar-Plain">store</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pokeshop.myshopify.com</span>
 <span class="l-Scalar-Plain">staging</span><span class="p-Indicator">:</span>
   <span class="l-Scalar-Plain">theme_id</span><span class="p-Indicator">:</span>
-  <span class="l-Scalar-Plain">access_token</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">alakazam</span>
+  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">alakazam</span>
   <span class="l-Scalar-Plain">store</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pokeshop-staging.myshopify.com</span>
 <span class="l-Scalar-Plain">development</span><span class="p-Indicator">:</span>
   <span class="l-Scalar-Plain">theme_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">123</span>
-  <span class="l-Scalar-Plain">access_token</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">abracadabra</span>
+  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">abracadabra</span>
   <span class="l-Scalar-Plain">store</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pokeshop.myshopify.com</span>
   <span class="l-Scalar-Plain">ignores</span><span class="p-Indicator">:</span>
     <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">myignores</span>
@@ -229,6 +229,7 @@ settings.html</code></pre>
   <span class="l-Scalar-Plain">bucket_size</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">40</span>
   <span class="l-Scalar-Plain">concurrency</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">4</span>
   <span class="l-Scalar-Plain">proxy</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://localhost:8080</span></code></pre>
+<p>&lt;/your&gt;&lt;/id&gt;&lt;/your&gt;</p>
 
     </div>
   </body>
