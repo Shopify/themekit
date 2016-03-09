@@ -17,18 +17,16 @@ type ConfigurationOptions struct {
 	Environment string
 	Domain      string
 	AccessToken string
+	Password    string
 	BucketSize  int
 	RefillRate  int
-}
-
-func (co ConfigurationOptions) areInvalid() bool {
-	return co.Domain == "" || co.AccessToken == ""
 }
 
 func (co ConfigurationOptions) defaultConfigurationOptions() themekit.Configuration {
 	return themekit.Configuration{
 		Domain:      co.Domain,
 		AccessToken: co.AccessToken,
+		Password:    co.Password,
 		BucketSize:  co.BucketSize,
 		RefillRate:  co.RefillRate,
 	}
@@ -39,8 +37,8 @@ func (co ConfigurationOptions) configurationErrors() error {
 	if len(co.Domain) <= 0 {
 		errs = append(errs, "\t-domain cannot be blank")
 	}
-	if len(co.AccessToken) <= 0 {
-		errs = append(errs, "\t-access_token cannot be blank")
+	if len(co.AccessToken) <= 0 && len(co.Password) <= 0 {
+		errs = append(errs, "\t-password or access_token cannot be blank")
 	}
 	if len(errs) > 0 {
 		fullPath := filepath.Join(co.Directory, "config.yml")
@@ -54,6 +52,7 @@ func defaultOptions() ConfigurationOptions {
 	return ConfigurationOptions{
 		Domain:      "",
 		AccessToken: "",
+		Password:    "",
 		Directory:   currentDir,
 		Environment: themekit.DefaultEnvironment,
 		BucketSize:  themekit.DefaultBucketSize,
@@ -68,12 +67,14 @@ func ConfigureCommand(args map[string]interface{}) chan bool {
 	extractString(&options.Directory, "directory", args)
 	extractString(&options.Domain, "domain", args)
 	extractString(&options.AccessToken, "access_token", args)
+	extractString(&options.Password, "password", args)
 	extractInt(&options.BucketSize, "bucket_size", args)
 	extractInt(&options.RefillRate, "refill_rate", args)
 	extractEventLog(&options.EventLog, args)
 
-	if options.areInvalid() {
-		themekit.NotifyError(options.configurationErrors())
+	if err := options.configurationErrors(); err != nil {
+		themekit.NotifyError(err)
+		return nil
 	}
 
 	Configure(options)

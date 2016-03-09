@@ -2,16 +2,19 @@ package themekit
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v1"
 	"io"
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
+
+	"gopkg.in/yaml.v1"
 )
 
 type Configuration struct {
 	ThemeId      int64    `yaml:"theme_id,omitempty"`
-	AccessToken  string   `yaml:"access_token"`
+	AccessToken  string   `yaml:"access_token,omitempty"`
+	Password     string   `yaml:"password,omitempty"`
 	Domain       string   `yaml:"store"`
 	Url          string   `yaml:"-"`
 	IgnoredFiles []string `yaml:"ignore_files,omitempty"`
@@ -54,9 +57,12 @@ func (conf Configuration) Initialize() (Configuration, error) {
 
 	if len(conf.Domain) == 0 {
 		return conf, fmt.Errorf("missing domain")
+	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") && !strings.HasSuffix(conf.Domain, "myshopify.io") {
+		return conf, fmt.Errorf("invalid domain, must end in '.myshopify.com'")
 	}
-	if len(conf.AccessToken) == 0 {
-		return conf, fmt.Errorf("missing access_token")
+
+	if len(conf.AccessToken) == 0 && len(conf.Password) == 0 {
+		return conf, fmt.Errorf("missing password or access_token (using 'password' is encouraged. 'access_token', which does the same thing will be deprecated soon)")
 	}
 	return conf, nil
 }
@@ -87,7 +93,14 @@ func (conf Configuration) AssetPath() string {
 }
 
 func (conf Configuration) AddHeaders(req *http.Request) {
-	req.Header.Add("X-Shopify-Access-Token", conf.AccessToken)
+	var accessToken string
+	if len(conf.Password) > 0 {
+		accessToken = conf.Password
+	} else {
+		accessToken = conf.AccessToken
+	}
+
+	req.Header.Add("X-Shopify-Access-Token", accessToken)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s)", runtime.GOOS, runtime.GOARCH))

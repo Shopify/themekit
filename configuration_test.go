@@ -2,18 +2,19 @@ package themekit
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadingAValidConfiguration(t *testing.T) {
 	config, err := LoadConfiguration([]byte(validConfiguration))
 	assert.Nil(t, err)
 	assert.Equal(t, "example.myshopify.com", config.Domain)
-	assert.Equal(t, "abracadabra", config.AccessToken)
+	assert.Equal(t, "abracadabra", config.Password)
 	assert.Equal(t, "https://example.myshopify.com/admin", config.Url)
 	assert.Equal(t, "https://example.myshopify.com/admin/assets.json", config.AssetPath())
 	assert.Equal(t, 4, config.Concurrency)
@@ -24,31 +25,32 @@ func TestLoadingAValidConfigurationWithIgnoredFiles(t *testing.T) {
 	config, err := LoadConfiguration([]byte(validConfigurationWithIgnoredFiles))
 	assert.Nil(t, err)
 	assert.Equal(t, "example.myshopify.com", config.Domain)
-	assert.Equal(t, "abracadabra", config.AccessToken)
+	assert.Equal(t, "abracadabra", config.Password)
 	assert.Equal(t, []string{"charmander", "bulbasaur", "squirtle"}, config.IgnoredFiles)
 }
 
 func TestLoadingAValidConfigurationWithAThemeId(t *testing.T) {
-	config, err := LoadConfiguration([]byte(validConfigurationWithThemeId))
+	config, err := LoadConfiguration([]byte(validConfigurationWithThemeID))
 	assert.Nil(t, err)
 	assert.Equal(t, 1234, config.ThemeId)
 	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234", config.Url)
 	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234/assets.json", config.AssetPath())
 }
 
-func TestLoadingAnUnsupportedConfiguration(t *testing.T) {
-	config, err := LoadConfiguration([]byte(unsupportedConfiguration))
+func TestLoadingSupportedConfiguration(t *testing.T) {
+	config, err := LoadConfiguration([]byte(supportedConfiguration))
 	assert.Nil(t, err)
 	assert.Equal(t, "example.myshopify.com", config.Domain)
-	assert.Equal(t, "abracadabra", config.AccessToken)
+	assert.Equal(t, "abracadabra", config.Password)
 }
 
 func TestLoadingConfigurationWithMissingFields(t *testing.T) {
 	tests := []struct {
 		src, expectedError string
 	}{
-		{configurationWithoutAccessToken, "missing access_token"},
+		{configurationWithoutAccessTokenAndPassword, "missing password or access_token (using 'password' is encouraged. 'access_token', which does the same thing will be deprecated soon)"},
 		{configurationWithoutDomain, "missing domain"},
+		{configurationWithInvalidDomain, "invalid domain, must end in '.myshopify.com'"},
 	}
 
 	for _, data := range tests {
@@ -86,37 +88,43 @@ func TestAddHeadersAddsPlatformAndArchitecture(t *testing.T) {
 const (
 	validConfiguration = `
   store: example.myshopify.com
-  access_token: abracadabra
+  password: abracadabra
   concurrency: 4
   `
 
-	validConfigurationWithThemeId = `
+	validConfigurationWithThemeID = `
   store: example.myshopify.com
-  access_token: abracadabra
+  password: abracadabra
   theme_id: 1234
   `
 
 	validConfigurationWithIgnoredFiles = `
   store: example.myshopify.com
-  access_token: abracadabra
+  password: abracadabra
   ignore_files:
     - charmander
     - bulbasaur
     - squirtle
   `
 
-	unsupportedConfiguration = `
+	supportedConfiguration = `
   store: example.myshopify.com
-  access_token: abracadabra
+  password: abracadabra
   theme_id: 12345
   `
 
-	configurationWithoutAccessToken = `
+	configurationWithoutAccessTokenAndPassword = `
   store: foo.myshopify.com
   theme_id: 123
   `
 
 	configurationWithoutDomain = `
-  access_token: foobar
+  password: foobar
+  `
+
+	configurationWithInvalidDomain = `
+  store: example.something.net
+  password: abracadabra
+  theme_id: 12345
   `
 )
