@@ -17,8 +17,9 @@ build:
 		godep go build -o build/dist/${GOOS}-${GOARCH}/$${subproject}${EXT} github.com/Shopify/themekit/cmd/$${subproject}; \
 	done
 
-debug:
-	cd cmd/theme &&	godebug run -instrument=github.com/Shopify/themekit,github.com/Shopify/themekit/commands main.go version
+
+debug: # Example: 'make debug ARGS="version" or 'make debug ARGS="remove templates/404.liquid"'
+	cd cmd/theme &&	godebug run -instrument=github.com/Shopify/themekit,github.com/Shopify/themekit/commands main.go $(ARGS)
 
 test: ## Run all tests
 	go test \
