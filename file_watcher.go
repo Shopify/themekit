@@ -17,7 +17,7 @@ import (
 
 const eventTimeoutInMs int64 = 3000
 
-var assetLocations = []string{"templates/customers/", "assets/", "config/", "layout/", "snippets/", "templates/", "locales/", "blocks/", "sections/"}
+var assetLocations = []string{"templates/customers/", "assets/", "config/", "layout/", "snippets/", "templates/", "locales/", "sections/"}
 
 // FsAssetEvent ... TODO
 type FsAssetEvent struct {
