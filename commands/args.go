@@ -18,6 +18,7 @@ type Args struct {
 	ThemeClients []themekit.ThemeClient
 	Filenames    []string
 	AccessToken  string
+	Password     string
 	Environment  string
 	Directory    string
 	Domain       string
@@ -57,14 +58,14 @@ func (args Args) DefaultConfigurationOptions() themekit.Configuration {
 // ConfigurationErrors returns an error for the first invalid field detected on an Args
 func (args Args) ConfigurationErrors() error {
 	var errs = []string{}
-	if len(co.Domain) <= 0 {
+	if len(args.Domain) <= 0 {
 		errs = append(errs, "\t-domain cannot be blank")
 	}
-	if len(co.AccessToken) <= 0 && len(co.Password) <= 0 {
+	if len(args.AccessToken) <= 0 && len(args.Password) <= 0 {
 		errs = append(errs, "\t-password or access_token cannot be blank")
 	}
 	if len(errs) > 0 {
-		fullPath := filepath.Join(co.Directory, "config.yml")
+		fullPath := filepath.Join(args.Directory, "config.yml")
 		return fmt.Errorf("Cannot create %s!\nErrors:\n%s", fullPath, strings.Join(errs, "\n"))
 	}
 	return nil
