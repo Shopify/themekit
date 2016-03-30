@@ -226,7 +226,7 @@ func configurationArgsParser(cmd string, rawArgs []string) commands.Args {
 	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment for this configuration")
 	set.StringVar(&args.Domain, "domain", "", "your myshopify domain")
 	set.StringVar(&args.Password, "password", "", "password (or access token) to make successful API calls")
-	set.StringVar(&args.AccessToken, "", "access_token to make successful API calls (optional, and soon to be deprecated in favour of 'password')")
+	set.StringVar(&args.AccessToken, "access_token", "", "access_token to make successful API calls (optional, and soon to be deprecated in favour of 'password')")
 	set.IntVar(&args.BucketSize, "bucketSize", themekit.DefaultBucketSize, "leaky bucket capacity")
 	set.IntVar(&args.RefillRate, "refillRate", themekit.DefaultRefillRate, "leaky bucket refill rate / second")
 	set.Parse(rawArgs)

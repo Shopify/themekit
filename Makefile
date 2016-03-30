@@ -7,7 +7,7 @@ all:
 	  godep go build -o build/development/$${subproject} github.com/Shopify/themekit/cmd/$${subproject}; \
   done
 
-install: Build and install the theme binary
+install: # Build and install the theme binary
 	godep go install github.com/Shopify/themekit/cmd/theme
 
 build:
@@ -57,4 +57,3 @@ dist: clean windows mac linux zip upload_to_s3 ## Build binaries for all platfor
 
 help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
