@@ -3,3 +3,6 @@ nanoc/
 .env
 tags
 .DS_Store
+
+# for testing
+cmd/theme/config.yml
