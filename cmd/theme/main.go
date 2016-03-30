@@ -24,15 +24,6 @@ const updateAvailableMessage string = `| An update for Theme Kit is available |
 
 var globalEventLog chan themekit.ThemeEvent
 
-var permittedZeroArgCommands = map[string]bool{
-	"upload":   true,
-	"download": true,
-	"replace":  true,
-	"watch":    true,
-	"version":  true,
-	"update":   true,
-}
-
 var commandDescriptionPrefix = []string{
 	"Usage: theme <operation> [<additional arguments> ...]",
 	"  Valid operations are:",
@@ -50,35 +41,108 @@ var permittedCommands = map[string]string{
 	"update":                      "Update application",
 }
 
-type CommandParser func(string, []string) (map[string]interface{}, *flag.FlagSet)
+// ArgsParser maps functions that take a command name and string args, to a prepared Args struct and set of CLI flags
+type ArgsParser func(string, []string) commands.Args
 
-var parserMapping = map[string]CommandParser{
-	"upload":    FileManipulationCommandParser,
-	"download":  FileManipulationCommandParser,
-	"remove":    FileManipulationCommandParser,
-	"replace":   FileManipulationCommandParser,
-	"watch":     WatchCommandParser,
-	"configure": ConfigurationCommandParser,
-	"bootstrap": BootstrapParser,
-	"version":   NoOpParser,
-	"update":    NoOpParser,
+// Command maps command string names to Commands that return a done channel, that is closed when the command operations are complete
+type Command func(commands.Args) chan bool
+
+// CommandDefinition ...
+type CommandDefinition struct {
+	ArgsParser
+	Command
+	PermitsZeroArgs bool
 }
 
-type Command func(map[string]interface{}) chan bool
-
-var commandMapping = map[string]Command{
-	"upload":    commands.UploadCommand,
-	"download":  commands.DownloadCommand,
-	"remove":    commands.RemoveCommand,
-	"replace":   commands.ReplaceCommand,
-	"watch":     commands.WatchCommand,
-	"configure": commands.ConfigureCommand,
-	"bootstrap": commands.BootstrapCommand,
-	"version":   commands.VersionCommand,
-	"update":    commands.UpdateCommand,
+var commandDefinitions = map[string]CommandDefinition{
+	"upload": CommandDefinition{
+		ArgsParser:      fileManipulationArgsParser,
+		Command:         commands.UploadCommand,
+		PermitsZeroArgs: true,
+	},
+	"download": CommandDefinition{
+		ArgsParser:      fileManipulationArgsParser,
+		Command:         commands.DownloadCommand,
+		PermitsZeroArgs: true,
+	},
+	"remove": CommandDefinition{
+		ArgsParser:      fileManipulationArgsParser,
+		Command:         commands.RemoveCommand,
+		PermitsZeroArgs: false,
+	},
+	"replace": CommandDefinition{
+		ArgsParser:      fileManipulationArgsParser,
+		Command:         commands.ReplaceCommand,
+		PermitsZeroArgs: true,
+	},
+	"watch": CommandDefinition{
+		ArgsParser:      watchArgsParser,
+		Command:         commands.WatchCommand,
+		PermitsZeroArgs: true,
+	},
+	"configure": CommandDefinition{
+		ArgsParser:      configurationArgsParser,
+		Command:         commands.ConfigureCommand,
+		PermitsZeroArgs: false,
+	},
+	"bootstrap": CommandDefinition{
+		ArgsParser:      bootstrapParser,
+		Command:         commands.BootstrapCommand,
+		PermitsZeroArgs: false,
+	},
+	"version": CommandDefinition{
+		ArgsParser:      noOpParser,
+		Command:         commands.VersionCommand,
+		PermitsZeroArgs: true,
+	},
+	"update": CommandDefinition{
+		ArgsParser:      noOpParser,
+		Command:         commands.UpdateCommand,
+		PermitsZeroArgs: true,
+	},
 }
 
-func CommandDescription() string {
+func main() {
+	setupGlobalEventLog()
+	setupErrorReporter()
+
+	command, rest := setupAndParseArgs(os.Args[1:])
+	verifyCommand(command, rest)
+
+	if command != "update" {
+		go checkForUpdate()
+	}
+
+	commandDefinition := commandDefinitions[command]
+
+	args := commandDefinition.ArgsParser(command, rest)
+	args.EventLog = globalEventLog
+
+	done := commandDefinition.Command(args)
+	output := bufio.NewWriter(os.Stdout)
+	go func() {
+		ticked := false
+		for {
+			select {
+			case event := <-globalEventLog:
+				if len(event.String()) > 0 {
+					output.WriteString(fmt.Sprintf("%s\n", event))
+					output.Flush()
+				}
+			case <-time.Tick(1000 * time.Millisecond):
+				if !ticked {
+					ticked = true
+					done <- true
+				}
+			}
+		}
+	}()
+	<-done
+	<-done
+	output.Flush()
+}
+
+func commandDescription() string {
 	commandDescription := make([]string, len(commandDescriptionPrefix)+len(permittedCommands))
 	pos := 0
 	for i := range commandDescriptionPrefix {
@@ -109,137 +173,81 @@ func checkForUpdate() {
 	}
 }
 
-func main() {
-	setupGlobalEventLog()
-	setupErrorReporter()
-	command, rest := SetupAndParseArgs(os.Args[1:])
-	verifyCommand(command, rest)
-	if command != "update" {
-		go checkForUpdate()
-	}
-
-	args, _ := parserMapping[command](command, rest)
-	args["eventLog"] = globalEventLog
-
-	operation := commandMapping[command]
-	done := operation(args)
-	output := bufio.NewWriter(os.Stdout)
-	go func() {
-		ticked := false
-		for {
-			select {
-			case event := <-globalEventLog:
-				if len(event.String()) > 0 {
-					output.WriteString(fmt.Sprintf("%s\n", event))
-					output.Flush()
-				}
-			case <-time.Tick(1000 * time.Millisecond):
-				if !ticked {
-					ticked = true
-					done <- true
-				}
-			}
-		}
-	}()
-	<-done
-	<-done
-	output.Flush()
+func noOpParser(cmd string, args []string) commands.Args {
+	return commands.DefaultArgs()
 }
 
-func NoOpParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
-	return make(map[string]interface{}), nil
-}
-
-func FileManipulationCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
-	result = make(map[string]interface{})
+func fileManipulationArgsParser(cmd string, rawArgs []string) commands.Args {
+	args := commands.DefaultArgs()
 	currentDir, _ := os.Getwd()
-	var environment, directory string
 
-	set = makeFlagSet(cmd)
-	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to run command")
-	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
-	set.Parse(args)
+	set := makeFlagSet(cmd)
+	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment to run command")
+	set.StringVar(&args.Directory, "dir", currentDir, "directory that config.yml is located")
+	set.Parse(rawArgs)
 
-	result["themeClient"] = loadThemeClient(directory, environment)
-	result["filenames"] = args[len(args)-set.NArg():]
-	return
+	args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
+	args.Filenames = rawArgs[len(rawArgs)-set.NArg():]
+	return args
 }
 
-func WatchCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
-	result = make(map[string]interface{})
+func watchArgsParser(cmd string, rawArgs []string) commands.Args {
+	args := commands.DefaultArgs()
 	currentDir, _ := os.Getwd()
 	var allEnvironments bool
-	var environment, directory, notifyFile string
-	var environments themekit.Environments
 
-	set = makeFlagSet(cmd)
-	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to run command")
+	set := makeFlagSet(cmd)
+	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment to run command")
 	set.BoolVar(&allEnvironments, "allenvs", false, "start watchers for all environments")
-	set.StringVar(&directory, "dir", currentDir, "directory that config.yml is located")
-	set.StringVar(&notifyFile, "notify", "", "file to touch when workers have gone idle")
-	set.Parse(args)
+	set.StringVar(&args.Directory, "dir", currentDir, "directory that config.yml is located")
+	set.StringVar(&args.NotifyFile, "notify", "", "file to touch when workers have gone idle")
+	set.Parse(rawArgs)
 
-	if len(environment) != 0 && allEnvironments {
-		environment = ""
+	if len(args.Environment) != 0 && allEnvironments {
+		args.Environment = ""
 	}
 
-	result["notifyFile"] = notifyFile
-	environments, err := loadEnvironments(directory)
+	environments, err := loadEnvironments(args.Directory)
 	if allEnvironments && err == nil {
-		result["environments"] = environments
+		args.Environments = environments
 	}
 
-	result["themeClient"] = loadThemeClient(directory, environment)
-	return
+	args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
+
+	return args
 }
 
-func ConfigurationCommandParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
-	result = make(map[string]interface{})
+func configurationArgsParser(cmd string, rawArgs []string) commands.Args {
+	args := commands.DefaultArgs()
 	currentDir, _ := os.Getwd()
-	var directory, environment, domain, password, access_token string
-	var bucketSize, refillRate int
 
-	set = makeFlagSet(cmd)
-	set.StringVar(&directory, "dir", currentDir, "directory to create config.yml")
-	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment for this configuration")
-	set.StringVar(&domain, "domain", "", "your myshopify domain")
-	set.StringVar(&password, "password", "", "password (or access token) to make successful API calls")
-	set.StringVar(&access_token, "access_token", "", "access_token to make successful API calls (optional, and soon to be deprecated in favour of 'password')")
-	set.IntVar(&bucketSize, "bucketSize", themekit.DefaultBucketSize, "leaky bucket capacity")
-	set.IntVar(&refillRate, "refillRate", themekit.DefaultRefillRate, "leaky bucket refill rate / second")
-	set.Parse(args)
+	set := makeFlagSet(cmd)
+	set.StringVar(&args.Directory, "dir", currentDir, "directory to create config.yml")
+	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment for this configuration")
+	set.StringVar(&args.Domain, "domain", "", "your myshopify domain")
+	set.StringVar(&args.Password, "password", "", "password (or access token) to make successful API calls")
+	set.StringVar(&args.AccessToken, "", "access_token to make successful API calls (optional, and soon to be deprecated in favour of 'password')")
+	set.IntVar(&args.BucketSize, "bucketSize", themekit.DefaultBucketSize, "leaky bucket capacity")
+	set.IntVar(&args.RefillRate, "refillRate", themekit.DefaultRefillRate, "leaky bucket refill rate / second")
+	set.Parse(rawArgs)
 
-	result["directory"] = directory
-	result["environment"] = environment
-	result["domain"] = domain
-	result["password"] = password
-	result["access_token"] = access_token
-	result["bucket_size"] = bucketSize
-	result["refill_rate"] = refillRate
-	return
+	return args
 }
 
-func BootstrapParser(cmd string, args []string) (result map[string]interface{}, set *flag.FlagSet) {
-	result = make(map[string]interface{})
+func bootstrapParser(cmd string, rawArgs []string) commands.Args {
+	args := commands.DefaultArgs()
 	currentDir, _ := os.Getwd()
-	var version, directory, environment, prefix string
-	var setThemeID bool
 
-	set = makeFlagSet(cmd)
-	set.StringVar(&directory, "dir", currentDir, "location of config.yml")
-	set.BoolVar(&setThemeID, "setid", true, "update config.yml with ID of created Theme")
-	set.StringVar(&environment, "env", themekit.DefaultEnvironment, "environment to execute command")
-	set.StringVar(&version, "version", commands.LatestRelease, "version of Shopify Timber to use")
-	set.StringVar(&prefix, "prefix", "", "prefix to the Timber theme being created")
-	set.Parse(args)
+	set := makeFlagSet(cmd)
+	set.StringVar(&args.Directory, "dir", currentDir, "location of config.yml")
+	set.BoolVar(&args.SetThemeID, "setid", true, "update config.yml with ID of created Theme")
+	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment to execute command")
+	set.StringVar(&args.Version, "version", commands.LatestRelease, "version of Shopify Timber to use")
+	set.StringVar(&args.Prefix, "prefix", "", "prefix to the Timber theme being created")
+	set.Parse(rawArgs)
 
-	result["version"] = version
-	result["directory"] = directory
-	result["environment"] = environment
-	result["prefix"] = prefix
-	result["setThemeId"] = setThemeID
-	result["themeClient"] = loadThemeClient(directory, environment)
-	return
+	args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
+	return args
 }
 
 func loadThemeClient(directory, env string) themekit.ThemeClient {
@@ -286,13 +294,13 @@ func loadEnvironments(directory string) (themekit.Environments, error) {
 	return themekit.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
 }
 
-func SetupAndParseArgs(args []string) (command string, rest []string) {
+func setupAndParseArgs(args []string) (command string, rest []string) {
 	if len(args) <= 0 {
 		return "", []string{"--help"}
 	}
 	set := makeFlagSet("")
 	set.Usage = func() {
-		fmt.Println(CommandDescription())
+		fmt.Println(commandDescription())
 	}
 	set.Parse(args)
 
@@ -301,18 +309,20 @@ func SetupAndParseArgs(args []string) (command string, rest []string) {
 	return
 }
 
-func CommandIsInvalid(command string) bool {
-	return commandMapping[command] == nil
+func commandIsInvalid(command string) bool {
+	_, found := commandDefinitions[command]
+	return !found
 }
 
-func CannotProcessCommandWithoutAdditionalArguments(command string, additionalArgs []string) bool {
-	return len(additionalArgs) <= 0 && permittedZeroArgCommands[command] == false
+func cannotProcessCommandWithoutAdditionalArguments(command string, additionalArgs []string) bool {
+	commandDefinition := commandDefinitions[command]
+	return len(additionalArgs) <= 0 && !commandDefinition.PermitsZeroArgs
 }
 
 func verifyCommand(command string, args []string) {
 	errors := []string{}
 
-	if CommandIsInvalid(command) {
+	if commandIsInvalid(command) {
 		if len(command) <= 0 {
 			errors = append(errors, "  An operation must be provided")
 		} else {
@@ -320,17 +330,17 @@ func verifyCommand(command string, args []string) {
 		}
 	}
 
-	if CannotProcessCommandWithoutAdditionalArguments(command, args) {
-		if parser, ok := parserMapping[command]; ok {
+	if cannotProcessCommandWithoutAdditionalArguments(command, args) {
+		if commandDefinition, ok := commandDefinitions[command]; ok {
 			errors = append(errors, fmt.Sprintf("\t- '%s' cannot run without additional arguments", command))
-			parser(command, []string{"-h"})
+			commandDefinition.ArgsParser(command, []string{"-h"})
 		}
 	}
 
 	if len(errors) > 0 {
 		errorMessage := fmt.Sprintf("Invalid Invocation!\n%s", strings.Join(errors, "\n"))
 		fmt.Println(themekit.RedText(errorMessage))
-		SetupAndParseArgs([]string{"--help"})
+		setupAndParseArgs([]string{"--help"})
 		os.Exit(1)
 	}
 }

@@ -11,11 +11,12 @@ import (
 	"github.com/Shopify/themekit/theme"
 )
 
-// Using a 500 Error Code is disingenuous since
+// ThemeEventErrorCode ... Using a 500 Error Code is disingenuous since
 // it could be an error internal to the library
 // and not necessarily with the Service Provider
 const ThemeEventErrorCode int = 999
 
+// ThemeEvent ... TODO
 type ThemeEvent interface {
 	String() string
 	Successful() bool
@@ -23,6 +24,7 @@ type ThemeEvent interface {
 	AsJSON() ([]byte, error)
 }
 
+// NoOpEvent ... TODO
 type NoOpEvent struct {
 }
 
@@ -30,6 +32,7 @@ func (e NoOpEvent) String() string {
 	return ""
 }
 
+// Successful ... TODO
 func (e NoOpEvent) Successful() bool {
 	return false
 }
@@ -38,10 +41,12 @@ func (e NoOpEvent) Error() error {
 	return nil
 }
 
+// AsJSON ... TODO
 func (e NoOpEvent) AsJSON() ([]byte, error) {
 	return []byte{}, errors.New("cannot encode NoOpEvents")
 }
 
+// APIAssetEvent ... TODO
 type APIAssetEvent struct {
 	Host      string `json:"host"`
 	AssetKey  string `json:"asset_key"`
@@ -51,6 +56,7 @@ type APIAssetEvent struct {
 	etype     string `json:"type"`            // TODO: same here, unexported, no json binding
 }
 
+// NewAPIAssetEvent ... TODO
 func NewAPIAssetEvent(r *http.Response, e AssetEvent, err error) APIAssetEvent {
 	event := APIAssetEvent{
 		AssetKey:  e.Asset().Key,
@@ -106,6 +112,7 @@ func (a APIAssetEvent) String() string {
 	}
 }
 
+// Successful ... TODO
 func (a APIAssetEvent) Successful() bool {
 	return a.Code >= 200 && a.Code < 300
 }
@@ -114,24 +121,28 @@ func (a APIAssetEvent) Error() error {
 	return a.err
 }
 
+// AsJSON ... TODO
 func (a APIAssetEvent) AsJSON() ([]byte, error) {
 	return json.Marshal(a)
 }
 
+// AssetError ... TODO
 type AssetError struct {
 	Messages []string `json:"asset"`
 }
 
+// APIThemeEvent ... TODO
 type APIThemeEvent struct {
 	Host        string `json:"host"`
 	ThemeName   string `json:"name"`
-	ThemeId     int64  `json:"theme_id"`
+	ThemeID     int64  `json:"theme_id"`
 	Code        int    `json:"status_code"`
 	Previewable bool   `json:"previewable,omitempty"`
-	err         error  `json:"error,omitempty"`
-	etype       string `json:"type"`
+	err         error  `json:"error,omitempty"` // err unexported
+	etype       string `json:"type"`            // etype unexported
 }
 
+// NewAPIThemeEvent ... TODO
 func NewAPIThemeEvent(r *http.Response, err error) APIThemeEvent {
 	if err != nil {
 		return APIThemeEvent{Host: "Unknown Host", Code: ThemeEventErrorCode, err: err, etype: "APIThemeEvent"}
@@ -152,19 +163,20 @@ func (t APIThemeEvent) String() string {
 			"[%s]Modifications made to theme '%s' with id of %s on shop %s",
 			GreenText(fmt.Sprintf("%d", t.Code)),
 			BlueText(t.ThemeName),
-			BlueText(fmt.Sprintf("%d", t.ThemeId)),
+			BlueText(fmt.Sprintf("%d", t.ThemeID)),
 			YellowText(t.Host),
-		)
-	} else {
-		return fmt.Sprintf(
-			"[%s]Encoutered error with request to %s\n\t%s",
-			RedText(fmt.Sprintf("%d", t.Code)),
-			YellowText(t.Host),
-			t.err,
 		)
 	}
+
+	return fmt.Sprintf(
+		"[%s]Encoutered error with request to %s\n\t%s",
+		RedText(fmt.Sprintf("%d", t.Code)),
+		YellowText(t.Host),
+		t.err,
+	)
 }
 
+// Successful ... TODO
 func (t APIThemeEvent) Successful() bool {
 	return t.Code >= 200 && t.Code < 300
 }
@@ -173,6 +185,7 @@ func (t APIThemeEvent) Error() error {
 	return t.err
 }
 
+// AsJSON ... TODO
 func (t APIThemeEvent) AsJSON() ([]byte, error) {
 	return json.Marshal(t)
 }
@@ -196,7 +209,7 @@ func populateThemeData(e *APIThemeEvent, r *http.Response) {
 		return
 	}
 	theme := container["theme"]
-	e.ThemeId = theme.Id
+	e.ThemeID = theme.ID
 	e.ThemeName = theme.Name
 	e.Previewable = theme.Previewable
 }

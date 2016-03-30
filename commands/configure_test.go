@@ -1,9 +1,10 @@
 package commands
 
 import (
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const badPatternEnv string = "../fixtures/bad_pattern_config.yml"

@@ -1,31 +1,18 @@
 package commands
 
 import (
-	"github.com/Shopify/themekit"
-	"github.com/Shopify/themekit/bucket"
-	"github.com/Shopify/themekit/theme"
 	"os"
+
+	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/theme"
 )
 
-type ReplaceOptions struct {
-	BasicOptions
-	Bucket *bucket.LeakyBucket
-}
-
-func ReplaceCommand(args map[string]interface{}) chan bool {
-	options := ReplaceOptions{}
-	extractThemeClient(&options.Client, args)
-	extractEventLog(&options.EventLog, args)
-	options.Filenames = extractStringSlice("filenames", args)
-
-	return Replace(options)
-}
-
-func Replace(options ReplaceOptions) chan bool {
-	rawEvents, throttledEvents := prepareChannel(options)
-	done, logs := options.Client.Process(throttledEvents)
-	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{logs})
-	enqueueEvents(options.Client, options.Filenames, rawEvents)
+// ReplaceCommand overwrite theme file(s)
+func ReplaceCommand(args Args) chan bool {
+	rawEvents, throttledEvents := prepareChannel(args)
+	done, logs := args.ThemeClient.Process(throttledEvents)
+	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{logs})
+	enqueueEvents(args.ThemeClient, args.Filenames, rawEvents)
 	return done
 }
 
@@ -66,13 +53,13 @@ func fullReplace(remoteAssets, localAssets []theme.Asset, events chan themekit.A
 
 }
 
-func prepareChannel(options ReplaceOptions) (rawEvents, throttledEvents chan themekit.AssetEvent) {
+func prepareChannel(args Args) (rawEvents, throttledEvents chan themekit.AssetEvent) {
 	rawEvents = make(chan themekit.AssetEvent)
-	if options.Bucket == nil {
+	if args.Bucket == nil {
 		return rawEvents, rawEvents
 	}
 
-	foreman := themekit.NewForeman(options.Bucket)
+	foreman := themekit.NewForeman(args.Bucket)
 	foreman.JobQueue = rawEvents
 	foreman.WorkerQueue = make(chan themekit.AssetEvent)
 	foreman.IssueWork()

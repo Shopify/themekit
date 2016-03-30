@@ -3,14 +3,15 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Shopify/themekit"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"runtime"
+
+	"github.com/Shopify/themekit"
 )
 
-const LatestReleasesUrl string = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
+const latestReleasesURL string = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
 
 type platform struct {
 	Name   string `json:"name"`
@@ -23,14 +24,17 @@ type release struct {
 	Platforms []platform `json:"platforms"`
 }
 
+// Version ... TODO
 func Version(r release) themekit.Version {
 	return themekit.ParseVersionString(r.Version)
 }
 
+// IsApplicable ... TODO
 func (r release) IsApplicable() bool {
 	return themekit.TKVersion.Compare(Version(r)) == themekit.VersionLessThan
 }
 
+// IsNewReleaseAvailable ... TODO
 func IsNewReleaseAvailable() bool {
 	latestRelease, err := downloadReleaseForPlatform()
 	if err != nil {
@@ -39,7 +43,8 @@ func IsNewReleaseAvailable() bool {
 	return latestRelease.IsApplicable()
 }
 
-func UpdateCommand(args map[string]interface{}) chan bool {
+// UpdateCommand ... TODO
+func UpdateCommand(args Args) chan bool {
 	latestRelease, err := downloadReleaseForPlatform()
 	if err == nil {
 		if latestRelease.IsApplicable() {
@@ -48,13 +53,13 @@ func UpdateCommand(args map[string]interface{}) chan bool {
 			themekit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
 		}
 	}
-	res := make(chan bool)
-	close(res)
-	return res
+	done := make(chan bool)
+	close(done)
+	return done
 }
 
 func downloadReleaseForPlatform() (release, error) {
-	resp, err := http.Get(LatestReleasesUrl)
+	resp, err := http.Get(latestReleasesURL)
 	if err != nil {
 		return release{}, err
 	}

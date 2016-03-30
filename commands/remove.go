@@ -2,32 +2,21 @@ package commands
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/Shopify/themekit"
 	"github.com/Shopify/themekit/theme"
-	"os"
 )
 
-type RemoveOptions struct {
-	BasicOptions
-}
-
-func RemoveCommand(args map[string]interface{}) chan bool {
-	options := RemoveOptions{}
-	extractThemeClient(&options.Client, args)
-	extractEventLog(&options.EventLog, args)
-	options.Filenames = extractStringSlice("filenames", args)
-
-	return Remove(options)
-}
-
-func Remove(options RemoveOptions) chan bool {
+// RemoveCommand removes file(s) from theme
+func RemoveCommand(args Args) chan bool {
 	events := make(chan themekit.AssetEvent)
-	done, logs := options.Client.Process(events)
+	done, logs := args.ThemeClient.Process(events)
 
-	mergeEvents(options.getEventLog(), []chan themekit.ThemeEvent{logs})
+	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{logs})
 
 	go func() {
-		for _, filename := range options.Filenames {
+		for _, filename := range args.Filenames {
 			asset := theme.Asset{Key: filename}
 			events <- themekit.NewRemovalEvent(asset)
 			removeFile(filename)

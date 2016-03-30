@@ -1,11 +1,12 @@
 package themekit
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/fsnotify.v1"
-	"io/ioutil"
-	"testing"
 
 	"github.com/Shopify/themekit/theme"
 )
