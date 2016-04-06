@@ -25,7 +25,7 @@ func TestGettingTheLatestEntry(t *testing.T) {
 	latestEntry := feed.LatestEntry()
 
 	expectedID := "tag:github.com,2008:Repository/17219500/v2.0.2"
-	assert.Equal(t, expectedID, latestEntry.Id)
+	assert.Equal(t, expectedID, latestEntry.ID)
 
 	expectedHref := "/Shopify/Timber/releases/tag/v2.0.2"
 	assert.Equal(t, expectedHref, latestEntry.Link.Href)
