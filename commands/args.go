@@ -29,6 +29,8 @@ type Args struct {
 	BucketSize   int
 	RefillRate   int
 	Bucket       *bucket.LeakyBucket
+
+	WorkingDirGetter WorkingDirGetterType
 }
 
 // DefaultArgs returns an instance of Args, initialized with defaults
@@ -36,14 +38,18 @@ func DefaultArgs() Args {
 	currentDir, _ := os.Getwd()
 
 	return Args{
-		Domain:      "",
-		AccessToken: "",
-		Directory:   currentDir,
-		Environment: themekit.DefaultEnvironment,
-		BucketSize:  themekit.DefaultBucketSize,
-		RefillRate:  themekit.DefaultRefillRate,
+		Domain:           "",
+		AccessToken:      "",
+		Directory:        currentDir,
+		Environment:      themekit.DefaultEnvironment,
+		BucketSize:       themekit.DefaultBucketSize,
+		RefillRate:       themekit.DefaultRefillRate,
+		WorkingDirGetter: os.Getwd,
 	}
 }
+
+// WorkingDirGetterType functions fulfills interface of os.Getwd(), used in testing
+type WorkingDirGetterType func() (string, error)
 
 // DefaultConfigurationOptions returns a default themekit.Configuration using fields from an Args instance
 func (args Args) DefaultConfigurationOptions() themekit.Configuration {

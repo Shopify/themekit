@@ -7,7 +7,7 @@ import (
 
 // Feed ... TODO
 type Feed struct {
-	XMLName xml.Name `xml:"http://www.w3.org/2005/Atom name"`
+	XMLName xml.Name `xml:"http://www.w3.org/2005/Atom feed"`
 	Title   string   `xml:"title"`
 	ID      string   `xml:"id"`
 	Link    Link     `xml:"link"`
