@@ -64,7 +64,7 @@ Usage of theme:
 There are some arguments that you can pass into every command:
 
 1. `env`: The *environment* to register the configuration settings under. These are just free form text, so you can name it anything. Common names are `staging`, `production`, `test` and the default is `development`
-2. `dir`: The directory that the configuration file (called `conf.yml`) will live. This allows you to update multiple themes without having to change into each themes directory.
+2. `dir`: The directory that the configuration file (called `config.yml`) will live. This allows you to update multiple themes without having to change into each themes directory.
 
 ### <a id="configure" href="#configure">Configure</a><i class="fa fa-bookmark"></i>
 
