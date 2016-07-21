@@ -25,7 +25,7 @@ func TestRetrievingAConfigurationFromAnEnvironment(t *testing.T) {
 	env, err := LoadEnvironmentsFromFile(goodEnv)
 	conf, err := env.GetConfiguration("default")
 	assert.NoError(t, err, "Retrieving the 'default' env should not have raised an error")
-	assert.EqualValues(t, conf.ThemeID, 2)
+	assert.Equal(t, conf.ThemeID, 2)
 }
 
 func TestRetrievingAnInvalidConfigurationFromAnEnvironment(t *testing.T) {
