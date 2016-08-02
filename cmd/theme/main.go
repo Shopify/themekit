@@ -14,7 +14,6 @@ import (
 	"github.com/Shopify/themekit/commands"
 )
 
-const eventTimeout = 10000
 const banner string = "----------------------------------------"
 const updateAvailableMessage string = `| An update for Theme Kit is available |
 |                                      |
@@ -53,7 +52,7 @@ type CommandDefinition struct {
 	ArgsParser
 	Command
 	PermitsZeroArgs bool
-	Timeoutable     bool
+	TimesOut        bool
 }
 
 var commandDefinitions = map[string]CommandDefinition{
@@ -61,55 +60,55 @@ var commandDefinitions = map[string]CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.UploadCommand,
 		PermitsZeroArgs: true,
-		Timeoutable:     true,
+		TimesOut:        true,
 	},
 	"download": CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.DownloadCommand,
 		PermitsZeroArgs: true,
-		Timeoutable:     true,
+		TimesOut:        true,
 	},
 	"remove": CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.RemoveCommand,
 		PermitsZeroArgs: false,
-		Timeoutable:     true,
+		TimesOut:        true,
 	},
 	"replace": CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.ReplaceCommand,
 		PermitsZeroArgs: true,
-		Timeoutable:     true,
+		TimesOut:        true,
 	},
 	"watch": CommandDefinition{
 		ArgsParser:      watchArgsParser,
 		Command:         commands.WatchCommand,
 		PermitsZeroArgs: true,
-		Timeoutable:     false,
+		TimesOut:        false,
 	},
 	"configure": CommandDefinition{
 		ArgsParser:      configurationArgsParser,
 		Command:         commands.ConfigureCommand,
 		PermitsZeroArgs: false,
-		Timeoutable:     false,
+		TimesOut:        false,
 	},
 	"bootstrap": CommandDefinition{
 		ArgsParser:      bootstrapParser,
 		Command:         commands.BootstrapCommand,
 		PermitsZeroArgs: false,
-		Timeoutable:     false,
+		TimesOut:        false,
 	},
 	"version": CommandDefinition{
 		ArgsParser:      noOpParser,
 		Command:         commands.VersionCommand,
 		PermitsZeroArgs: true,
-		Timeoutable:     false,
+		TimesOut:        false,
 	},
 	"update": CommandDefinition{
 		ArgsParser:      noOpParser,
 		Command:         commands.UpdateCommand,
 		PermitsZeroArgs: true,
-		Timeoutable:     false,
+		TimesOut:        false,
 	},
 }
 
@@ -131,14 +130,20 @@ func main() {
 	done := commandDefinition.Command(args)
 	output := bufio.NewWriter(os.Stdout)
 
-	go consumeEventLog(output, commandDefinition, done)
+	timeout := themekit.DefaultTimeout
+
+	if args.ThemeClient.GetConfiguration().Timeout != 0*time.Second {
+		timeout = args.ThemeClient.GetConfiguration().Timeout
+	}
+
+	go consumeEventLog(output, commandDefinition, timeout, done)
 	<-done
 	output.Flush()
 }
 
 var eventTicked bool
 
-func consumeEventLog(output *bufio.Writer, commandDef CommandDefinition, done chan bool) {
+func consumeEventLog(output *bufio.Writer, commandDef CommandDefinition, timeout time.Duration, done chan bool) {
 	for {
 		select {
 		case event := <-globalEventLog:
@@ -148,13 +153,13 @@ func consumeEventLog(output *bufio.Writer, commandDef CommandDefinition, done ch
 				output.WriteString(fmt.Sprintf("%s\n", event))
 				output.Flush()
 			}
-		case <-time.Tick(eventTimeout * time.Millisecond):
-			if !commandDef.Timeoutable {
+		case <-time.Tick(timeout):
+			if !commandDef.TimesOut {
 				break
 			}
 
 			if !eventDidTick() {
-				fmt.Printf("Theme Kit timed out after %d seconds\n", eventTimeout/1000)
+				fmt.Printf("Theme Kit timed out after %v seconds\n", timeout)
 				close(done)
 			}
 
