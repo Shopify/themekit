@@ -32,7 +32,7 @@ func TestLoadingAValidConfigurationWithIgnoredFiles(t *testing.T) {
 func TestLoadingAValidConfigurationWithAThemeId(t *testing.T) {
 	config, err := LoadConfiguration([]byte(validConfigurationWithThemeID))
 	assert.Nil(t, err)
-	assert.EqualValues(t, 1234, config.ThemeID)
+	assert.Equal(t, 1234, config.ThemeID)
 	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234", config.URL)
 	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234/assets.json", config.AssetPath())
 }

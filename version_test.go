@@ -28,11 +28,11 @@ func TestStringifyingAVersion(t *testing.T) {
 func TestParsingAVersionString(t *testing.T) {
 	expected := Version{1, 52, 99}
 	actual := ParseVersionString("1.52.99")
-	assert.EqualValues(t, VersionEqual, expected.Compare(actual))
+	assert.Equal(t, VersionEqual, expected.Compare(actual))
 }
 
 func TestParsingAVersionStringWithPrefixedV(t *testing.T) {
 	expected := Version{1, 52, 99}
 	actual := ParseVersionString("v1.52.99")
-	assert.EqualValues(t, VersionEqual, expected.Compare(actual))
+	assert.Equal(t, VersionEqual, expected.Compare(actual))
 }
