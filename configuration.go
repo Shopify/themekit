@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v1"
@@ -15,7 +16,7 @@ import (
 type Configuration struct {
 	AccessToken  string   `yaml:"access_token,omitempty"`
 	Password     string   `yaml:"password,omitempty"`
-	ThemeID      int64    `yaml:"theme_id,omitempty"`
+	ThemeID      string   `yaml:"theme_id,omitempty"`
 	Domain       string   `yaml:"store"`
 	URL          string   `yaml:"-"`
 	IgnoredFiles []string `yaml:"ignore_files,omitempty"`
@@ -57,8 +58,11 @@ func (conf Configuration) Initialize() (Configuration, error) {
 	}
 
 	conf.URL = conf.AdminURL()
-	if conf.ThemeID != 0 {
-		conf.URL = fmt.Sprintf("%s/themes/%d", conf.URL, conf.ThemeID)
+
+	if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); err == nil {
+		conf.URL = fmt.Sprintf("%s/themes/%d", conf.URL, themeID)
+	} else {
+		return conf, fmt.Errorf("missing theme_id")
 	}
 
 	if len(conf.Domain) == 0 {

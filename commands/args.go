@@ -25,6 +25,7 @@ type Args struct {
 	NotifyFile   string
 	Prefix       string
 	Version      string
+	ThemeID      string
 	SetThemeID   bool
 	BucketSize   int
 	RefillRate   int
@@ -53,11 +54,17 @@ type WorkingDirGetterType func() (string, error)
 
 // DefaultConfigurationOptions returns a default themekit.Configuration using fields from an Args instance
 func (args Args) DefaultConfigurationOptions() themekit.Configuration {
+	accessToken := args.AccessToken
+	if args.AccessToken == "" {
+		accessToken = args.Password
+	}
+
 	return themekit.Configuration{
-		Domain:      args.Domain,
-		AccessToken: args.AccessToken,
-		BucketSize:  args.BucketSize,
-		RefillRate:  args.RefillRate,
+		Domain:     args.Domain,
+		Password:   accessToken,
+		BucketSize: args.BucketSize,
+		RefillRate: args.RefillRate,
+		ThemeID:    args.ThemeID,
 	}
 }
 
