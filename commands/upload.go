@@ -1,6 +1,11 @@
 package commands
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/Shopify/themekit"
 	"github.com/Shopify/themekit/theme"
 )
@@ -8,6 +13,7 @@ import (
 // UploadCommand add file(s) to theme
 func UploadCommand(args Args) chan bool {
 	files := make(chan themekit.AssetEvent)
+	args.Filenames = extractFilenames(args, args.Filenames)
 	go ReadAndPrepareFiles(args, files)
 
 	done, events := args.ThemeClient.Process(files)
@@ -36,4 +42,19 @@ func loadAsset(args Args, filename string) (asset theme.Asset, err error) {
 	}
 
 	return theme.LoadAsset(root, filename)
+}
+
+func extractFilenames(args Args, filenames []string) []string {
+	if len(filenames) > 0 {
+		return filenames
+	}
+	filepath.Walk(args.Directory, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			root := fmt.Sprintf("%s%s", args.Directory, string(filepath.Separator))
+			name := strings.Replace(path, root, "", -1)
+			filenames = append(filenames, name)
+		}
+		return nil
+	})
+	return filenames
 }
