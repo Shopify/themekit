@@ -59,10 +59,14 @@ func (conf Configuration) Initialize() (Configuration, error) {
 
 	conf.URL = conf.AdminURL()
 
-	if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); err == nil {
-		conf.URL = fmt.Sprintf("%s/themes/%d", conf.URL, themeID)
-	} else {
-		return conf, fmt.Errorf("missing theme_id")
+	if !(strings.ToLower(strings.TrimSpace(conf.ThemeID)) == "live") {
+		// theme_id may be specified as 'live', indicating that the user
+		// is opting into always syncing to the current, production theme
+		if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); err == nil {
+			conf.URL = fmt.Sprintf("%s/themes/%d", conf.URL, themeID)
+		} else {
+			return conf, fmt.Errorf("missing theme_id. Error: \"%s\"", err)
+		}
 	}
 
 	if len(conf.Domain) == 0 {

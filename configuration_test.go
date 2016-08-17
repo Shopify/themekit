@@ -21,6 +21,17 @@ func TestLoadingAValidConfiguration(t *testing.T) {
 	assert.Nil(t, config.IgnoredFiles)
 }
 
+func TestLoadingAValidConfigurationWithLiveTheme(t *testing.T) {
+	config, err := LoadConfiguration([]byte(validConfigurationWithLiveTheme))
+	assert.Nil(t, err)
+	assert.Equal(t, "example.myshopify.com", config.Domain)
+	assert.Equal(t, "abracadabra", config.Password)
+	assert.Equal(t, "https://example.myshopify.com/admin", config.URL)
+	assert.Equal(t, "https://example.myshopify.com/admin/assets.json", config.AssetPath())
+	assert.Equal(t, 4, config.Concurrency)
+	assert.Nil(t, config.IgnoredFiles)
+}
+
 func TestLoadingAValidConfigurationWithIgnoredFiles(t *testing.T) {
 	config, err := LoadConfiguration([]byte(validConfigurationWithIgnoredFiles))
 	assert.Nil(t, err)
@@ -83,6 +94,13 @@ const (
   password: abracadabra
   concurrency: 4
   theme_id: 1234
+  `
+
+	validConfigurationWithLiveTheme = `
+  store: example.myshopify.com
+  password: abracadabra
+  concurrency: 4
+  theme_id: live
   `
 
 	validConfigurationWithIgnoredFiles = `
