@@ -26,6 +26,12 @@ func ConfigureCommand(args Args) chan bool {
 // Configure ... TODO
 func Configure(args Args) {
 	config := args.DefaultConfigurationOptions()
+	_, err := config.Initialize()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	AddConfiguration(args.Directory, args.Environment, config)
 }
 
@@ -99,7 +105,12 @@ func loadOrInitializeEnvironment(location string) (themekit.Environments, error)
 	}
 
 	env, err := themekit.LoadEnvironments(contents)
-	if (err != nil && canProcessWithError(err)) || len(env) <= 0 {
+
+	if err != nil && !canProcessWithError(err) {
+		return env, err
+	}
+
+	if err != nil || len(env) <= 0 {
 		conf, _ := themekit.LoadConfiguration(contents)
 		env[themekit.DefaultEnvironment] = conf
 	}
@@ -107,5 +118,9 @@ func loadOrInitializeEnvironment(location string) (themekit.Environments, error)
 }
 
 func canProcessWithError(e error) bool {
-	return strings.Contains(e.Error(), "YAML error") == false
+	if strings.Contains(e.Error(), "YAML error") == false {
+		return false
+	}
+
+	return true
 }

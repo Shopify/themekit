@@ -224,7 +224,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 
 	wg.Wait()
 	config := t.GetConfiguration() // Shouldn't this configuration already be loaded and initialized?
-	config.ThemeID = themeEvent.ThemeID
+	config.ThemeID = fmt.Sprintf("%d", themeEvent.ThemeID)
 	config, err := config.Initialize()
 	if err != nil {
 		// TODO: there's no way we can signal that something went wrong.

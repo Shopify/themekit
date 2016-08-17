@@ -15,6 +15,17 @@ func TestLoadingAValidConfiguration(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "example.myshopify.com", config.Domain)
 	assert.Equal(t, "abracadabra", config.Password)
+	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234", config.URL)
+	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234/assets.json", config.AssetPath())
+	assert.Equal(t, 4, config.Concurrency)
+	assert.Nil(t, config.IgnoredFiles)
+}
+
+func TestLoadingAValidConfigurationWithLiveTheme(t *testing.T) {
+	config, err := LoadConfiguration([]byte(validConfigurationWithLiveTheme))
+	assert.Nil(t, err)
+	assert.Equal(t, "example.myshopify.com", config.Domain)
+	assert.Equal(t, "abracadabra", config.Password)
 	assert.Equal(t, "https://example.myshopify.com/admin", config.URL)
 	assert.Equal(t, "https://example.myshopify.com/admin/assets.json", config.AssetPath())
 	assert.Equal(t, 4, config.Concurrency)
@@ -27,14 +38,6 @@ func TestLoadingAValidConfigurationWithIgnoredFiles(t *testing.T) {
 	assert.Equal(t, "example.myshopify.com", config.Domain)
 	assert.Equal(t, "abracadabra", config.Password)
 	assert.Equal(t, []string{"charmander", "bulbasaur", "squirtle"}, config.IgnoredFiles)
-}
-
-func TestLoadingAValidConfigurationWithAThemeId(t *testing.T) {
-	config, err := LoadConfiguration([]byte(validConfigurationWithThemeID))
-	assert.Nil(t, err)
-	assert.Equal(t, 1234, config.ThemeID)
-	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234", config.URL)
-	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234/assets.json", config.AssetPath())
 }
 
 func TestLoadingSupportedConfiguration(t *testing.T) {
@@ -90,17 +93,20 @@ const (
   store: example.myshopify.com
   password: abracadabra
   concurrency: 4
+  theme_id: 1234
   `
 
-	validConfigurationWithThemeID = `
+	validConfigurationWithLiveTheme = `
   store: example.myshopify.com
   password: abracadabra
-  theme_id: 1234
+  concurrency: 4
+  theme_id: live
   `
 
 	validConfigurationWithIgnoredFiles = `
   store: example.myshopify.com
   password: abracadabra
+  theme_id: 1234
   ignore_files:
     - charmander
     - bulbasaur
@@ -120,11 +126,12 @@ const (
 
 	configurationWithoutDomain = `
   password: foobar
+  theme_id: 1234
   `
 
 	configurationWithInvalidDomain = `
   store: example.something.net
   password: abracadabra
-  theme_id: 12345
+  theme_id: 1234
   `
 )
