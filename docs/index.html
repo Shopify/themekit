@@ -116,6 +116,7 @@ of commands that are available, enter the following command into your terminal:<
 <ol>
   <li><code>password</code>: Your Shopify Private App password. This is needed to make authenticated calls against the Shopify API. Create a Private Application and use the value from the <strong>Password</strong> field, obtained at <code>https://&lt;your subdomain&gt;.myshopify.com/admin/apps/private/&lt;id&gt;</code></li>
   <li><code>domain</code>: Your <code>&lt;your subdomain&gt;.myshopify.com</code> domain without any protocol or other information.</li>
+  <li><code>theme_id</code>: The id of the theme you want Theme Kit to work with.</li>
 </ol>
 
 <p>Additional arguments you can provide:</p>
@@ -184,7 +185,7 @@ of commands that are available, enter the following command into your terminal:<
 <p>A configuration can contain a number of things on top of what can be added by invoking <code>theme configure</code>.</p>
 
 <ul>
-  <li><code>theme_id</code>: The ID of the theme to upload changes to. <strong>Beware</strong> that if this is blank all changes will be uploaded to your user visible theme.</li>
+  <li><code>theme_id</code>: The ID of the theme to upload changes to. <strong>Note</strong> Unlike previous versions of Theme Kit, leaving <code>theme_id</code> blank will no longer default to pointing to your live, production theme. To opt into that behavior, set <code>theme_id</code> to a value of <code>"live"</code></li>
   <li><code>password</code>: API credentials to update and manipulate themes on Shopify</li>
   <li><code>store</code>: Your <code>.myshopify.com</code> domain (i.e. pokeshop.myshopify.com). Note that you <strong>do not</strong> need to include <code>http://</code> or <code>https://</code></li>
   <li><code>ignore_files</code>: A list of specific files to ignore (i.e. <code>config/settings.html</code>). You can also ignore based on patterns (such as all png files), but those patterns will need to be wrapped in double quotes (i.e. <code>"*.png"</code>).</li>

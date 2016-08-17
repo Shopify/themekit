@@ -74,6 +74,7 @@ The following options **must be provided**:
 
 1. `password`: Your Shopify Private App password. This is needed to make authenticated calls against the Shopify API. Create a Private Application and use the value from the **Password** field, obtained at `https://<your subdomain>.myshopify.com/admin/apps/private/<id>`
 2. `domain`: Your `<your subdomain>.myshopify.com` domain without any protocol or other information.
+3. `theme_id`: The id of the theme you want Theme Kit to work with.
 
 Additional arguments you can provide:
 
@@ -136,7 +137,7 @@ Environments allow you to manage where to upload your theme changes to. This hel
 
 A configuration can contain a number of things on top of what can be added by invoking `theme configure`.
 
-- `theme_id`: The ID of the theme to upload changes to. **Beware** that if this is blank all changes will be uploaded to your user visible theme.
+- `theme_id`: The ID of the theme to upload changes to. **Note** Unlike previous versions of Theme Kit, leaving `theme_id` blank will no longer default to pointing to your live, production theme. To opt into that behavior, set `theme_id` to a value of `"live"`
 - `password`: API credentials to update and manipulate themes on Shopify
 -  `store`: Your `.myshopify.com` domain (i.e. pokeshop.myshopify.com). Note that you **do not** need to include `http://` or `https://`
 - `ignore_files`: A list of specific files to ignore (i.e. `config/settings.html`). You can also ignore based on patterns (such as all png files), but those patterns will need to be wrapped in double quotes (i.e. `"*.png"`).
