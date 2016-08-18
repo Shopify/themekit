@@ -41,6 +41,7 @@ contain the program. The Makefile will use `godep` to ensure that the builds are
   - Also upload the zipped binaries manually to Github so people can easily download them
 - Update the [themekit](http://themekit.cat) website
   - `git checkout gh-pages && pushd nanoc`
+  - Do changes to markdown / stylesheet files within `nanoc`
   - `nanoc compile && popd`
   - `git add . && git commit -m "Updating website"`
   - `git push origin gh-pages`
