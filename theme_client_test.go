@@ -75,7 +75,9 @@ func TestProcessingAnEventsChannel(t *testing.T) {
 	}()
 
 	client := NewThemeClient(conf(ts))
-	done, messages := client.Process(stream)
+
+	done := make(chan bool)
+	messages := client.Process(stream, done)
 
 	go drain(messages)
 

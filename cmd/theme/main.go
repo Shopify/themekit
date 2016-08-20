@@ -45,7 +45,7 @@ var permittedCommands = map[string]string{
 type ArgsParser func(string, []string) commands.Args
 
 // Command maps command string names to Commands that return a done channel, that is closed when the command operations are complete
-type Command func(commands.Args) chan bool
+type Command func(commands.Args, chan bool)
 
 // CommandDefinition ...
 type CommandDefinition struct {
@@ -127,9 +127,12 @@ func main() {
 	args := commandDefinition.ArgsParser(command, rest)
 	args.EventLog = globalEventLog
 
-	done := commandDefinition.Command(args)
-	output := bufio.NewWriter(os.Stdout)
+	done := make(chan bool)
+	go func() {
+		commandDefinition.Command(args, done)
+	}()
 
+	output := bufio.NewWriter(os.Stdout)
 	timeout := themekit.DefaultTimeout
 
 	if args.ThemeClient.GetConfiguration().Timeout != 0*time.Second {
@@ -137,7 +140,9 @@ func main() {
 	}
 
 	go consumeEventLog(output, commandDefinition, timeout, done)
+
 	<-done
+	time.Sleep(50 * time.Millisecond)
 	output.Flush()
 }
 

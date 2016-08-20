@@ -44,7 +44,7 @@ func IsNewReleaseAvailable() bool {
 }
 
 // UpdateCommand ... TODO
-func UpdateCommand(args Args) chan bool {
+func UpdateCommand(args Args, done chan bool) {
 	latestRelease, err := downloadReleaseForPlatform()
 	if err == nil {
 		if latestRelease.IsApplicable() {
@@ -53,9 +53,7 @@ func UpdateCommand(args Args) chan bool {
 			themekit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
 		}
 	}
-	done := make(chan bool)
 	close(done)
-	return done
 }
 
 func downloadReleaseForPlatform() (release, error) {

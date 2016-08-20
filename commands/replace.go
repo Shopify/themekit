@@ -8,12 +8,11 @@ import (
 )
 
 // ReplaceCommand overwrite theme file(s)
-func ReplaceCommand(args Args) chan bool {
+func ReplaceCommand(args Args, done chan bool)  {
 	rawEvents, throttledEvents := prepareChannel(args)
-	done, logs := args.ThemeClient.Process(throttledEvents)
+	logs := args.ThemeClient.Process(throttledEvents, done)
 	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{logs})
 	enqueueEvents(args.ThemeClient, args.Filenames, rawEvents)
-	return done
 }
 
 func enqueueEvents(client themekit.ThemeClient, filenames []string, events chan themekit.AssetEvent) {

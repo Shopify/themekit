@@ -7,9 +7,7 @@ import (
 )
 
 // VersionCommand ...
-func VersionCommand(args Args) chan bool {
+func VersionCommand(args Args, done chan bool) {
 	fmt.Println("Theme Kit", themekit.ThemeKitVersion)
-	done := make(chan bool)
 	close(done)
-	return done
 }

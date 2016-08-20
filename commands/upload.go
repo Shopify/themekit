@@ -11,28 +11,28 @@ import (
 )
 
 // UploadCommand add file(s) to theme
-func UploadCommand(args Args) chan bool {
-	files := make(chan themekit.AssetEvent)
+func UploadCommand(args Args, done chan bool)  {
 	args.Filenames = extractFilenames(args, args.Filenames)
-	go ReadAndPrepareFiles(args, files)
+	syncAssetEvents := ReadAndPrepareFilesSync(args)
 
-	done, events := args.ThemeClient.Process(files)
-	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{events})
-	return done
+	go func() {
+		args.ThemeClient.ProcessSync(syncAssetEvents, args.EventLog)
+		done <- true
+	}()
 }
 
-// ReadAndPrepareFiles ... TODO
-func ReadAndPrepareFiles(args Args, results chan themekit.AssetEvent) {
+// ReadAndPrepareFilesSync ... TODO
+func ReadAndPrepareFilesSync(args Args) (results []themekit.AssetEvent) {
 	for _, filename := range args.Filenames {
 		asset, err := loadAsset(args, filename)
 
 		if err == nil {
-			results <- themekit.NewUploadEvent(asset)
+			results = append(results, themekit.NewUploadEvent(asset))
 		} else if err.Error() != "File is a directory" {
 			themekit.NotifyError(err)
 		}
 	}
-	close(results)
+	return
 }
 
 func loadAsset(args Args, filename string) (asset theme.Asset, err error) {

@@ -37,7 +37,7 @@ const (
 	// DefaultConcurrency ... TODO
 	DefaultConcurrency int = 2
 	// DefaultTimeout ... TODO
-	DefaultTimeout time.Duration = 10 * time.Second
+	DefaultTimeout time.Duration = 30 * time.Second
 )
 
 // LoadConfiguration ... TODO
