@@ -12,15 +12,13 @@ import (
 )
 
 // ConfigureCommand creates a configuration file
-func ConfigureCommand(args Args) chan bool {
+func ConfigureCommand(args Args, done chan bool) {
 	if err := args.ConfigurationErrors(); err != nil {
 		themekit.NotifyError(err)
 	}
 
 	Configure(args)
-	done := make(chan bool)
 	close(done)
-	return done
 }
 
 // Configure ... TODO
