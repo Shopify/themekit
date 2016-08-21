@@ -16,7 +16,7 @@ func UploadCommand(args Args, done chan bool)  {
 	syncAssetEvents := ReadAndPrepareFilesSync(args)
 
 	go func() {
-		args.ThemeClient.ProcessSync(syncAssetEvents, args.EventLog)
+		args.ThemeClient.ProcessSync(syncAssetEvents)
 		done <- true
 	}()
 }
@@ -29,7 +29,7 @@ func ReadAndPrepareFilesSync(args Args) (results []themekit.AssetEvent) {
 		if err == nil {
 			results = append(results, themekit.NewUploadEvent(asset))
 		} else if err.Error() != "File is a directory" {
-			themekit.NotifyError(err)
+			args.Console.WriteFatalError(err)
 		}
 	}
 	return

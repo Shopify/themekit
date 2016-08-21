@@ -107,6 +107,8 @@ func writeToDisk(asset theme.Asset, eventLog chan themekit.ThemeEvent) {
 	}
 }
 
+// TODO do version of this that doesn't do channel stuff
+// TODO generally, just leave DownloadCommand until last
 func handleError(filename string, err error, eventLog chan themekit.ThemeEvent) {
 	if nonFatal, ok := err.(themekit.NonFatalNetworkError); ok {
 		event := basicEvent{

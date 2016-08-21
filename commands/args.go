@@ -13,6 +13,7 @@ import (
 
 // Args is a struct containing fields, set via CLI args, that are used by various themekit Commands
 type Args struct {
+	Console      *themekit.Console
 	EventLog     chan themekit.ThemeEvent
 	Environments themekit.Environments
 	ThemeClient  themekit.ThemeClient

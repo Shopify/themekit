@@ -11,6 +11,7 @@ import (
 	"github.com/inconshreveable/go-update"
 )
 
+// TKVersion ... TODO
 var TKVersion = Version{Major: 0, Minor: 4, Patch: 3}
 
 // ThemeKitVersion ... TODO

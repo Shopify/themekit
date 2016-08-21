@@ -10,19 +10,22 @@ import (
 
 // RemoveCommand removes file(s) from theme
 func RemoveCommand(args Args, done chan bool)  {
-	events := make(chan themekit.AssetEvent)
-	logs := args.ThemeClient.Process(events, done)
+	// events := make(chan themekit.AssetEvent)
+	// logs := args.ThemeClient.ProcessSync(events)
 
-	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{logs})
+	// mergeEvents(args.EventLog, []chan themekit.ThemeEvent{logs})
 
-	go func() {
+	// events := []themekit.SimpleAssetEvent
+	// go func() {
 		for _, filename := range args.Filenames {
 			asset := theme.Asset{Key: filename}
-			events <- themekit.NewRemovalEvent(asset)
+			event := themekit.NewRemovalEvent(asset)
+			args.ThemeClient.ProcessSync([]themekit.AssetEvent{event})
 			removeFile(filename)
 		}
-		close(events)
-	}()
+		done <- true
+		// close(events)
+	// }()
 }
 
 func removeFile(filename string) error {

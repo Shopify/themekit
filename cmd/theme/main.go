@@ -66,7 +66,7 @@ var commandDefinitions = map[string]CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.DownloadCommand,
 		PermitsZeroArgs: true,
-		TimesOut:        true,
+		TimesOut:        false,
 	},
 	"remove": CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
@@ -128,10 +128,6 @@ func main() {
 	args.EventLog = globalEventLog
 
 	done := make(chan bool)
-	go func() {
-		commandDefinition.Command(args, done)
-	}()
-
 	output := bufio.NewWriter(os.Stdout)
 	timeout := themekit.DefaultTimeout
 
@@ -139,10 +135,22 @@ func main() {
 		timeout = args.ThemeClient.GetConfiguration().Timeout
 	}
 
+	args.Console = new(themekit.Console)
+	args.Console.Initialize()
+	args.ThemeClient.Console = args.Console
+
+	go func() {
+		commandDefinition.Command(args, done)
+
+		if commandDefinition.TimesOut {
+			args.Console.HandleTimeout(timeout, done)
+		}
+	}()
+
 	go consumeEventLog(output, commandDefinition, timeout, done)
 
 	<-done
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond) // TODO remove
 	output.Flush()
 }
 

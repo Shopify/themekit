@@ -23,7 +23,7 @@ type HaltExecutionReporter struct{}
 func (n nullReporter) Report(e error) {}
 
 // Report ... TODO
-func (c ConsoleReporter) Report(e error) {
+func (c ConsoleReporter) report(e error) {
 	fmt.Println(RedText(e.Error()))
 }
 
@@ -31,7 +31,7 @@ func (c ConsoleReporter) Report(e error) {
 func (h HaltExecutionReporter) Report(e error) {
 	c := ConsoleReporter{}
 	libraryInfo := fmt.Sprintf("%s%s%s", MessageSeparator, LibraryInfo(), MessageSeparator)
-	c.Report(errors.New(libraryInfo))
+	c.report(errors.New(libraryInfo))
 	log.Fatal(e)
 }
 
