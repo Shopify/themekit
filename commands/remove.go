@@ -9,9 +9,9 @@ import (
 )
 
 // RemoveCommand removes file(s) from theme
-func RemoveCommand(args Args) chan bool {
+func RemoveCommand(args Args, done chan bool)  {
 	events := make(chan themekit.AssetEvent)
-	done, logs := args.ThemeClient.Process(events)
+	logs := args.ThemeClient.Process(events, done)
 
 	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{logs})
 
@@ -23,8 +23,6 @@ func RemoveCommand(args Args) chan bool {
 		}
 		close(events)
 	}()
-
-	return done
 }
 
 func removeFile(filename string) error {

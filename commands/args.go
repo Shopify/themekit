@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Shopify/themekit"
 	"github.com/Shopify/themekit/bucket"
@@ -30,6 +31,7 @@ type Args struct {
 	BucketSize   int
 	RefillRate   int
 	Bucket       *bucket.LeakyBucket
+	Timeout      time.Duration
 
 	WorkingDirGetter WorkingDirGetterType
 }
@@ -45,6 +47,7 @@ func DefaultArgs() Args {
 		Environment:      themekit.DefaultEnvironment,
 		BucketSize:       themekit.DefaultBucketSize,
 		RefillRate:       themekit.DefaultRefillRate,
+		Timeout:          themekit.DefaultTimeout,
 		WorkingDirGetter: os.Getwd,
 	}
 }
@@ -60,11 +63,12 @@ func (args Args) DefaultConfigurationOptions() themekit.Configuration {
 	}
 
 	return themekit.Configuration{
-		Domain:     args.Domain,
-		Password:   accessToken,
-		BucketSize: args.BucketSize,
-		RefillRate: args.RefillRate,
-		ThemeID:    args.ThemeID,
+		Domain:      args.Domain,
+		AccessToken: accessToken,
+		Password:    accessToken,
+		BucketSize:  args.BucketSize,
+		RefillRate:  args.RefillRate,
+		Timeout:     args.Timeout,
 	}
 }
 

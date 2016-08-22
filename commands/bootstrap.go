@@ -19,16 +19,14 @@ const (
 )
 
 // BootstrapCommand bootstraps a new theme using Shopify Timber
-func BootstrapCommand(args Args) chan bool {
-	done := make(chan bool)
+func BootstrapCommand(args Args, done chan bool) {
 	go func() {
-		doneCh := doBootstrap(args)
-		done <- <-doneCh
+		doBootstrap(args, done)
+		close(done)
 	}()
-	return done
 }
 
-func doBootstrap(args Args) chan bool {
+func doBootstrap(args Args, done chan bool) {
 	pwd, _ := os.Getwd()
 	if pwd != args.Directory {
 		os.Chdir(args.Directory)
@@ -37,9 +35,7 @@ func doBootstrap(args Args) chan bool {
 	zipLocation, err := zipPathForVersion(args.Version)
 	if err != nil {
 		themekit.NotifyError(err)
-		done := make(chan bool)
 		close(done)
-		return done
 	}
 
 	name := "Timber-" + args.Version
@@ -58,9 +54,7 @@ func doBootstrap(args Args) chan bool {
 	downloadOptions.ThemeClient = clientForNewTheme
 	downloadOptions.EventLog = args.EventLog
 
-	done := DownloadCommand(downloadOptions)
-
-	return done
+	DownloadCommand(downloadOptions, done)
 }
 
 func zipPath(version string) string {

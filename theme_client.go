@@ -232,9 +232,18 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 	return NewThemeClient(config), log
 }
 
+// ProcessSync ... TODO
+func (t ThemeClient) ProcessSync(events []AssetEvent, eventLog chan ThemeEvent) bool {
+	for _, event := range events {
+		eventLog <- t.Perform(event)
+	}
+
+	return true
+}
+
 // Process ... TODO
-func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan ThemeEvent) {
-	done = make(chan bool)
+func (t ThemeClient) Process(events chan AssetEvent, done chan bool) (messages chan ThemeEvent) {
+	// done = make(chan bool)
 	messages = make(chan ThemeEvent)
 	go func() {
 		for {
