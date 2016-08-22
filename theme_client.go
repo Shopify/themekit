@@ -25,6 +25,7 @@ type ThemeClient struct {
 	config     Configuration
 	httpClient *http.Client
 	filter     EventFilter
+	Console    *Console
 }
 
 type apiResponse struct {
@@ -232,9 +233,18 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 	return NewThemeClient(config), log
 }
 
+// ProcessSync ... TODO
+func (t ThemeClient) ProcessSync(events []AssetEvent) {
+	for _, event := range events {
+		t.Console.Write(fmt.Sprintf("%s", t.Perform(event)))
+	}
+
+	return
+}
+
 // Process ... TODO
-func (t ThemeClient) Process(events chan AssetEvent) (done chan bool, messages chan ThemeEvent) {
-	done = make(chan bool)
+func (t ThemeClient) Process(events chan AssetEvent, done chan bool) (messages chan ThemeEvent) {
+	// done = make(chan bool)
 	messages = make(chan ThemeEvent)
 	go func() {
 		for {

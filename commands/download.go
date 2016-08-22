@@ -11,8 +11,7 @@ import (
 )
 
 // DownloadCommand downloads file(s) from theme
-func DownloadCommand(args Args) (done chan bool) {
-	done = make(chan bool)
+func DownloadCommand(args Args, done chan bool) {
 	eventLog := args.EventLog
 
 	if len(args.Filenames) <= 0 {
@@ -22,8 +21,6 @@ func DownloadCommand(args Args) (done chan bool) {
 	} else {
 		go downloadFiles(args.ThemeClient.Asset, args.Filenames, done, eventLog)
 	}
-
-	return done
 }
 
 func downloadAllFiles(assets chan theme.Asset, done chan bool, eventLog chan themekit.ThemeEvent) {
@@ -110,6 +107,8 @@ func writeToDisk(asset theme.Asset, eventLog chan themekit.ThemeEvent) {
 	}
 }
 
+// TODO do version of this that doesn't do channel stuff
+// TODO generally, just leave DownloadCommand until last
 func handleError(filename string, err error, eventLog chan themekit.ThemeEvent) {
 	if nonFatal, ok := err.(themekit.NonFatalNetworkError); ok {
 		event := basicEvent{

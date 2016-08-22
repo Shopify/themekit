@@ -12,7 +12,7 @@ import (
 )
 
 // TKVersion ... TODO
-var TKVersion = Version{Major: 0, Minor: 4, Patch: 2}
+var TKVersion = Version{Major: 0, Minor: 4, Patch: 3}
 
 // ThemeKitVersion ... TODO
 var ThemeKitVersion = TKVersion.String()

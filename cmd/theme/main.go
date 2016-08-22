@@ -45,13 +45,14 @@ var permittedCommands = map[string]string{
 type ArgsParser func(string, []string) commands.Args
 
 // Command maps command string names to Commands that return a done channel, that is closed when the command operations are complete
-type Command func(commands.Args) chan bool
+type Command func(commands.Args, chan bool)
 
 // CommandDefinition ...
 type CommandDefinition struct {
 	ArgsParser
 	Command
 	PermitsZeroArgs bool
+	TimesOut        bool
 }
 
 var commandDefinitions = map[string]CommandDefinition{
@@ -59,46 +60,55 @@ var commandDefinitions = map[string]CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.UploadCommand,
 		PermitsZeroArgs: true,
+		TimesOut:        true,
 	},
 	"download": CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.DownloadCommand,
 		PermitsZeroArgs: true,
+		TimesOut:        false,
 	},
 	"remove": CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.RemoveCommand,
 		PermitsZeroArgs: false,
+		TimesOut:        true,
 	},
 	"replace": CommandDefinition{
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.ReplaceCommand,
 		PermitsZeroArgs: true,
+		TimesOut:        true,
 	},
 	"watch": CommandDefinition{
 		ArgsParser:      watchArgsParser,
 		Command:         commands.WatchCommand,
 		PermitsZeroArgs: true,
+		TimesOut:        false,
 	},
 	"configure": CommandDefinition{
 		ArgsParser:      configurationArgsParser,
 		Command:         commands.ConfigureCommand,
 		PermitsZeroArgs: false,
+		TimesOut:        false,
 	},
 	"bootstrap": CommandDefinition{
 		ArgsParser:      bootstrapParser,
 		Command:         commands.BootstrapCommand,
 		PermitsZeroArgs: false,
+		TimesOut:        false,
 	},
 	"version": CommandDefinition{
 		ArgsParser:      noOpParser,
 		Command:         commands.VersionCommand,
 		PermitsZeroArgs: true,
+		TimesOut:        false,
 	},
 	"update": CommandDefinition{
 		ArgsParser:      noOpParser,
 		Command:         commands.UpdateCommand,
 		PermitsZeroArgs: true,
+		TimesOut:        false,
 	},
 }
 
@@ -114,32 +124,73 @@ func main() {
 	}
 
 	commandDefinition := commandDefinitions[command]
-
 	args := commandDefinition.ArgsParser(command, rest)
 	args.EventLog = globalEventLog
 
-	done := commandDefinition.Command(args)
+	done := make(chan bool)
 	output := bufio.NewWriter(os.Stdout)
+	timeout := themekit.DefaultTimeout
+
+	if args.ThemeClient.GetConfiguration().Timeout != 0*time.Second {
+		timeout = args.ThemeClient.GetConfiguration().Timeout
+	}
+
+	args.Console = new(themekit.Console)
+	args.Console.Initialize()
+	args.ThemeClient.Console = args.Console
+
 	go func() {
-		ticked := false
-		for {
-			select {
-			case event := <-globalEventLog:
-				if len(event.String()) > 0 {
-					output.WriteString(fmt.Sprintf("%s\n", event))
-					output.Flush()
-				}
-			case <-time.Tick(1000 * time.Millisecond):
-				if !ticked {
-					ticked = true
-					done <- true
-				}
-			}
+		commandDefinition.Command(args, done)
+
+		if commandDefinition.TimesOut {
+			args.Console.HandleTimeout(timeout, done)
 		}
 	}()
+
+	go consumeEventLog(output, commandDefinition, timeout, done)
+
 	<-done
-	<-done
+	time.Sleep(50 * time.Millisecond) // TODO remove
 	output.Flush()
+}
+
+var eventTicked bool
+
+func consumeEventLog(output *bufio.Writer, commandDef CommandDefinition, timeout time.Duration, done chan bool) {
+	for {
+		select {
+		case event := <-globalEventLog:
+			eventTick()
+
+			if len(event.String()) > 0 {
+				output.WriteString(fmt.Sprintf("%s\n", event))
+				output.Flush()
+			}
+		case <-time.Tick(timeout):
+			if !commandDef.TimesOut {
+				break
+			}
+
+			if !eventDidTick() {
+				fmt.Printf("Theme Kit timed out after %v seconds\n", timeout)
+				close(done)
+			}
+
+			resetEventTick()
+		}
+	}
+}
+
+func eventTick() {
+	eventTicked = true
+}
+
+func resetEventTick() {
+	eventTicked = false
+}
+
+func eventDidTick() bool {
+	return eventTicked == true
 }
 
 func commandDescription() string {
