@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -193,8 +194,15 @@ func commandDescription() string {
 		pos++
 	}
 
-	for cmd, desc := range permittedCommands {
-		commandDescription[pos] = fmt.Sprintf("    %s:\n        %s", cmd, desc)
+	commandNames := []string{}
+	for name, _ := range permittedCommands {
+		commandNames = append(commandNames, name)
+	}
+
+	sort.Strings(commandNames)
+
+	for _, commandName := range commandNames {
+		commandDescription[pos] = fmt.Sprintf("    %s:\n        %s", commandName, permittedCommands[commandName])
 		pos++
 	}
 
