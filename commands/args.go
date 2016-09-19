@@ -69,6 +69,7 @@ func (args Args) DefaultConfigurationOptions() themekit.Configuration {
 		BucketSize:  args.BucketSize,
 		RefillRate:  args.RefillRate,
 		Timeout:     args.Timeout,
+		ThemeID:     args.ThemeID,
 	}
 }
 
