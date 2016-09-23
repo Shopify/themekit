@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Shopify/themekit"
 	"github.com/Shopify/themekit/atom"
+	"github.com/Shopify/themekit/kit"
 )
 
 const (
@@ -34,7 +34,7 @@ func doBootstrap(args Args, done chan bool) {
 
 	zipLocation, err := zipPathForVersion(args.Version)
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 		close(done)
 	}
 
@@ -43,7 +43,7 @@ func doBootstrap(args Args, done chan bool) {
 		name = args.Prefix + "-" + name
 	}
 	clientForNewTheme, themeEvents := args.ThemeClient.CreateTheme(name, zipLocation)
-	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{themeEvents})
+	mergeEvents(args.EventLog, []chan kit.ThemeEvent{themeEvents})
 	if args.SetThemeID {
 		AddConfiguration(args.Directory, args.Environment, clientForNewTheme.GetConfiguration())
 	}
@@ -107,7 +107,7 @@ func findReleaseWith(feed atom.Feed, version string) (atom.Entry, error) {
 
 func buildInvalidVersionError(feed atom.Feed, version string) error {
 	buff := bytes.NewBuffer([]byte{})
-	buff.WriteString(themekit.RedText("Invalid Timber Version: " + version))
+	buff.WriteString(kit.RedText("Invalid Timber Version: " + version))
 	buff.WriteString("\nAvailable Versions Are:")
 	buff.WriteString("\n  - master")
 	buff.WriteString("\n  - latest")

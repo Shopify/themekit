@@ -4,7 +4,7 @@
 - If feature/bug is deemed valid then fork repo
 - Implement patch to resolve issue, include tests to prevent regressions/validate patch/be super awesome
 - Submit pull request and mention maintainers
-  - Current Maintainers: @ilikeorangutans, @chrisbutcher
+  - Current Maintainers: @ilikeorangutans, @chrisbutcher, @tanema
 
 # Pre-Requisites
 

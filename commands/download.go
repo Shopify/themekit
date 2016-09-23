@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 	"github.com/Shopify/themekit/theme"
 )
 
@@ -23,7 +23,7 @@ func DownloadCommand(args Args, done chan bool) {
 	}
 }
 
-func downloadAllFiles(assets chan theme.Asset, done chan bool, eventLog chan themekit.ThemeEvent) {
+func downloadAllFiles(assets chan theme.Asset, done chan bool, eventLog chan kit.ThemeEvent) {
 	for {
 		asset, more := <-assets
 		if more {
@@ -35,7 +35,7 @@ func downloadAllFiles(assets chan theme.Asset, done chan bool, eventLog chan the
 	}
 }
 
-func downloadFiles(retrievalFunction themekit.AssetRetrieval, filenames []string, done chan bool, eventLog chan themekit.ThemeEvent) {
+func downloadFiles(retrievalFunction kit.AssetRetrieval, filenames []string, done chan bool, eventLog chan kit.ThemeEvent) {
 	for _, filename := range filenames {
 		if asset, err := retrievalFunction(filename); err != nil {
 			handleError(filename, err, eventLog)
@@ -47,29 +47,29 @@ func downloadFiles(retrievalFunction themekit.AssetRetrieval, filenames []string
 	return
 }
 
-func writeToDisk(asset theme.Asset, eventLog chan themekit.ThemeEvent) {
+func writeToDisk(asset theme.Asset, eventLog chan kit.ThemeEvent) {
 	dir, err := os.Getwd()
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 		return
 	}
 
 	perms, err := os.Stat(dir)
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 		return
 	}
 
 	filename := fmt.Sprintf("%s/%s", dir, asset.Key)
 	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 		return
 	}
 
 	file, err := os.Create(filename)
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 		return
 	}
 	defer file.Sync()
@@ -82,7 +82,7 @@ func writeToDisk(asset theme.Asset, eventLog chan themekit.ThemeEvent) {
 	case len(asset.Attachment) > 0:
 		data, err = base64.StdEncoding.DecodeString(asset.Attachment)
 		if err != nil {
-			themekit.NotifyError(fmt.Errorf("Could not decode %s. error: %s", asset.Key, err))
+			kit.NotifyError(fmt.Errorf("Could not decode %s. error: %s", asset.Key, err))
 			return
 		}
 	}
@@ -92,7 +92,7 @@ func writeToDisk(asset theme.Asset, eventLog chan themekit.ThemeEvent) {
 	}
 
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 	} else {
 		event := basicEvent{
 			Title:     "FS Event",
@@ -100,15 +100,15 @@ func writeToDisk(asset theme.Asset, eventLog chan themekit.ThemeEvent) {
 			Target:    filename,
 			Etype:     "fsevent",
 			Formatter: func(b basicEvent) string {
-				return themekit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", b.Target))
+				return kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", b.Target))
 			},
 		}
 		logEvent(event, eventLog)
 	}
 }
 
-func handleError(filename string, err error, eventLog chan themekit.ThemeEvent) {
-	if nonFatal, ok := err.(themekit.NonFatalNetworkError); ok {
+func handleError(filename string, err error, eventLog chan kit.ThemeEvent) {
+	if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
 		event := basicEvent{
 			Title:     "Non-Fatal Network Error",
 			EventType: nonFatal.Verb,
@@ -117,9 +117,9 @@ func handleError(filename string, err error, eventLog chan themekit.ThemeEvent) 
 			Formatter: func(b basicEvent) string {
 				return fmt.Sprintf(
 					"[%s] Could not complete %s for %s",
-					themekit.RedText(fmt.Sprintf("%d", nonFatal.Code)),
-					themekit.YellowText(b.EventType),
-					themekit.BlueText(b.Target),
+					kit.RedText(fmt.Sprintf("%d", nonFatal.Code)),
+					kit.YellowText(b.EventType),
+					kit.BlueText(b.Target),
 				)
 			},
 		}

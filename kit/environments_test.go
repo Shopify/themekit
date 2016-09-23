@@ -1,4 +1,4 @@
-package themekit
+package kit
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const goodEnv string = "./fixtures/valid_config.yml"
-const badPatternEnv string = "./fixtures/bad_pattern_config.yml"
+const goodEnv string = "../fixtures/valid_config.yml"
+const badPatternEnv string = "../fixtures/bad_pattern_config.yml"
 
 func TestLoadingEnvironmentsFromAFile(t *testing.T) {
 	env, err := LoadEnvironmentsFromFile(goodEnv)

@@ -1,4 +1,4 @@
-package themekit
+package kit
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"sort"
 	"testing"
 
@@ -101,8 +100,7 @@ func TestRetrievingLocalAssets(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	client := NewThemeClient(conf(ts))
 
-	dir, _ := os.Getwd()
-	assets := client.LocalAssets(fmt.Sprintf("%s/fixtures/templates", dir))
+	assets := client.LocalAssets("../fixtures/templates")
 
 	assert.Equal(t, 1, len(assets))
 }
@@ -110,8 +108,7 @@ func TestRetrievingLocalAssets(t *testing.T) {
 func TestRetrievingLocalAssetsWithSubdirectories(t *testing.T) {
 	client := NewThemeClient(Configuration{})
 
-	dir, _ := os.Getwd()
-	assets := client.LocalAssets(fmt.Sprintf("%s/fixtures/local_assets", dir))
+	assets := client.LocalAssets("../fixtures/local_assets")
 
 	assert.Equal(t, 3, len(assets))
 }

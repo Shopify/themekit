@@ -5,13 +5,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 )
 
 // WatchCommand watches directories for changes, and updates the remote theme
 func WatchCommand(args Args, done chan bool) {
 	if isSingleEnvironment(args) {
-		args.ThemeClients = []themekit.ThemeClient{args.ThemeClient}
+		args.ThemeClients = []kit.ThemeClient{args.ThemeClient}
 	}
 
 	eventLog := args.EventLog
@@ -30,13 +30,13 @@ func isSingleEnvironment(args Args) bool {
 	return len(args.ThemeClients) == 0
 }
 
-func watchForChangesAndIssueWork(args Args, eventLog chan themekit.ThemeEvent) {
+func watchForChangesAndIssueWork(args Args, eventLog chan kit.ThemeEvent) {
 	client := args.ThemeClient
 	config := client.GetConfiguration()
 	bucket := client.LeakyBucket()
 	bucket.TopUp()
 
-	foreman := themekit.NewForeman(bucket)
+	foreman := kit.NewForeman(bucket)
 	foreman.OnIdle = func() {
 		if len(args.NotifyFile) > 0 {
 			os.Create(args.NotifyFile)
@@ -53,7 +53,7 @@ func watchForChangesAndIssueWork(args Args, eventLog chan themekit.ThemeEvent) {
 	}
 }
 
-func spawnWorker(workerName string, queue chan themekit.AssetEvent, client themekit.ThemeClient, eventLog chan themekit.ThemeEvent) {
+func spawnWorker(workerName string, queue chan kit.AssetEvent, client kit.ThemeClient, eventLog chan kit.ThemeEvent) {
 	logEvent(workerSpawnEvent(workerName), eventLog)
 	for {
 		asset := <-queue
@@ -66,8 +66,8 @@ func spawnWorker(workerName string, queue chan themekit.AssetEvent, client theme
 				Formatter: func(b basicEvent) string {
 					return fmt.Sprintf(
 						"Received %s event on %s",
-						themekit.GreenText(b.EventType),
-						themekit.BlueText(b.Target),
+						kit.GreenText(b.EventType),
+						kit.BlueText(b.Target),
 					)
 				},
 			}
@@ -77,16 +77,16 @@ func spawnWorker(workerName string, queue chan themekit.AssetEvent, client theme
 	}
 }
 
-func constructFileWatcher(dir string, config themekit.Configuration) chan themekit.AssetEvent {
-	filter := themekit.NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores)
-	watcher, err := themekit.NewFileWatcher(dir, true, filter)
+func constructFileWatcher(dir string, config kit.Configuration) chan kit.AssetEvent {
+	filter := kit.NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores)
+	watcher, err := kit.NewFileWatcher(dir, true, filter)
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 	}
 	return watcher
 }
 
-func workerSpawnEvent(workerName string) themekit.ThemeEvent {
+func workerSpawnEvent(workerName string) kit.ThemeEvent {
 	return basicEvent{
 		Title:     "Worker",
 		Target:    workerName,

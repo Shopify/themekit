@@ -23,7 +23,7 @@ debug: # Example: 'make debug ARGS="version" or 'make debug ARGS="remove templat
 
 test: ## Run all tests
 	go test -v -race \
-	github.com/Shopify/themekit \
+	github.com/Shopify/themekit/kit \
 	github.com/Shopify/themekit/atom \
 	github.com/Shopify/themekit/bucket \
 	github.com/Shopify/themekit/commands \

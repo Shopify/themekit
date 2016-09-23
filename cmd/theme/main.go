@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/themekit"
 	"github.com/Shopify/themekit/commands"
+	"github.com/Shopify/themekit/kit"
 )
 
 const banner string = "----------------------------------------"
@@ -23,7 +23,7 @@ const updateAvailableMessage string = `| An update for Theme Kit is available |
 |                                      |
 | theme update                         |`
 
-var globalEventLog chan themekit.ThemeEvent
+var globalEventLog chan kit.ThemeEvent
 
 var commandDescriptionPrefix = []string{
 	"Usage: theme <operation> [<additional arguments> ...]",
@@ -134,7 +134,7 @@ func main() {
 	}()
 
 	output := bufio.NewWriter(os.Stdout)
-	timeout := themekit.DefaultTimeout
+	timeout := kit.DefaultTimeout
 
 	if args.ThemeClient.GetConfiguration().Timeout != 0*time.Second {
 		timeout = args.ThemeClient.GetConfiguration().Timeout
@@ -210,17 +210,17 @@ func commandDescription() string {
 }
 
 func setupErrorReporter() {
-	themekit.SetErrorReporter(themekit.HaltExecutionReporter{})
+	kit.SetErrorReporter(kit.HaltExecutionReporter{})
 }
 
 func setupGlobalEventLog() {
-	globalEventLog = make(chan themekit.ThemeEvent)
+	globalEventLog = make(chan kit.ThemeEvent)
 }
 
 func checkForUpdate() {
 	if commands.IsNewReleaseAvailable() {
 		message := fmt.Sprintf("%s\n%s\n%s", banner, updateAvailableMessage, banner)
-		fmt.Println(themekit.YellowText(message))
+		fmt.Println(kit.YellowText(message))
 	}
 }
 
@@ -233,7 +233,7 @@ func fileManipulationArgsParser(cmd string, rawArgs []string) commands.Args {
 	currentDir, _ := os.Getwd()
 
 	set := makeFlagSet(cmd)
-	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment to run command")
+	set.StringVar(&args.Environment, "env", kit.DefaultEnvironment, "environment to run command")
 	set.StringVar(&args.Directory, "dir", currentDir, "directory that config.yml is located")
 	set.Parse(rawArgs)
 
@@ -248,7 +248,7 @@ func watchArgsParser(cmd string, rawArgs []string) commands.Args {
 	var allEnvironments bool
 
 	set := makeFlagSet(cmd)
-	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment to run command")
+	set.StringVar(&args.Environment, "env", kit.DefaultEnvironment, "environment to run command")
 	set.BoolVar(&allEnvironments, "allenvs", false, "start watchers for all environments")
 	set.StringVar(&args.Directory, "dir", currentDir, "directory that config.yml is located")
 	set.StringVar(&args.NotifyFile, "notify", "", "file to touch when workers have gone idle")
@@ -274,13 +274,13 @@ func configurationArgsParser(cmd string, rawArgs []string) commands.Args {
 
 	set := makeFlagSet(cmd)
 	set.StringVar(&args.Directory, "dir", currentDir, "directory to create config.yml")
-	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment for this configuration")
+	set.StringVar(&args.Environment, "env", kit.DefaultEnvironment, "environment for this configuration")
 	set.StringVar(&args.Domain, "domain", "", "your myshopify domain")
 	set.StringVar(&args.ThemeID, "theme_id", "", "your theme's id (i.e. https://<your shop>.myshopify.com/admin/themes/<theme_id>/)")
 	set.StringVar(&args.Password, "password", "", "password (or access token) to make successful API calls")
 	set.StringVar(&args.AccessToken, "access_token", "", "access_token to make successful API calls (optional, and soon to be deprecated in favour of 'password')")
-	set.IntVar(&args.BucketSize, "bucketSize", themekit.DefaultBucketSize, "leaky bucket capacity")
-	set.IntVar(&args.RefillRate, "refillRate", themekit.DefaultRefillRate, "leaky bucket refill rate / second")
+	set.IntVar(&args.BucketSize, "bucketSize", kit.DefaultBucketSize, "leaky bucket capacity")
+	set.IntVar(&args.RefillRate, "refillRate", kit.DefaultRefillRate, "leaky bucket refill rate / second")
 	set.Parse(rawArgs)
 
 	return args
@@ -293,7 +293,7 @@ func bootstrapParser(cmd string, rawArgs []string) commands.Args {
 	set := makeFlagSet(cmd)
 	set.StringVar(&args.Directory, "dir", currentDir, "location of config.yml")
 	set.BoolVar(&args.SetThemeID, "setid", true, "update config.yml with ID of created Theme")
-	set.StringVar(&args.Environment, "env", themekit.DefaultEnvironment, "environment to execute command")
+	set.StringVar(&args.Environment, "env", kit.DefaultEnvironment, "environment to execute command")
 	set.StringVar(&args.Version, "version", commands.LatestRelease, "version of Shopify Timber to use")
 	set.StringVar(&args.Prefix, "prefix", "", "prefix to the Timber theme being created")
 	set.Parse(rawArgs)
@@ -302,48 +302,48 @@ func bootstrapParser(cmd string, rawArgs []string) commands.Args {
 	return args
 }
 
-func loadThemeClient(directory, env string) themekit.ThemeClient {
+func loadThemeClient(directory, env string) kit.ThemeClient {
 	client, err := loadThemeClientWithRetry(directory, env, false)
 	handleError(err)
 	return client
 }
 
-func loadThemeClientWithRetry(directory, env string, isRetry bool) (themekit.ThemeClient, error) {
+func loadThemeClientWithRetry(directory, env string, isRetry bool) (kit.ThemeClient, error) {
 	environments, err := loadEnvironments(directory)
 	if err != nil {
-		return themekit.ThemeClient{}, err
+		return kit.ThemeClient{}, err
 	}
 	config, err := environments.GetConfiguration(env)
 	if err != nil && len(environments) > 0 {
 		invalidEnvMsg := fmt.Sprintf("'%s' is not a valid environment. The following environments are available within config.yml:", env)
-		fmt.Println(themekit.RedText(invalidEnvMsg))
+		fmt.Println(kit.RedText(invalidEnvMsg))
 		for e := range environments {
-			fmt.Println(themekit.RedText(fmt.Sprintf(" - %s", e)))
+			fmt.Println(kit.RedText(fmt.Sprintf(" - %s", e)))
 		}
 		os.Exit(1)
 	} else if err != nil && !isRetry {
-		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", themekit.DefaultEnvironment)
-		fmt.Println(themekit.YellowText(upgradeMessage))
+		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", kit.DefaultEnvironment)
+		fmt.Println(kit.YellowText(upgradeMessage))
 		confirmationfn, savefn := commands.PrepareConfigurationMigration(directory)
 
 		if confirmationfn() && savefn() == nil {
 			return loadThemeClientWithRetry(directory, env, true)
 		}
 
-		return themekit.ThemeClient{}, errors.New("loadThemeClientWithRetry: could not load or migrate the configuration")
+		return kit.ThemeClient{}, errors.New("loadThemeClientWithRetry: could not load or migrate the configuration")
 	} else if err != nil {
-		return themekit.ThemeClient{}, err
+		return kit.ThemeClient{}, err
 	}
 
 	if len(config.AccessToken) > 0 {
 		fmt.Println("DEPRECATION WARNING: 'access_token' (in conf.yml) will soon be deprecated. Use 'password' instead, with the same Password value obtained from https://<your-subdomain>.myshopify.com/admin/apps/private/<app_id>")
 	}
 
-	return themekit.NewThemeClient(config), nil
+	return kit.NewThemeClient(config), nil
 }
 
-func loadEnvironments(directory string) (themekit.Environments, error) {
-	return themekit.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
+func loadEnvironments(directory string) (kit.Environments, error) {
+	return kit.LoadEnvironmentsFromFile(filepath.Join(directory, "config.yml"))
 }
 
 func setupAndParseArgs(args []string) (command string, rest []string) {
@@ -391,7 +391,7 @@ func verifyCommand(command string, args []string) {
 
 	if len(errors) > 0 {
 		errorMessage := fmt.Sprintf("Invalid Invocation!\n%s", strings.Join(errors, "\n"))
-		fmt.Println(themekit.RedText(errorMessage))
+		fmt.Println(kit.RedText(errorMessage))
 		setupAndParseArgs([]string{"--help"})
 		os.Exit(1)
 	}
@@ -414,5 +414,5 @@ func handleError(err error) {
 	} else if strings.Contains(err.Error(), "no such file or directory") {
 		err = fmt.Errorf("configuration error: %s", err)
 	}
-	themekit.NotifyErrorImmediately(err)
+	kit.NotifyErrorImmediately(err)
 }

@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 )
 
 // ConfigureCommand creates a configuration file
 func ConfigureCommand(args Args, done chan bool) {
 	if err := args.ConfigurationErrors(); err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 	}
 
 	Configure(args)
@@ -34,23 +34,23 @@ func Configure(args Args) {
 }
 
 // AddConfiguration ... TODO
-func AddConfiguration(dir, environment string, config themekit.Configuration) {
+func AddConfiguration(dir, environment string, config kit.Configuration) {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)
 	env.SetConfiguration(environment, config)
 
 	err = env.Save(environmentLocation)
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 	}
 }
 
 // MigrateConfigurationCommand ... TODO
-func MigrateConfigurationCommand(args Args) (done chan bool, log chan themekit.ThemeEvent) {
+func MigrateConfigurationCommand(args Args) (done chan bool, log chan kit.ThemeEvent) {
 	MigrateConfiguration(args.Directory)
 
 	done = make(chan bool)
-	log = make(chan themekit.ThemeEvent)
+	log = make(chan kit.ThemeEvent)
 	close(done)
 	close(log)
 	return
@@ -61,18 +61,18 @@ func PrepareConfigurationMigration(dir string) (func() bool, func() error) {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 		return func() bool { return false }, func() error { return err }
 	}
 
 	confirmationFn := func() bool {
 		before, _ := ioutil.ReadFile(environmentLocation)
 		after := env.String()
-		fmt.Println(themekit.YellowText("Compare changes to configuration:"))
-		fmt.Println(themekit.YellowText("Before:\n"), themekit.GreenText(string(before)))
-		fmt.Println(themekit.YellowText("After:\n"), themekit.RedText(after))
+		fmt.Println(kit.YellowText("Compare changes to configuration:"))
+		fmt.Println(kit.YellowText("Before:\n"), kit.GreenText(string(before)))
+		fmt.Println(kit.YellowText("After:\n"), kit.RedText(after))
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Println(themekit.YellowText("Does this look correct? (y/n)"))
+		fmt.Println(kit.YellowText("Does this look correct? (y/n)"))
 		text, _ := reader.ReadString('\n')
 		return strings.TrimSpace(text) == "y"
 	}
@@ -88,7 +88,7 @@ func MigrateConfiguration(dir string) error {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)
 	if err != nil {
-		themekit.NotifyError(err)
+		kit.NotifyError(err)
 		return err
 	}
 
@@ -96,21 +96,21 @@ func MigrateConfiguration(dir string) error {
 	return err
 }
 
-func loadOrInitializeEnvironment(location string) (themekit.Environments, error) {
+func loadOrInitializeEnvironment(location string) (kit.Environments, error) {
 	contents, err := ioutil.ReadFile(location)
 	if err != nil {
-		return themekit.Environments{}, err
+		return kit.Environments{}, err
 	}
 
-	env, err := themekit.LoadEnvironments(contents)
+	env, err := kit.LoadEnvironments(contents)
 
 	if err != nil && !canProcessWithError(err) {
 		return env, err
 	}
 
 	if err != nil || len(env) <= 0 {
-		conf, _ := themekit.LoadConfiguration(contents)
-		env[themekit.DefaultEnvironment] = conf
+		conf, _ := kit.LoadConfiguration(contents)
+		env[kit.DefaultEnvironment] = conf
 	}
 	return env, err
 }

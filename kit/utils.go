@@ -1,4 +1,4 @@
-package themekit
+package kit
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ func TestFixture(name string) string {
 
 // RawTestFixture ... TODO
 func RawTestFixture(name string) []byte {
-	path := fmt.Sprintf("fixtures/%s.json", name)
+	path := fmt.Sprintf("../fixtures/%s.json", name)
 	file, err := os.Open(path)
 	defer file.Close()
 	if err != nil {

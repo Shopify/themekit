@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 	"github.com/Shopify/themekit/theme"
 )
 
 // UploadCommand add file(s) to theme
-func UploadCommand(args Args, done chan bool)  {
+func UploadCommand(args Args, done chan bool) {
 	args.Filenames = extractFilenames(args, args.Filenames)
 	syncAssetEvents := ReadAndPrepareFilesSync(args)
 
@@ -22,14 +22,14 @@ func UploadCommand(args Args, done chan bool)  {
 }
 
 // ReadAndPrepareFilesSync ... TODO
-func ReadAndPrepareFilesSync(args Args) (results []themekit.AssetEvent) {
+func ReadAndPrepareFilesSync(args Args) (results []kit.AssetEvent) {
 	for _, filename := range args.Filenames {
 		asset, err := loadAsset(args, filename)
 
 		if err == nil {
-			results = append(results, themekit.NewUploadEvent(asset))
+			results = append(results, kit.NewUploadEvent(asset))
 		} else if err.Error() != "File is a directory" {
-			themekit.NotifyError(err)
+			kit.NotifyError(err)
 		}
 	}
 	return
