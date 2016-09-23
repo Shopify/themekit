@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// Foreman ... TODO
+// Foreman is a job queueing processor using a LeakyBucket throttler.
 type Foreman struct {
 	leakyBucket *LeakyBucket
 	halt        chan bool
@@ -13,7 +13,7 @@ type Foreman struct {
 	OnIdle      func()
 }
 
-// NewForeman ... TODO
+// NewForeman will return a new Foreman using the bucket for throttling.
 func NewForeman(leakyBucket *LeakyBucket) Foreman {
 	return Foreman{
 		leakyBucket: leakyBucket,
@@ -24,7 +24,9 @@ func NewForeman(leakyBucket *LeakyBucket) Foreman {
 	}
 }
 
-// IssueWork ... TODO
+// IssueWork start the Foreman processing jobs that are in it's queue. It will call
+// OnIdle every second when there is no jobs to process. If there are jobs in the queue
+// then it will make sure there is a worker to process it from the bucket.
 func (f Foreman) IssueWork() {
 	f.leakyBucket.StartDripping()
 	go func() {
@@ -34,10 +36,7 @@ func (f Foreman) IssueWork() {
 			case job := <-f.JobQueue:
 				f.leakyBucket.GetDrop()
 				notifyProcessed = true
-				// TODO: this was a potential aliasing issue!
-				go func(jobToAdd AssetEvent) {
-					f.WorkerQueue <- jobToAdd
-				}(job)
+				f.WorkerQueue <- job
 			case <-f.halt:
 				return
 			case <-time.Tick(1 * time.Second):
@@ -50,7 +49,7 @@ func (f Foreman) IssueWork() {
 	}()
 }
 
-// Halt ... TODO
+// Halt stops the Foreman from processing jobs in its queue.
 func (f Foreman) Halt() {
 	f.leakyBucket.StopDripping()
 	go func() {
