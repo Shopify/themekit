@@ -88,10 +88,11 @@ func (a APIAssetEvent) String() string {
 		)
 	} else if a.Code == 422 {
 		return RedText(fmt.Sprintf("Could not upload %s:\n\t%s", a.AssetKey, a.err))
-	} else if a.Code == 403 {
+	} else if a.Code == 403 || a.Code == 401 {
 		return fmt.Sprintf(
-			"[%s]Cannot remove files that would make a theme invalid. %s",
+			"[%s]Insufficient permissions to perform %s to %s",
 			RedText(fmt.Sprintf("%d", a.Code)),
+			YellowText(a.EventType),
 			BlueText(a.AssetKey),
 		)
 	} else if a.Code == 404 {
