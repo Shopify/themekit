@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Shopify/themekit/bucket"
 	"github.com/Shopify/themekit/theme"
 )
 
@@ -86,8 +85,8 @@ func (t ThemeClient) GetConfiguration() Configuration {
 }
 
 // LeakyBucket ... TODO
-func (t ThemeClient) LeakyBucket() *bucket.LeakyBucket {
-	return bucket.NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
+func (t ThemeClient) LeakyBucket() *LeakyBucket {
+	return NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
 }
 
 // AssetList ... TODO

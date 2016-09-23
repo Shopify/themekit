@@ -2,13 +2,11 @@ package kit
 
 import (
 	"time"
-
-	"github.com/Shopify/themekit/bucket"
 )
 
 // Foreman ... TODO
 type Foreman struct {
-	leakyBucket *bucket.LeakyBucket
+	leakyBucket *LeakyBucket
 	halt        chan bool
 	JobQueue    chan AssetEvent
 	WorkerQueue chan AssetEvent
@@ -16,7 +14,7 @@ type Foreman struct {
 }
 
 // NewForeman ... TODO
-func NewForeman(leakyBucket *bucket.LeakyBucket) Foreman {
+func NewForeman(leakyBucket *LeakyBucket) Foreman {
 	return Foreman{
 		leakyBucket: leakyBucket,
 		halt:        make(chan bool),

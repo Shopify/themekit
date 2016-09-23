@@ -1,32 +1,29 @@
-package bucket
+package kit
 
 import (
 	"time"
 )
 
-// LeakyBucketConfiguration configures the size and refill rate of the bucket.
-type Configuration struct {
-	Size, Refill int
-	Duration     time.Duration
-}
-
 type LeakyBucket struct {
-	Configuration
+	Size        int
+	Refill      int
+	Duration    time.Duration
 	bucket      chan (bool)
 	stopFilling chan (bool)
 	ticker      *time.Ticker
 }
 
 func NewLeakyBucket(size, refill, duration int) *LeakyBucket {
-	return NewLeakyBucketWithConfiguration(Configuration{Size: size, Refill: refill, Duration: time.Duration(duration) * time.Second})
-}
+	dur := time.Duration(duration) * time.Second
 
-func NewLeakyBucketWithConfiguration(configuration Configuration) *LeakyBucket {
-	b := &LeakyBucket{Configuration: configuration}
-	b.bucket = make(chan bool, b.Size)
-	b.stopFilling = make(chan bool)
-	b.ticker = time.NewTicker(b.Duration)
-	return b
+	return &LeakyBucket{
+		Size:        size,
+		Refill:      refill,
+		Duration:    dur,
+		bucket:      make(chan bool, size),
+		stopFilling: make(chan bool),
+		ticker:      time.NewTicker(dur),
+	}
 }
 
 func (b *LeakyBucket) StartDripping() {

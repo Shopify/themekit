@@ -25,7 +25,6 @@ test: ## Run all tests
 	go test -v -race \
 	github.com/Shopify/themekit/kit \
 	github.com/Shopify/themekit/atom \
-	github.com/Shopify/themekit/bucket \
 	github.com/Shopify/themekit/commands \
 	github.com/Shopify/themekit/theme
 

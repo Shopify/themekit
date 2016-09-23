@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/themekit/bucket"
 	"github.com/Shopify/themekit/kit"
 )
 
@@ -30,7 +29,7 @@ type Args struct {
 	SetThemeID   bool
 	BucketSize   int
 	RefillRate   int
-	Bucket       *bucket.LeakyBucket
+	Bucket       *kit.LeakyBucket
 	Timeout      time.Duration
 
 	WorkingDirGetter WorkingDirGetterType
