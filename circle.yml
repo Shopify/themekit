@@ -1,6 +1,6 @@
 machine:
   environment:
-    GOPATH: "~/go"
+    GOPATH: "${HOME}/go"
     IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
     PROJECT_PATH: "$GOPATH/src/$IMPORT_PATH"
 
