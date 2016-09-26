@@ -51,10 +51,10 @@ linux: ## Build binaries for Linux (32 and 64 bit)
 	export GOOS=linux; $(MAKE) build32
 
 zip: ## Create zip file with distributable binaries
-	./compress
+	./scripts/compress
 
 upload_to_s3: ## Upload zip file with binaries to S3
-	./release
+	./scripts/release
 
 dist: clean windows mac linux zip upload_to_s3 ## Build binaries for all platforms, zip, and upload to S3
 
