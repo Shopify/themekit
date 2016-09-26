@@ -1,6 +1,7 @@
 # Theme Kit
 ## Shopify Theme Manipulation Utilities and Libraries
 [![Go Report Card](https://goreportcard.com/badge/github.com/shopify/themekit)](https://goreportcard.com/report/github.com/shopify/themekit)
+[![Build Status](https://circleci.com/gh/Shopify/themekit.png?circle-token=ac951910873cafaaf9c1be6049d2b9d3276eb2d4)](https://circleci.com/gh/Shopify/themekit)
 
 [Read more about it on the website](http://themekit.cat)
 
@@ -22,8 +23,7 @@ The library is very much a work in progress but includes a few core things:
 
 ## Downloads
 
-You can get your hands on a build for your system by checking out the [releases section](https://github.com/csaunders/themekit/releases).
-
+You can get your hands on a build for your system by checking out the [releases section](https://github.com/Shopify/themekit/releases).
 
 ## Contributing
 
