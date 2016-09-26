@@ -52,8 +52,8 @@ type APIAssetEvent struct {
 	AssetKey  string `json:"asset_key"`
 	EventType string `json:"event_type"`
 	Code      int    `json:"status_code"`
-	err       error  `json:"error,omitempty"` // TODO: err is unexported; json binding is not going to work
-	etype     string `json:"type"`            // TODO: same here, unexported, no json binding
+	err       error
+	etype     string
 }
 
 // NewAPIAssetEvent ... TODO
@@ -139,8 +139,8 @@ type APIThemeEvent struct {
 	ThemeID     int64  `json:"theme_id"`
 	Code        int    `json:"status_code"`
 	Previewable bool   `json:"previewable,omitempty"`
-	err         error  `json:"error,omitempty"` // err unexported
-	etype       string `json:"type"`            // etype unexported
+	err         error
+	etype       string
 }
 
 // NewAPIThemeEvent ... TODO
