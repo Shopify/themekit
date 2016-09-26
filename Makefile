@@ -22,11 +22,7 @@ debug: # Example: 'make debug ARGS="version" or 'make debug ARGS="remove templat
 	cd cmd/theme &&	godebug run -instrument=github.com/Shopify/themekit,github.com/Shopify/themekit/commands main.go $(ARGS)
 
 test: ## Run all tests
-	go test -v -race \
-	github.com/Shopify/themekit/kit \
-	github.com/Shopify/themekit/atom \
-	github.com/Shopify/themekit/commands \
-	github.com/Shopify/themekit/theme
+	go test -v -race ./kit ./atom ./commands ./theme
 
 clean: ## Remove all temporary build artifacts
 	rm -rf build/
