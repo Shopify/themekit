@@ -1,4 +1,5 @@
 SUBPROJECTS = theme
+PACKAGES = ./kit ./atom ./commands ./theme
 
 all:
 	for subproject in $(SUBPROJECTS); \
@@ -22,7 +23,10 @@ debug: # Example: 'make debug ARGS="version" or 'make debug ARGS="remove templat
 	cd cmd/theme &&	godebug run -instrument=github.com/Shopify/themekit,github.com/Shopify/themekit/commands main.go $(ARGS)
 
 test: ## Run all tests
-	godep go test -v -race ./kit ./atom ./commands ./theme
+	go test -v -race $(PACKAGES)
+
+vet:
+	go vet $(PACKAGES)
 
 clean: ## Remove all temporary build artifacts
 	rm -rf build/
