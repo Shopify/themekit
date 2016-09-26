@@ -10,8 +10,6 @@ dependencies:
     - rsync -azC --delete ./ "$PROJECT_PATH/"
 test:
   pre:
-    - cd $PROJECT_PATH
-    - make vet
+    - cd $PROJECT_PATH && make vet
   override:
-    - cd $PROJECT_PATH
-    - make test
+    - cd $PROJECT_PATH && make test
