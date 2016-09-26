@@ -1,21 +1,26 @@
 SUBPROJECTS = theme
 PACKAGES = ./kit ./atom ./commands ./theme
+OS = $(shell uname)
+UPX := $(shell command -v upx 3>/dev/null)
+# building smaller binaries and panics without confusing outputs
+# https://blog.filippo.io/shrink-your-go-binaries-with-this-one-weird-trick/
+build-bin = go build -ldflags="-s -w" -o $(1) $(2) && upx --brute $(1);
 
-all:
+all: install_upx
 	for subproject in $(SUBPROJECTS); \
 	do \
 		mkdir -p build/development; \
-	  godep go build -o build/development/$${subproject} github.com/Shopify/themekit/cmd/$${subproject}; \
+	  $(call build-bin,build/development/$${subproject},github.com/Shopify/themekit/cmd/$${subproject}) \
   done
 
 install: # Build and install the theme binary
-	godep go install github.com/Shopify/themekit/cmd/theme
+	go install github.com/Shopify/themekit/cmd/theme
 
-build:
+build: install_upx
 	for subproject in $(SUBPROJECTS); \
 	do \
 	  mkdir -p build/dist/${GOOS}-${GOARCH}; \
-		godep go build -o build/dist/${GOOS}-${GOARCH}/$${subproject}${EXT} github.com/Shopify/themekit/cmd/$${subproject}; \
+		$(call build-bin,build/dist/${GOOS}-${GOARCH}/$${subproject}${EXT},github.com/Shopify/themekit/cmd/$${subproject}) \
 	done
 
 
@@ -60,3 +65,12 @@ dist: clean windows mac linux zip upload_to_s3 ## Build binaries for all platfor
 
 help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+install_upx:
+ifndef UPX
+ifeq ($(OS), Darwin)
+	brew install upx
+else
+	sudo apt-get install upx-ucl
+endif
+endif
