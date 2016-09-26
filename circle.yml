@@ -1,3 +1,8 @@
+dependencies:
+  pre:
+    - go get github.com/tools/godep
 test:
+  pre:
+    - go vet ./...
   override:
     - make test
