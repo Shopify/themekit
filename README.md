@@ -23,8 +23,7 @@ The library is very much a work in progress but includes a few core things:
 
 ## Downloads
 
-You can get your hands on a build for your system by checking out the [releases section](https://github.com/csaunders/themekit/releases).
-
+You can get your hands on a build for your system by checking out the [releases section](https://github.com/Shopify/themekit/releases).
 
 ## Contributing
 
