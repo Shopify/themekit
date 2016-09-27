@@ -254,16 +254,20 @@ func watchArgsParser(cmd string, rawArgs []string) commands.Args {
 	set.StringVar(&args.NotifyFile, "notify", "", "file to touch when workers have gone idle")
 	set.Parse(rawArgs)
 
-	if len(args.Environment) != 0 && allEnvironments {
-		args.Environment = ""
+	if allEnvironments {
+		if environments, err := loadEnvironments(args.Directory); err == nil {
+			args.ThemeClients = make([]kit.ThemeClient, len(environments))
+			i := 0
+			for env, _ := range environments {
+				args.ThemeClients[i] = loadThemeClient(args.Directory, env)
+				i++
+			}
+		} else {
+			args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
+		}
+	} else {
+		args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
 	}
-
-	environments, err := loadEnvironments(args.Directory)
-	if allEnvironments && err == nil {
-		args.Environments = environments
-	}
-
-	args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
 
 	return args
 }
