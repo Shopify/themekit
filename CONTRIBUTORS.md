@@ -51,3 +51,4 @@ contain the program. The Makefile will use `godep` to ensure that the builds are
 - Chris Saunders <[Shopify](https://shopify.com)>
 - Jakob Külzer <[Shopify](https://shopify.com)>
 - Chris Butcher <[Shopify](https://shopify.com)>
+- Tim Anema <[Shopify](https://shopify.com)>
