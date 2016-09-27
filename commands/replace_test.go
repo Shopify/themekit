@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 	"github.com/Shopify/themekit/theme"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,25 +17,25 @@ func TestFullReplace(t *testing.T) {
 	data := []struct {
 		local          []theme.Asset
 		remote         []theme.Asset
-		expectedEvents []themekit.AssetEvent
+		expectedEvents []kit.AssetEvent
 		desc           string
 	}{
-		{[]theme.Asset{}, []theme.Asset{}, []themekit.AssetEvent{}, "Empty local and remote, no expected events"},
-		{[]theme.Asset{assetWithValue}, []theme.Asset{assetWithValue}, []themekit.AssetEvent{themekit.NewUploadEvent(assetWithValue)}, "Both local and remote are the same"},
-		{[]theme.Asset{assetWithValue}, []theme.Asset{}, []themekit.AssetEvent{themekit.NewUploadEvent(assetWithValue)}, "Only local asset exists"},
-		{[]theme.Asset{}, []theme.Asset{assetWithValue}, []themekit.AssetEvent{themekit.NewRemovalEvent(assetWithValue)}, "Asset exists only remotely"},
-		{[]theme.Asset{assetWithAttachment}, []theme.Asset{assetWithValue}, []themekit.AssetEvent{themekit.NewUploadEvent(assetWithValue)}, "Local asset has attachment, remote value"},
-		{[]theme.Asset{assetWithValue}, []theme.Asset{assetWithAttachment}, []themekit.AssetEvent{themekit.NewUploadEvent(assetWithValue)}, "Local asset has value, remote has attachment"},
-		{[]theme.Asset{assetInSubdir}, []theme.Asset{}, []themekit.AssetEvent{themekit.NewUploadEvent(assetInSubdir)}, "local asset in subdirectory only"},
-		{[]theme.Asset{}, []theme.Asset{assetInSubdir}, []themekit.AssetEvent{themekit.NewRemovalEvent(assetInSubdir)}, "remote asset in subdirectory only"},
-		{[]theme.Asset{assetInSubdir}, []theme.Asset{assetInSubdir}, []themekit.AssetEvent{themekit.NewUploadEvent(assetInSubdir)}, "local asset in subdirectory both local and remote"},
+		{[]theme.Asset{}, []theme.Asset{}, []kit.AssetEvent{}, "Empty local and remote, no expected events"},
+		{[]theme.Asset{assetWithValue}, []theme.Asset{assetWithValue}, []kit.AssetEvent{kit.NewUploadEvent(assetWithValue)}, "Both local and remote are the same"},
+		{[]theme.Asset{assetWithValue}, []theme.Asset{}, []kit.AssetEvent{kit.NewUploadEvent(assetWithValue)}, "Only local asset exists"},
+		{[]theme.Asset{}, []theme.Asset{assetWithValue}, []kit.AssetEvent{kit.NewRemovalEvent(assetWithValue)}, "Asset exists only remotely"},
+		{[]theme.Asset{assetWithAttachment}, []theme.Asset{assetWithValue}, []kit.AssetEvent{kit.NewUploadEvent(assetWithValue)}, "Local asset has attachment, remote value"},
+		{[]theme.Asset{assetWithValue}, []theme.Asset{assetWithAttachment}, []kit.AssetEvent{kit.NewUploadEvent(assetWithValue)}, "Local asset has value, remote has attachment"},
+		{[]theme.Asset{assetInSubdir}, []theme.Asset{}, []kit.AssetEvent{kit.NewUploadEvent(assetInSubdir)}, "local asset in subdirectory only"},
+		{[]theme.Asset{}, []theme.Asset{assetInSubdir}, []kit.AssetEvent{kit.NewRemovalEvent(assetInSubdir)}, "remote asset in subdirectory only"},
+		{[]theme.Asset{assetInSubdir}, []theme.Asset{assetInSubdir}, []kit.AssetEvent{kit.NewUploadEvent(assetInSubdir)}, "local asset in subdirectory both local and remote"},
 	}
 
 	for _, d := range data {
 		t.Log(d.desc)
 		eventCount := 0
 
-		events := make(chan themekit.AssetEvent)
+		events := make(chan kit.AssetEvent)
 		fullReplace(d.remote, d.local, events)
 
 		select {

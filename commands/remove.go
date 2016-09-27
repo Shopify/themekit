@@ -4,21 +4,21 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 	"github.com/Shopify/themekit/theme"
 )
 
 // RemoveCommand removes file(s) from theme
-func RemoveCommand(args Args, done chan bool)  {
-	events := make(chan themekit.AssetEvent)
+func RemoveCommand(args Args, done chan bool) {
+	events := make(chan kit.AssetEvent)
 	logs := args.ThemeClient.Process(events, done)
 
-	mergeEvents(args.EventLog, []chan themekit.ThemeEvent{logs})
+	mergeEvents(args.EventLog, []chan kit.ThemeEvent{logs})
 
 	go func() {
 		for _, filename := range args.Filenames {
 			asset := theme.Asset{Key: filename}
-			events <- themekit.NewRemovalEvent(asset)
+			events <- kit.NewRemovalEvent(asset)
 			removeFile(filename)
 		}
 		close(events)

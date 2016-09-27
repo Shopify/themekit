@@ -1,4 +1,4 @@
-package themekit
+package kit
 
 import (
 	"testing"

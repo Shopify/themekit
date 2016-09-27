@@ -3,20 +3,20 @@ package commands
 import (
 	"encoding/json"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 )
 
 func drainErrors(errs chan error) {
 	for {
 		if err := <-errs; err != nil {
-			themekit.NotifyError(err)
+			kit.NotifyError(err)
 		} else {
 			break
 		}
 	}
 }
 
-func mergeEvents(dest chan themekit.ThemeEvent, chans []chan themekit.ThemeEvent) {
+func mergeEvents(dest chan kit.ThemeEvent, chans []chan kit.ThemeEvent) {
 	go func() {
 		for _, ch := range chans {
 			var ok = true
@@ -30,7 +30,7 @@ func mergeEvents(dest chan themekit.ThemeEvent, chans []chan themekit.ThemeEvent
 	}()
 }
 
-func logEvent(event themekit.ThemeEvent, eventLog chan themekit.ThemeEvent) {
+func logEvent(event kit.ThemeEvent, eventLog chan kit.ThemeEvent) {
 	go func() {
 		eventLog <- event
 	}()
@@ -44,7 +44,7 @@ type basicEvent struct {
 	Etype     string `json:"type"`
 }
 
-func message(content string) themekit.ThemeEvent {
+func message(content string) kit.ThemeEvent {
 	return basicEvent{
 		Formatter: func(b basicEvent) string { return content },
 		EventType: "message",

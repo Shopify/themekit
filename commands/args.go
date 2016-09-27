@@ -7,16 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/themekit"
-	"github.com/Shopify/themekit/bucket"
+	"github.com/Shopify/themekit/kit"
 )
 
 // Args is a struct containing fields, set via CLI args, that are used by various themekit Commands
 type Args struct {
-	EventLog     chan themekit.ThemeEvent
-	Environments themekit.Environments
-	ThemeClient  themekit.ThemeClient
-	ThemeClients []themekit.ThemeClient
+	EventLog     chan kit.ThemeEvent
+	Environments kit.Environments
+	ThemeClient  kit.ThemeClient
+	ThemeClients []kit.ThemeClient
 	Filenames    []string
 	AccessToken  string
 	Password     string
@@ -30,7 +29,7 @@ type Args struct {
 	SetThemeID   bool
 	BucketSize   int
 	RefillRate   int
-	Bucket       *bucket.LeakyBucket
+	Bucket       *kit.LeakyBucket
 	Timeout      time.Duration
 
 	WorkingDirGetter WorkingDirGetterType
@@ -44,10 +43,10 @@ func DefaultArgs() Args {
 		Domain:           "",
 		AccessToken:      "",
 		Directory:        currentDir,
-		Environment:      themekit.DefaultEnvironment,
-		BucketSize:       themekit.DefaultBucketSize,
-		RefillRate:       themekit.DefaultRefillRate,
-		Timeout:          themekit.DefaultTimeout,
+		Environment:      kit.DefaultEnvironment,
+		BucketSize:       kit.DefaultBucketSize,
+		RefillRate:       kit.DefaultRefillRate,
+		Timeout:          kit.DefaultTimeout,
 		WorkingDirGetter: os.Getwd,
 	}
 }
@@ -55,14 +54,14 @@ func DefaultArgs() Args {
 // WorkingDirGetterType functions fulfills interface of os.Getwd(), used in testing
 type WorkingDirGetterType func() (string, error)
 
-// DefaultConfigurationOptions returns a default themekit.Configuration using fields from an Args instance
-func (args Args) DefaultConfigurationOptions() themekit.Configuration {
+// DefaultConfigurationOptions returns a default kit.Configuration using fields from an Args instance
+func (args Args) DefaultConfigurationOptions() kit.Configuration {
 	accessToken := args.AccessToken
 	if args.AccessToken == "" {
 		accessToken = args.Password
 	}
 
-	return themekit.Configuration{
+	return kit.Configuration{
 		Domain:      args.Domain,
 		AccessToken: accessToken,
 		Password:    accessToken,

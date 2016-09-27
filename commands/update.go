@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 )
 
 const latestReleasesURL string = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
@@ -25,13 +25,13 @@ type release struct {
 }
 
 // Version ... TODO
-func Version(r release) themekit.Version {
-	return themekit.ParseVersionString(r.Version)
+func Version(r release) kit.Version {
+	return kit.ParseVersionString(r.Version)
 }
 
 // IsApplicable ... TODO
 func (r release) IsApplicable() bool {
-	return themekit.TKVersion.Compare(Version(r)) == themekit.VersionLessThan
+	return kit.TKVersion.Compare(Version(r)) == kit.VersionLessThan
 }
 
 // IsNewReleaseAvailable ... TODO
@@ -48,9 +48,9 @@ func UpdateCommand(args Args, done chan bool) {
 	latestRelease, err := downloadReleaseForPlatform()
 	if err == nil {
 		if latestRelease.IsApplicable() {
-			fmt.Println("Updating from", themekit.TKVersion, "to", Version(latestRelease))
+			fmt.Println("Updating from", kit.TKVersion, "to", Version(latestRelease))
 			releaseForPlatform := findAppropriateRelease(latestRelease)
-			themekit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
+			kit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
 		}
 	}
 	close(done)

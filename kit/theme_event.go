@@ -1,4 +1,4 @@
-package themekit
+package kit
 
 import (
 	"encoding/json"
@@ -52,8 +52,8 @@ type APIAssetEvent struct {
 	AssetKey  string `json:"asset_key"`
 	EventType string `json:"event_type"`
 	Code      int    `json:"status_code"`
-	err       error  `json:"error,omitempty"` // TODO: err is unexported; json binding is not going to work
-	etype     string `json:"type"`            // TODO: same here, unexported, no json binding
+	err       error
+	etype     string
 }
 
 // NewAPIAssetEvent ... TODO
@@ -88,10 +88,11 @@ func (a APIAssetEvent) String() string {
 		)
 	} else if a.Code == 422 {
 		return RedText(fmt.Sprintf("Could not upload %s:\n\t%s", a.AssetKey, a.err))
-	} else if a.Code == 403 {
+	} else if a.Code == 403 || a.Code == 401 {
 		return fmt.Sprintf(
-			"[%s]Cannot remove files that would make a theme invalid. %s",
+			"[%s]Insufficient permissions to perform %s to %s",
 			RedText(fmt.Sprintf("%d", a.Code)),
+			YellowText(a.EventType),
 			BlueText(a.AssetKey),
 		)
 	} else if a.Code == 404 {
@@ -138,8 +139,8 @@ type APIThemeEvent struct {
 	ThemeID     int64  `json:"theme_id"`
 	Code        int    `json:"status_code"`
 	Previewable bool   `json:"previewable,omitempty"`
-	err         error  `json:"error,omitempty"` // err unexported
-	etype       string `json:"type"`            // etype unexported
+	err         error
+	etype       string
 }
 
 // NewAPIThemeEvent ... TODO

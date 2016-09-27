@@ -1,4 +1,5 @@
 SUBPROJECTS = theme
+PACKAGES = ./kit ./atom ./commands ./theme
 
 all:
 	for subproject in $(SUBPROJECTS); \
@@ -22,12 +23,10 @@ debug: # Example: 'make debug ARGS="version" or 'make debug ARGS="remove templat
 	cd cmd/theme &&	godebug run -instrument=github.com/Shopify/themekit,github.com/Shopify/themekit/commands main.go $(ARGS)
 
 test: ## Run all tests
-	go test -v -race \
-	github.com/Shopify/themekit \
-	github.com/Shopify/themekit/atom \
-	github.com/Shopify/themekit/bucket \
-	github.com/Shopify/themekit/commands \
-	github.com/Shopify/themekit/theme
+	go test -v -race $(PACKAGES)
+
+vet:
+	go vet $(PACKAGES)
 
 clean: ## Remove all temporary build artifacts
 	rm -rf build/
@@ -52,10 +51,10 @@ linux: ## Build binaries for Linux (32 and 64 bit)
 	export GOOS=linux; $(MAKE) build32
 
 zip: ## Create zip file with distributable binaries
-	./compress
+	./scripts/compress
 
 upload_to_s3: ## Upload zip file with binaries to S3
-	./release
+	./scripts/release
 
 dist: clean windows mac linux zip upload_to_s3 ## Build binaries for all platforms, zip, and upload to S3
 

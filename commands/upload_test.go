@@ -3,7 +3,7 @@ package commands
 import (
 	"testing"
 
-	"github.com/Shopify/themekit"
+	"github.com/Shopify/themekit/kit"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,5 +22,5 @@ func TestUploadSingleAsset(t *testing.T) {
 	assert.Equal(t, "404.liquid", result.Asset().Key)
 	assert.Equal(t, "404!\n", result.Asset().Value)
 
-	assert.Equal(t, themekit.Update, result.Type())
+	assert.Equal(t, kit.Update, result.Type())
 }

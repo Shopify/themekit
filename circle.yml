@@ -1,3 +1,15 @@
-test:
+machine:
+  environment:
+    GOPATH: "/home/ubuntu/go_workspace"
+    IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+    PROJECT_PATH: "$GOPATH/src/$IMPORT_PATH"
+
+dependencies:
   override:
-    - make test
+    - mkdir -p "$PROJECT_PATH"
+    - rsync -azC --delete ./ "$PROJECT_PATH/"
+test:
+  pre:
+    - cd $PROJECT_PATH && make vet
+  override:
+    - cd $PROJECT_PATH && make test
