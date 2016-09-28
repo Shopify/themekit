@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -88,7 +90,7 @@ func writeToDisk(asset theme.Asset, eventLog chan kit.ThemeEvent) {
 	}
 
 	if len(data) > 0 {
-		_, err = file.Write(data)
+		_, err = prettyWrite(file, data)
 	}
 
 	if err != nil {
@@ -104,6 +106,17 @@ func writeToDisk(asset theme.Asset, eventLog chan kit.ThemeEvent) {
 			},
 		}
 		logEvent(event, eventLog)
+	}
+}
+
+func prettyWrite(file *os.File, data []byte) (n int, err error) {
+	switch filepath.Ext(file.Name()) {
+	case ".json":
+		var out bytes.Buffer
+		json.Indent(&out, data, "", "\t")
+		return file.Write(out.Bytes())
+	default:
+		return file.Write(data)
 	}
 }
 
