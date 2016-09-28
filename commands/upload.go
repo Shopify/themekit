@@ -12,35 +12,22 @@ func UploadCommand(args Args, done chan bool) {
 	rawEvents, throttledEvents := prepareChannel(args)
 	logs := args.ThemeClient.Process(throttledEvents, done)
 	mergeEvents(args.EventLog, []chan kit.ThemeEvent{logs})
-	enqueueUploadEvents(args.ThemeClient, args.Filenames, rawEvents)
+	go enqueueUploadEvents(args.ThemeClient, args.Filenames, rawEvents)
 }
 
 func enqueueUploadEvents(client kit.ThemeClient, filenames []string, events chan kit.AssetEvent) {
 	root, _ := os.Getwd()
 	if len(filenames) == 0 {
-		go fullUpload(client.LocalAssets(root), events)
-		return
-	}
-	go func() {
+		for _, asset := range client.LocalAssets(root) {
+			events <- kit.NewUploadEvent(asset)
+		}
+	} else {
 		for _, filename := range filenames {
 			asset, err := theme.LoadAsset(root, filename)
 			if err == nil {
 				events <- kit.NewUploadEvent(asset)
 			}
 		}
-		close(events)
-	}()
-}
-
-func fullUpload(localAssets []theme.Asset, events chan kit.AssetEvent) {
-	assetsActions := map[string]kit.AssetEvent{}
-	for _, asset := range localAssets {
-		assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 	}
-	go func() {
-		for _, event := range assetsActions {
-			events <- event
-		}
-		close(events)
-	}()
+	close(events)
 }
