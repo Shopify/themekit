@@ -255,7 +255,7 @@ func watchArgsParser(cmd string, rawArgs []string) commands.Args {
 	set.Parse(rawArgs)
 
 	if allEnvironments {
-		if environments, err := loadEnvironments(args.Directory); err == nil {
+		if environments, err := loadEnvironments(args.Directory); err == nil && len(environments) > 0 {
 			args.ThemeClients = make([]kit.ThemeClient, len(environments))
 			i := 0
 			for env, _ := range environments {
@@ -263,6 +263,7 @@ func watchArgsParser(cmd string, rawArgs []string) commands.Args {
 				i++
 			}
 		} else {
+			fmt.Println(kit.RedText("Error loading environments"))
 			args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
 		}
 	} else {

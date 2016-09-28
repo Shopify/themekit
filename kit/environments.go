@@ -19,14 +19,15 @@ type Environments map[string]Configuration
 func LoadEnvironments(contents []byte) (envs Environments, err error) {
 	envs = make(Environments)
 	err = yaml.Unmarshal(contents, &envs)
-	if err == nil {
-		for key, conf := range envs {
-			environmentConfig, err := conf.Initialize()
-			if err != nil {
-				return nil, fmt.Errorf("could not load environment \"%s\": %s", key, err)
-			}
-			envs[key] = environmentConfig
+	if err != nil {
+		return nil, err
+	}
+	for key, conf := range envs {
+		environmentConfig, err := conf.Initialize()
+		if err != nil {
+			return nil, fmt.Errorf("could not load environment \"%s\": %s", key, err)
 		}
+		envs[key] = environmentConfig
 	}
 	return
 }
