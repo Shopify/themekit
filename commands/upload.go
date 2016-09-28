@@ -34,12 +34,9 @@ func enqueueUploadEvents(client kit.ThemeClient, filenames []string, events chan
 
 func fullUpload(localAssets []theme.Asset, events chan kit.AssetEvent) {
 	assetsActions := map[string]kit.AssetEvent{}
-	generateActions := func(assets []theme.Asset, assetEventFn func(asset theme.Asset) kit.SimpleAssetEvent) {
-		for _, asset := range assets {
-			assetsActions[asset.Key] = assetEventFn(asset)
-		}
+	for _, asset := range localAssets {
+		assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 	}
-	generateActions(localAssets, kit.NewUploadEvent)
 	go func() {
 		for _, event := range assetsActions {
 			events <- event
