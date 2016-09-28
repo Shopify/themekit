@@ -25,7 +25,6 @@ func enqueueEvents(client kit.ThemeClient, filenames []string, events chan kit.A
 		for _, filename := range filenames {
 			asset, err := theme.LoadAsset(root, filename)
 			if err == nil {
-				events <- kit.NewRemovalEvent(asset)
 				events <- kit.NewUploadEvent(asset)
 			}
 		}
