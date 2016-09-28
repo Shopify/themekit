@@ -115,7 +115,16 @@ of commands that are available, enter the following command into your terminal:<
 <p>The following options <strong>must be provided</strong>:</p>
 
 <ol>
-  <li><code>password</code>: Your Shopify Private App password. This is needed to make authenticated calls against the Shopify API. Create a Private Application and use the value from the <strong>Password</strong> field, obtained at <code>https://&lt;your subdomain&gt;.myshopify.com/admin/apps/private/&lt;id&gt;</code></li>
+  <li><code>password</code>: Your Shopify Private App password. This is needed to make authenticated calls against the Shopify API. To setup an app password you should:
+    <ol>
+      <li>Visit <code>https://&lt;your subdomain&gt;.myshopify.com/admin/apps/private</code></li>
+      <li>Create a new private app.</li>
+      <li>Give the private app a title</li>
+      <li>Give <code>Read and write</code> access to <code>Theme templates and theme assets</code>, <code>Scripts</code> and <code>Script tags in your store's theme template files</code>.</li>
+      <li>Save App</li>
+      <li>Copy password from the Authentication field group.</li>
+    </ol>
+  </li>
   <li><code>domain</code>: Your <code>&lt;your subdomain&gt;.myshopify.com</code> domain without any protocol or other information.</li>
   <li><code>theme_id</code>: The id of the theme you want Theme Kit to work with.</li>
 </ol>
