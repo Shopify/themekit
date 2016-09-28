@@ -187,7 +187,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", t.config.AdminURL())
 	contents := map[string]theme.Theme{
-		"theme": theme.Theme{Name: name, Source: zipLocation, Role: "unpublished"},
+		"theme": {Name: name, Source: zipLocation, Role: "unpublished"},
 	}
 
 	log := make(chan ThemeEvent)
