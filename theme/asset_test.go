@@ -146,18 +146,18 @@ func TestLoadAssetSuite(t *testing.T) {
 
 func TestSortListOfAssets(t *testing.T) {
 	input := []Asset{
-		Asset{Key: "assets/ajaxify.js.liquid"},
-		Asset{Key: "assets/ajaxify.js"},
-		Asset{Key: "assets/ajaxify.css"},
-		Asset{Key: "assets/ajaxify.css.liquid"},
-		Asset{Key: "layouts/customers.liquid"},
+		{Key: "assets/ajaxify.js.liquid"},
+		{Key: "assets/ajaxify.js"},
+		{Key: "assets/ajaxify.css"},
+		{Key: "assets/ajaxify.css.liquid"},
+		{Key: "layouts/customers.liquid"},
 	}
 	expected := []Asset{
-		Asset{Key: "assets/ajaxify.css"},
-		Asset{Key: "assets/ajaxify.css.liquid"},
-		Asset{Key: "assets/ajaxify.js"},
-		Asset{Key: "assets/ajaxify.js.liquid"},
-		Asset{Key: "layouts/customers.liquid"},
+		{Key: "assets/ajaxify.css"},
+		{Key: "assets/ajaxify.css.liquid"},
+		{Key: "assets/ajaxify.js"},
+		{Key: "assets/ajaxify.js.liquid"},
+		{Key: "layouts/customers.liquid"},
 	}
 	sort.Sort(ByAsset(input))
 	assert.Equal(t, expected, input)

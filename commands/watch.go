@@ -10,7 +10,7 @@ import (
 
 // WatchCommand watches directories for changes, and updates the remote theme
 func WatchCommand(args Args, done chan bool) {
-	if isSingleEnvironment(args) {
+	if len(args.ThemeClients) == 0 {
 		args.ThemeClients = []kit.ThemeClient{args.ThemeClient}
 	}
 
@@ -24,10 +24,6 @@ func WatchCommand(args Args, done chan bool) {
 		args.ThemeClient = client
 		watchForChangesAndIssueWork(args, eventLog)
 	}
-}
-
-func isSingleEnvironment(args Args) bool {
-	return len(args.ThemeClients) == 0
 }
 
 func watchForChangesAndIssueWork(args Args, eventLog chan kit.ThemeEvent) {

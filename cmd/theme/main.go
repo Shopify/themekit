@@ -57,55 +57,55 @@ type CommandDefinition struct {
 }
 
 var commandDefinitions = map[string]CommandDefinition{
-	"upload": CommandDefinition{
+	"upload": {
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.UploadCommand,
 		PermitsZeroArgs: true,
 		TimesOut:        true,
 	},
-	"download": CommandDefinition{
+	"download": {
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.DownloadCommand,
 		PermitsZeroArgs: true,
 		TimesOut:        true,
 	},
-	"remove": CommandDefinition{
+	"remove": {
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.RemoveCommand,
 		PermitsZeroArgs: false,
 		TimesOut:        true,
 	},
-	"replace": CommandDefinition{
+	"replace": {
 		ArgsParser:      fileManipulationArgsParser,
 		Command:         commands.ReplaceCommand,
 		PermitsZeroArgs: true,
 		TimesOut:        true,
 	},
-	"watch": CommandDefinition{
+	"watch": {
 		ArgsParser:      watchArgsParser,
 		Command:         commands.WatchCommand,
 		PermitsZeroArgs: true,
 		TimesOut:        false,
 	},
-	"configure": CommandDefinition{
+	"configure": {
 		ArgsParser:      configurationArgsParser,
 		Command:         commands.ConfigureCommand,
 		PermitsZeroArgs: false,
 		TimesOut:        false,
 	},
-	"bootstrap": CommandDefinition{
+	"bootstrap": {
 		ArgsParser:      bootstrapParser,
 		Command:         commands.BootstrapCommand,
 		PermitsZeroArgs: false,
 		TimesOut:        false,
 	},
-	"version": CommandDefinition{
+	"version": {
 		ArgsParser:      noOpParser,
 		Command:         commands.VersionCommand,
 		PermitsZeroArgs: true,
 		TimesOut:        false,
 	},
-	"update": CommandDefinition{
+	"update": {
 		ArgsParser:      noOpParser,
 		Command:         commands.UpdateCommand,
 		PermitsZeroArgs: true,
@@ -195,7 +195,7 @@ func commandDescription() string {
 	}
 
 	commandNames := []string{}
-	for name, _ := range permittedCommands {
+	for name := range permittedCommands {
 		commandNames = append(commandNames, name)
 	}
 
@@ -254,16 +254,21 @@ func watchArgsParser(cmd string, rawArgs []string) commands.Args {
 	set.StringVar(&args.NotifyFile, "notify", "", "file to touch when workers have gone idle")
 	set.Parse(rawArgs)
 
-	if len(args.Environment) != 0 && allEnvironments {
-		args.Environment = ""
+	if allEnvironments {
+		if environments, err := loadEnvironments(args.Directory); err == nil && len(environments) > 0 {
+			args.ThemeClients = make([]kit.ThemeClient, len(environments))
+			i := 0
+			for env := range environments {
+				args.ThemeClients[i] = loadThemeClient(args.Directory, env)
+				i++
+			}
+		} else {
+			fmt.Println(kit.RedText("Error loading environments"))
+			args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
+		}
+	} else {
+		args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
 	}
-
-	environments, err := loadEnvironments(args.Directory)
-	if allEnvironments && err == nil {
-		args.Environments = environments
-	}
-
-	args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
 
 	return args
 }
