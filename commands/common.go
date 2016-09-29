@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Shopify/themekit/kit"
 )
@@ -36,19 +37,6 @@ func logEvent(event kit.ThemeEvent, eventLog chan kit.ThemeEvent) {
 	}()
 }
 
-func prepareChannel(args Args) (rawEvents, throttledEvents chan kit.AssetEvent) {
-	rawEvents = make(chan kit.AssetEvent)
-	if args.Bucket == nil {
-		return rawEvents, rawEvents
-	}
-
-	foreman := kit.NewForeman(args.Bucket)
-	foreman.JobQueue = rawEvents
-	foreman.WorkerQueue = make(chan kit.AssetEvent)
-	foreman.IssueWork()
-	return foreman.JobQueue, foreman.WorkerQueue
-}
-
 type basicEvent struct {
 	Formatter func(b basicEvent) string
 	EventType string `json:"event_type"`
@@ -57,13 +45,13 @@ type basicEvent struct {
 	Etype     string `json:"type"`
 }
 
-func message(content string) kit.ThemeEvent {
-	return basicEvent{
-		Formatter: func(b basicEvent) string { return content },
+func message(eventLog chan kit.ThemeEvent, content string, args ...interface{}) {
+	logEvent(basicEvent{
+		Formatter: func(b basicEvent) string { return fmt.Sprintf(content, args...) },
 		EventType: "message",
 		Title:     "Notice",
 		Etype:     "basicEvent",
-	}
+	}, eventLog)
 }
 
 func (b basicEvent) String() string {

@@ -15,8 +15,7 @@ type LeakyBucket struct {
 
 func NewLeakyBucket(size, refill, duration int) *LeakyBucket {
 	dur := time.Duration(duration) * time.Second
-
-	return &LeakyBucket{
+	newBucket := &LeakyBucket{
 		Size:        size,
 		Refill:      refill,
 		Duration:    dur,
@@ -24,6 +23,7 @@ func NewLeakyBucket(size, refill, duration int) *LeakyBucket {
 		stopFilling: make(chan bool),
 		ticker:      time.NewTicker(dur),
 	}
+	return newBucket
 }
 
 func (b *LeakyBucket) StartDripping() {

@@ -89,6 +89,11 @@ func (t ThemeClient) LeakyBucket() *LeakyBucket {
 	return NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
 }
 
+// NewForeman ... TODO
+func (t ThemeClient) NewForeman() Foreman {
+	return NewForeman(t.LeakyBucket())
+}
+
 // AssetList ... TODO
 func (t ThemeClient) AssetList() (results chan theme.Asset, errs chan error) {
 	results = make(chan theme.Asset)

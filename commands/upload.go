@@ -9,10 +9,10 @@ import (
 
 // UploadCommand add file(s) to theme
 func UploadCommand(args Args, done chan bool) {
-	rawEvents, throttledEvents := prepareChannel(args)
-	logs := args.ThemeClient.Process(throttledEvents, done)
+	foreman := args.ThemeClient.NewForeman()
+	logs := args.ThemeClient.Process(foreman.WorkerQueue, done)
 	mergeEvents(args.EventLog, []chan kit.ThemeEvent{logs})
-	go enqueueUploadEvents(args.ThemeClient, args.Filenames, rawEvents)
+	go enqueueUploadEvents(args.ThemeClient, args.Filenames, foreman.JobQueue)
 }
 
 func enqueueUploadEvents(client kit.ThemeClient, filenames []string, events chan kit.AssetEvent) {

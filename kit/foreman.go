@@ -15,13 +15,21 @@ type Foreman struct {
 
 // NewForeman will return a new Foreman using the bucket for throttling.
 func NewForeman(leakyBucket *LeakyBucket) Foreman {
-	return Foreman{
+	newForeman := Foreman{
 		leakyBucket: leakyBucket,
 		halt:        make(chan bool),
 		JobQueue:    make(chan AssetEvent),
 		WorkerQueue: make(chan AssetEvent),
 		OnIdle:      func() {},
 	}
+	newForeman.IssueWork()
+	return newForeman
+}
+
+func (f Foreman) Restart() {
+	f.Halt()
+	f.leakyBucket.TopUp()
+	f.IssueWork()
 }
 
 // IssueWork start the Foreman processing jobs that are in it's queue. It will call

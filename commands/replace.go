@@ -9,10 +9,10 @@ import (
 
 // ReplaceCommand overwrite theme file(s)
 func ReplaceCommand(args Args, done chan bool) {
-	rawEvents, throttledEvents := prepareChannel(args)
-	logs := args.ThemeClient.Process(throttledEvents, done)
+	foreman := args.ThemeClient.NewForeman()
+	logs := args.ThemeClient.Process(foreman.WorkerQueue, done)
 	mergeEvents(args.EventLog, []chan kit.ThemeEvent{logs})
-	enqueueReplaceEvents(args.ThemeClient, args.Filenames, rawEvents)
+	enqueueReplaceEvents(args.ThemeClient, args.Filenames, foreman.JobQueue)
 }
 
 func enqueueReplaceEvents(client kit.ThemeClient, filenames []string, events chan kit.AssetEvent) {

@@ -96,16 +96,7 @@ func writeToDisk(asset theme.Asset, eventLog chan kit.ThemeEvent) {
 	if err != nil {
 		kit.NotifyError(err)
 	} else {
-		event := basicEvent{
-			Title:     "FS Event",
-			EventType: "Write",
-			Target:    filename,
-			Etype:     "fsevent",
-			Formatter: func(b basicEvent) string {
-				return kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", b.Target))
-			},
-		}
-		logEvent(event, eventLog)
+		message(eventLog, kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
 	}
 }
 
@@ -122,20 +113,6 @@ func prettyWrite(file *os.File, data []byte) (n int, err error) {
 
 func handleError(filename string, err error, eventLog chan kit.ThemeEvent) {
 	if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
-		event := basicEvent{
-			Title:     "Non-Fatal Network Error",
-			EventType: nonFatal.Verb,
-			Target:    filename,
-			Etype:     "fsevent",
-			Formatter: func(b basicEvent) string {
-				return fmt.Sprintf(
-					"[%s] Could not complete %s for %s",
-					kit.RedText(fmt.Sprintf("%d", nonFatal.Code)),
-					kit.YellowText(b.EventType),
-					kit.BlueText(b.Target),
-				)
-			},
-		}
-		logEvent(event, eventLog)
+		message(eventLog, "[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
 	}
 }

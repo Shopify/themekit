@@ -264,10 +264,10 @@ func watchArgsParser(cmd string, rawArgs []string) commands.Args {
 			}
 		} else {
 			fmt.Println(kit.RedText("Error loading environments"))
-			args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
+			args.ThemeClients = []kit.ThemeClient{loadThemeClient(args.Directory, args.Environment)}
 		}
 	} else {
-		args.ThemeClient = loadThemeClient(args.Directory, args.Environment)
+		args.ThemeClients = []kit.ThemeClient{loadThemeClient(args.Directory, args.Environment)}
 	}
 
 	return args
