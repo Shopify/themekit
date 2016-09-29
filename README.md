@@ -1,7 +1,5 @@
-# Theme Kit
+# [Theme Kit](http://themekit.cat) [![Go Report Card](https://goreportcard.com/badge/github.com/shopify/themekit)](https://goreportcard.com/report/github.com/shopify/themekit) [![Build Status](https://circleci.com/gh/Shopify/themekit.png?circle-token=ac951910873cafaaf9c1be6049d2b9d3276eb2d4)](https://circleci.com/gh/Shopify/themekit)
 ## Shopify Theme Manipulation Utilities and Libraries
-[![Go Report Card](https://goreportcard.com/badge/github.com/shopify/themekit)](https://goreportcard.com/report/github.com/shopify/themekit)
-[![Build Status](https://circleci.com/gh/Shopify/themekit.png?circle-token=ac951910873cafaaf9c1be6049d2b9d3276eb2d4)](https://circleci.com/gh/Shopify/themekit)
 
 [Read more about it on the website](http://themekit.cat)
 
