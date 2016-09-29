@@ -36,6 +36,19 @@ func logEvent(event kit.ThemeEvent, eventLog chan kit.ThemeEvent) {
 	}()
 }
 
+func prepareChannel(args Args) (rawEvents, throttledEvents chan kit.AssetEvent) {
+	rawEvents = make(chan kit.AssetEvent)
+	if args.Bucket == nil {
+		return rawEvents, rawEvents
+	}
+
+	foreman := kit.NewForeman(args.Bucket)
+	foreman.JobQueue = rawEvents
+	foreman.WorkerQueue = make(chan kit.AssetEvent)
+	foreman.IssueWork()
+	return foreman.JobQueue, foreman.WorkerQueue
+}
+
 type basicEvent struct {
 	Formatter func(b basicEvent) string
 	EventType string `json:"event_type"`

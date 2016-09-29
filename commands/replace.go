@@ -12,10 +12,10 @@ func ReplaceCommand(args Args, done chan bool) {
 	rawEvents, throttledEvents := prepareChannel(args)
 	logs := args.ThemeClient.Process(throttledEvents, done)
 	mergeEvents(args.EventLog, []chan kit.ThemeEvent{logs})
-	enqueueEvents(args.ThemeClient, args.Filenames, rawEvents)
+	enqueueReplaceEvents(args.ThemeClient, args.Filenames, rawEvents)
 }
 
-func enqueueEvents(client kit.ThemeClient, filenames []string, events chan kit.AssetEvent) {
+func enqueueReplaceEvents(client kit.ThemeClient, filenames []string, events chan kit.AssetEvent) {
 	root, _ := os.Getwd()
 	if len(filenames) == 0 {
 		go fullReplace(client.AssetListSync(), client.LocalAssets(root), events)
@@ -49,18 +49,4 @@ func fullReplace(remoteAssets, localAssets []theme.Asset, events chan kit.AssetE
 		}
 		close(events)
 	}()
-
-}
-
-func prepareChannel(args Args) (rawEvents, throttledEvents chan kit.AssetEvent) {
-	rawEvents = make(chan kit.AssetEvent)
-	if args.Bucket == nil {
-		return rawEvents, rawEvents
-	}
-
-	foreman := kit.NewForeman(args.Bucket)
-	foreman.JobQueue = rawEvents
-	foreman.WorkerQueue = make(chan kit.AssetEvent)
-	foreman.IssueWork()
-	return foreman.JobQueue, foreman.WorkerQueue
 }

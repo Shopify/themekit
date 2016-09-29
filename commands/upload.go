@@ -1,10 +1,7 @@
 package commands
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/Shopify/themekit/kit"
 	"github.com/Shopify/themekit/theme"
@@ -12,49 +9,25 @@ import (
 
 // UploadCommand add file(s) to theme
 func UploadCommand(args Args, done chan bool) {
-	args.Filenames = extractFilenames(args, args.Filenames)
-	syncAssetEvents := ReadAndPrepareFilesSync(args)
-
-	go func() {
-		args.ThemeClient.ProcessSync(syncAssetEvents, args.EventLog)
-		done <- true
-	}()
+	rawEvents, throttledEvents := prepareChannel(args)
+	logs := args.ThemeClient.Process(throttledEvents, done)
+	mergeEvents(args.EventLog, []chan kit.ThemeEvent{logs})
+	go enqueueUploadEvents(args.ThemeClient, args.Filenames, rawEvents)
 }
 
-// ReadAndPrepareFilesSync ... TODO
-func ReadAndPrepareFilesSync(args Args) (results []kit.AssetEvent) {
-	for _, filename := range args.Filenames {
-		asset, err := loadAsset(args, filename)
-
-		if err == nil {
-			results = append(results, kit.NewUploadEvent(asset))
-		} else if err.Error() != "File is a directory" {
-			kit.NotifyError(err)
+func enqueueUploadEvents(client kit.ThemeClient, filenames []string, events chan kit.AssetEvent) {
+	root, _ := os.Getwd()
+	if len(filenames) == 0 {
+		for _, asset := range client.LocalAssets(root) {
+			events <- kit.NewUploadEvent(asset)
+		}
+	} else {
+		for _, filename := range filenames {
+			asset, err := theme.LoadAsset(root, filename)
+			if err == nil {
+				events <- kit.NewUploadEvent(asset)
+			}
 		}
 	}
-	return
-}
-
-func loadAsset(args Args, filename string) (asset theme.Asset, err error) {
-	root, err := args.WorkingDirGetter()
-	if err != nil {
-		return
-	}
-
-	return theme.LoadAsset(root, filename)
-}
-
-func extractFilenames(args Args, filenames []string) []string {
-	if len(filenames) > 0 {
-		return filenames
-	}
-	filepath.Walk(args.Directory, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			root := fmt.Sprintf("%s%s", args.Directory, string(filepath.Separator))
-			name := strings.Replace(path, root, "", -1)
-			filenames = append(filenames, name)
-		}
-		return nil
-	})
-	return filenames
+	close(events)
 }
