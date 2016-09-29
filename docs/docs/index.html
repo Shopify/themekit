@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Theme Kit - Documentation</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Muli' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" href="/font-awesome.css">
+    <link rel="stylesheet" href="/simplegrid.css">
+    <link rel="stylesheet" href="/github.css">
+    <link rel="stylesheet" href="/stylesheet.css">
+
+    <script type="text/javascript" src="zepto.js"></script>
+  </head>
+  <body>
+    <header class="col-1-1">
+      <a class="header-link" href="/"><h1>Theme Kit</h1></a>
+
+      <ul class="col-1-1 inline">
+        <li>
+          <a class="install" href="/install">Installation</a>
+        </li>
+
+        <li>
+          <a class="docs" href="/docs">Documentation</a>
+        </li>
+
+        <li>
+          <a class="contrib" href="https://github.com/csaunders/themekit">Contribute</a>
+        </li>
+
+        <li>
+          <a class="report" href="https://github.com/csaunders/themekit/issues">Report Issue</a>
+        </li>
+      </div>
+    </header>
+
+
+    <div class="container">
+      
+<h1 id="documentation">Documentation</h1>
+
+<ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#commands">Commands</a></li>
+  <li><a href="#config-file">Configuration</a>
+    <ul>
+      <li><a href="#environments">Environments</a></li>
+      <li><a href="#config-variables">Configuration Variables</a></li>
+      <li><a href="#config-example">Example Configuration</a></li>
+      <li><a href="#ignore-file">Ignore File</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="a-idoverview-hrefoverviewoverviewai-classfa-fa-bookmarki"><a id="overview" href="#overview">Overview</a><i class="fa fa-bookmark"></i></h2>
+
+<p>Theme Kit comes with a number of utilities that you can use to interact one or more themes on Shopify. To see the list
+of commands that are available, enter the following command into your terminal:</p>
+
+<pre><code class="language-bash">theme --help</code></pre>
+
+<p>You will see output similar to the following:</p>
+
+<pre><code class="language-bash">Usage of theme:
+  -command<span class="o">=</span><span class="s2">"download"</span>: An operation to be performed against the theme.
+  Valid commands are:
+    remove  <span class="o">[</span> ...<span class="o">]</span>:
+        Remove file<span class="o">(</span>s<span class="o">)</span> from theme
+    replace <span class="o">[</span> ...<span class="o">]</span>:
+        Overwrite theme file<span class="o">(</span>s<span class="o">)</span>
+    watch:
+        Watch directory <span class="k">for</span> changes and update remote theme
+    configure:
+        Create a configuration file
+    bootstrap:
+        Bootstrap a new theme using Shopify Timber
+    upload  <span class="o">[</span> ...<span class="o">]</span>:
+        Add file<span class="o">(</span>s<span class="o">)</span> to theme
+    download <span class="o">[</span> ...<span class="o">]</span>:
+        Download file<span class="o">(</span>s<span class="o">)</span> from theme <span class="o">[</span>default<span class="o">]</span></code></pre>
+
+<h2 id="a-idcommands-hrefcommandscommandsai-classfa-fa-bookmarki"><a id="commands" href="#commands">Commands</a><i class="fa fa-bookmark"></i></h2>
+
+<ol>
+  <li><a href="#common-args">Common Arguments</a></li>
+  <li><a href="#configure">configure</a></li>
+  <li><a href="#bootstrap">bootstrap</a></li>
+  <li><a href="#watch">watch</a></li>
+  <li><a href="#download">download</a></li>
+  <li><a href="#remove">remove</a></li>
+  <li><a href="#replace">replace</a></li>
+  <li><a href="#upload">upload</a></li>
+</ol>
+
+<hr />
+
+<h3 id="a-idcommon-args-hrefcommon-argscommon-argumentsai-classfa-fa-bookmarki"><a id="common-args" href="#common-args">Common Arguments</a><i class="fa fa-bookmark"></i></h3>
+
+<p>There are some arguments that you can pass into every command:</p>
+
+<p><code>env</code>: The <em>environment</em> to register the configuration settings under. These are just free form text, so you can name it anything. Common names are <code>staging</code>, <code>production</code>, <code>test</code> and the default is <code>development</code></p>
+
+<pre><code>theme replace --env=staging [file]</code></pre>
+
+<p><code>dir</code>: The directory that the configuration file (called <code>config.yml</code>) will live. This allows you to update multiple themes without having to change into each themes directory.</p>
+
+<h3 id="a-idconfigure-hrefconfigureconfigureai-classfa-fa-bookmarki"><a id="configure" href="#configure">Configure</a><i class="fa fa-bookmark"></i></h3>
+
+<p>Use this command to create or update configuration files. If you don’t want to run the command in the directory that will contain the configuration file you will need to specify the directory manually.</p>
+
+<p>The following options <strong>must be provided</strong>:</p>
+
+<ol>
+  <li><code>password</code>: Your Shopify Private App password. This is needed to make authenticated calls against the Shopify API. Create a Private Application and use the value from the <strong>Password</strong> field, obtained at <code>https://&lt;your subdomain&gt;.myshopify.com/admin/apps/private/&lt;id&gt;</code></li>
+  <li><code>domain</code>: Your <code>&lt;your subdomain&gt;.myshopify.com</code> domain without any protocol or other information.</li>
+  <li><code>theme_id</code>: The id of the theme you want Theme Kit to work with.</li>
+</ol>
+
+<p>Additional arguments you can provide:</p>
+
+<ol>
+  <li><code>bucketSize</code>: Shopify uses a leaky bucket strategy for rate limiting API access. If you have been granted additional API usage you can update that here. Internally it is used to prevent failures that can be caused by exhausted API limits.</li>
+  <li><code>refillRate</code>: The rate at which tickets are restored in the leaky bucket (per second).</li>
+</ol>
+
+<h3 id="a-idbootstrap-hrefbootstrapbootstrapai-classfa-fa-bookmarki"><a id="bootstrap" href="#bootstrap">Bootstrap</a><i class="fa fa-bookmark"></i></h3>
+
+<p>If you are starting a new theme and want to have some sane defaults, you can use the bootstrap command. It will create a new theme based on <a href="https://github.com/shopify/timber">Timber</a>, update your configuration file for that theme and download it to your computer.</p>
+
+<p><strong>Configuration is required before bootstrapping</strong></p>
+
+<p>The available options are as follows:</p>
+
+<ol>
+  <li><code>setid</code>: When setid is true your configuration file will be updated to include the appropriate Theme ID. This will ensure that changes are uploaded to the correct place. You can opt out of this by passing setting the flag to false (i.e. <code>--setid=false</code>)</li>
+  <li><code>prefix</code>: Prefix to add to your theme. If a prefix is provided, the theme created on Shopify will be called <code>PREFIX-Timber-VERSION</code>, otherwise it will simply be <code>Timber-VERSION</code></li>
+  <li><code>version</code>: The version of Timber that you want to use for developing a theme. By default it will use the <a href="https://github.com/Shopify/Timber/releases">latest stable release</a>. Latest master can also be used by setting the version flag (i.e. <code>--version=master</code>)</li>
+</ol>
+
+<h3 id="a-idwatch-hrefwatchwatchai-classfa-fa-bookmarki"><a id="watch" href="#watch">Watch</a><i class="fa fa-bookmark"></i></h3>
+
+<p>Theme watch will start a process that will watch the specified directory for changes and upload them to the specified Shopify theme. Any changes will be logged to the terminal and the status of the upload will be logged as well. The program can be stopped by simply typing <code>ctrl+C</code>.</p>
+
+<p>By default watch starts up two workers who will perform the upload, allowing for faster uploads to Shopify. The number of workers can be changed in your <a href="#config-example">configuration file</a> though be aware that you may run the risk of slowdowns due to the leaky bucket getting drained.</p>
+
+<p>To ease integrating the watcher with tools such as <a href="http://livereload.com/">LiveReload</a>, you can provide an the optional <code>--notify</code> argument to a file you want to have updated when the workers have gone idle. For example, if you had LiveReload watching for update made to a file at <code>/tmp/theme.update</code> you would enter the following command:</p>
+
+<pre><code>theme watch --notify=/tmp/theme.update</code></pre>
+
+<p><strong>Concurrent Uploads to multiple Environments</strong></p>
+
+<p>Another command that can be useful for theme development is the <code>--allenvs</code> flag. By passing in this flag to the <code>theme watch</code> command, themekit will create watchers for every environment in your <a href="#config-files">configuration file</a>. <strong>Note</strong> currently there is no way to opt-out specific configurations, which means that changes made here will be sent to all your configured themes which may include production versions.</p>
+
+<h3 id="a-iddownload-hrefdownloaddownloadai-classfa-fa-bookmarki"><a id="download" href="#download">Download</a><i class="fa fa-bookmark"></i></h3>
+
+<p>If called without any arguments, it will download the entire theme. Otherwise if you specify the files you want to download, then only those files will be retrieved. For example if you wanted to download the <code>404</code> and <code>article</code> liquid templates you could enter the following command:</p>
+
+<pre><code>theme download templates/404.liquid templates/article.liquid</code></pre>
+
+<h3 id="a-idremove-hrefremoveremoveai-classfa-fa-bookmarki"><a id="remove" href="#remove">Remove</a><i class="fa fa-bookmark"></i></h3>
+
+<p>Deletes theme files both locally and on Shopify. This command must be called with at least one filename.</p>
+
+<h3 id="a-idreplace-hrefreplacereplaceai-classfa-fa-bookmarki"><a id="replace" href="#replace">Replace</a><i class="fa fa-bookmark"></i></h3>
+
+<p>Removes remote files and replaces them with local files.</p>
+
+<h3 id="a-idupload-hrefuploaduploadai-classfa-fa-bookmarki"><a id="upload" href="#upload">Upload</a><i class="fa fa-bookmark"></i></h3>
+
+<p>Upload specified files to Shopify theme. This command requires at least one filename.</p>
+
+<hr />
+
+<h2 id="a-idconfig-file-hrefconfig-fileconfigurationai-classfa-fa-bookmarki"><a id="config-file" href="#config-file">Configuration</a><i class="fa fa-bookmark"></i></h2>
+
+<h3 id="a-idenvironments-hrefenvironmentsenvironmentsai-classfa-fa-bookmarki"><a id="environments" href="#environments">Environments</a><i class="fa fa-bookmark"></i></h3>
+
+<p>Environments allow you to manage where to upload your theme changes to. This helps reduce the errors that could happen when swapping between environments by directly modifying the config file. Environments are named whatever you want and will all contain roughly the same information, though perhaps with some minor changes (store, theme id, etc.)</p>
+
+<h3 id="a-idconfig-variables-hrefconfig-variablesconfiguration-variablesai-classfa-fa-bookmarki"><a id="config-variables" href="#config-variables">Configuration Variables</a><i class="fa fa-bookmark"></i></h3>
+
+<p>A configuration can contain a number of things on top of what can be added by invoking <code>theme configure</code>.</p>
+
+<ul>
+  <li><code>theme_id</code>: The ID of the theme to upload changes to. <strong>Note</strong> Unlike previous versions of Theme Kit, leaving <code>theme_id</code> blank will no longer default to pointing to your live, production theme. To opt into that behavior, set <code>theme_id</code> to a value of <code>"live"</code></li>
+  <li><code>password</code>: API credentials to update and manipulate themes on Shopify</li>
+  <li><code>store</code>: Your <code>.myshopify.com</code> domain (i.e. pokeshop.myshopify.com). Note that you <strong>do not</strong> need to include <code>http://</code> or <code>https://</code></li>
+  <li><code>ignore_files</code>: A list of specific files to ignore (i.e. <code>config/settings.html</code>). You can also ignore based on patterns (such as all png files), but those patterns will need to be wrapped in double quotes (i.e. <code>"*.png"</code>).</li>
+  <li><code>ignores</code>: A list of files containing patterns of files that should be ignored. These files are somewhat similar to the <a href="https://www.kernel.org/pub/software/scm/git/docs/gitignore.html">.gitignore file</a></li>
+  <li><code>bucket_size</code>: The size of your Access Tokens bucket. By default this is 40 and cannot be configured by the shop.</li>
+  <li><code>refill_rate</code>: The rate at which tickets are replenished by the Shopify API (per second). By default this is 2 and cannot be configured by the shop.</li>
+  <li><code>concurrency</code>: The number of workers to spawn when running <code>theme watch</code>. By default it is 2 to ensure that API limits don’t get hit. This can be changed, though keep in mind that it can cause slowdowns if API limits are indeed reached. For most regular usage this might not be the case, but could happen if using automated that create a lot of File System events.</li>
+  <li><code>proxy</code>: Proxy server to route HTTP requests through. If you’ve run into a bug this can be paired up with <a href="http://mitmproxy.org/">mitmproxy</a> to provide further insight into what is going on. You may be asked to use this feature when making bug reports.</li>
+</ul>
+
+<h3 id="a-idignore-file-hrefignore-filethe-ignore-fileai-classfa-fa-bookmarki"><a id="ignore-file" href="#ignore-file">The Ignore File</a><i class="fa fa-bookmark"></i></h3>
+
+<p>Ignore files are simply lists of patterns or files you’d like to skip when uploading or downloading files. This can be useful for
+situations where your build system generates a lot of temporary files, or files that Shopify won’t allow. If you have a build system that generates temporary files in a directory called <code>build</code>, your ignorefile could look like this:</p>
+
+<pre><code class="language-text">build/*
+settings.html</code></pre>
+
+<h3 id="a-idconfig-example-hrefconfig-exampleexample-configurationai-classfa-fa-bookmarki"><a id="config-example" href="#config-example">Example Configuration</a><i class="fa fa-bookmark"></i></h3>
+
+<p>The following is a comprehensive example of what the contents of a configuration might look like.</p>
+
+<pre><code class="language-yaml"><span class="l-Scalar-Plain">production</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">theme_id</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">abracadabra</span>
+  <span class="l-Scalar-Plain">store</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pokeshop.myshopify.com</span>
+<span class="l-Scalar-Plain">staging</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">theme_id</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">alakazam</span>
+  <span class="l-Scalar-Plain">store</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pokeshop-staging.myshopify.com</span>
+<span class="l-Scalar-Plain">development</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">theme_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">123</span>
+  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">abracadabra</span>
+  <span class="l-Scalar-Plain">store</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pokeshop.myshopify.com</span>
+  <span class="l-Scalar-Plain">ignores</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">myignores</span>
+  <span class="l-Scalar-Plain">ignore_files</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">config/settings.html</span>
+    <span class="p-Indicator">-</span> <span class="s">"*.png"</span>
+    <span class="p-Indicator">-</span> <span class="s">"*.jpg"</span>
+  <span class="l-Scalar-Plain">refill_rate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">2</span>
+  <span class="l-Scalar-Plain">bucket_size</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">40</span>
+  <span class="l-Scalar-Plain">concurrency</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">4</span>
+  <span class="l-Scalar-Plain">proxy</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://localhost:8080</span></code></pre>
+<p>&lt;/your&gt;&lt;/id&gt;&lt;/your&gt;</p>
+
+    </div>
+  </body>
+  <script type="text/javascript" src="platform-picker.js"></script>
+</html>
