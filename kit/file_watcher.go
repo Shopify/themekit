@@ -1,10 +1,8 @@
 package kit
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,20 +13,31 @@ import (
 	"github.com/Shopify/themekit/theme"
 )
 
-const eventTimeoutInMs int64 = 3000
+const (
+	debouceTimeout = 500 * time.Millisecond
+)
 
-var assetLocations = []string{"templates/customers/", "assets/", "config/", "layout/", "snippets/", "templates/", "locales/", "sections/"}
+var (
+	assetLocations = []string{
+		"templates/customers/",
+		"assets/",
+		"config/",
+		"layout/",
+		"snippets/",
+		"templates/",
+		"locales/",
+		"sections/",
+	}
+	WatcherFileReader fileReader = ioutil.ReadFile
+)
 
-// FsAssetEvent ... TODO
-type FsAssetEvent struct {
-	asset     theme.Asset
-	eventType EventType
-}
-
-type fileReader func(filename string) ([]byte, error)
-
-// WatcherFileReader ... TODO
-var WatcherFileReader fileReader = ioutil.ReadFile
+type (
+	FsAssetEvent struct {
+		asset     theme.Asset
+		eventType EventType
+	}
+	fileReader func(filename string) ([]byte, error)
+)
 
 // RestoreReader ... TODO
 func RestoreReader() {
@@ -98,6 +107,7 @@ func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(s
 	}
 	return result, nil
 }
+
 func fwLoadAsset(event fsnotify.Event) theme.Asset {
 	root := filepath.Dir(event.Name)
 	filename := filepath.Base(event.Name)
@@ -127,21 +137,6 @@ func HandleEvent(event fsnotify.Event) FsAssetEvent {
 	return FsAssetEvent{asset: asset, eventType: eventType}
 }
 
-// ContentTypeFor ... TODO
-func ContentTypeFor(data []byte) string {
-	contentType := http.DetectContentType(data)
-	if strings.Contains(contentType, "text") {
-		return "text"
-	}
-
-	return "binary"
-}
-
-// Encode64 ... TODO
-func Encode64(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data)
-}
-
 func extractAssetKey(filename string) string {
 	filename = filepath.ToSlash(filename)
 
@@ -157,24 +152,22 @@ func extractAssetKey(filename string) string {
 func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetEvent {
 	results := make(chan AssetEvent)
 	go func() {
-		duplicateEventTimeout := map[string]int64{}
+		var currentEvent fsnotify.Event
+		recordedEvents := map[string]fsnotify.Event{}
 		for {
-			event := <-events
-
-			if event.Op == fsnotify.Chmod {
-				continue
-			}
-
-			// TODO: we should add new directories to the watch list
-			if !filter.MatchesFilter(event.Name) {
-				fsevent := HandleEvent(event)
-				duplicateEventTimeoutKey := fsevent.String()
-				timestamp := (time.Now().UnixNano() / int64(time.Millisecond))
-
-				if duplicateEventTimeout[duplicateEventTimeoutKey] < timestamp && fsevent.IsValid() {
-					duplicateEventTimeout[duplicateEventTimeoutKey] = timestamp + eventTimeoutInMs
-					results <- fsevent
+			select {
+			case currentEvent = <-events:
+				if currentEvent.Op == fsnotify.Chmod {
+					continue
 				}
+				recordedEvents[currentEvent.Name] = currentEvent
+			case <-time.After(debouceTimeout):
+				for eventName, event := range recordedEvents {
+					if fsevent := HandleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
+						results <- fsevent
+					}
+				}
+				recordedEvents = map[string]fsnotify.Event{}
 			}
 		}
 	}()

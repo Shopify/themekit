@@ -269,6 +269,7 @@ func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
 	if t.filter.MatchesFilter(asset.Asset().Key) {
 		return NoOpEvent{}
 	}
+
 	var event string
 	switch asset.Type() {
 	case Update:
@@ -276,12 +277,13 @@ func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
 	case Remove:
 		event = "DELETE"
 	}
+
 	resp, err := t.request(asset, event)
 	if err == nil {
 		defer resp.Body.Close()
 	}
 
-	return processResponse(resp, err, asset)
+	return NewAPIAssetEvent(resp, asset, err)
 }
 
 func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
@@ -333,10 +335,6 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 
 	t.config.AddHeaders(req)
 	return t.httpClient.Do(req)
-}
-
-func processResponse(r *http.Response, err error, event AssetEvent) ThemeEvent {
-	return NewAPIAssetEvent(r, event, err)
 }
 
 func (t ThemeClient) isDoneProcessing(themeID int64) bool {

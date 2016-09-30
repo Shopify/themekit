@@ -1,7 +1,9 @@
 package kit
 
 import (
+	"encoding/base64"
 	"io/ioutil"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,14 +39,14 @@ func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
 
 func (s *FileWatcherSuite) TestDeterminingContentTypesOfFiles() {
 	image, _ := ioutil.ReadFile("../fixtures/image.png")
-	assert.Equal(s.T(), "binary", ContentTypeFor(image))
-	assert.Equal(s.T(), "text", ContentTypeFor([]byte("Hello World")))
-	assert.Equal(s.T(), "text", ContentTypeFor([]byte("<!DOCTYPE html><html><head></head><body></body></html>")))
+	assert.Equal(s.T(), "binary", contentTypeFor(image))
+	assert.Equal(s.T(), "text", contentTypeFor([]byte("Hello World")))
+	assert.Equal(s.T(), "text", contentTypeFor([]byte("<!DOCTYPE html><html><head></head><body></body></html>")))
 }
 
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsAttachmentDataForBinaryFiles() {
 	imageData, _ := ioutil.ReadFile("../fixtures/image.png")
-	encodedImageData := Encode64(imageData)
+	encodedImageData := encode64(imageData)
 	WatcherFileReader = func(filename string) ([]byte, error) {
 		return imageData, nil
 	}
@@ -72,4 +74,16 @@ func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents(
 
 func TestFileWatcherSuite(t *testing.T) {
 	suite.Run(t, new(FileWatcherSuite))
+}
+
+func contentTypeFor(data []byte) string {
+	contentType := http.DetectContentType(data)
+	if strings.Contains(contentType, "text") {
+		return "text"
+	}
+	return "binary"
+}
+
+func encode64(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
 }

@@ -11,11 +11,11 @@ import (
 func WatchCommand(args Args, done chan bool) {
 	for _, client := range args.ThemeClients {
 		config := client.GetConfiguration()
-		foreman := buildForeman(client, args, config)
 		message(args.EventLog, "Spawning %d workers for %s", config.Concurrency, config.Domain)
+		foreman := buildForeman(client, args, config)
 		for i := 0; i < config.Concurrency; i++ {
-			message(args.EventLog, "%s Worker #%d ready to upload local changes", config.Domain, i)
 			go spawnWorker(foreman.WorkerQueue, client, args.EventLog)
+			message(args.EventLog, "%s Worker #%d ready to upload local changes", config.Domain, i)
 		}
 	}
 }
