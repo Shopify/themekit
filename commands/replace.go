@@ -14,7 +14,7 @@ func ReplaceCommand(args Args, done chan bool) {
 	root, _ := os.Getwd()
 	assetsActions := map[string]kit.AssetEvent{}
 	if len(args.Filenames) == 0 {
-		for _, asset := range args.ThemeClient.AssetListSync() {
+		for _, asset := range args.ThemeClient.AssetList() {
 			assetsActions[asset.Key] = kit.NewRemovalEvent(asset)
 		}
 		for _, asset := range args.ThemeClient.LocalAssets(root) {

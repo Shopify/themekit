@@ -112,56 +112,35 @@ func (t ThemeClient) Message(content string, args ...interface{}) {
 }
 
 // AssetList ... TODO
-func (t ThemeClient) AssetList() (results chan theme.Asset) {
-	results = make(chan theme.Asset)
-	go func() {
-		defer close(results)
-		queryBuilder := func(path string) string {
-			return path
-		}
-
-		resp := t.query(queryBuilder)
-		if resp.err != nil {
-			t.ErrorMessage(resp.err.Error())
-		}
-
-		if resp.code >= 400 && resp.code < 500 {
-			t.ErrorMessage("Server responded with HTTP %d; please check your credentials.", resp.code)
-			return
-		}
-		if resp.code >= 500 {
-			t.ErrorMessage("Server responded with HTTP %d; try again in a few minutes.", resp.code)
-			return
-		}
-
-		var assets map[string][]theme.Asset
-		err := json.Unmarshal(resp.body, &assets)
-		if err != nil {
-			t.ErrorMessage(err.Error())
-			return
-		}
-
-		sort.Sort(theme.ByAsset(assets["assets"]))
-		sanitizedAssets := ignoreCompiledAssets(assets["assets"])
-
-		for _, asset := range sanitizedAssets {
-			results <- asset
-		}
-	}()
-	return
-}
-
-// AssetListSync ... TODO
-func (t ThemeClient) AssetListSync() []theme.Asset {
-	ch := t.AssetList()
-	results := []theme.Asset{}
-	for {
-		asset, more := <-ch
-		if !more {
-			return results
-		}
-		results = append(results, asset)
+func (t ThemeClient) AssetList() []theme.Asset {
+	queryBuilder := func(path string) string {
+		return path
 	}
+
+	resp := t.query(queryBuilder)
+	if resp.err != nil {
+		t.ErrorMessage(resp.err.Error())
+	}
+
+	if resp.code >= 400 && resp.code < 500 {
+		t.ErrorMessage("Server responded with HTTP %d; please check your credentials.", resp.code)
+		return []theme.Asset{}
+	}
+	if resp.code >= 500 {
+		t.ErrorMessage("Server responded with HTTP %d; try again in a few minutes.", resp.code)
+		return []theme.Asset{}
+	}
+
+	var assets map[string][]theme.Asset
+	err := json.Unmarshal(resp.body, &assets)
+	if err != nil {
+		t.ErrorMessage(err.Error())
+		return []theme.Asset{}
+	}
+
+	sort.Sort(theme.ByAsset(assets["assets"]))
+
+	return ignoreCompiledAssets(assets["assets"])
 }
 
 // LocalAssets ... TODO

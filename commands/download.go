@@ -15,36 +15,21 @@ import (
 // DownloadCommand downloads file(s) from theme
 func DownloadCommand(args Args, done chan bool) {
 	if len(args.Filenames) <= 0 {
-		go downloadAllFiles(args.ThemeClient, done)
-	} else {
-		go downloadFiles(args.ThemeClient, args.Filenames, done)
-	}
-}
-
-func downloadAllFiles(client kit.ThemeClient, done chan bool) {
-	for {
-		asset, more := <-client.AssetList()
-		if more {
-			writeToDisk(client, asset)
-		} else {
-			done <- true
-			return
+		for _, asset := range args.ThemeClient.AssetList() {
+			go writeToDisk(args.ThemeClient, asset)
 		}
-	}
-}
-
-func downloadFiles(client kit.ThemeClient, filenames []string, done chan bool) {
-	for _, filename := range filenames {
-		if asset, err := client.Asset(filename); err != nil {
-			if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
-				client.Message("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
+	} else {
+		for _, filename := range args.Filenames {
+			if asset, err := args.ThemeClient.Asset(filename); err != nil {
+				if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
+					args.ThemeClient.Message("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
+				}
+			} else {
+				go writeToDisk(args.ThemeClient, asset)
 			}
-		} else {
-			writeToDisk(client, asset)
 		}
 	}
 	done <- true
-	return
 }
 
 func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
