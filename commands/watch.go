@@ -20,7 +20,7 @@ func WatchCommand(args Args, done chan bool) {
 	}
 }
 
-func buildForeman(client kit.ThemeClient, args Args, config kit.Configuration) kit.Foreman {
+func buildForeman(client kit.ThemeClient, args Args, config kit.Configuration) *kit.Foreman {
 	foreman := client.NewForeman()
 	if len(args.NotifyFile) > 0 {
 		foreman.OnIdle = func() {

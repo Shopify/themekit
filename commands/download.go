@@ -22,10 +22,8 @@ func DownloadCommand(args Args, done chan bool) {
 }
 
 func downloadAllFiles(client kit.ThemeClient, done chan bool) {
-	assets, errs := client.AssetList()
-	go drainErrors(errs)
 	for {
-		asset, more := <-assets
+		asset, more := <-client.AssetList()
 		if more {
 			writeToDisk(client, asset)
 		} else {

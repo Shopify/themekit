@@ -92,8 +92,12 @@ func (t ThemeClient) LeakyBucket() *LeakyBucket {
 }
 
 // NewForeman ... TODO
-func (t ThemeClient) NewForeman() Foreman {
+func (t ThemeClient) NewForeman() *Foreman {
 	return NewForeman(t.LeakyBucket())
+}
+
+func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
+	t.Message(RedText(fmt.Sprintf(content, args...)))
 }
 
 func (t ThemeClient) Message(content string, args ...interface{}) {
@@ -108,34 +112,32 @@ func (t ThemeClient) Message(content string, args ...interface{}) {
 }
 
 // AssetList ... TODO
-func (t ThemeClient) AssetList() (results chan theme.Asset, errs chan error) {
+func (t ThemeClient) AssetList() (results chan theme.Asset) {
 	results = make(chan theme.Asset)
-	errs = make(chan error)
 	go func() {
 		defer close(results)
-		defer close(errs)
 		queryBuilder := func(path string) string {
 			return path
 		}
 
 		resp := t.query(queryBuilder)
 		if resp.err != nil {
-			errs <- resp.err
+			t.ErrorMessage(resp.err.Error())
 		}
 
 		if resp.code >= 400 && resp.code < 500 {
-			errs <- fmt.Errorf("Server responded with HTTP %d; please check your credentials.", resp.code)
+			t.ErrorMessage("Server responded with HTTP %d; please check your credentials.", resp.code)
 			return
 		}
 		if resp.code >= 500 {
-			errs <- fmt.Errorf("Server responded with HTTP %d; try again in a few minutes.", resp.code)
+			t.ErrorMessage("Server responded with HTTP %d; try again in a few minutes.", resp.code)
 			return
 		}
 
 		var assets map[string][]theme.Asset
 		err := json.Unmarshal(resp.body, &assets)
 		if err != nil {
-			errs <- err
+			t.ErrorMessage(err.Error())
 			return
 		}
 
@@ -151,7 +153,7 @@ func (t ThemeClient) AssetList() (results chan theme.Asset, errs chan error) {
 
 // AssetListSync ... TODO
 func (t ThemeClient) AssetListSync() []theme.Asset {
-	ch, _ := t.AssetList()
+	ch := t.AssetList()
 	results := []theme.Asset{}
 	for {
 		asset, more := <-ch
@@ -253,9 +255,9 @@ func (t ThemeClient) ProcessSync(events []AssetEvent) {
 // Process ... TODO
 func (t ThemeClient) Process(events chan AssetEvent, done chan bool) {
 	go func() {
-		select {
-		case job, more := <-events:
-			if job != nil && more {
+		for {
+			job, more := <-events
+			if more {
 				t.Perform(job)
 			} else {
 				done <- true
