@@ -11,11 +11,11 @@ import (
 func WatchCommand(args Args, done chan bool) {
 	for _, client := range args.ThemeClients {
 		config := client.GetConfiguration()
-		message(args.EventLog, "Spawning %d workers for %s", config.Concurrency, config.Domain)
+		client.Message("Spawning %d workers for %s", config.Concurrency, config.Domain)
 		foreman := buildForeman(client, args, config)
 		for i := 0; i < config.Concurrency; i++ {
-			go spawnWorker(foreman.WorkerQueue, client, args.EventLog)
-			message(args.EventLog, "%s Worker #%d ready to upload local changes", config.Domain, i)
+			go spawnWorker(foreman.WorkerQueue, client)
+			client.Message("%s Worker #%d ready to upload local changes", config.Domain, i)
 		}
 	}
 }
@@ -42,12 +42,12 @@ func constructFileWatcher(dir string, config kit.Configuration) chan kit.AssetEv
 	return watcher
 }
 
-func spawnWorker(queue chan kit.AssetEvent, client kit.ThemeClient, eventLog chan kit.ThemeEvent) {
+func spawnWorker(queue chan kit.AssetEvent, client kit.ThemeClient) {
 	for {
 		asset := <-queue
 		if asset.Asset().IsValid() {
-			message(eventLog, "Received %s event on %s", kit.GreenText(asset.Type().String()), kit.BlueText(asset.Asset().Key))
-			logEvent(client.Perform(asset), eventLog)
+			client.Message("Received %s event on %s", kit.GreenText(asset.Type().String()), kit.BlueText(asset.Asset().Key))
+			client.Perform(asset)
 		}
 	}
 }

@@ -14,22 +14,20 @@ import (
 
 // DownloadCommand downloads file(s) from theme
 func DownloadCommand(args Args, done chan bool) {
-	eventLog := args.EventLog
-
 	if len(args.Filenames) <= 0 {
-		assets, errs := args.ThemeClient.AssetList()
-		go drainErrors(errs)
-		go downloadAllFiles(assets, done, eventLog)
+		go downloadAllFiles(args.ThemeClient, done)
 	} else {
-		go downloadFiles(args.ThemeClient.Asset, args.Filenames, done, eventLog)
+		go downloadFiles(args.ThemeClient, args.Filenames, done)
 	}
 }
 
-func downloadAllFiles(assets chan theme.Asset, done chan bool, eventLog chan kit.ThemeEvent) {
+func downloadAllFiles(client kit.ThemeClient, done chan bool) {
+	assets, errs := client.AssetList()
+	go drainErrors(errs)
 	for {
 		asset, more := <-assets
 		if more {
-			writeToDisk(asset, eventLog)
+			writeToDisk(client, asset)
 		} else {
 			done <- true
 			return
@@ -37,19 +35,21 @@ func downloadAllFiles(assets chan theme.Asset, done chan bool, eventLog chan kit
 	}
 }
 
-func downloadFiles(retrievalFunction kit.AssetRetrieval, filenames []string, done chan bool, eventLog chan kit.ThemeEvent) {
+func downloadFiles(client kit.ThemeClient, filenames []string, done chan bool) {
 	for _, filename := range filenames {
-		if asset, err := retrievalFunction(filename); err != nil {
-			handleError(filename, err, eventLog)
+		if asset, err := client.Asset(filename); err != nil {
+			if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
+				client.Message("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
+			}
 		} else {
-			writeToDisk(asset, eventLog)
+			writeToDisk(client, asset)
 		}
 	}
 	done <- true
 	return
 }
 
-func writeToDisk(asset theme.Asset, eventLog chan kit.ThemeEvent) {
+func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
 	dir, err := os.Getwd()
 	if err != nil {
 		kit.NotifyError(err)
@@ -96,7 +96,7 @@ func writeToDisk(asset theme.Asset, eventLog chan kit.ThemeEvent) {
 	if err != nil {
 		kit.NotifyError(err)
 	} else {
-		message(eventLog, kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
+		client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
 	}
 }
 
@@ -111,8 +111,5 @@ func prettyWrite(file *os.File, data []byte) (n int, err error) {
 	}
 }
 
-func handleError(filename string, err error, eventLog chan kit.ThemeEvent) {
-	if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
-		message(eventLog, "[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
-	}
+func handleError(filename string, err error) {
 }

@@ -12,7 +12,6 @@ import (
 
 // Args is a struct containing fields, set via CLI args, that are used by various themekit Commands
 type Args struct {
-	EventLog     chan kit.ThemeEvent
 	Environments kit.Environments
 	ThemeClient  kit.ThemeClient
 	ThemeClients []kit.ThemeClient
@@ -29,7 +28,6 @@ type Args struct {
 	SetThemeID   bool
 	BucketSize   int
 	RefillRate   int
-	Bucket       *kit.LeakyBucket
 	Timeout      time.Duration
 
 	WorkingDirGetter WorkingDirGetterType

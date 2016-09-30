@@ -21,6 +21,7 @@ const createThemeMaxRetries int = 3
 
 // ThemeClient ... TODO
 type ThemeClient struct {
+	eventLog   chan ThemeEvent
 	config     Configuration
 	httpClient *http.Client
 	filter     EventFilter
@@ -71,8 +72,9 @@ type AssetEvent interface {
 }
 
 // NewThemeClient ... TODO
-func NewThemeClient(config Configuration) ThemeClient {
+func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient {
 	return ThemeClient{
+		eventLog:   eventLog,
 		config:     config,
 		httpClient: newHTTPClient(config),
 		filter:     NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores),
@@ -92,6 +94,17 @@ func (t ThemeClient) LeakyBucket() *LeakyBucket {
 // NewForeman ... TODO
 func (t ThemeClient) NewForeman() Foreman {
 	return NewForeman(t.LeakyBucket())
+}
+
+func (t ThemeClient) Message(content string, args ...interface{}) {
+	go func() {
+		t.eventLog <- basicEvent{
+			Formatter: func(b basicEvent) string { return fmt.Sprintf(content, args...) },
+			EventType: "message",
+			Title:     "Notice",
+			Etype:     "basicEvent",
+		}
+	}()
 }
 
 // AssetList ... TODO
@@ -161,9 +174,6 @@ func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 	return assets
 }
 
-// AssetRetrieval ... TODO
-type AssetRetrieval func(filename string) (theme.Asset, error)
-
 // Asset ... TODO
 func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 	queryBuilder := func(path string) string {
@@ -187,17 +197,12 @@ func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 }
 
 // CreateTheme ... TODO
-func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan ThemeEvent) {
+func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", t.config.AdminURL())
 	contents := map[string]theme.Theme{
 		"theme": {Name: name, Source: zipLocation, Role: "unpublished"},
-	}
-
-	log := make(chan ThemeEvent)
-	logEvent := func(t ThemeEvent) {
-		log <- t
 	}
 
 	retries := 0
@@ -210,7 +215,9 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 			} else {
 				ready = true
 			}
-			go logEvent(themeEvent)
+			go func(client ThemeClient, event ThemeEvent) {
+				client.eventLog <- event
+			}(t, themeEvent)
 		}
 		if retries >= createThemeMaxRetries {
 			err := fmt.Errorf(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
@@ -233,41 +240,35 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 	if err != nil {
 		// TODO: there's no way we can signal that something went wrong.
 	}
-	return NewThemeClient(config), log
+	return NewThemeClient(t.eventLog, config)
 }
 
 // ProcessSync ... TODO
-func (t ThemeClient) ProcessSync(events []AssetEvent, eventLog chan ThemeEvent) bool {
+func (t ThemeClient) ProcessSync(events []AssetEvent) {
 	for _, event := range events {
-		eventLog <- t.Perform(event)
+		t.Perform(event)
 	}
-
-	return true
 }
 
 // Process ... TODO
-func (t ThemeClient) Process(events chan AssetEvent, done chan bool) (messages chan ThemeEvent) {
-	// done = make(chan bool)
-	messages = make(chan ThemeEvent)
+func (t ThemeClient) Process(events chan AssetEvent, done chan bool) {
 	go func() {
-		for {
-			job, more := <-events
-			if more {
-				messages <- t.Perform(job)
+		select {
+		case job, more := <-events:
+			if job != nil && more {
+				t.Perform(job)
 			} else {
-				close(messages)
 				done <- true
 				return
 			}
 		}
 	}()
-	return
 }
 
 // Perform ... TODO
-func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
+func (t ThemeClient) Perform(asset AssetEvent) {
 	if t.filter.MatchesFilter(asset.Asset().Key) {
-		return NoOpEvent{}
+		return
 	}
 
 	var event string
@@ -283,7 +284,7 @@ func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
 		defer resp.Body.Close()
 	}
 
-	return NewAPIAssetEvent(resp, asset, err)
+	t.eventLog <- NewAPIAssetEvent(resp, asset, err)
 }
 
 func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {

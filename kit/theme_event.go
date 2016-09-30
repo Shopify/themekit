@@ -24,28 +24,6 @@ type ThemeEvent interface {
 	AsJSON() ([]byte, error)
 }
 
-// NoOpEvent ... TODO
-type NoOpEvent struct {
-}
-
-func (e NoOpEvent) String() string {
-	return ""
-}
-
-// Successful ... TODO
-func (e NoOpEvent) Successful() bool {
-	return false
-}
-
-func (e NoOpEvent) Error() error {
-	return nil
-}
-
-// AsJSON ... TODO
-func (e NoOpEvent) AsJSON() ([]byte, error) {
-	return []byte{}, errors.New("cannot encode NoOpEvents")
-}
-
 // APIAssetEvent ... TODO
 type APIAssetEvent struct {
 	Host      string `json:"host"`
@@ -234,4 +212,28 @@ func extractAssetAPIErrors(data []byte, err error) error {
 		return err
 	}
 	return errors.New(strings.Join(assetErrors["errors"].Messages, "\n"))
+}
+
+type basicEvent struct {
+	Formatter func(b basicEvent) string
+	EventType string `json:"event_type"`
+	Target    string `json:"target"`
+	Title     string `json:"title"`
+	Etype     string `json:"type"`
+}
+
+func (b basicEvent) String() string {
+	return b.Formatter(b)
+}
+
+func (b basicEvent) Successful() bool {
+	return true
+}
+
+func (b basicEvent) Error() error {
+	return nil
+}
+
+func (b basicEvent) AsJSON() ([]byte, error) {
+	return json.Marshal(b)
 }

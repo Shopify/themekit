@@ -126,7 +126,6 @@ func main() {
 
 	commandDefinition := commandDefinitions[command]
 	args := commandDefinition.ArgsParser(command, rest)
-	args.EventLog = globalEventLog
 
 	done := make(chan bool)
 	go func() {
@@ -344,7 +343,7 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (kit.ThemeCli
 		fmt.Println("DEPRECATION WARNING: 'access_token' (in conf.yml) will soon be deprecated. Use 'password' instead, with the same Password value obtained from https://<your-subdomain>.myshopify.com/admin/apps/private/<app_id>")
 	}
 
-	return kit.NewThemeClient(config), nil
+	return kit.NewThemeClient(globalEventLog, config), nil
 }
 
 func loadEnvironments(directory string) (kit.Environments, error) {

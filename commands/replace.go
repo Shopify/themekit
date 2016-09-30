@@ -10,43 +10,30 @@ import (
 // ReplaceCommand overwrite theme file(s)
 func ReplaceCommand(args Args, done chan bool) {
 	foreman := args.ThemeClient.NewForeman()
-	logs := args.ThemeClient.Process(foreman.WorkerQueue, done)
-	mergeEvents(args.EventLog, []chan kit.ThemeEvent{logs})
+	args.ThemeClient.Process(foreman.WorkerQueue, done)
 	enqueueReplaceEvents(args.ThemeClient, args.Filenames, foreman.JobQueue)
 }
 
 func enqueueReplaceEvents(client kit.ThemeClient, filenames []string, events chan kit.AssetEvent) {
 	root, _ := os.Getwd()
+	assetsActions := map[string]kit.AssetEvent{}
 	if len(filenames) == 0 {
-		go fullReplace(client.AssetListSync(), client.LocalAssets(root), events)
-		return
-	}
-	go func() {
+		for _, asset := range client.AssetListSync() {
+			assetsActions[asset.Key] = kit.NewRemovalEvent(asset)
+		}
+		for _, asset := range client.LocalAssets(root) {
+			assetsActions[asset.Key] = kit.NewUploadEvent(asset)
+		}
+	} else {
 		for _, filename := range filenames {
 			asset, err := theme.LoadAsset(root, filename)
-			if err == nil {
-				events <- kit.NewUploadEvent(asset)
+			if err == nil && asset.IsValid() {
+				assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 			}
 		}
-		close(events)
-	}()
-}
-
-// fullReplace takes slices with assets both from the local filesystem and the remote server and translates them
-// into a suitable set of events that updates the remote site to the local state.
-func fullReplace(remoteAssets, localAssets []theme.Asset, events chan kit.AssetEvent) {
-	assetsActions := map[string]kit.AssetEvent{}
-	generateActions := func(assets []theme.Asset, assetEventFn func(asset theme.Asset) kit.SimpleAssetEvent) {
-		for _, asset := range assets {
-			assetsActions[asset.Key] = assetEventFn(asset)
-		}
 	}
-	generateActions(remoteAssets, kit.NewRemovalEvent)
-	generateActions(localAssets, kit.NewUploadEvent)
-	go func() {
-		for _, event := range assetsActions {
-			events <- event
-		}
-		close(events)
-	}()
+	for _, event := range assetsActions {
+		events <- event
+	}
+	close(events)
 }
