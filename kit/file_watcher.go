@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	debouceTimeout = 500 * time.Millisecond
+	debouceTimeout = 50 * time.Millisecond
 )
 
 var (
@@ -155,6 +155,7 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 		var currentEvent fsnotify.Event
 		recordedEvents := map[string]fsnotify.Event{}
 		for {
+			currentEvent = <-events
 			select {
 			case currentEvent = <-events:
 				if currentEvent.Op == fsnotify.Chmod {
@@ -168,6 +169,7 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 					}
 				}
 				recordedEvents = map[string]fsnotify.Event{}
+				break
 			}
 		}
 	}()
