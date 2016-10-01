@@ -29,8 +29,6 @@ type Args struct {
 	BucketSize   int
 	RefillRate   int
 	Timeout      time.Duration
-
-	WorkingDirGetter WorkingDirGetterType
 }
 
 // DefaultArgs returns an instance of Args, initialized with defaults
@@ -38,19 +36,13 @@ func DefaultArgs() Args {
 	currentDir, _ := os.Getwd()
 
 	return Args{
-		Domain:           "",
-		AccessToken:      "",
-		Directory:        currentDir,
-		Environment:      kit.DefaultEnvironment,
-		BucketSize:       kit.DefaultBucketSize,
-		RefillRate:       kit.DefaultRefillRate,
-		Timeout:          kit.DefaultTimeout,
-		WorkingDirGetter: os.Getwd,
+		Directory:   currentDir,
+		Environment: kit.DefaultEnvironment,
+		BucketSize:  kit.DefaultBucketSize,
+		RefillRate:  kit.DefaultRefillRate,
+		Timeout:     kit.DefaultTimeout,
 	}
 }
-
-// WorkingDirGetterType functions fulfills interface of os.Getwd(), used in testing
-type WorkingDirGetterType func() (string, error)
 
 // DefaultConfigurationOptions returns a default kit.Configuration using fields from an Args instance
 func (args Args) DefaultConfigurationOptions() kit.Configuration {
