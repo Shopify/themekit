@@ -17,12 +17,6 @@ func ConfigureCommand(args Args, done chan bool) {
 		kit.NotifyError(err)
 	}
 
-	Configure(args)
-	close(done)
-}
-
-// Configure ... TODO
-func Configure(args Args) {
 	config := args.DefaultConfigurationOptions()
 	_, err := config.Initialize()
 	if err != nil {
@@ -31,6 +25,7 @@ func Configure(args Args) {
 	}
 
 	AddConfiguration(args.Directory, args.Environment, config)
+	close(done)
 }
 
 // AddConfiguration ... TODO
@@ -43,17 +38,6 @@ func AddConfiguration(dir, environment string, config kit.Configuration) {
 	if err != nil {
 		kit.NotifyError(err)
 	}
-}
-
-// MigrateConfigurationCommand ... TODO
-func MigrateConfigurationCommand(args Args) (done chan bool, log chan kit.ThemeEvent) {
-	MigrateConfiguration(args.Directory)
-
-	done = make(chan bool)
-	log = make(chan kit.ThemeEvent)
-	close(done)
-	close(log)
-	return
 }
 
 // PrepareConfigurationMigration ... TODO
@@ -81,19 +65,6 @@ func PrepareConfigurationMigration(dir string) (func() bool, func() error) {
 		return env.Save(environmentLocation)
 	}
 	return confirmationFn, saveFn
-}
-
-// MigrateConfiguration ... TODO
-func MigrateConfiguration(dir string) error {
-	environmentLocation := filepath.Join(dir, "config.yml")
-	env, err := loadOrInitializeEnvironment(environmentLocation)
-	if err != nil {
-		kit.NotifyError(err)
-		return err
-	}
-
-	err = env.Save(environmentLocation)
-	return err
 }
 
 func loadOrInitializeEnvironment(location string) (kit.Environments, error) {

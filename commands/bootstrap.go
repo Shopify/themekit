@@ -20,13 +20,6 @@ const (
 
 // BootstrapCommand bootstraps a new theme using Shopify Timber
 func BootstrapCommand(args Args, done chan bool) {
-	go func() {
-		doBootstrap(args, done)
-		close(done)
-	}()
-}
-
-func doBootstrap(args Args, done chan bool) {
 	pwd, _ := os.Getwd()
 	if pwd != args.Directory {
 		os.Chdir(args.Directory)
