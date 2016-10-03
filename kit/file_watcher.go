@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	debouceTimeout = 50 * time.Millisecond
+	debounceTimeout = 50 * time.Millisecond
 )
 
 var (
@@ -162,7 +162,7 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 					continue
 				}
 				recordedEvents[currentEvent.Name] = currentEvent
-			case <-time.After(debouceTimeout):
+			case <-time.After(debounceTimeout):
 				for eventName, event := range recordedEvents {
 					if fsevent := HandleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
 						results <- fsevent
