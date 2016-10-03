@@ -11,7 +11,7 @@ import (
 	"github.com/inconshreveable/go-update"
 )
 
-var TKVersion = Version{Major: 0, Minor: 4, Patch: 3}
+var TKVersion = Version{Major: 0, Minor: 4, Patch: 4}
 
 // ThemeKitVersion ... TODO
 var ThemeKitVersion = TKVersion.String()
@@ -33,7 +33,6 @@ func LibraryInfo() []string {
 	return []string{
 		"ThemeKit - Shopify Theme Utilities",
 		ThemeKitVersion,
-		"Author: Chris Saunders",
 	}
 }
 
