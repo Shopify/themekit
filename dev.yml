@@ -1,12 +1,12 @@
 name: themekit
 
 up:
-  - go: 1.6.2
+  - go: 1.7.1
   - ruby: 2.2.3p172-shopify
 
 commands:
   test:
-    run: godep go test ./...
+    run: make test
     desc: 'run unit tests'
 
 packages:
