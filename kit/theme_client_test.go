@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var globalEventLog chan ThemeEvent
+var globalEventLog = make(chan ThemeEvent, 100)
 
 type TestEvent struct {
 	asset     theme.Asset
