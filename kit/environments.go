@@ -22,13 +22,6 @@ func LoadEnvironments(contents []byte) (envs Environments, err error) {
 	if err != nil {
 		return nil, err
 	}
-	for key, conf := range envs {
-		environmentConfig, err := conf.Initialize()
-		if err != nil {
-			return nil, fmt.Errorf("could not load environment \"%s\": %s", key, err)
-		}
-		envs[key] = environmentConfig
-	}
 	return
 }
 
@@ -41,9 +34,15 @@ func (e Environments) SetConfiguration(environmentName string, conf Configuratio
 func (e Environments) GetConfiguration(environmentName string) (conf Configuration, err error) {
 	conf, exists := e[environmentName]
 	if !exists {
-		err = fmt.Errorf("%s does not exist in this environments list", environmentName)
+		return conf, fmt.Errorf("%s does not exist in this environments list", environmentName)
 	}
-	return
+
+	validConfig, err := conf.Initialize()
+	if err != nil {
+		return conf, fmt.Errorf("could not load environment \"%s\": %s", environmentName, err)
+	}
+
+	return validConfig, nil
 }
 
 func (e Environments) Write(w io.Writer) error {

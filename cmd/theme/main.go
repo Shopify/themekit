@@ -319,11 +319,7 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (kit.ThemeCli
 	}
 	config, err := environments.GetConfiguration(env)
 	if err != nil && len(environments) > 0 {
-		invalidEnvMsg := fmt.Sprintf("'%s' is not a valid environment. The following environments are available within config.yml:", env)
-		fmt.Println(kit.RedText(invalidEnvMsg))
-		for e := range environments {
-			fmt.Println(kit.RedText(fmt.Sprintf(" - %s", e)))
-		}
+		fmt.Println(kit.RedText(err.Error()))
 		os.Exit(1)
 	} else if err != nil && !isRetry {
 		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", kit.DefaultEnvironment)
