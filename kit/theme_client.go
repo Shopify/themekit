@@ -86,17 +86,17 @@ func (t ThemeClient) GetConfiguration() Configuration {
 	return t.config
 }
 
-// LeakyBucket ... TODO
+// LeakyBucket creates a leaky bucket using the theme clients bucket size and refill rate
 func (t ThemeClient) LeakyBucket() *LeakyBucket {
 	return NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
 }
 
-// NewForeman ... TODO
+// NewForeman creates a foreman job runner using a leaky bucket using the theme clients config
 func (t ThemeClient) NewForeman() *Foreman {
 	return NewForeman(t.LeakyBucket())
 }
 
-// NewForeman ... TODO
+// NewFileWatcher creates a new filewatcher using the theme clients file filter
 func (t ThemeClient) NewFileWatcher(dir string) (chan AssetEvent, error) {
 	return NewFileWatcher(dir, true, t.filter)
 }
