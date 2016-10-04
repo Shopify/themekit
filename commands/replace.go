@@ -23,7 +23,9 @@ func ReplaceCommand(args Args, done chan bool) {
 	} else {
 		for _, filename := range args.Filenames {
 			asset, err := theme.LoadAsset(root, filename)
-			if err == nil && asset.IsValid() {
+			if err != nil {
+				args.ThemeClient.ErrorMessage(err.Error())
+			} else if asset.IsValid() {
 				assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 			}
 		}
