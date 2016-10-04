@@ -266,10 +266,6 @@ func (t ThemeClient) Perform(asset AssetEvent) {
 	}
 
 	resp, err := t.request(asset, event)
-	if err == nil {
-		defer resp.Body.Close()
-	}
-
 	t.eventLog <- NewAPIAssetEvent(resp, asset, err)
 }
 

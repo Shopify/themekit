@@ -40,7 +40,7 @@ func buildForeman(client kit.ThemeClient, args Args, config kit.Configuration) *
 func spawnWorker(queue chan kit.AssetEvent, client kit.ThemeClient) {
 	for {
 		asset := <-queue
-		if asset.Asset().IsValid() {
+		if asset.Asset().IsValid() || asset.Type() == kit.Remove {
 			client.Message("Received %s event on %s", kit.GreenText(asset.Type().String()), kit.BlueText(asset.Asset().Key))
 			client.Perform(asset)
 		}

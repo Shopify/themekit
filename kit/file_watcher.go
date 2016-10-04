@@ -156,9 +156,12 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 		recordedEvents := map[string]fsnotify.Event{}
 		for {
 			currentEvent = <-events
+			if currentEvent.Op&fsnotify.Chmod != fsnotify.Chmod {
+				recordedEvents[currentEvent.Name] = currentEvent
+			}
 			select {
 			case currentEvent = <-events:
-				if currentEvent.Op == fsnotify.Chmod {
+				if currentEvent.Op&fsnotify.Chmod == fsnotify.Chmod {
 					continue
 				}
 				recordedEvents[currentEvent.Name] = currentEvent
