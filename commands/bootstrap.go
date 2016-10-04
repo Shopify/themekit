@@ -20,13 +20,6 @@ const (
 
 // BootstrapCommand bootstraps a new theme using Shopify Timber
 func BootstrapCommand(args Args, done chan bool) {
-	go func() {
-		doBootstrap(args, done)
-		close(done)
-	}()
-}
-
-func doBootstrap(args Args, done chan bool) {
 	pwd, _ := os.Getwd()
 	if pwd != args.Directory {
 		os.Chdir(args.Directory)
@@ -42,8 +35,7 @@ func doBootstrap(args Args, done chan bool) {
 	if len(args.Prefix) > 0 {
 		name = args.Prefix + "-" + name
 	}
-	clientForNewTheme, themeEvents := args.ThemeClient.CreateTheme(name, zipLocation)
-	mergeEvents(args.EventLog, []chan kit.ThemeEvent{themeEvents})
+	clientForNewTheme := args.ThemeClient.CreateTheme(name, zipLocation)
 	if args.SetThemeID {
 		AddConfiguration(args.Directory, args.Environment, clientForNewTheme.GetConfiguration())
 	}
@@ -52,7 +44,6 @@ func doBootstrap(args Args, done chan bool) {
 
 	downloadOptions := Args{}
 	downloadOptions.ThemeClient = clientForNewTheme
-	downloadOptions.EventLog = args.EventLog
 
 	DownloadCommand(downloadOptions, done)
 }

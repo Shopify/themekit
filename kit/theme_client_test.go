@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var globalEventLog = make(chan ThemeEvent, 100)
+
 type TestEvent struct {
 	asset     theme.Asset
 	eventType EventType
@@ -30,7 +32,7 @@ func TestPerformWithUpdateAssetEvent(t *testing.T) {
 	ts := assertRequest(t, "PUT", "asset", map[string]string{"value": "Hello World", "key": "assets/hello.txt"})
 	defer ts.Close()
 	asset := TestEvent{asset: asset(), eventType: Update}
-	client := NewThemeClient(conf(ts))
+	client := NewThemeClient(globalEventLog, conf(ts))
 	client.Perform(asset)
 }
 
@@ -38,7 +40,7 @@ func TestPerformWithRemoveAssetEvent(t *testing.T) {
 	ts := assertRequest(t, "DELETE", "asset", map[string]string{"key": "assets/hello.txt"})
 	defer ts.Close()
 	asset := TestEvent{asset: asset(), eventType: Remove}
-	client := NewThemeClient(conf(ts))
+	client := NewThemeClient(globalEventLog, conf(ts))
 	client.Perform(asset)
 }
 
@@ -55,7 +57,7 @@ func TestPerformWithAssetEventThatDoesNotPassTheFilter(t *testing.T) {
 	asset := theme.Asset{Key: "snickerdoodle.txt", Value: "not important"}
 	event := TestEvent{asset: asset, eventType: Update}
 
-	client := NewThemeClient(config)
+	client := NewThemeClient(globalEventLog, config)
 	client.Perform(event)
 }
 
@@ -73,12 +75,10 @@ func TestProcessingAnEventsChannel(t *testing.T) {
 		close(stream)
 	}()
 
-	client := NewThemeClient(conf(ts))
+	client := NewThemeClient(globalEventLog, conf(ts))
 
 	done := make(chan bool)
-	messages := client.Process(stream, done)
-
-	go drain(messages)
+	client.Process(stream, done)
 
 	<-done
 	assert.Equal(t, 2, results["PUT"])
@@ -91,14 +91,14 @@ func TestRetrievingAnAssetList(t *testing.T) {
 		fmt.Fprintf(w, TestFixture("response_multi"))
 	}))
 
-	client := NewThemeClient(conf(ts))
-	assets, _ := client.AssetList()
-	assert.Equal(t, 2, count(assets))
+	client := NewThemeClient(globalEventLog, conf(ts))
+	assets := client.AssetList()
+	assert.Equal(t, 2, len(assets))
 }
 
 func TestRetrievingLocalAssets(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
-	client := NewThemeClient(conf(ts))
+	client := NewThemeClient(globalEventLog, conf(ts))
 
 	assets := client.LocalAssets("../fixtures/templates")
 
@@ -106,7 +106,7 @@ func TestRetrievingLocalAssets(t *testing.T) {
 }
 
 func TestRetrievingLocalAssetsWithSubdirectories(t *testing.T) {
-	client := NewThemeClient(Configuration{})
+	client := NewThemeClient(globalEventLog, Configuration{})
 
 	assets := client.LocalAssets("../fixtures/local_assets")
 
@@ -122,14 +122,13 @@ func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
 	json.Unmarshal(RawTestFixture("expected_asset_list_output"), &expected)
 	sort.Sort(theme.ByAsset(expected["assets"]))
 
-	client := NewThemeClient(conf(ts))
-	assetsChan, _ := client.AssetList()
-	actual := makeSlice(assetsChan)
-	sort.Sort(theme.ByAsset(actual))
+	client := NewThemeClient(globalEventLog, conf(ts))
+	assetsChan := client.AssetList()
+	sort.Sort(theme.ByAsset(assetsChan))
 
-	assert.Equal(t, len(expected["assets"]), len(actual))
+	assert.Equal(t, len(expected["assets"]), len(assetsChan))
 	for index, expected := range expected["assets"] {
-		assert.Equal(t, expected, actual[index])
+		assert.Equal(t, expected, assetsChan[index])
 	}
 }
 
@@ -139,7 +138,7 @@ func TestRetrievingASingleAsset(t *testing.T) {
 		fmt.Fprintf(w, TestFixture("response_single"))
 	}))
 
-	client := NewThemeClient(conf(ts))
+	client := NewThemeClient(globalEventLog, conf(ts))
 	asset, _ := client.Asset("assets/foo.txt")
 	assert.Equal(t, "hello world", asset.Value)
 }
@@ -168,19 +167,6 @@ func TestIgnoringCompiledAssets(t *testing.T) {
 	assert.Equal(t, expected, ignoreCompiledAssets(input))
 }
 
-func TestThemeClientAssetListOnUnauthorized(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-	}))
-	client := NewThemeClient(conf(ts))
-
-	_, errs := client.AssetList()
-
-	err := <-errs
-	assert.NotNil(t, err)
-	assert.Equal(t, "Server responded with HTTP 401; please check your credentials.", err.Error())
-}
-
 func asset() theme.Asset {
 	return theme.Asset{Key: "assets/hello.txt", Value: "Hello World"}
 }
@@ -195,28 +181,6 @@ func drain(channel chan ThemeEvent) {
 		if !more {
 			return
 		}
-	}
-}
-
-func count(channel chan theme.Asset) int {
-	count := 0
-	for {
-		_, more := <-channel
-		if !more {
-			return count
-		}
-		count++
-	}
-}
-
-func makeSlice(channel chan theme.Asset) []theme.Asset {
-	assets := []theme.Asset{}
-	for {
-		asset, more := <-channel
-		if !more {
-			return assets
-		}
-		assets = append(assets, asset)
 	}
 }
 

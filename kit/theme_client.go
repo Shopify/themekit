@@ -21,6 +21,7 @@ const createThemeMaxRetries int = 3
 
 // ThemeClient ... TODO
 type ThemeClient struct {
+	eventLog   chan ThemeEvent
 	config     Configuration
 	httpClient *http.Client
 	filter     EventFilter
@@ -71,8 +72,9 @@ type AssetEvent interface {
 }
 
 // NewThemeClient ... TODO
-func NewThemeClient(config Configuration) ThemeClient {
+func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient {
 	return ThemeClient{
+		eventLog:   eventLog,
 		config:     config,
 		httpClient: newHTTPClient(config),
 		filter:     NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores),
@@ -89,59 +91,56 @@ func (t ThemeClient) LeakyBucket() *LeakyBucket {
 	return NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
 }
 
-// AssetList ... TODO
-func (t ThemeClient) AssetList() (results chan theme.Asset, errs chan error) {
-	results = make(chan theme.Asset)
-	errs = make(chan error)
-	go func() {
-		defer close(results)
-		defer close(errs)
-		queryBuilder := func(path string) string {
-			return path
-		}
-
-		resp := t.query(queryBuilder)
-		if resp.err != nil {
-			errs <- resp.err
-		}
-
-		if resp.code >= 400 && resp.code < 500 {
-			errs <- fmt.Errorf("Server responded with HTTP %d; please check your credentials.", resp.code)
-			return
-		}
-		if resp.code >= 500 {
-			errs <- fmt.Errorf("Server responded with HTTP %d; try again in a few minutes.", resp.code)
-			return
-		}
-
-		var assets map[string][]theme.Asset
-		err := json.Unmarshal(resp.body, &assets)
-		if err != nil {
-			errs <- err
-			return
-		}
-
-		sort.Sort(theme.ByAsset(assets["assets"]))
-		sanitizedAssets := ignoreCompiledAssets(assets["assets"])
-
-		for _, asset := range sanitizedAssets {
-			results <- asset
-		}
-	}()
-	return
+// NewForeman ... TODO
+func (t ThemeClient) NewForeman() *Foreman {
+	return NewForeman(t.LeakyBucket())
 }
 
-// AssetListSync ... TODO
-func (t ThemeClient) AssetListSync() []theme.Asset {
-	ch, _ := t.AssetList()
-	results := []theme.Asset{}
-	for {
-		asset, more := <-ch
-		if !more {
-			return results
+func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
+	t.Message(RedText(fmt.Sprintf(content, args...)))
+}
+
+func (t ThemeClient) Message(content string, args ...interface{}) {
+	go func() {
+		t.eventLog <- basicEvent{
+			Formatter: func(b basicEvent) string { return fmt.Sprintf(content, args...) },
+			EventType: "message",
+			Title:     "Notice",
+			Etype:     "basicEvent",
 		}
-		results = append(results, asset)
+	}()
+}
+
+// AssetList ... TODO
+func (t ThemeClient) AssetList() []theme.Asset {
+	queryBuilder := func(path string) string {
+		return path
 	}
+
+	resp := t.query(queryBuilder)
+	if resp.err != nil {
+		t.ErrorMessage(resp.err.Error())
+	}
+
+	if resp.code >= 400 && resp.code < 500 {
+		t.ErrorMessage("Server responded with HTTP %d; please check your credentials.", resp.code)
+		return []theme.Asset{}
+	}
+	if resp.code >= 500 {
+		t.ErrorMessage("Server responded with HTTP %d; try again in a few minutes.", resp.code)
+		return []theme.Asset{}
+	}
+
+	var assets map[string][]theme.Asset
+	err := json.Unmarshal(resp.body, &assets)
+	if err != nil {
+		t.ErrorMessage(err.Error())
+		return []theme.Asset{}
+	}
+
+	sort.Sort(theme.ByAsset(assets["assets"]))
+
+	return ignoreCompiledAssets(assets["assets"])
 }
 
 // LocalAssets ... TODO
@@ -155,9 +154,6 @@ func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 
 	return assets
 }
-
-// AssetRetrieval ... TODO
-type AssetRetrieval func(filename string) (theme.Asset, error)
 
 // Asset ... TODO
 func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
@@ -182,17 +178,12 @@ func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 }
 
 // CreateTheme ... TODO
-func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan ThemeEvent) {
+func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", t.config.AdminURL())
 	contents := map[string]theme.Theme{
 		"theme": {Name: name, Source: zipLocation, Role: "unpublished"},
-	}
-
-	log := make(chan ThemeEvent)
-	logEvent := func(t ThemeEvent) {
-		log <- t
 	}
 
 	retries := 0
@@ -205,7 +196,9 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 			} else {
 				ready = true
 			}
-			go logEvent(themeEvent)
+			go func(client ThemeClient, event ThemeEvent) {
+				client.eventLog <- event
+			}(t, themeEvent)
 		}
 		if retries >= createThemeMaxRetries {
 			err := fmt.Errorf(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
@@ -228,42 +221,37 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) (ThemeClient, chan Th
 	if err != nil {
 		// TODO: there's no way we can signal that something went wrong.
 	}
-	return NewThemeClient(config), log
+	return NewThemeClient(t.eventLog, config)
 }
 
 // ProcessSync ... TODO
-func (t ThemeClient) ProcessSync(events []AssetEvent, eventLog chan ThemeEvent) bool {
+func (t ThemeClient) ProcessSync(events []AssetEvent) {
 	for _, event := range events {
-		eventLog <- t.Perform(event)
+		t.Perform(event)
 	}
-
-	return true
 }
 
 // Process ... TODO
-func (t ThemeClient) Process(events chan AssetEvent, done chan bool) (messages chan ThemeEvent) {
-	// done = make(chan bool)
-	messages = make(chan ThemeEvent)
+func (t ThemeClient) Process(events chan AssetEvent, done chan bool) {
 	go func() {
 		for {
 			job, more := <-events
 			if more {
-				messages <- t.Perform(job)
+				t.Perform(job)
 			} else {
-				close(messages)
 				done <- true
 				return
 			}
 		}
 	}()
-	return
 }
 
 // Perform ... TODO
-func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
+func (t ThemeClient) Perform(asset AssetEvent) {
 	if t.filter.MatchesFilter(asset.Asset().Key) {
-		return NoOpEvent{}
+		return
 	}
+
 	var event string
 	switch asset.Type() {
 	case Update:
@@ -271,12 +259,13 @@ func (t ThemeClient) Perform(asset AssetEvent) ThemeEvent {
 	case Remove:
 		event = "DELETE"
 	}
+
 	resp, err := t.request(asset, event)
 	if err == nil {
 		defer resp.Body.Close()
 	}
 
-	return processResponse(resp, err, asset)
+	t.eventLog <- NewAPIAssetEvent(resp, asset, err)
 }
 
 func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
@@ -328,10 +317,6 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 
 	t.config.AddHeaders(req)
 	return t.httpClient.Do(req)
-}
-
-func processResponse(r *http.Response, err error, event AssetEvent) ThemeEvent {
-	return NewAPIAssetEvent(r, event, err)
 }
 
 func (t ThemeClient) isDoneProcessing(themeID int64) bool {

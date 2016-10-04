@@ -9,25 +9,24 @@ import (
 
 // UploadCommand add file(s) to theme
 func UploadCommand(args Args, done chan bool) {
-	rawEvents, throttledEvents := prepareChannel(args)
-	logs := args.ThemeClient.Process(throttledEvents, done)
-	mergeEvents(args.EventLog, []chan kit.ThemeEvent{logs})
-	go enqueueUploadEvents(args.ThemeClient, args.Filenames, rawEvents)
-}
-
-func enqueueUploadEvents(client kit.ThemeClient, filenames []string, events chan kit.AssetEvent) {
+	foreman := args.ThemeClient.NewForeman()
+	args.ThemeClient.Process(foreman.WorkerQueue, done)
 	root, _ := os.Getwd()
-	if len(filenames) == 0 {
-		for _, asset := range client.LocalAssets(root) {
-			events <- kit.NewUploadEvent(asset)
+	if len(args.Filenames) == 0 {
+		for _, asset := range args.ThemeClient.LocalAssets(root) {
+			if asset.IsValid() {
+				foreman.JobQueue <- kit.NewUploadEvent(asset)
+			}
 		}
 	} else {
-		for _, filename := range filenames {
+		for _, filename := range args.Filenames {
 			asset, err := theme.LoadAsset(root, filename)
-			if err == nil {
-				events <- kit.NewUploadEvent(asset)
+			if err != nil {
+				args.ThemeClient.ErrorMessage(err.Error())
+			} else if asset.IsValid() {
+				foreman.JobQueue <- kit.NewUploadEvent(asset)
 			}
 		}
 	}
-	close(events)
+	close(foreman.JobQueue)
 }

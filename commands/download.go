@@ -14,42 +14,25 @@ import (
 
 // DownloadCommand downloads file(s) from theme
 func DownloadCommand(args Args, done chan bool) {
-	eventLog := args.EventLog
-
 	if len(args.Filenames) <= 0 {
-		assets, errs := args.ThemeClient.AssetList()
-		go drainErrors(errs)
-		go downloadAllFiles(assets, done, eventLog)
-	} else {
-		go downloadFiles(args.ThemeClient.Asset, args.Filenames, done, eventLog)
-	}
-}
-
-func downloadAllFiles(assets chan theme.Asset, done chan bool, eventLog chan kit.ThemeEvent) {
-	for {
-		asset, more := <-assets
-		if more {
-			writeToDisk(asset, eventLog)
-		} else {
-			done <- true
-			return
+		for _, asset := range args.ThemeClient.AssetList() {
+			go writeToDisk(args.ThemeClient, asset)
 		}
-	}
-}
-
-func downloadFiles(retrievalFunction kit.AssetRetrieval, filenames []string, done chan bool, eventLog chan kit.ThemeEvent) {
-	for _, filename := range filenames {
-		if asset, err := retrievalFunction(filename); err != nil {
-			handleError(filename, err, eventLog)
-		} else {
-			writeToDisk(asset, eventLog)
+	} else {
+		for _, filename := range args.Filenames {
+			if asset, err := args.ThemeClient.Asset(filename); err != nil {
+				if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
+					args.ThemeClient.Message("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
+				}
+			} else {
+				go writeToDisk(args.ThemeClient, asset)
+			}
 		}
 	}
 	done <- true
-	return
 }
 
-func writeToDisk(asset theme.Asset, eventLog chan kit.ThemeEvent) {
+func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
 	dir, err := os.Getwd()
 	if err != nil {
 		kit.NotifyError(err)
@@ -96,16 +79,7 @@ func writeToDisk(asset theme.Asset, eventLog chan kit.ThemeEvent) {
 	if err != nil {
 		kit.NotifyError(err)
 	} else {
-		event := basicEvent{
-			Title:     "FS Event",
-			EventType: "Write",
-			Target:    filename,
-			Etype:     "fsevent",
-			Formatter: func(b basicEvent) string {
-				return kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", b.Target))
-			},
-		}
-		logEvent(event, eventLog)
+		client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
 	}
 }
 
@@ -120,22 +94,5 @@ func prettyWrite(file *os.File, data []byte) (n int, err error) {
 	}
 }
 
-func handleError(filename string, err error, eventLog chan kit.ThemeEvent) {
-	if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
-		event := basicEvent{
-			Title:     "Non-Fatal Network Error",
-			EventType: nonFatal.Verb,
-			Target:    filename,
-			Etype:     "fsevent",
-			Formatter: func(b basicEvent) string {
-				return fmt.Sprintf(
-					"[%s] Could not complete %s for %s",
-					kit.RedText(fmt.Sprintf("%d", nonFatal.Code)),
-					kit.YellowText(b.EventType),
-					kit.BlueText(b.Target),
-				)
-			},
-		}
-		logEvent(event, eventLog)
-	}
+func handleError(filename string, err error) {
 }
