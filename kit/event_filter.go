@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/ryanuber/go-glob"
+
+	"github.com/Shopify/themekit/theme"
 )
 
 const configurationFilename = "config\\.yml"
@@ -81,6 +83,16 @@ func NewEventFilterFromPatternsAndFiles(patterns []string, files []string) Event
 		pos++
 	}
 	return NewEventFilterFromReaders(allReaders)
+}
+
+func (e EventFilter) FilterAssets(assets []theme.Asset) []theme.Asset {
+	filteredAssets := []theme.Asset{}
+	for _, asset := range assets {
+		if !e.MatchesFilter(asset.Key) {
+			filteredAssets = append(filteredAssets, asset)
+		}
+	}
+	return filteredAssets
 }
 
 // Filter ... TODO
