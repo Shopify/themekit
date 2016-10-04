@@ -72,7 +72,7 @@ func (conf Configuration) Initialize() (Configuration, error) {
 		if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); err == nil {
 			conf.URL = fmt.Sprintf("%s/themes/%d", conf.URL, themeID)
 		} else {
-			return conf, fmt.Errorf("missing theme_id. Error: \"%s\"", err)
+			return conf, fmt.Errorf("missing theme_id.")
 		}
 	}
 
