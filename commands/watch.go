@@ -28,18 +28,13 @@ func buildForeman(client kit.ThemeClient, args Args, config kit.Configuration) *
 			os.Chtimes(args.NotifyFile, time.Now(), time.Now())
 		}
 	}
-	foreman.JobQueue = constructFileWatcher(args.Directory, config)
-	foreman.Restart()
-	return foreman
-}
-
-func constructFileWatcher(dir string, config kit.Configuration) chan kit.AssetEvent {
-	filter := kit.NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores)
-	watcher, err := kit.NewFileWatcher(dir, true, filter)
+	var err error
+	foreman.JobQueue, err = client.NewFileWatcher(args.Directory)
 	if err != nil {
 		kit.NotifyError(err)
 	}
-	return watcher
+	foreman.Restart()
+	return foreman
 }
 
 func spawnWorker(queue chan kit.AssetEvent, client kit.ThemeClient) {

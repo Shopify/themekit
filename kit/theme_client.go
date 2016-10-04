@@ -96,6 +96,11 @@ func (t ThemeClient) NewForeman() *Foreman {
 	return NewForeman(t.LeakyBucket())
 }
 
+// NewForeman ... TODO
+func (t ThemeClient) NewFileWatcher(dir string) (chan AssetEvent, error) {
+	return NewFileWatcher(dir, true, t.filter)
+}
+
 func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
 	t.Message(RedText(fmt.Sprintf(content, args...)))
 }
@@ -140,7 +145,7 @@ func (t ThemeClient) AssetList() []theme.Asset {
 
 	sort.Sort(theme.ByAsset(assets["assets"]))
 
-	return ignoreCompiledAssets(assets["assets"])
+	return t.filter.FilterAssets(ignoreCompiledAssets(assets["assets"]))
 }
 
 // LocalAssets ... TODO
