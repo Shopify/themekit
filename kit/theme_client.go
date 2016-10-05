@@ -203,7 +203,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 	}
 
 	retries := 0
-	themeEvent := func() (themeEvent APIThemeEvent) {
+	themeEvent := func() (themeEvent apiThemeEvent) {
 		ready := false
 		data, _ := json.Marshal(contents)
 		for retries < createThemeMaxRetries && !ready {
@@ -279,7 +279,7 @@ func (t ThemeClient) Perform(asset AssetEvent) {
 	}
 
 	resp, err := t.request(asset, event)
-	t.eventLog <- NewAPIAssetEvent(resp, asset, err)
+	t.eventLog <- newAPIAssetEvent(resp, asset, err)
 }
 
 func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
@@ -301,14 +301,14 @@ func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
 	return apiResponse{code: resp.StatusCode, body: body, err: err}
 }
 
-func (t ThemeClient) sendData(method, path string, body []byte) (result APIThemeEvent) {
+func (t ThemeClient) sendData(method, path string, body []byte) (result apiThemeEvent) {
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
 		Fatal(err)
 	}
 	t.config.AddHeaders(req)
 	resp, err := t.httpClient.Do(req)
-	if result = NewAPIThemeEvent(resp, err); result.Successful() {
+	if result = newAPIThemeEvent(resp, err); result.Successful() {
 		defer resp.Body.Close()
 	}
 	return result
