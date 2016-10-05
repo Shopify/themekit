@@ -45,7 +45,7 @@ func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsAttachmentDataForBin
 	imageData, _ := ioutil.ReadFile("../fixtures/image.png")
 	encodedImageData := encode64(imageData)
 	event := fsnotify.Event{Name: "../fixtures/image.png", Op: fsnotify.Chmod}
-	assetEvent := HandleEvent(event)
+	assetEvent := handleEvent(event)
 	assert.Equal(s.T(), "", assetEvent.Asset().Value)
 	assert.Equal(s.T(), encodedImageData, assetEvent.Asset().Attachment)
 }
@@ -58,7 +58,7 @@ func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents(
 	}
 	for fsEvent, themekitEvent := range writes {
 		event := fsnotify.Event{Name: "../fixtures/whatever.txt", Op: fsEvent}
-		assetEvent := HandleEvent(event)
+		assetEvent := handleEvent(event)
 		assert.Equal(s.T(), themekitEvent, assetEvent.Type())
 	}
 }

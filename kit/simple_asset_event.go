@@ -9,22 +9,22 @@ type simpleAssetEvent struct {
 	eventType EventType
 }
 
-// Asset ... TODO
 func (s simpleAssetEvent) Asset() theme.Asset {
 	return s.asset
 }
 
-// Type ... TODO
 func (s simpleAssetEvent) Type() EventType {
 	return s.eventType
 }
 
-// NewRemovalEvent ... TODO
+// NewRemovalEvent will create a simple asset removal event for the theme client
+// to process
 func NewRemovalEvent(asset theme.Asset) AssetEvent {
 	return simpleAssetEvent{asset: asset, eventType: Remove}
 }
 
-// NewUploadEvent ... TODO
+// NewUploadEvent will create a simple asset update event for the theme client
+// to process
 func NewUploadEvent(asset theme.Asset) AssetEvent {
 	return simpleAssetEvent{asset: asset, eventType: Update}
 }

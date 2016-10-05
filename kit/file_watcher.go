@@ -116,8 +116,7 @@ func fwLoadAsset(event fsnotify.Event) theme.Asset {
 	return asset
 }
 
-// HandleEvent ... TODO
-func HandleEvent(event fsnotify.Event) fsAssetEvent {
+func handleEvent(event fsnotify.Event) fsAssetEvent {
 	var eventType EventType
 	asset := fwLoadAsset(event)
 	switch event.Op {
@@ -159,7 +158,7 @@ func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetE
 				recordedEvents[currentEvent.Name] = currentEvent
 			case <-time.After(debounceTimeout):
 				for eventName, event := range recordedEvents {
-					if fsevent := HandleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
+					if fsevent := handleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
 						results <- fsevent
 					}
 				}

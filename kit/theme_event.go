@@ -97,7 +97,6 @@ func (a apiAssetEvent) String() string {
 	}
 }
 
-// Successful ... TODO
 func (a apiAssetEvent) Successful() bool {
 	return a.Code >= 200 && a.Code < 300
 }
@@ -106,7 +105,6 @@ func (a apiAssetEvent) Error() error {
 	return a.err
 }
 
-// AsJSON ... TODO
 func (a apiAssetEvent) AsJSON() ([]byte, error) {
 	return json.Marshal(a)
 }
@@ -158,7 +156,6 @@ func (t apiThemeEvent) String() string {
 	)
 }
 
-// Successful ... TODO
 func (t apiThemeEvent) Successful() bool {
 	return t.Code >= 200 && t.Code < 300
 }
@@ -167,7 +164,6 @@ func (t apiThemeEvent) Error() error {
 	return t.err
 }
 
-// AsJSON ... TODO
 func (t apiThemeEvent) AsJSON() ([]byte, error) {
 	return json.Marshal(t)
 }

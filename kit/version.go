@@ -18,15 +18,16 @@ var (
 type versionComparisonResult int
 
 const (
-	// VersionLessThan .. TODO
+	// VersionLessThan is a versionComparisonResult for a version that is less than
 	VersionLessThan versionComparisonResult = -1
-	// VersionEqual ... TODO
+	// VersionEqual is a versionComparisonResult for a version that is equal
 	VersionEqual = 0
-	// VersionGreaterThan ... TODO
+	// VersionEqual is a versionComparisonResult for a version that is greater than
 	VersionGreaterThan = 1
 )
 
-// LibraryInfo ... TODO
+// LibraryInfo will return a string array with information about the library used
+// for logging.
 func LibraryInfo() []string {
 	return []string{
 		"ThemeKit - Shopify Theme Utilities",
@@ -65,7 +66,7 @@ func (v version) Compare(o version) versionComparisonResult {
 	return VersionEqual
 }
 
-// ParseVersionString ... TODO
+// ParseVersionString will parse a string and convert it into a version for comparison.
 func ParseVersionString(ver string) version {
 	sanitizedVer := strings.Replace(ver, "v", "", 1)
 	expandedVersionString := strings.Split(sanitizedVer, ".")
@@ -75,7 +76,8 @@ func ParseVersionString(ver string) version {
 	return version{Major: major, Minor: minor, Patch: patch}
 }
 
-// ApplyUpdate ... TODO
+// ApplyUpdate will take a url and digest and download the update specified, then
+// apply it to the current version.
 func ApplyUpdate(updateURL, digest string) error {
 	checksum, err := hex.DecodeString(digest)
 	if err != nil {

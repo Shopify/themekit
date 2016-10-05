@@ -20,7 +20,8 @@ import (
 
 const createThemeMaxRetries int = 3
 
-// ThemeClient ... TODO
+// ThemeClient is the interactor with the shopify server. All actions are processed
+// with the client.
 type ThemeClient struct {
 	eventLog   chan ThemeEvent
 	config     Configuration
@@ -61,13 +62,15 @@ func (e NonFatalNetworkError) Error() string {
 }
 
 const (
-	// Update ... TODO
+	// Update specifies that an AssetEvent is an update event.
 	Update EventType = iota
-	// Remove ... TODO
+	// Remove specifies that an AssetEvent is an delete event.
 	Remove
 )
 
-// NewThemeClient ... TODO
+// NewThemeClient will build a new theme client from a configuration and a theme event
+// channel. The channel is used for logging all events. The configuration specifies how
+// the client will behave.
 func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient {
 	return ThemeClient{
 		eventLog:   eventLog,
@@ -77,7 +80,8 @@ func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient 
 	}
 }
 
-// GetConfiguration ... TODO
+// GetConfiguration will return the clients built config. This is useful for grabbing
+// things like urls and domains.
 func (t ThemeClient) GetConfiguration() Configuration {
 	return t.config
 }
@@ -122,7 +126,8 @@ func (t ThemeClient) Message(content string, args ...interface{}) {
 	}()
 }
 
-// AssetList ... TODO
+// AssetList will return a slice of remote assets from the shopify servers. The
+// assets are sorted and any ignored files based on your config are filtered out.
 func (t ThemeClient) AssetList() []theme.Asset {
 	queryBuilder := func(path string) string {
 		return path
@@ -154,7 +159,8 @@ func (t ThemeClient) AssetList() []theme.Asset {
 	return t.filter.FilterAssets(ignoreCompiledAssets(assets["assets"]))
 }
 
-// LocalAssets ... TODO
+// LocalAssets will return a slice of assets from the local disk. The
+// assets are filtered based on your config.
 func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 	dir = fmt.Sprintf("%s%s", dir, string(filepath.Separator))
 
@@ -166,7 +172,7 @@ func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 	return assets
 }
 
-// Asset ... TODO
+// Asset will load up a single remote asset from the remote shopify servers.
 func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 	queryBuilder := func(path string) string {
 		return fmt.Sprintf("%s&asset[key]=%s", path, filename)
@@ -188,7 +194,8 @@ func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 	return asset["asset"], nil
 }
 
-// CreateTheme ... TODO
+// CreateTheme will create a unpublished new theme on your shopify store and then
+// return a new theme client with the configuration of the new client.
 func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -230,19 +237,16 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 	config.ThemeID = fmt.Sprintf("%d", themeEvent.ThemeID)
 	config, err := config.Initialize()
 	if err != nil {
-		// TODO: there's no way we can signal that something went wrong.
+		Fatal(err)
 	}
 	return NewThemeClient(t.eventLog, config)
 }
 
-// ProcessSync ... TODO
-func (t ThemeClient) ProcessSync(events []AssetEvent) {
-	for _, event := range events {
-		t.Perform(event)
-	}
-}
-
-// Process ... TODO
+// Process will create a new throttler and return the jobqueue. You can then send
+// asset events to the channel and they will be performed. If you close the job
+// queue, then the worker queue will be closed when it is finished, then the done
+// channel will be closed. This is a good way of knowing when your jobs are done
+// processing.
 func (t ThemeClient) Process(done chan bool) chan AssetEvent {
 	new_foreman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
 	go func() {
@@ -259,7 +263,9 @@ func (t ThemeClient) Process(done chan bool) chan AssetEvent {
 	return new_foreman.JobQueue
 }
 
-// Perform ... TODO
+// Perform will send an http request to the shopify servers based on the asset event.
+// if it is an update it will post to the server and if it is a remove it will DELETE
+// to the server. Any errors will be outputted to the event log.
 func (t ThemeClient) Perform(asset AssetEvent) {
 	if t.filter.MatchesFilter(asset.Asset().Key) {
 		return
