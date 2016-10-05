@@ -1,23 +1,23 @@
 # [Theme Kit](http://themekit.cat) [![Go Report Card](https://goreportcard.com/badge/github.com/shopify/themekit)](https://goreportcard.com/report/github.com/shopify/themekit) [![Build Status](https://circleci.com/gh/Shopify/themekit.png?circle-token=ac951910873cafaaf9c1be6049d2b9d3276eb2d4)](https://circleci.com/gh/Shopify/themekit)
-## Shopify Theme Manipulation Utilities and Libraries
+## Shopify Theme Manipulation CLI
+
+Theme Kit is a cross-platform tool for building Shopify Themes. Theme Kit is a single binary that has no dependencies.
+
+**Features**
+- Upload Themes to Multiple Environments
+- Fast Uploads and Downloads
+- Watch for local changes and upload automatically to Shopify
+- Works on Windows, Linux and OS X
 
 [Read more about it on the website](http://themekit.cat)
 
-### Utilities
+## Installation
 
-Theme Kit provides a number of utilities when they are all built. These are to replicate the features in the [shopify_theme gem](https://github.com/shopify/shopify_theme) but aims to solve a few core problems:
+You can find installation instructions for each platform [themekit.cat/install](http://themekit.cat/install/)
 
-- The architecture of the theme gem leaves much to be desired. It's a working tool, but adding new features is becoming very difficult
-- The user experience for installing the theme gem leave much to be desired. A Windows user needs to jump through several hoops to get Ruby installed and not all OS X users are on a standard rubyists environment (rbenv, chruby, bundler, etc.)
-- The gem isn't really extensible. It's a command line utility and that is it. Users aren't able to easily grab parts of the gem and use it for their own purposes.
+## Usage and Docs
 
-### Library
-
-The library is very much a work in progress but includes a few core things:
-
-- YAML based Configuration Management
-- Rudimentary Shopify API interaction via a ThemeClient
-- API Limit control via a client side leaky bucket that is controlled via an arbiter (currently called Foreman)
+Please find further usage instructions at [themekit.cat/docs](http://themekit.cat/docs/)
 
 ## Downloads
 
