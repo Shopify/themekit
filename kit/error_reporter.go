@@ -5,7 +5,23 @@ import (
 	"fmt"
 	"log"
 	"sync"
+
+	"github.com/fatih/color"
 )
+
+const messageSeparator string = "\n----------------------------------------------------------------\n"
+
+// RedText ... TODO
+var RedText = color.New(color.FgRed).SprintFunc()
+
+// YellowText ... TODO
+var YellowText = color.New(color.FgYellow).SprintFunc()
+
+// BlueText ... TODO
+var BlueText = color.New(color.FgBlue).SprintFunc()
+
+// GreenText ... TODO
+var GreenText = color.New(color.FgGreen).SprintFunc()
 
 // ErrorReporter ... TODO
 type ErrorReporter interface {
@@ -30,7 +46,7 @@ func (c ConsoleReporter) Report(e error) {
 // Report ... TODO
 func (h HaltExecutionReporter) Report(e error) {
 	c := ConsoleReporter{}
-	libraryInfo := fmt.Sprintf("%s%s%s", MessageSeparator, LibraryInfo(), MessageSeparator)
+	libraryInfo := fmt.Sprintf("%s%s%s", messageSeparator, LibraryInfo(), messageSeparator)
 	c.Report(errors.New(libraryInfo))
 	log.Fatal(e)
 }
