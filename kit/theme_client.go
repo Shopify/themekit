@@ -34,7 +34,7 @@ type apiResponse struct {
 	err  error
 }
 
-// EventType ... TODO
+// EventType is an enum of event types to compare agains event.Type()
 type EventType int
 
 func (e EventType) String() string {
@@ -48,7 +48,8 @@ func (e EventType) String() string {
 	}
 }
 
-// NonFatalNetworkError ... TODO
+// NonFatalNetworkError is an error for describing an asset request that failed
+// but is not critical. For instance updating a file that does not exist.
 type NonFatalNetworkError struct {
 	Code    int
 	Verb    string
@@ -65,12 +66,6 @@ const (
 	// Remove ... TODO
 	Remove
 )
-
-// AssetEvent ... TODO
-type AssetEvent interface {
-	Asset() theme.Asset
-	Type() EventType
-}
 
 // NewThemeClient ... TODO
 func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient {

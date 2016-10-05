@@ -25,6 +25,13 @@ type ThemeEvent interface {
 	AsJSON() ([]byte, error)
 }
 
+// AssetEvent is an interface that describes events that are related to assets that
+// are processed through the eventlog
+type AssetEvent interface {
+	Asset() theme.Asset
+	Type() EventType
+}
+
 type apiAssetEvent struct {
 	Host      string `json:"host"`
 	AssetKey  string `json:"asset_key"`

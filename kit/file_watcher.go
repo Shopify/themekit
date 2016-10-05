@@ -30,7 +30,7 @@ var (
 )
 
 type (
-	FsAssetEvent struct {
+	fsAssetEvent struct {
 		asset     theme.Asset
 		eventType EventType
 	}
@@ -38,21 +38,21 @@ type (
 )
 
 // Asset ... TODO
-func (f FsAssetEvent) Asset() theme.Asset {
+func (f fsAssetEvent) Asset() theme.Asset {
 	return f.asset
 }
 
 // Type ... TODO
-func (f FsAssetEvent) Type() EventType {
+func (f fsAssetEvent) Type() EventType {
 	return f.eventType
 }
 
 // IsValid ... TODO
-func (f FsAssetEvent) IsValid() bool {
+func (f fsAssetEvent) IsValid() bool {
 	return f.eventType == Remove || f.asset.IsValid()
 }
 
-func (f FsAssetEvent) String() string {
+func (f fsAssetEvent) String() string {
 	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
 }
 
@@ -117,7 +117,7 @@ func fwLoadAsset(event fsnotify.Event) theme.Asset {
 }
 
 // HandleEvent ... TODO
-func HandleEvent(event fsnotify.Event) FsAssetEvent {
+func HandleEvent(event fsnotify.Event) fsAssetEvent {
 	var eventType EventType
 	asset := fwLoadAsset(event)
 	switch event.Op {
@@ -126,7 +126,7 @@ func HandleEvent(event fsnotify.Event) FsAssetEvent {
 	case fsnotify.Remove:
 		eventType = Remove
 	}
-	return FsAssetEvent{asset: asset, eventType: eventType}
+	return fsAssetEvent{asset: asset, eventType: eventType}
 }
 
 func extractAssetKey(filename string) string {
