@@ -87,32 +87,22 @@ func (t ThemeClient) GetConfiguration() Configuration {
 	return t.config
 }
 
-// LeakyBucket creates a leaky bucket using the theme clients bucket size and refill rate
-func (t ThemeClient) LeakyBucket() *LeakyBucket {
-	return NewLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1)
-}
-
-// NewForeman creates a foreman job runner using a leaky bucket using the theme clients config
-func (t ThemeClient) NewForeman() *Foreman {
-	return NewForeman(t.LeakyBucket())
-}
-
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
 func (t ThemeClient) NewFileWatcher(dir, notifyFile string) chan AssetEvent {
-	foreman := t.NewForeman()
+	new_foreman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
 	if len(notifyFile) > 0 {
-		foreman.OnIdle = func() {
+		new_foreman.OnIdle = func() {
 			os.Create(notifyFile)
 			os.Chtimes(notifyFile, time.Now(), time.Now())
 		}
 	}
 	var err error
-	foreman.JobQueue, err = NewFileWatcher(dir, true, t.filter)
+	new_foreman.JobQueue, err = NewFileWatcher(dir, true, t.filter)
 	if err != nil {
 		NotifyError(err)
 	}
-	foreman.Restart()
-	return foreman.WorkerQueue
+	new_foreman.Restart()
+	return new_foreman.WorkerQueue
 }
 
 func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
@@ -252,10 +242,10 @@ func (t ThemeClient) ProcessSync(events []AssetEvent) {
 
 // Process ... TODO
 func (t ThemeClient) Process(done chan bool) chan AssetEvent {
-	foreman := t.NewForeman()
+	new_foreman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
 	go func() {
 		for {
-			job, more := <-foreman.WorkerQueue
+			job, more := <-new_foreman.WorkerQueue
 			if more {
 				t.Perform(job)
 			} else {
@@ -264,7 +254,7 @@ func (t ThemeClient) Process(done chan bool) chan AssetEvent {
 			}
 		}
 	}()
-	return foreman.JobQueue
+	return new_foreman.JobQueue
 }
 
 // Perform ... TODO

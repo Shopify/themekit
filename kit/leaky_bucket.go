@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type LeakyBucket struct {
+type leakyBucket struct {
 	Size        int
 	Refill      int
 	Duration    time.Duration
@@ -13,9 +13,9 @@ type LeakyBucket struct {
 	ticker      *time.Ticker
 }
 
-func NewLeakyBucket(size, refill, duration int) *LeakyBucket {
+func newLeakyBucket(size, refill, duration int) *leakyBucket {
 	dur := time.Duration(duration) * time.Second
-	newBucket := &LeakyBucket{
+	newBucket := &leakyBucket{
 		Size:        size,
 		Refill:      refill,
 		Duration:    dur,
@@ -26,7 +26,7 @@ func NewLeakyBucket(size, refill, duration int) *LeakyBucket {
 	return newBucket
 }
 
-func (b *LeakyBucket) StartDripping() {
+func (b *leakyBucket) StartDripping() {
 	go func() {
 		for {
 			select {
@@ -39,37 +39,37 @@ func (b *LeakyBucket) StartDripping() {
 	}()
 }
 
-func (b *LeakyBucket) StopDripping() {
+func (b *leakyBucket) StopDripping() {
 	go func() {
 		b.stopFilling <- true
 	}()
 }
 
-func (b *LeakyBucket) Available() int {
+func (b *leakyBucket) Available() int {
 	return len(b.bucket)
 }
 
-func (b *LeakyBucket) IsEmpty() bool {
+func (b *leakyBucket) IsEmpty() bool {
 	return len(b.bucket) == 0
 }
 
-func (b *LeakyBucket) IsFull() bool {
+func (b *leakyBucket) IsFull() bool {
 	return len(b.bucket) >= cap(b.bucket)
 }
 
-func (b *LeakyBucket) TopUp() {
+func (b *leakyBucket) TopUp() {
 	b.fill(b.Size)
 }
 
-func (b *LeakyBucket) AddDrops() {
+func (b *leakyBucket) AddDrops() {
 	b.fill(b.Refill)
 }
 
-func (b *LeakyBucket) GetDrop() {
+func (b *leakyBucket) GetDrop() {
 	<-b.bucket
 }
 
-func (b *LeakyBucket) fill(amount int) {
+func (b *leakyBucket) fill(amount int) {
 	for i := 0; i < amount; i++ {
 		select {
 		case b.bucket <- true:

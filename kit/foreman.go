@@ -5,19 +5,19 @@ import (
 	"time"
 )
 
-// Foreman is a job queueing processor using a LeakyBucket throttler.
-type Foreman struct {
-	leakyBucket *LeakyBucket
+// foreman is a job queueing processor using a leakyBucket throttler.
+type foreman struct {
+	leakyBucket *leakyBucket
 	halt        chan bool
 	JobQueue    chan AssetEvent
 	WorkerQueue chan AssetEvent
 	OnIdle      func()
 }
 
-// NewForeman will return a new Foreman using the bucket for throttling.
-func NewForeman(leakyBucket *LeakyBucket) *Foreman {
-	newForeman := &Foreman{
-		leakyBucket: leakyBucket,
+// newForeman will return a new foreman using the bucket for throttling.
+func newForeman(lb *leakyBucket) *foreman {
+	newForeman := &foreman{
+		leakyBucket: lb,
 		halt:        make(chan bool),
 		JobQueue:    make(chan AssetEvent),
 		WorkerQueue: make(chan AssetEvent),
@@ -27,16 +27,16 @@ func NewForeman(leakyBucket *LeakyBucket) *Foreman {
 	return newForeman
 }
 
-func (f *Foreman) Restart() {
+func (f *foreman) Restart() {
 	f.Halt()
 	f.leakyBucket.TopUp()
 	f.IssueWork()
 }
 
-// IssueWork start the Foreman processing jobs that are in it's queue. It will call
+// IssueWork start the foreman processing jobs that are in it's queue. It will call
 // OnIdle every second when there is no jobs to process. If there are jobs in the queue
 // then it will make sure there is a worker to process it from the bucket.
-func (f *Foreman) IssueWork() {
+func (f *foreman) IssueWork() {
 	f.leakyBucket.StartDripping()
 	go func() {
 		var waitGroup sync.WaitGroup
@@ -68,8 +68,8 @@ func (f *Foreman) IssueWork() {
 	}()
 }
 
-// Halt stops the Foreman from processing jobs in its queue.
-func (f *Foreman) Halt() {
+// Halt stops the foreman from processing jobs in its queue.
+func (f *foreman) Halt() {
 	f.leakyBucket.StopDripping()
 	go func() {
 		f.halt <- true
