@@ -11,17 +11,15 @@ import (
 	"github.com/inconshreveable/go-update"
 )
 
-var TKVersion = Version{Major: 0, Minor: 4, Patch: 4}
+var (
+	ThemeKitVersion = version{Major: 0, Minor: 4, Patch: 4}
+)
 
-// ThemeKitVersion ... TODO
-var ThemeKitVersion = TKVersion.String()
-
-// VersionComparisonResult ... TODO
-type VersionComparisonResult int
+type versionComparisonResult int
 
 const (
 	// VersionLessThan .. TODO
-	VersionLessThan VersionComparisonResult = -1
+	VersionLessThan versionComparisonResult = -1
 	// VersionEqual ... TODO
 	VersionEqual = 0
 	// VersionGreaterThan ... TODO
@@ -32,29 +30,28 @@ const (
 func LibraryInfo() []string {
 	return []string{
 		"ThemeKit - Shopify Theme Utilities",
-		ThemeKitVersion,
+		ThemeKitVersion.String(),
 	}
 }
 
-// Version ... TODO
-type Version struct {
+type version struct {
 	Major int
 	Minor int
 	Patch int
 }
 
-func (v Version) String() string {
+func (v version) String() string {
 	return fmt.Sprintf("v%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
-func (v Version) toArray() [3]int {
+func (v version) toArray() [3]int {
 	return [3]int{v.Major, v.Minor, v.Patch}
 }
 
 // Compare ... I often get confused by comparison, so comparison results are going
 // to be the same as what <=> would return in Ruby.
 // http://ruby-doc.org/core-1.9.3/Comparable.html
-func (v Version) Compare(o Version) VersionComparisonResult {
+func (v version) Compare(o version) versionComparisonResult {
 	vAry := v.toArray()
 	oAry := o.toArray()
 	for i := 0; i < len(vAry); i++ {
@@ -69,13 +66,13 @@ func (v Version) Compare(o Version) VersionComparisonResult {
 }
 
 // ParseVersionString ... TODO
-func ParseVersionString(ver string) Version {
+func ParseVersionString(ver string) version {
 	sanitizedVer := strings.Replace(ver, "v", "", 1)
 	expandedVersionString := strings.Split(sanitizedVer, ".")
 	major, _ := strconv.Atoi(expandedVersionString[0])
 	minor, _ := strconv.Atoi(expandedVersionString[1])
 	patch, _ := strconv.Atoi(expandedVersionString[2])
-	return Version{Major: major, Minor: minor, Patch: patch}
+	return version{Major: major, Minor: minor, Patch: patch}
 }
 
 // ApplyUpdate ... TODO
