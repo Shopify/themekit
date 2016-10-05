@@ -18,10 +18,6 @@ type FileWatcherSuite struct {
 	suite.Suite
 }
 
-func (s *FileWatcherSuite) TearDownTest() {
-	RestoreReader()
-}
-
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
 	var tests = []struct {
 		input    fsnotify.Event
@@ -48,9 +44,6 @@ func (s *FileWatcherSuite) TestDeterminingContentTypesOfFiles() {
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsAttachmentDataForBinaryFiles() {
 	imageData, _ := ioutil.ReadFile("../fixtures/image.png")
 	encodedImageData := encode64(imageData)
-	WatcherFileReader = func(filename string) ([]byte, error) {
-		return imageData, nil
-	}
 	event := fsnotify.Event{Name: "../fixtures/image.png", Op: fsnotify.Chmod}
 	assetEvent := HandleEvent(event)
 	assert.Equal(s.T(), "", assetEvent.Asset().Value)
@@ -58,9 +51,6 @@ func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsAttachmentDataForBin
 }
 
 func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents() {
-	WatcherFileReader = func(filename string) ([]byte, error) {
-		return []byte("hello"), nil
-	}
 	writes := map[fsnotify.Op]EventType{
 		fsnotify.Chmod:  Update,
 		fsnotify.Create: Update,

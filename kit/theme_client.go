@@ -25,7 +25,7 @@ type ThemeClient struct {
 	eventLog   chan ThemeEvent
 	config     Configuration
 	httpClient *http.Client
-	filter     EventFilter
+	filter     eventFilter
 }
 
 type apiResponse struct {
@@ -78,7 +78,7 @@ func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient 
 		eventLog:   eventLog,
 		config:     config,
 		httpClient: newHTTPClient(config),
-		filter:     NewEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores),
+		filter:     newEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores),
 	}
 }
 
@@ -97,7 +97,7 @@ func (t ThemeClient) NewFileWatcher(dir, notifyFile string) chan AssetEvent {
 		}
 	}
 	var err error
-	new_foreman.JobQueue, err = NewFileWatcher(dir, true, t.filter)
+	new_foreman.JobQueue, err = newFileWatcher(dir, true, t.filter)
 	if err != nil {
 		Fatal(err)
 	}
@@ -337,11 +337,6 @@ func (t ThemeClient) isDoneProcessing(themeID int64) bool {
 	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminURL(), themeID)
 	themeEvent := t.sendData("GET", path, []byte{})
 	return themeEvent.Previewable
-}
-
-// ExtractErrorMessage ... TODO
-func ExtractErrorMessage(data []byte, err error) string {
-	return extractAssetAPIErrors(data, err).Error()
 }
 
 func newHTTPClient(config Configuration) (client *http.Client) {

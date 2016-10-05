@@ -171,12 +171,6 @@ func TestRetrievingASingleAsset(t *testing.T) {
 	assert.Equal(t, "hello world", asset.Value)
 }
 
-func TestExtractErrorMessage(t *testing.T) {
-	contents := []byte(Fixture("asset_error"))
-	expectedMessage := "Liquid syntax error (line 10): 'comment' tag was never closed"
-	assert.Equal(t, expectedMessage, ExtractErrorMessage(contents, nil))
-}
-
 func TestIgnoringCompiledAssets(t *testing.T) {
 	input := []theme.Asset{
 		{Key: "assets/ajaxify.js"},

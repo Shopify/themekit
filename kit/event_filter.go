@@ -24,14 +24,12 @@ var defaultRegexes = []*re.Regexp{
 
 var defaultGlobs = []string{}
 
-// EventFilter ... TODO
-type EventFilter struct {
+type eventFilter struct {
 	filters []*re.Regexp
 	globs   []string
 }
 
-// NewEventFilter ... TODO
-func NewEventFilter(rawPatterns []string) EventFilter {
+func newEventFilter(rawPatterns []string) eventFilter {
 	filters := defaultRegexes
 	globs := defaultGlobs
 	for _, pat := range rawPatterns {
@@ -46,11 +44,10 @@ func NewEventFilter(rawPatterns []string) EventFilter {
 		}
 	}
 	filters = append(filters, re.MustCompile(configurationFilename))
-	return EventFilter{filters: filters, globs: globs}
+	return eventFilter{filters: filters, globs: globs}
 }
 
-// NewEventFilterFromReaders ... TODO
-func NewEventFilterFromReaders(readers []io.Reader) EventFilter {
+func newEventFilterFromReaders(readers []io.Reader) eventFilter {
 	patterns := []string{}
 	for _, reader := range readers {
 		data, err := ioutil.ReadAll(reader)
@@ -60,17 +57,15 @@ func NewEventFilterFromReaders(readers []io.Reader) EventFilter {
 		otherPatterns := strings.Split(string(data), "\n")
 		patterns = append(patterns, otherPatterns...)
 	}
-	return NewEventFilter(patterns)
+	return newEventFilter(patterns)
 }
 
-// NewEventFilterFromIgnoreFiles ... TODO
-func NewEventFilterFromIgnoreFiles(ignores []string) EventFilter {
+func newEventFilterFromIgnoreFiles(ignores []string) eventFilter {
 	files := filenamesToReaders(ignores)
-	return NewEventFilterFromReaders(files)
+	return newEventFilterFromReaders(files)
 }
 
-// NewEventFilterFromPatternsAndFiles ... TODO
-func NewEventFilterFromPatternsAndFiles(patterns []string, files []string) EventFilter {
+func newEventFilterFromPatternsAndFiles(patterns []string, files []string) eventFilter {
 	readers := filenamesToReaders(files)
 	allReaders := make([]io.Reader, len(readers)+len(patterns))
 	pos := 0
@@ -82,10 +77,10 @@ func NewEventFilterFromPatternsAndFiles(patterns []string, files []string) Event
 		allReaders[pos] = strings.NewReader(patterns[i])
 		pos++
 	}
-	return NewEventFilterFromReaders(allReaders)
+	return newEventFilterFromReaders(allReaders)
 }
 
-func (e EventFilter) FilterAssets(assets []theme.Asset) []theme.Asset {
+func (e eventFilter) FilterAssets(assets []theme.Asset) []theme.Asset {
 	filteredAssets := []theme.Asset{}
 	for _, asset := range assets {
 		if !e.MatchesFilter(asset.Key) {
@@ -96,7 +91,7 @@ func (e EventFilter) FilterAssets(assets []theme.Asset) []theme.Asset {
 }
 
 // Filter ... TODO
-func (e EventFilter) Filter(events chan string) chan string {
+func (e eventFilter) Filter(events chan string) chan string {
 	filtered := make(chan string)
 	go func() {
 		for {
@@ -113,7 +108,7 @@ func (e EventFilter) Filter(events chan string) chan string {
 }
 
 // MatchesFilter ... TODO
-func (e EventFilter) MatchesFilter(event string) bool {
+func (e eventFilter) MatchesFilter(event string) bool {
 	if len(event) == 0 {
 		return false
 	}
@@ -130,7 +125,7 @@ func (e EventFilter) MatchesFilter(event string) bool {
 	return false
 }
 
-func (e EventFilter) String() string {
+func (e eventFilter) String() string {
 	buffer := bytes.NewBufferString(strings.Join(e.globs, "\n"))
 	buffer.WriteString("--- endglobs ---\n")
 	for _, rxp := range e.filters {

@@ -2,7 +2,6 @@ package kit
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +27,6 @@ var (
 		"locales/",
 		"sections/",
 	}
-	WatcherFileReader fileReader = ioutil.ReadFile
 )
 
 type (
@@ -38,11 +36,6 @@ type (
 	}
 	fileReader func(filename string) ([]byte, error)
 )
-
-// RestoreReader ... TODO
-func RestoreReader() {
-	WatcherFileReader = ioutil.ReadFile
-}
 
 // Asset ... TODO
 func (f FsAssetEvent) Asset() theme.Asset {
@@ -63,8 +56,7 @@ func (f FsAssetEvent) String() string {
 	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
 }
 
-// NewFileWatcher ... TODO
-func NewFileWatcher(dir string, recur bool, filter EventFilter) (chan AssetEvent, error) {
+func newFileWatcher(dir string, recur bool, filter eventFilter) (chan AssetEvent, error) {
 	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.MatchesFilter)
 	if err != nil {
 		return nil, err
@@ -149,7 +141,7 @@ func extractAssetKey(filename string) string {
 	return ""
 }
 
-func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetEvent {
+func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetEvent {
 	results := make(chan AssetEvent)
 	go func() {
 		var currentEvent fsnotify.Event
