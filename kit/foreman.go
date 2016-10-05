@@ -1,6 +1,7 @@
 package kit
 
 import (
+	"sync"
 	"time"
 )
 
@@ -38,28 +39,23 @@ func (f *Foreman) Restart() {
 func (f *Foreman) IssueWork() {
 	f.leakyBucket.StartDripping()
 	go func() {
-		var (
-			jobsRecieved  int
-			processedJobs int
-			job           AssetEvent
-			more          = true
-		)
+		var waitGroup sync.WaitGroup
 		notifyProcessed := false
 		for {
 			select {
-			case job, more = <-f.JobQueue:
-				if more {
-					f.leakyBucket.GetDrop()
-					notifyProcessed = true
-					jobsRecieved++
-					go func(jobToAdd AssetEvent) {
-						f.WorkerQueue <- jobToAdd
-						processedJobs++
-						if processedJobs == jobsRecieved && !more {
-							close(f.WorkerQueue)
-						}
-					}(job)
+			case job, more := <-f.JobQueue:
+				if !more {
+					waitGroup.Wait()
+					close(f.WorkerQueue)
+					return
 				}
+				f.leakyBucket.GetDrop()
+				notifyProcessed = true
+				waitGroup.Add(1)
+				go func(jobToAdd AssetEvent, wg *sync.WaitGroup) {
+					f.WorkerQueue <- jobToAdd
+					wg.Done()
+				}(job, &waitGroup)
 			case <-f.halt:
 				return
 			case <-time.Tick(1 * time.Second):

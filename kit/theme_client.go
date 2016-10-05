@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -97,8 +98,21 @@ func (t ThemeClient) NewForeman() *Foreman {
 }
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
-func (t ThemeClient) NewFileWatcher(dir string) (chan AssetEvent, error) {
-	return NewFileWatcher(dir, true, t.filter)
+func (t ThemeClient) NewFileWatcher(dir, notifyFile string) chan AssetEvent {
+	foreman := t.NewForeman()
+	if len(notifyFile) > 0 {
+		foreman.OnIdle = func() {
+			os.Create(notifyFile)
+			os.Chtimes(notifyFile, time.Now(), time.Now())
+		}
+	}
+	var err error
+	foreman.JobQueue, err = NewFileWatcher(dir, true, t.filter)
+	if err != nil {
+		NotifyError(err)
+	}
+	foreman.Restart()
+	return foreman.WorkerQueue
 }
 
 func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
@@ -237,10 +251,11 @@ func (t ThemeClient) ProcessSync(events []AssetEvent) {
 }
 
 // Process ... TODO
-func (t ThemeClient) Process(events chan AssetEvent, done chan bool) {
+func (t ThemeClient) Process(done chan bool) chan AssetEvent {
+	foreman := t.NewForeman()
 	go func() {
 		for {
-			job, more := <-events
+			job, more := <-foreman.WorkerQueue
 			if more {
 				t.Perform(job)
 			} else {
@@ -249,6 +264,7 @@ func (t ThemeClient) Process(events chan AssetEvent, done chan bool) {
 			}
 		}
 	}()
+	return foreman.JobQueue
 }
 
 // Perform ... TODO

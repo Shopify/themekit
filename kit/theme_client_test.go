@@ -67,18 +67,16 @@ func TestProcessingAnEventsChannel(t *testing.T) {
 		results[r.Method]++
 	}))
 
-	stream := make(chan AssetEvent)
+	client := NewThemeClient(globalEventLog, conf(ts))
+
+	done := make(chan bool)
+	stream := client.Process(done)
 	go func() {
 		stream <- TestEvent{asset: asset(), eventType: Update}
 		stream <- TestEvent{asset: asset(), eventType: Update}
 		stream <- TestEvent{asset: asset(), eventType: Remove}
 		close(stream)
 	}()
-
-	client := NewThemeClient(globalEventLog, conf(ts))
-
-	done := make(chan bool)
-	client.Process(stream, done)
 
 	<-done
 	assert.Equal(t, 2, results["PUT"])
@@ -172,7 +170,12 @@ func asset() theme.Asset {
 }
 
 func conf(server *httptest.Server) Configuration {
-	return Configuration{URL: server.URL, AccessToken: "abra"}
+	return Configuration{
+		URL:         server.URL,
+		AccessToken: "abra",
+		BucketSize:  100,
+		RefillRate:  100,
+	}
 }
 
 func drain(channel chan ThemeEvent) {

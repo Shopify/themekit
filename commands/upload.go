@@ -9,13 +9,12 @@ import (
 
 // UploadCommand add file(s) to theme
 func UploadCommand(args Args, done chan bool) {
-	foreman := args.ThemeClient.NewForeman()
-	args.ThemeClient.Process(foreman.WorkerQueue, done)
+	jobQueue := args.ThemeClient.Process(done)
 	root, _ := os.Getwd()
 	if len(args.Filenames) == 0 {
 		for _, asset := range args.ThemeClient.LocalAssets(root) {
 			if asset.IsValid() {
-				foreman.JobQueue <- kit.NewUploadEvent(asset)
+				jobQueue <- kit.NewUploadEvent(asset)
 			}
 		}
 	} else {
@@ -24,9 +23,9 @@ func UploadCommand(args Args, done chan bool) {
 			if err != nil {
 				args.ThemeClient.ErrorMessage(err.Error())
 			} else if asset.IsValid() {
-				foreman.JobQueue <- kit.NewUploadEvent(asset)
+				jobQueue <- kit.NewUploadEvent(asset)
 			}
 		}
 	}
-	close(foreman.JobQueue)
+	close(jobQueue)
 }
