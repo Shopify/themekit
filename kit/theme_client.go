@@ -160,7 +160,7 @@ func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 
 	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.MatchesFilter)
 	if err != nil {
-		panic(err)
+		Fatal(err)
 	}
 
 	return assets

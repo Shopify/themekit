@@ -1,6 +1,6 @@
 package theme
 
-// Theme ... TODO
+// Theme represents a shopify theme.
 type Theme struct {
 	Name        string `json:"name"`
 	Source      string `json:"src,omitempty"`

@@ -11,13 +11,14 @@ import (
 	"strings"
 )
 
-// Asset ... TODO
+// Asset represents an asset from the shopify server.
 type Asset struct {
 	Key        string `json:"key"`
 	Value      string `json:"value,omitempty"`
 	Attachment string `json:"attachment,omitempty"`
 }
 
+// String() will print out a formatted string representation of this asset.
 func (a Asset) String() string {
 	return fmt.Sprintf("key: %s | value: %d bytes | attachment: %d bytes", a.Key, len([]byte(a.Value)), len([]byte(a.Attachment)))
 }
@@ -27,7 +28,7 @@ func (a Asset) IsValid() bool {
 	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)
 }
 
-// Size ... TODO
+// Size will return the length of the value or attachment depending on which exists.
 func (a Asset) Size() int {
 	if len(a.Value) > 0 {
 		return len(a.Value)
@@ -35,17 +36,20 @@ func (a Asset) Size() int {
 	return len(a.Attachment)
 }
 
-// ByAsset implements sort.Interface
+// ByAsset implements sort.Interface for sorting remote assets
 type ByAsset []Asset
 
+// Len returns the length of the array.
 func (assets ByAsset) Len() int {
 	return len(assets)
 }
 
+// Swap swaps two values in the slive
 func (assets ByAsset) Swap(i, j int) {
 	assets[i], assets[j] = assets[j], assets[i]
 }
 
+// Less is the comparison method. Will return true if the first is less than the second.
 func (assets ByAsset) Less(i, j int) bool {
 	return assets[i].Key < assets[j].Key
 }
@@ -64,18 +68,19 @@ func findAllFiles(dir string) ([]string, error) {
 	return files, err
 }
 
-// LoadAssetsFromDirectory ... TODO
+// LoadAssetsFromDirectory will recursivley load all the local assets on disk into an
+// asset array. It will return an error if it cannot load any of the files.
 func LoadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset, error) {
+	assets := []Asset{}
 	files, err := findAllFiles(dir)
 	if err != nil {
-		panic(err)
+		return assets, err
 	}
 
-	assets := []Asset{}
 	for _, file := range files {
 		assetKey, err := filepath.Rel(dir, file)
 		if err != nil {
-			panic(err)
+			return assets, err
 		}
 		if !ignore(assetKey) {
 			asset, err := LoadAsset(dir, assetKey)
@@ -88,7 +93,8 @@ func LoadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset
 	return assets, nil
 }
 
-// LoadAsset ... TODO
+// LoadAsset will load a single local asset on disk. It will return an error if there
+// is a problem loading the asset.
 func LoadAsset(root, filename string) (asset Asset, err error) {
 	asset = Asset{}
 	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
