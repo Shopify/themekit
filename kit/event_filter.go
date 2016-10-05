@@ -55,7 +55,7 @@ func NewEventFilterFromReaders(readers []io.Reader) EventFilter {
 	for _, reader := range readers {
 		data, err := ioutil.ReadAll(reader)
 		if err != nil {
-			NotifyError(err)
+			Fatal(err)
 		}
 		otherPatterns := strings.Split(string(data), "\n")
 		patterns = append(patterns, otherPatterns...)
@@ -146,7 +146,7 @@ func filenamesToReaders(ignores []string) []io.Reader {
 		file, err := os.Open(name)
 		defer file.Close()
 		if err != nil {
-			NotifyError(err)
+			Fatal(err)
 		}
 		files[i] = file
 	}

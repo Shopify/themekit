@@ -14,7 +14,7 @@ import (
 // ConfigureCommand creates a configuration file
 func ConfigureCommand(args Args, done chan bool) {
 	if err := args.ConfigurationErrors(); err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 	}
 
 	config := args.DefaultConfigurationOptions()
@@ -36,7 +36,7 @@ func AddConfiguration(dir, environment string, config kit.Configuration) {
 
 	err = env.Save(environmentLocation)
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 	}
 }
 
@@ -45,7 +45,7 @@ func PrepareConfigurationMigration(dir string) (func() bool, func() error) {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 		return func() bool { return false }, func() error { return err }
 	}
 

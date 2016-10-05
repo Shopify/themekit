@@ -27,7 +27,7 @@ func BootstrapCommand(args Args, done chan bool) {
 
 	zipLocation, err := zipPathForVersion(args.Version)
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 		close(done)
 	}
 

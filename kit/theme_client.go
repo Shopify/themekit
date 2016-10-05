@@ -99,14 +99,21 @@ func (t ThemeClient) NewFileWatcher(dir, notifyFile string) chan AssetEvent {
 	var err error
 	new_foreman.JobQueue, err = NewFileWatcher(dir, true, t.filter)
 	if err != nil {
-		NotifyError(err)
+		Fatal(err)
 	}
 	new_foreman.Restart()
 	return new_foreman.WorkerQueue
 }
 
 func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
-	t.Message(RedText(fmt.Sprintf(content, args...)))
+	go func() {
+		t.eventLog <- basicEvent{
+			Formatter: func(b basicEvent) string { return RedText(fmt.Sprintf(content, args...)) },
+			EventType: "message",
+			Title:     "Notice",
+			Etype:     "basicEvent",
+		}
+	}()
 }
 
 func (t ThemeClient) Message(content string, args ...interface{}) {
@@ -211,7 +218,7 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 		}
 		if retries >= createThemeMaxRetries {
 			err := fmt.Errorf(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
-			NotifyError(err)
+			Fatal(err)
 		}
 		return
 	}()
@@ -297,7 +304,7 @@ func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
 func (t ThemeClient) sendData(method, path string, body []byte) (result APIThemeEvent) {
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
-		NotifyError(err)
+		Fatal(err)
 	}
 	t.config.AddHeaders(req)
 	resp, err := t.httpClient.Do(req)

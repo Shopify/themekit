@@ -35,26 +35,26 @@ func DownloadCommand(args Args, done chan bool) {
 func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
 	dir, err := os.Getwd()
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 		return
 	}
 
 	perms, err := os.Stat(dir)
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 		return
 	}
 
 	filename := fmt.Sprintf("%s/%s", dir, asset.Key)
 	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 		return
 	}
 
 	file, err := os.Create(filename)
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 		return
 	}
 	defer file.Sync()
@@ -67,7 +67,7 @@ func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
 	case len(asset.Attachment) > 0:
 		data, err = base64.StdEncoding.DecodeString(asset.Attachment)
 		if err != nil {
-			kit.NotifyError(fmt.Errorf("Could not decode %s. error: %s", asset.Key, err))
+			kit.Fatal(fmt.Errorf("Could not decode %s. error: %s", asset.Key, err))
 			return
 		}
 	}
@@ -77,7 +77,7 @@ func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
 	}
 
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 	} else {
 		client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
 	}

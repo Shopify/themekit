@@ -115,7 +115,7 @@ func fwLoadAsset(event fsnotify.Event) theme.Asset {
 	asset, err := theme.LoadAsset(root, filename)
 	if err != nil {
 		if os.IsExist(err) {
-			NotifyError(err)
+			Fatal(err)
 		} else {
 			asset = theme.Asset{}
 		}
