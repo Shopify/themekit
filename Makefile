@@ -1,5 +1,5 @@
 SUBPROJECTS = theme
-PACKAGES = ./kit ./atom ./commands ./theme
+PACKAGES = ./kit/... ./commands/... ./theme/...
 OS = $(shell uname)
 UPX := $(shell command -v upx 3>/dev/null)
 # building smaller binaries and panics without confusing outputs

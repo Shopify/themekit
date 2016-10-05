@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Shopify/themekit/atom"
+	"github.com/Shopify/themekit/commands/internal/atom"
 	"github.com/Shopify/themekit/kit"
 )
 
