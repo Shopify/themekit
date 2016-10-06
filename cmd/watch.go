@@ -1,4 +1,4 @@
-package commands
+package cmd
 
 import (
 	"github.com/Shopify/themekit/kit"

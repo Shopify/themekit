@@ -1,4 +1,4 @@
-package commands
+package cmd
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Shopify/themekit/commands/internal/atom"
+	"github.com/Shopify/themekit/cmd/internal/atom"
 	"github.com/Shopify/themekit/kit"
 )
 
