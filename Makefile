@@ -4,7 +4,8 @@ OS = $(shell uname)
 UPX := $(shell command -v upx 3>/dev/null)
 # building smaller binaries and panics without confusing outputs
 # https://blog.filippo.io/shrink-your-go-binaries-with-this-one-weird-trick/
-build-bin = go build -ldflags="-s -w" -o $(1) $(2) && upx --brute $(1);
+#build-bin = go build -ldflags="-s -w" -o $(1) $(2) && upx $(1);
+build-bin = go build -ldflags="-s -w" -o $(1) $(2);
 
 all: install_upx
 	for subproject in $(SUBPROJECTS); \
