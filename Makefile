@@ -1,12 +1,10 @@
-PACKAGES = ./kit/... ./commands/... ./theme/...
-
 .PHONY: all build clean zip help
 
 test: ## Run all tests
-	@go test -v -race $(PACKAGES);
+	go test -v -race $(glide novendor)
 
 vet: ## Lint a verify go code.
-	@go vet $(PACKAGES);
+	go vet $(glide novendor)
 
 dist: clean  ## Build binaries for all platforms, zip, and upload to S3
 	@$(MAKE) windows && $(MAKE) mac && $(MAKE) linux && $(MAKE) zip && $(MAKE) upload_to_s3;
