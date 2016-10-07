@@ -88,22 +88,23 @@ func (t ThemeClient) GetConfiguration() Configuration {
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
 func (t ThemeClient) NewFileWatcher(dir, notifyFile string) chan AssetEvent {
-	new_foreman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
+	newForeman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
 	if len(notifyFile) > 0 {
-		new_foreman.OnIdle = func() {
+		newForeman.OnIdle = func() {
 			os.Create(notifyFile)
 			os.Chtimes(notifyFile, time.Now(), time.Now())
 		}
 	}
 	var err error
-	new_foreman.JobQueue, err = newFileWatcher(dir, true, t.filter)
+	newForeman.JobQueue, err = newFileWatcher(dir, true, t.filter)
 	if err != nil {
 		Fatal(err)
 	}
-	new_foreman.Restart()
-	return new_foreman.WorkerQueue
+	newForeman.Restart()
+	return newForeman.WorkerQueue
 }
 
+// Will output an error message to the eventLog
 func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
 	go func() {
 		t.eventLog <- basicEvent{
@@ -115,6 +116,7 @@ func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
 	}()
 }
 
+// Will output a simple message to the eventLog
 func (t ThemeClient) Message(content string, args ...interface{}) {
 	go func() {
 		t.eventLog <- basicEvent{
@@ -247,20 +249,20 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 // queue, then the worker queue will be closed when it is finished, then the done
 // channel will be closed. This is a good way of knowing when your jobs are done
 // processing.
-func (t ThemeClient) Process(done chan bool) chan AssetEvent {
-	new_foreman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
+func (t ThemeClient) Process(wg *sync.WaitGroup) chan AssetEvent {
+	newForeman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
 	go func() {
 		for {
-			job, more := <-new_foreman.WorkerQueue
+			job, more := <-newForeman.WorkerQueue
 			if more {
 				t.Perform(job)
 			} else {
-				done <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
-	return new_foreman.JobQueue
+	return newForeman.JobQueue
 }
 
 // Perform will send an http request to the shopify servers based on the asset event.

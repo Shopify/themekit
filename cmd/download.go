@@ -8,34 +8,49 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Shopify/themekit/kit"
 	"github.com/Shopify/themekit/theme"
 )
 
-// DownloadCommand downloads file(s) from theme
-func DownloadCommand(args Args, done chan bool) {
-	if len(args.Filenames) <= 0 {
-		for _, asset := range args.ThemeClient.AssetList() {
-			if err := writeToDisk(args.ThemeClient, asset); err != nil {
-				kit.Fatal(err)
+var downloadCmd = &cobra.Command{
+	Use:   "download <filenames>",
+	Short: "Download one or all of the theme files",
+	Long: `Download will download specific files from shopify servers if provided file names.
+If no filenames are provided then download will download every file in the project
+and write them to disk.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := initializeConfig(cmd.Name(), true); err != nil {
+			return err
+		}
+		return download(themeClients[0], args)
+	},
+}
+
+func download(client kit.ThemeClient, filenames []string) error {
+	if len(filenames) <= 0 {
+		for _, asset := range client.AssetList() {
+			if err := writeToDisk(client, asset); err != nil {
+				return err
 			}
 		}
 	} else {
-		for _, filename := range args.Filenames {
-			if asset, err := args.ThemeClient.Asset(filename); err != nil {
+		for _, filename := range filenames {
+			if asset, err := client.Asset(filename); err != nil {
 				if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
-					args.ThemeClient.Message("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
+					client.Message("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
 				} else {
-					kit.Fatal(err)
+					return err
 				}
 			} else {
-				if err := writeToDisk(args.ThemeClient, asset); err != nil {
-					kit.Fatal(err)
+				if err := writeToDisk(client, asset); err != nil {
+					return err
 				}
 			}
 		}
 	}
-	done <- true
+	return nil
 }
 
 func writeToDisk(client kit.ThemeClient, asset theme.Asset) error {
@@ -80,9 +95,7 @@ func writeToDisk(client kit.ThemeClient, asset theme.Asset) error {
 	if err != nil {
 		return err
 	}
-
 	client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
-
 	return nil
 }
 

@@ -40,8 +40,7 @@ func AddConfiguration(dir, environment string, config kit.Configuration) {
 	}
 }
 
-// PrepareConfigurationMigration ... TODO
-func PrepareConfigurationMigration(dir string) (func() bool, func() error) {
+func prepareConfigurationMigration(dir string) (func() bool, func() error) {
 	environmentLocation := filepath.Join(dir, "config.yml")
 	env, err := loadOrInitializeEnvironment(environmentLocation)
 	if err != nil {

@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	ThemeKitVersion = version{Major: 0, Minor: 4, Patch: 7}
+	// ThemeKitVersion is the version build of the library
+	ThemeKitVersion = version{Major: 0, Minor: 5, Patch: 0}
 )
 
 type versionComparisonResult int
@@ -22,7 +23,7 @@ const (
 	VersionLessThan versionComparisonResult = -1
 	// VersionEqual is a versionComparisonResult for a version that is equal
 	VersionEqual = 0
-	// VersionEqual is a versionComparisonResult for a version that is greater than
+	// VersionGreaterThan is a versionComparisonResult for a version that is greater than
 	VersionGreaterThan = 1
 )
 
@@ -33,6 +34,11 @@ func LibraryInfo() []string {
 		"ThemeKit - Shopify Theme Utilities",
 		ThemeKitVersion.String(),
 	}
+}
+
+func PrintInfo() {
+	messageSeparator := "\n----------------------------------------------------------------\n"
+	fmt.Println(GreenText(fmt.Sprintf("%s%s%s", messageSeparator, LibraryInfo(), messageSeparator)))
 }
 
 type version struct {

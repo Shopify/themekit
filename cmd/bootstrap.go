@@ -45,7 +45,7 @@ func BootstrapCommand(args Args, done chan bool) {
 	downloadOptions := Args{}
 	downloadOptions.ThemeClient = clientForNewTheme
 
-	DownloadCommand(downloadOptions, done)
+	download(clientForNewTheme, []string{})
 }
 
 func zipPath(version string) string {

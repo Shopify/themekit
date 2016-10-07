@@ -24,13 +24,11 @@ type release struct {
 	Platforms []platform `json:"platforms"`
 }
 
-// IsApplicable ... TODO
 func (r release) IsApplicable() bool {
 	return kit.ThemeKitVersion.Compare(kit.ParseVersionString(r.Version)) == kit.VersionLessThan
 }
 
-// IsNewReleaseAvailable ... TODO
-func IsNewReleaseAvailable() bool {
+func isNewReleaseAvailable() bool {
 	latestRelease, err := downloadReleaseForPlatform()
 	if err != nil {
 		return false
@@ -38,7 +36,6 @@ func IsNewReleaseAvailable() bool {
 	return latestRelease.IsApplicable()
 }
 
-// UpdateCommand ... TODO
 func UpdateCommand(args Args, done chan bool) {
 	latestRelease, err := downloadReleaseForPlatform()
 	if err == nil {

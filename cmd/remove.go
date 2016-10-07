@@ -3,16 +3,37 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sync"
+
+	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
 	"github.com/Shopify/themekit/theme"
 )
 
-// RemoveCommand removes file(s) from theme
-func RemoveCommand(args Args, done chan bool) {
-	jobQueue := args.ThemeClient.Process(done)
+var removeCmd = &cobra.Command{
+	Use:   "remove <filenames>",
+	Short: "Remove theme file(s) from shopify",
+	Long:  `Remove will delete all specified files from shopify servers.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := initializeConfig(cmd.Name(), true); err != nil {
+			return err
+		}
+
+		wg := sync.WaitGroup{}
+		for _, client := range themeClients {
+			wg.Add(1)
+			go remove(client, args, &wg)
+		}
+		wg.Wait()
+		return nil
+	},
+}
+
+func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+	jobQueue := client.Process(wg)
 	go func() {
-		for _, filename := range args.Filenames {
+		for _, filename := range filenames {
 			asset := theme.Asset{Key: filename}
 			jobQueue <- kit.NewRemovalEvent(asset)
 			removeFile(filename)
