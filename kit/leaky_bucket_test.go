@@ -7,7 +7,7 @@ import (
 )
 
 func TestFillingABucket(t *testing.T) {
-	bucket := NewLeakyBucket(2, 1, 10)
+	bucket := newLeakyBucket(2, 1, 10)
 	assert.Equal(t, true, bucket.IsEmpty(), "The bucket should be empty")
 	assert.Equal(t, 0, bucket.Available())
 	assert.Equal(t, false, bucket.IsFull(), "The bucket has nothing in it. Therefore it is not full")
@@ -21,14 +21,14 @@ func TestFillingABucket(t *testing.T) {
 }
 
 func TestToppingUpABucket(t *testing.T) {
-	bucket := NewLeakyBucket(4, 1, 10)
+	bucket := newLeakyBucket(4, 1, 10)
 	bucket.TopUp()
 	assert.Equal(t, 4, bucket.Available())
 	assert.Equal(t, true, bucket.IsFull())
 }
 
 func TestGrabbingADropFromTheBucket(t *testing.T) {
-	bucket := NewLeakyBucket(2, 1, 10)
+	bucket := newLeakyBucket(2, 1, 10)
 	assert.Equal(t, 0, bucket.Available(), "Bucket should be empty")
 	bucket.TopUp()
 	assert.Equal(t, bucket.Size, bucket.Available(), "Bucket should be full")
@@ -51,7 +51,7 @@ func TestGrabbingADropFromTheBucket(t *testing.T) {
 }
 
 func TestFillingAnAlreadyFullBucket(t *testing.T) {
-	bucket := NewLeakyBucket(2, 1, 10)
+	bucket := newLeakyBucket(2, 1, 10)
 	bucket.TopUp()
 
 	assert.Equal(t, true, bucket.IsFull())
@@ -61,7 +61,7 @@ func TestFillingAnAlreadyFullBucket(t *testing.T) {
 }
 
 func BenchmarkBucket(b *testing.B) {
-	bucket := NewLeakyBucket(2, 1, 1)
+	bucket := newLeakyBucket(2, 1, 1)
 	bucket.StartDripping()
 	for i := 0; i < b.N; i++ {
 		bucket.GetDrop()

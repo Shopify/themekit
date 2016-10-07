@@ -10,15 +10,14 @@ import (
 
 // RemoveCommand removes file(s) from theme
 func RemoveCommand(args Args, done chan bool) {
-	foreman := args.ThemeClient.NewForeman()
-	args.ThemeClient.Process(foreman.WorkerQueue, done)
+	jobQueue := args.ThemeClient.Process(done)
 	go func() {
 		for _, filename := range args.Filenames {
 			asset := theme.Asset{Key: filename}
-			foreman.JobQueue <- kit.NewRemovalEvent(asset)
+			jobQueue <- kit.NewRemovalEvent(asset)
 			removeFile(filename)
 		}
-		close(foreman.JobQueue)
+		close(jobQueue)
 	}()
 }
 

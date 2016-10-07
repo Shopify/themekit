@@ -16,7 +16,8 @@ import (
 // and not necessarily with the Service Provider
 const ThemeEventErrorCode int = 999
 
-// ThemeEvent ... TODO
+// ThemeEvent is an interface that describes all the events that pass through the
+// Theme clients event log
 type ThemeEvent interface {
 	String() string
 	Successful() bool
@@ -24,8 +25,14 @@ type ThemeEvent interface {
 	AsJSON() ([]byte, error)
 }
 
-// APIAssetEvent ... TODO
-type APIAssetEvent struct {
+// AssetEvent is an interface that describes events that are related to assets that
+// are processed through the eventlog
+type AssetEvent interface {
+	Asset() theme.Asset
+	Type() EventType
+}
+
+type apiAssetEvent struct {
 	Host      string `json:"host"`
 	AssetKey  string `json:"asset_key"`
 	EventType string `json:"event_type"`
@@ -34,12 +41,11 @@ type APIAssetEvent struct {
 	etype     string
 }
 
-// NewAPIAssetEvent ... TODO
-func NewAPIAssetEvent(r *http.Response, e AssetEvent, err error) APIAssetEvent {
-	event := APIAssetEvent{
+func newAPIAssetEvent(r *http.Response, e AssetEvent, err error) apiAssetEvent {
+	event := apiAssetEvent{
 		AssetKey:  e.Asset().Key,
 		EventType: e.Type().String(),
-		etype:     "APIAssetEvent",
+		etype:     "apiAssetEvent",
 	}
 	if err != nil {
 		event.Host = "Host Unknown"
@@ -56,7 +62,7 @@ func NewAPIAssetEvent(r *http.Response, e AssetEvent, err error) APIAssetEvent {
 	return event
 }
 
-func (a APIAssetEvent) String() string {
+func (a apiAssetEvent) String() string {
 	if a.Successful() {
 		return fmt.Sprintf(
 			"Successfully performed %s operation for file %s to %s",
@@ -91,27 +97,23 @@ func (a APIAssetEvent) String() string {
 	}
 }
 
-// Successful ... TODO
-func (a APIAssetEvent) Successful() bool {
+func (a apiAssetEvent) Successful() bool {
 	return a.Code >= 200 && a.Code < 300
 }
 
-func (a APIAssetEvent) Error() error {
+func (a apiAssetEvent) Error() error {
 	return a.err
 }
 
-// AsJSON ... TODO
-func (a APIAssetEvent) AsJSON() ([]byte, error) {
+func (a apiAssetEvent) AsJSON() ([]byte, error) {
 	return json.Marshal(a)
 }
 
-// AssetError ... TODO
-type AssetError struct {
+type assetError struct {
 	Messages []string `json:"asset"`
 }
 
-// APIThemeEvent ... TODO
-type APIThemeEvent struct {
+type apiThemeEvent struct {
 	Host        string `json:"host"`
 	ThemeName   string `json:"name"`
 	ThemeID     int64  `json:"theme_id"`
@@ -121,12 +123,11 @@ type APIThemeEvent struct {
 	etype       string
 }
 
-// NewAPIThemeEvent ... TODO
-func NewAPIThemeEvent(r *http.Response, err error) APIThemeEvent {
+func newAPIThemeEvent(r *http.Response, err error) apiThemeEvent {
 	if err != nil {
-		return APIThemeEvent{Host: "Unknown Host", Code: ThemeEventErrorCode, err: err, etype: "APIThemeEvent"}
+		return apiThemeEvent{Host: "Unknown Host", Code: ThemeEventErrorCode, err: err, etype: "APIThemeEvent"}
 	}
-	event := APIThemeEvent{Host: r.Request.URL.Host, Code: r.StatusCode, etype: "APIThemeEvent"}
+	event := apiThemeEvent{Host: r.Request.URL.Host, Code: r.StatusCode, etype: "APIThemeEvent"}
 
 	if event.Successful() {
 		populateThemeData(&event, r)
@@ -136,7 +137,7 @@ func NewAPIThemeEvent(r *http.Response, err error) APIThemeEvent {
 	return event
 }
 
-func (t APIThemeEvent) String() string {
+func (t apiThemeEvent) String() string {
 	if t.Successful() {
 		return fmt.Sprintf(
 			"[%s]Modifications made to theme '%s' with id of %s on shop %s",
@@ -155,21 +156,19 @@ func (t APIThemeEvent) String() string {
 	)
 }
 
-// Successful ... TODO
-func (t APIThemeEvent) Successful() bool {
+func (t apiThemeEvent) Successful() bool {
 	return t.Code >= 200 && t.Code < 300
 }
 
-func (t APIThemeEvent) Error() error {
+func (t apiThemeEvent) Error() error {
 	return t.err
 }
 
-// AsJSON ... TODO
-func (t APIThemeEvent) AsJSON() ([]byte, error) {
+func (t apiThemeEvent) AsJSON() ([]byte, error) {
 	return json.Marshal(t)
 }
 
-func (t *APIThemeEvent) markIfHasError(err error) bool {
+func (t *apiThemeEvent) markIfHasError(err error) bool {
 	if err != nil {
 		t.Code = ThemeEventErrorCode
 		t.err = err
@@ -178,7 +177,7 @@ func (t *APIThemeEvent) markIfHasError(err error) bool {
 	return false
 }
 
-func populateThemeData(e *APIThemeEvent, r *http.Response) {
+func populateThemeData(e *apiThemeEvent, r *http.Response) {
 	var container map[string]theme.Theme
 	bytes, err := ioutil.ReadAll(r.Body)
 	if e.markIfHasError(err) {
@@ -193,7 +192,7 @@ func populateThemeData(e *APIThemeEvent, r *http.Response) {
 	e.Previewable = theme.Previewable
 }
 
-func populateAPIErrorData(e *APIThemeEvent, r *http.Response) {
+func populateAPIErrorData(e *apiThemeEvent, r *http.Response) {
 	data, err := ioutil.ReadAll(r.Body)
 	if !e.markIfHasError(err) {
 		e.err = errors.New(string(data))
@@ -205,7 +204,7 @@ func extractAssetAPIErrors(data []byte, err error) error {
 		return err
 	}
 
-	var assetErrors map[string]AssetError
+	var assetErrors map[string]assetError
 	err = json.Unmarshal(data, &assetErrors)
 
 	if err != nil {

@@ -1,11 +1,16 @@
 package kit
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/png"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sort"
 	"testing"
 
@@ -18,6 +23,31 @@ var globalEventLog = make(chan ThemeEvent, 100)
 type TestEvent struct {
 	asset     theme.Asset
 	eventType EventType
+}
+
+func Fixture(name string) string {
+	return string(RawFixture(name))
+}
+
+func RawFixture(name string) []byte {
+	path := fmt.Sprintf("../fixtures/%s.json", name)
+	file, err := os.Open(path)
+	defer file.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return bytes
+}
+
+func BinaryTestData() []byte {
+	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+	buff := bytes.NewBuffer([]byte{})
+	png.Encode(buff, img)
+	return buff.Bytes()
 }
 
 func (t TestEvent) Asset() theme.Asset {
@@ -67,18 +97,16 @@ func TestProcessingAnEventsChannel(t *testing.T) {
 		results[r.Method]++
 	}))
 
-	stream := make(chan AssetEvent)
+	client := NewThemeClient(globalEventLog, conf(ts))
+
+	done := make(chan bool)
+	stream := client.Process(done)
 	go func() {
 		stream <- TestEvent{asset: asset(), eventType: Update}
 		stream <- TestEvent{asset: asset(), eventType: Update}
 		stream <- TestEvent{asset: asset(), eventType: Remove}
 		close(stream)
 	}()
-
-	client := NewThemeClient(globalEventLog, conf(ts))
-
-	done := make(chan bool)
-	client.Process(stream, done)
 
 	<-done
 	assert.Equal(t, 2, results["PUT"])
@@ -88,7 +116,7 @@ func TestProcessingAnEventsChannel(t *testing.T) {
 func TestRetrievingAnAssetList(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "fields=key,attachment,value", r.URL.RawQuery)
-		fmt.Fprintf(w, TestFixture("response_multi"))
+		fmt.Fprintf(w, Fixture("response_multi"))
 	}))
 
 	client := NewThemeClient(globalEventLog, conf(ts))
@@ -115,11 +143,11 @@ func TestRetrievingLocalAssetsWithSubdirectories(t *testing.T) {
 
 func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, TestFixture("assets_response_from_shopify"))
+		fmt.Fprintf(w, Fixture("assets_response_from_shopify"))
 	}))
 
 	var expected map[string][]theme.Asset
-	json.Unmarshal(RawTestFixture("expected_asset_list_output"), &expected)
+	json.Unmarshal(RawFixture("expected_asset_list_output"), &expected)
 	sort.Sort(theme.ByAsset(expected["assets"]))
 
 	client := NewThemeClient(globalEventLog, conf(ts))
@@ -135,18 +163,12 @@ func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
 func TestRetrievingASingleAsset(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "fields=key,attachment,value&asset[key]=assets/foo.txt", r.URL.RawQuery)
-		fmt.Fprintf(w, TestFixture("response_single"))
+		fmt.Fprintf(w, Fixture("response_single"))
 	}))
 
 	client := NewThemeClient(globalEventLog, conf(ts))
 	asset, _ := client.Asset("assets/foo.txt")
 	assert.Equal(t, "hello world", asset.Value)
-}
-
-func TestExtractErrorMessage(t *testing.T) {
-	contents := []byte(TestFixture("asset_error"))
-	expectedMessage := "Liquid syntax error (line 10): 'comment' tag was never closed"
-	assert.Equal(t, expectedMessage, ExtractErrorMessage(contents, nil))
 }
 
 func TestIgnoringCompiledAssets(t *testing.T) {
@@ -172,7 +194,12 @@ func asset() theme.Asset {
 }
 
 func conf(server *httptest.Server) Configuration {
-	return Configuration{URL: server.URL, AccessToken: "abra"}
+	return Configuration{
+		URL:         server.URL,
+		AccessToken: "abra",
+		BucketSize:  100,
+		RefillRate:  100,
+	}
 }
 
 func drain(channel chan ThemeEvent) {

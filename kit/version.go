@@ -11,50 +11,48 @@ import (
 	"github.com/inconshreveable/go-update"
 )
 
-var TKVersion = Version{Major: 0, Minor: 4, Patch: 4}
+var (
+	ThemeKitVersion = version{Major: 0, Minor: 4, Patch: 4}
+)
 
-// ThemeKitVersion ... TODO
-var ThemeKitVersion = TKVersion.String()
-
-// VersionComparisonResult ... TODO
-type VersionComparisonResult int
+type versionComparisonResult int
 
 const (
-	// VersionLessThan .. TODO
-	VersionLessThan VersionComparisonResult = -1
-	// VersionEqual ... TODO
+	// VersionLessThan is a versionComparisonResult for a version that is less than
+	VersionLessThan versionComparisonResult = -1
+	// VersionEqual is a versionComparisonResult for a version that is equal
 	VersionEqual = 0
-	// VersionGreaterThan ... TODO
+	// VersionEqual is a versionComparisonResult for a version that is greater than
 	VersionGreaterThan = 1
 )
 
-// LibraryInfo ... TODO
+// LibraryInfo will return a string array with information about the library used
+// for logging.
 func LibraryInfo() []string {
 	return []string{
 		"ThemeKit - Shopify Theme Utilities",
-		ThemeKitVersion,
+		ThemeKitVersion.String(),
 	}
 }
 
-// Version ... TODO
-type Version struct {
+type version struct {
 	Major int
 	Minor int
 	Patch int
 }
 
-func (v Version) String() string {
+func (v version) String() string {
 	return fmt.Sprintf("v%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
-func (v Version) toArray() [3]int {
+func (v version) toArray() [3]int {
 	return [3]int{v.Major, v.Minor, v.Patch}
 }
 
 // Compare ... I often get confused by comparison, so comparison results are going
 // to be the same as what <=> would return in Ruby.
 // http://ruby-doc.org/core-1.9.3/Comparable.html
-func (v Version) Compare(o Version) VersionComparisonResult {
+func (v version) Compare(o version) versionComparisonResult {
 	vAry := v.toArray()
 	oAry := o.toArray()
 	for i := 0; i < len(vAry); i++ {
@@ -68,17 +66,18 @@ func (v Version) Compare(o Version) VersionComparisonResult {
 	return VersionEqual
 }
 
-// ParseVersionString ... TODO
-func ParseVersionString(ver string) Version {
+// ParseVersionString will parse a string and convert it into a version for comparison.
+func ParseVersionString(ver string) version {
 	sanitizedVer := strings.Replace(ver, "v", "", 1)
 	expandedVersionString := strings.Split(sanitizedVer, ".")
 	major, _ := strconv.Atoi(expandedVersionString[0])
 	minor, _ := strconv.Atoi(expandedVersionString[1])
 	patch, _ := strconv.Atoi(expandedVersionString[2])
-	return Version{Major: major, Minor: minor, Patch: patch}
+	return version{Major: major, Minor: minor, Patch: patch}
 }
 
-// ApplyUpdate ... TODO
+// ApplyUpdate will take a url and digest and download the update specified, then
+// apply it to the current version.
 func ApplyUpdate(updateURL, digest string) error {
 	checksum, err := hex.DecodeString(digest)
 	if err != nil {

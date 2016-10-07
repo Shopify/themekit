@@ -23,7 +23,7 @@ const updateAvailableMessage string = `| An update for Theme Kit is available |
 |                                      |
 | theme update                         |`
 
-var globalEventLog chan kit.ThemeEvent
+var globalEventLog = make(chan kit.ThemeEvent)
 
 var commandDescriptionPrefix = []string{
 	"Usage: theme <operation> [<additional arguments> ...]",
@@ -114,9 +114,6 @@ var commandDefinitions = map[string]CommandDefinition{
 }
 
 func main() {
-	setupGlobalEventLog()
-	setupErrorReporter()
-
 	command, rest := setupAndParseArgs(os.Args[1:])
 	verifyCommand(command, rest)
 
@@ -206,14 +203,6 @@ func commandDescription() string {
 	}
 
 	return strings.Join(commandDescription, "\n")
-}
-
-func setupErrorReporter() {
-	kit.SetErrorReporter(kit.HaltExecutionReporter{})
-}
-
-func setupGlobalEventLog() {
-	globalEventLog = make(chan kit.ThemeEvent)
 }
 
 func checkForUpdate() {
@@ -308,7 +297,14 @@ func bootstrapParser(cmd string, rawArgs []string) commands.Args {
 
 func loadThemeClient(directory, env string) kit.ThemeClient {
 	client, err := loadThemeClientWithRetry(directory, env, false)
-	handleError(err)
+	if err != nil {
+		if strings.Contains(err.Error(), "YAML error") {
+			err = fmt.Errorf("configuration error: does your configuration properly escape wildcards? \n\t\t\t%s", err)
+		} else if strings.Contains(err.Error(), "no such file or directory") {
+			err = fmt.Errorf("configuration error: %s", err)
+		}
+		kit.Fatal(err)
+	}
 	return client
 }
 
@@ -319,8 +315,7 @@ func loadThemeClientWithRetry(directory, env string, isRetry bool) (kit.ThemeCli
 	}
 	config, err := environments.GetConfiguration(env)
 	if err != nil && len(environments) > 0 {
-		fmt.Println(kit.RedText(err.Error()))
-		os.Exit(1)
+		kit.Fatal(err)
 	} else if err != nil && !isRetry {
 		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", kit.DefaultEnvironment)
 		fmt.Println(kit.YellowText(upgradeMessage))
@@ -402,17 +397,4 @@ func makeFlagSet(command string) *flag.FlagSet {
 		command = " " + command
 	}
 	return flag.NewFlagSet(fmt.Sprintf("theme%s", command), flag.ExitOnError)
-}
-
-func handleError(err error) {
-	if err == nil {
-		return
-	}
-
-	if strings.Contains(err.Error(), "YAML error") {
-		err = fmt.Errorf("configuration error: does your configuration properly escape wildcards? \n\t\t\t%s", err)
-	} else if strings.Contains(err.Error(), "no such file or directory") {
-		err = fmt.Errorf("configuration error: %s", err)
-	}
-	kit.NotifyErrorImmediately(err)
 }

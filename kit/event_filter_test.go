@@ -10,19 +10,19 @@ import (
 )
 
 func TestEventFilterRejectsEventsThatMatch(t *testing.T) {
-	eventFilter := NewEventFilter([]string{"foo", "baa*"})
+	e := newEventFilter([]string{"foo", "baa*"})
 
 	inputEvents := []string{"hello", "foo", "gofoo", "baarber", "barber", "goodbye"}
 	expectedEvents := []string{"hello", "goodbye"}
-	assertFilter(t, eventFilter, inputEvents, expectedEvents)
+	assertFilter(t, e, inputEvents, expectedEvents)
 }
 
 func TestEventFilterTurnsInvalidRegexpsIntoGlobs(t *testing.T) {
-	eventFilter := NewEventFilter([]string{"*.bat", "build/*", "*.ini"})
+	e := newEventFilter([]string{"*.bat", "build/*", "*.ini"})
 
 	inputEvents := []string{"hello.bat", "build/hello/world", "build/world", "whatever", "foo.ini", "zubat"}
 	expectedEvents := []string{"whatever", "zubat"}
-	assertFilter(t, eventFilter, inputEvents, expectedEvents)
+	assertFilter(t, e, inputEvents, expectedEvents)
 }
 
 func TestBuildingEventFiltersFromMultipleReaders(t *testing.T) {
@@ -30,32 +30,32 @@ func TestBuildingEventFiltersFromMultipleReaders(t *testing.T) {
 		bytes.NewReader([]byte("*.bat\nbuild/")),
 		bytes.NewReader([]byte("foo\nbar")),
 	}
-	eventFilter := NewEventFilterFromReaders(readers)
+	e := newEventFilterFromReaders(readers)
 	inputEvents := []string{
 		"program.bat", "build/dist/program", "item.liquid", "gofoo", "gobar", "listing", "programbat", "config.yml",
 	}
 	expectedResults := []string{"item.liquid", "listing", "programbat"}
-	assertFilter(t, eventFilter, inputEvents, expectedResults)
+	assertFilter(t, e, inputEvents, expectedResults)
 }
 
 func TestFilterRemovesEmptyStrings(t *testing.T) {
-	eventFilter := NewEventFilterFromReaders([]io.Reader{})
+	e := newEventFilterFromReaders([]io.Reader{})
 	inputEvents := []string{"hello", "", "world"}
 	expectedEvents := []string{"hello", "world"}
-	assertFilter(t, eventFilter, inputEvents, expectedEvents)
+	assertFilter(t, e, inputEvents, expectedEvents)
 }
 
 func TestDefaultFilters(t *testing.T) {
-	eventFilter := NewEventFilterFromReaders([]io.Reader{})
+	e := newEventFilterFromReaders([]io.Reader{})
 	inputEvents := []string{".git/HEAD", ".DS_Store", "config.yml", "templates/products.liquid"}
 	expectedEvents := []string{"templates/products.liquid"}
-	assertFilter(t, eventFilter, inputEvents, expectedEvents)
+	assertFilter(t, e, inputEvents, expectedEvents)
 }
 
 func TestMatchesFilterWithEmptyInputDoesNotCrash(t *testing.T) {
-	eventFilter := NewEventFilter([]string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"})
+	e := newEventFilter([]string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"})
 	// Shouldn't crash
-	eventFilter.MatchesFilter("")
+	e.MatchesFilter("")
 }
 
 func nextValue(channel chan string) string {
@@ -67,9 +67,9 @@ func nextValue(channel chan string) string {
 	}
 }
 
-func assertFilter(t *testing.T, eventFilter EventFilter, inputs []string, expectedResults []string) {
+func assertFilter(t *testing.T, e eventFilter, inputs []string, expectedResults []string) {
 	events := make(chan string)
-	filtered := eventFilter.Filter(events)
+	filtered := e.Filter(events)
 
 	go func() {
 		for _, event := range inputs {

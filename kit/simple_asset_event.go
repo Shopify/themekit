@@ -4,28 +4,27 @@ import (
 	"github.com/Shopify/themekit/theme"
 )
 
-// SimpleAssetEvent ... TODO
-type SimpleAssetEvent struct {
+type simpleAssetEvent struct {
 	asset     theme.Asset
 	eventType EventType
 }
 
-// Asset ... TODO
-func (s SimpleAssetEvent) Asset() theme.Asset {
+func (s simpleAssetEvent) Asset() theme.Asset {
 	return s.asset
 }
 
-// Type ... TODO
-func (s SimpleAssetEvent) Type() EventType {
+func (s simpleAssetEvent) Type() EventType {
 	return s.eventType
 }
 
-// NewRemovalEvent ... TODO
-func NewRemovalEvent(asset theme.Asset) SimpleAssetEvent {
-	return SimpleAssetEvent{asset: asset, eventType: Remove}
+// NewRemovalEvent will create a simple asset removal event for the theme client
+// to process
+func NewRemovalEvent(asset theme.Asset) AssetEvent {
+	return simpleAssetEvent{asset: asset, eventType: Remove}
 }
 
-// NewUploadEvent ... TODO
-func NewUploadEvent(asset theme.Asset) SimpleAssetEvent {
-	return SimpleAssetEvent{asset: asset, eventType: Update}
+// NewUploadEvent will create a simple asset update event for the theme client
+// to process
+func NewUploadEvent(asset theme.Asset) AssetEvent {
+	return simpleAssetEvent{asset: asset, eventType: Update}
 }

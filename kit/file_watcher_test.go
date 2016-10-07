@@ -18,10 +18,6 @@ type FileWatcherSuite struct {
 	suite.Suite
 }
 
-func (s *FileWatcherSuite) TearDownTest() {
-	RestoreReader()
-}
-
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
 	var tests = []struct {
 		input    fsnotify.Event
@@ -48,19 +44,13 @@ func (s *FileWatcherSuite) TestDeterminingContentTypesOfFiles() {
 func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsAttachmentDataForBinaryFiles() {
 	imageData, _ := ioutil.ReadFile("../fixtures/image.png")
 	encodedImageData := encode64(imageData)
-	WatcherFileReader = func(filename string) ([]byte, error) {
-		return imageData, nil
-	}
 	event := fsnotify.Event{Name: "../fixtures/image.png", Op: fsnotify.Chmod}
-	assetEvent := HandleEvent(event)
+	assetEvent := handleEvent(event)
 	assert.Equal(s.T(), "", assetEvent.Asset().Value)
 	assert.Equal(s.T(), encodedImageData, assetEvent.Asset().Attachment)
 }
 
 func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents() {
-	WatcherFileReader = func(filename string) ([]byte, error) {
-		return []byte("hello"), nil
-	}
 	writes := map[fsnotify.Op]EventType{
 		fsnotify.Chmod:  Update,
 		fsnotify.Create: Update,
@@ -68,7 +58,7 @@ func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents(
 	}
 	for fsEvent, themekitEvent := range writes {
 		event := fsnotify.Event{Name: "../fixtures/whatever.txt", Op: fsEvent}
-		assetEvent := HandleEvent(event)
+		assetEvent := handleEvent(event)
 		assert.Equal(s.T(), themekitEvent, assetEvent.Type())
 	}
 }

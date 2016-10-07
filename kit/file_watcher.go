@@ -2,7 +2,6 @@ package kit
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,43 +27,36 @@ var (
 		"locales/",
 		"sections/",
 	}
-	WatcherFileReader fileReader = ioutil.ReadFile
 )
 
 type (
-	FsAssetEvent struct {
+	fsAssetEvent struct {
 		asset     theme.Asset
 		eventType EventType
 	}
 	fileReader func(filename string) ([]byte, error)
 )
 
-// RestoreReader ... TODO
-func RestoreReader() {
-	WatcherFileReader = ioutil.ReadFile
-}
-
 // Asset ... TODO
-func (f FsAssetEvent) Asset() theme.Asset {
+func (f fsAssetEvent) Asset() theme.Asset {
 	return f.asset
 }
 
 // Type ... TODO
-func (f FsAssetEvent) Type() EventType {
+func (f fsAssetEvent) Type() EventType {
 	return f.eventType
 }
 
 // IsValid ... TODO
-func (f FsAssetEvent) IsValid() bool {
+func (f fsAssetEvent) IsValid() bool {
 	return f.eventType == Remove || f.asset.IsValid()
 }
 
-func (f FsAssetEvent) String() string {
+func (f fsAssetEvent) String() string {
 	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
 }
 
-// NewFileWatcher ... TODO
-func NewFileWatcher(dir string, recur bool, filter EventFilter) (chan AssetEvent, error) {
+func newFileWatcher(dir string, recur bool, filter eventFilter) (chan AssetEvent, error) {
 	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.MatchesFilter)
 	if err != nil {
 		return nil, err
@@ -115,7 +107,7 @@ func fwLoadAsset(event fsnotify.Event) theme.Asset {
 	asset, err := theme.LoadAsset(root, filename)
 	if err != nil {
 		if os.IsExist(err) {
-			NotifyError(err)
+			Fatal(err)
 		} else {
 			asset = theme.Asset{}
 		}
@@ -124,8 +116,7 @@ func fwLoadAsset(event fsnotify.Event) theme.Asset {
 	return asset
 }
 
-// HandleEvent ... TODO
-func HandleEvent(event fsnotify.Event) FsAssetEvent {
+func handleEvent(event fsnotify.Event) fsAssetEvent {
 	var eventType EventType
 	asset := fwLoadAsset(event)
 	switch event.Op {
@@ -134,7 +125,7 @@ func HandleEvent(event fsnotify.Event) FsAssetEvent {
 	case fsnotify.Remove:
 		eventType = Remove
 	}
-	return FsAssetEvent{asset: asset, eventType: eventType}
+	return fsAssetEvent{asset: asset, eventType: eventType}
 }
 
 func extractAssetKey(filename string) string {
@@ -149,7 +140,7 @@ func extractAssetKey(filename string) string {
 	return ""
 }
 
-func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetEvent {
+func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetEvent {
 	results := make(chan AssetEvent)
 	go func() {
 		var currentEvent fsnotify.Event
@@ -167,7 +158,7 @@ func convertFsEvents(events chan fsnotify.Event, filter EventFilter) chan AssetE
 				recordedEvents[currentEvent.Name] = currentEvent
 			case <-time.After(debounceTimeout):
 				for eventName, event := range recordedEvents {
-					if fsevent := HandleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
+					if fsevent := handleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
 						results <- fsevent
 					}
 				}

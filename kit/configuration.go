@@ -13,7 +13,8 @@ import (
 	"gopkg.in/yaml.v1"
 )
 
-// Configuration ... TODO
+// Configuration is the structure of a configuration for an environment. This will
+// get loaded into a theme client to dictate it's actions.
 type Configuration struct {
 	AccessToken  string        `yaml:"access_token,omitempty"`
 	Password     string        `yaml:"password,omitempty"`
@@ -30,17 +31,17 @@ type Configuration struct {
 }
 
 const (
-	// DefaultBucketSize ... TODO
+	// DefaultBucketSize is the default maximum amount of processes to run at the same time.
 	DefaultBucketSize int = 40
-	// DefaultRefillRate ... TODO
+	// DefaultRefillRate is the rate in which processes are allowed to spawn at a time.
 	DefaultRefillRate int = 2
-	// DefaultConcurrency ... TODO
+	// DefaultConcurrency is the default amount of workers that will be spawned for any job.
 	DefaultConcurrency int = 2
-	// DefaultTimeout ... TODO
+	// DefaultTimeout is the default timeout to kill any stalled processes.
 	DefaultTimeout time.Duration = 30 * time.Second
 )
 
-// LoadConfiguration ... TODO
+// LoadConfiguration will build a configuration object form a raw byte array.
 func LoadConfiguration(contents []byte) (Configuration, error) {
 	var conf Configuration
 	if err := yaml.Unmarshal(contents, &conf); err != nil {
@@ -49,7 +50,8 @@ func LoadConfiguration(contents []byte) (Configuration, error) {
 	return conf.Initialize()
 }
 
-// Initialize ... TODO
+// Initialize will format a Configuration that has been unmarshalled form json.
+// It will set default values and validate settings.
 func (conf Configuration) Initialize() (Configuration, error) {
 	if conf.BucketSize <= 0 {
 		conf.BucketSize = DefaultBucketSize
@@ -88,11 +90,12 @@ func (conf Configuration) Initialize() (Configuration, error) {
 	return conf, nil
 }
 
-// AdminURL ... TODO
+// AdminURL will return the url to the shopify admin.
 func (conf Configuration) AdminURL() string {
 	return fmt.Sprintf("https://%s/admin", conf.Domain)
 }
 
+// Write will write out a configuration to a writer.
 func (conf Configuration) Write(w io.Writer) error {
 	bytes, err := yaml.Marshal(conf)
 	if err == nil {
@@ -101,7 +104,7 @@ func (conf Configuration) Write(w io.Writer) error {
 	return err
 }
 
-// Save ... TODO
+// Save will write out the configuration to a file.
 func (conf Configuration) Save(location string) error {
 	file, err := os.OpenFile(location, os.O_WRONLY|os.O_CREATE, 0644)
 	defer file.Close()
@@ -111,12 +114,12 @@ func (conf Configuration) Save(location string) error {
 	return err
 }
 
-// AssetPath ... TODO
+// AssetPath will return the assets endpoint in the admin section of shopify.
 func (conf Configuration) AssetPath() string {
 	return fmt.Sprintf("%s/assets.json", conf.URL)
 }
 
-// AddHeaders ... TODO
+// AddHeaders will add api headers to an http.Requests so that it is a valid request.
 func (conf Configuration) AddHeaders(req *http.Request) {
 	var accessToken string
 	if len(conf.Password) > 0 {
@@ -131,6 +134,7 @@ func (conf Configuration) AddHeaders(req *http.Request) {
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s)", runtime.GOOS, runtime.GOARCH))
 }
 
+// String will return a formatted string with the information about this configuration
 func (conf Configuration) String() string {
 	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", conf.AccessToken, conf.Domain, conf.BucketSize, conf.RefillRate, conf.URL)
 }

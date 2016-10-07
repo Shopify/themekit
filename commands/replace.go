@@ -9,8 +9,7 @@ import (
 
 // ReplaceCommand overwrite theme file(s)
 func ReplaceCommand(args Args, done chan bool) {
-	foreman := args.ThemeClient.NewForeman()
-	args.ThemeClient.Process(foreman.WorkerQueue, done)
+	jobQueue := args.ThemeClient.Process(done)
 	root, _ := os.Getwd()
 	assetsActions := map[string]kit.AssetEvent{}
 	if len(args.Filenames) == 0 {
@@ -31,7 +30,7 @@ func ReplaceCommand(args Args, done chan bool) {
 		}
 	}
 	for _, event := range assetsActions {
-		foreman.JobQueue <- event
+		jobQueue <- event
 	}
-	close(foreman.JobQueue)
+	close(jobQueue)
 }

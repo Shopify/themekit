@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Shopify/themekit/atom"
+	"github.com/Shopify/themekit/commands/internal/atom"
 	"github.com/Shopify/themekit/kit"
 )
 
@@ -27,7 +27,7 @@ func BootstrapCommand(args Args, done chan bool) {
 
 	zipLocation, err := zipPathForVersion(args.Version)
 	if err != nil {
-		kit.NotifyError(err)
+		kit.Fatal(err)
 		close(done)
 	}
 
