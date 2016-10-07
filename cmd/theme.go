@@ -13,19 +13,6 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
-/*
-configure
-	-domain
-	-theme_id
-	-password
-	-bucketSize
-	-refillRate
-bootstrap
-	-setid
-	-version
-	-prefix
-*/
-
 const (
 	banner                 string = "----------------------------------------"
 	updateAvailableMessage string = `| An update for Theme Kit is available |
@@ -43,6 +30,14 @@ var (
 	environment  string
 	allenvs      bool
 	notifyFile   string
+	password     string
+	themeid      string
+	domain       string
+	bucketsize   int
+	refillrate   int
+	concurrency  int
+	proxy        string
+	timeout      int
 )
 
 var ThemeCmd = &cobra.Command{
@@ -61,7 +56,15 @@ func init() {
 
 	ThemeCmd.PersistentFlags().StringVarP(&directory, "dir", "d", pwd, "directory that config.yml is located")
 	ThemeCmd.PersistentFlags().StringVarP(&environment, "env", "e", kit.DefaultEnvironment, "envionment to run the command")
-	ThemeCmd.PersistentFlags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
+
+	ThemeCmd.PersistentFlags().StringVar(&password, "password", "", "theme password. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().StringVar(&themeid, "themeid", "", "theme id. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().StringVar(&domain, "domain", "", "your shopify domain. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().IntVar(&bucketsize, "bucket", kit.DefaultBucketSize, "the bucket size for throttling. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().IntVar(&refillrate, "refill", kit.DefaultRefillRate, "the refill rate for throttling. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().IntVar(&concurrency, "concurrency", 1, "the refill rate for throttling. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().StringVar(&proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().IntVarP(&timeout, "timeout", "t", kit.DefaultTimeoutInt, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 
 	watchCmd.Flags().StringVarP(&notifyFile, "notify", "n", "", "file to touch when workers have gone idle")
 	watchCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
@@ -69,7 +72,14 @@ func init() {
 	replaceCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
 	uploadCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
 
-	ThemeCmd.AddCommand(removeCmd, replaceCmd, uploadCmd, watchCmd, downloadCmd, versionCmd)
+	ThemeCmd.AddCommand(
+		removeCmd,
+		replaceCmd,
+		uploadCmd,
+		watchCmd,
+		downloadCmd,
+		versionCmd,
+	)
 }
 
 func initializeConfig(cmdName string, timesout bool) error {

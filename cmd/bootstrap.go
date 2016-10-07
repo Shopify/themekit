@@ -10,6 +10,13 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
+/*
+bootstrap
+	-setid
+	-version
+	-prefix
+*/
+
 const (
 	masterBranch = "master"
 	// LatestRelease (github's latest release)
