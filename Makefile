@@ -41,10 +41,10 @@ linux: ## Build binaries for Linux (32 and 64 bit)
 	@echo "building linux-32" && export GOOS=linux; $(MAKE) build32 && echo "linux-32 build complete";
 
 zip: ## Create zip file with distributable binaries
-	echo "compressing releases" && ./scripts/compress && echo "finished compressing";
+	@echo "compressing releases" && ./scripts/compress && echo "finished compressing";
 
 upload_to_s3: ## Upload zip file with binaries to S3
-	@echo "uploading to S3" && ./scripts/release && echo "upload complete";
+	@echo "uploading to S3" && bundle exec ruby ./scripts/release && echo "upload complete";
 
 help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

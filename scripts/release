@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'fog'
+require 'fog/aws'
 require 'dotenv'
 require 'json'
 require 'digest'
@@ -8,8 +8,8 @@ require 'git'
 Dotenv.load
 
 class FileManager
-  ALL_RELEASES = "releases/all.json"
-  LATEST_RELEASE = "releases/latest.json"
+  ALL_RELEASES = 'releases/all.json'.freeze
+  LATEST_RELEASE = 'releases/latest.json'.freeze
 
   attr_reader :bucket
 
@@ -30,24 +30,25 @@ class FileManager
     get_file(filename).public_url
   end
 
-  def fetch(filename, default: "")
+  def fetch(filename, default: '')
     exists?(filename) ? get_file(filename).body : default
   end
 
   private
+
   def get_file(name)
     bucket.files.get(name)
   end
 
   def exists?(name)
     bucket.files.head(name)
-  rescue => e
+  rescue
     false
   end
 end
 
 class Repository
-  GIT_DIR = File.expand_path(__FILE__ + "/..")
+  GIT_DIR = File.expand_path(__FILE__ + '/../..')
 
   def initialize
     @git = Git.open(GIT_DIR)
@@ -160,7 +161,7 @@ class FeedGenerator
   end
 
   def upload!(logger: nil)
-    logger.puts "Updating feeds" if logger
+    logger.puts 'Updating feeds' if logger
     storage_manager.upload!(FileManager::LATEST_RELEASE, latest_feed)
     storage_manager.upload!(FileManager::ALL_RELEASES, entire_feed)
   end
@@ -179,13 +180,13 @@ class FeedGenerator
 
   def as_hash
     {
-      "version" => version,
-      "platforms" => releases.map(&:as_hash)
+      version: version,
+      platforms: releases.map(&:as_hash)
     }
   end
 end
 
-puts "Establishing Connection to Amazon S3"
+puts 'Establishing Connection to Amazon S3'
 connection = Fog::Storage.new(
   provider: 'AWS',
   aws_access_key_id: ENV['AWS_KEY_ID'],
@@ -194,7 +195,7 @@ connection = Fog::Storage.new(
 
 bucket = Fog::Storage::AWS::Directory.new(key: ENV['AWS_BUCKET_NAME'], service: connection)
 manager = FileManager.new(bucket)
-puts "Determining latest release"
+puts 'Determining latest release'
 repo = Repository.new
 version = repo.latest_version
 
