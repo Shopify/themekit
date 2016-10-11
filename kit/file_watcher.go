@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	debounceTimeout = 50 * time.Millisecond
+	debounceTimeout = 500 * time.Millisecond
 )
 
 var (
