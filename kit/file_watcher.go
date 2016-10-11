@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	debounceTimeout = 50 * time.Millisecond
+	debounceTimeout = 500 * time.Millisecond
 )
 
 var (
@@ -146,14 +146,10 @@ func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetE
 		var currentEvent fsnotify.Event
 		recordedEvents := map[string]fsnotify.Event{}
 		for {
-			currentEvent = <-events
-			if currentEvent.Op&fsnotify.Chmod != fsnotify.Chmod {
-				recordedEvents[currentEvent.Name] = currentEvent
-			}
 			select {
 			case currentEvent = <-events:
 				if currentEvent.Op&fsnotify.Chmod == fsnotify.Chmod {
-					continue
+					currentEvent.Op = fsnotify.Write
 				}
 				recordedEvents[currentEvent.Name] = currentEvent
 			case <-time.After(debounceTimeout):
