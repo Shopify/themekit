@@ -33,6 +33,10 @@ var updateCmd = &cobra.Command{
 if there is an applicable update it will
 download it and apply it.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := initializeConfig(cmd.Name(), true); err != nil {
+			return err
+		}
+
 		latestRelease, err := downloadReleaseForPlatform()
 		if err == nil {
 			if latestRelease.IsApplicable() {

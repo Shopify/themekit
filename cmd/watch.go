@@ -22,12 +22,12 @@ run 'theme watch' while you are editing and it will detect create, update and de
 		wg := sync.WaitGroup{}
 		for _, client := range themeClients {
 			config := client.GetConfiguration()
-			client.Message("Spawning %d workers for %s", config.Concurrency, config.Domain)
+			client.Message("Spawning %d workers for %s", config.Concurrency, kit.GreenText(config.Domain))
 			assetEvents := client.NewFileWatcher(directory, notifyFile)
 			for i := 0; i < config.Concurrency; i++ {
 				wg.Add(1)
 				go spawnWorker(assetEvents, client, &wg)
-				client.Message("%s Worker #%d ready to upload local changes", config.Domain, i)
+				client.Message("%s Worker #%d ready to upload local changes", kit.GreenText(config.Domain), i)
 			}
 		}
 		wg.Wait()

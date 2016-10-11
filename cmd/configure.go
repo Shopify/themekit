@@ -20,6 +20,10 @@ var configureCmd = &cobra.Command{
 	Long: `Configure will create a new configuration file to
 access shopify using the theme kit.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := initializeConfig(cmd.Name(), true); err != nil {
+			return err
+		}
+
 		var errs = []string{}
 		if len(domain) <= 0 {
 			errs = append(errs, "\t-domain cannot be blank")

@@ -11,13 +11,6 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
-/*
-bootstrap
-	-setid
-	-version
-	-prefix
-*/
-
 const (
 	masterBranch   = "master"
 	latestRelease  = "latest"
@@ -32,6 +25,10 @@ var bootstrapCmd = &cobra.Command{
 The most popular theme on Shopify. Bootstrap will also setup
 your config file and create a new theme id for you.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := initializeConfig(cmd.Name(), true); err != nil {
+			return err
+		}
+
 		zipLocation, err := zipPathForVersion(bootstrapVersion)
 		if err != nil {
 			return err
