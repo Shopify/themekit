@@ -39,6 +39,10 @@ var (
 	concurrency  int
 	proxy        string
 	timeout      int
+
+	bootstrapVersion string
+	bootstrapPrefix  string
+	setThemeID       bool
 )
 
 var ThemeCmd = &cobra.Command{
@@ -75,7 +79,12 @@ func init() {
 	replaceCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
 	uploadCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
 
+	bootstrapCmd.Flags().StringVar(&bootstrapVersion, "version", latestRelease, "version of Shopify Timber to use")
+	bootstrapCmd.Flags().StringVar(&bootstrapPrefix, "prefix", "", "prefix to the Timber theme being created")
+	bootstrapCmd.Flags().BoolVar(&setThemeID, "setid", true, "update config with ID of created Theme")
+
 	ThemeCmd.AddCommand(
+		bootstrapCmd,
 		removeCmd,
 		replaceCmd,
 		uploadCmd,
@@ -83,6 +92,7 @@ func init() {
 		downloadCmd,
 		versionCmd,
 		updateCmd,
+		configureCmd,
 	)
 }
 

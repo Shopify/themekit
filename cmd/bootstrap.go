@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"net/http"
-	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/cmd/internal/atom"
 	"github.com/Shopify/themekit/kit"
@@ -18,41 +19,38 @@ bootstrap
 */
 
 const (
-	masterBranch = "master"
-	// LatestRelease (github's latest release)
-	LatestRelease  = "latest"
+	masterBranch   = "master"
+	latestRelease  = "latest"
 	themeZipRoot   = "https://github.com/Shopify/Timber/archive/"
 	timberFeedPath = "https://github.com/Shopify/Timber/releases.atom"
 )
 
-// BootstrapCommand bootstraps a new theme using Shopify Timber
-func BootstrapCommand(args Args, done chan bool) {
-	pwd, _ := os.Getwd()
-	if pwd != args.Directory {
-		os.Chdir(args.Directory)
-	}
+var bootstrapCmd = &cobra.Command{
+	Use:   "bootstrap",
+	Short: "Bootstrap a new theme using Shopify Timber",
+	Long: `Bootstrap will download the latest release of Timber,
+The most popular theme on Shopify. Bootstrap will also setup
+your config file and create a new theme id for you.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		zipLocation, err := zipPathForVersion(bootstrapVersion)
+		if err != nil {
+			return err
+		}
 
-	zipLocation, err := zipPathForVersion(args.Version)
-	if err != nil {
-		kit.Fatal(err)
-		close(done)
-	}
+		name := "Timber-" + bootstrapVersion
+		if len(bootstrapPrefix) > 0 {
+			name = bootstrapPrefix + "-" + name
+		}
 
-	name := "Timber-" + args.Version
-	if len(args.Prefix) > 0 {
-		name = args.Prefix + "-" + name
-	}
-	clientForNewTheme := args.ThemeClient.CreateTheme(name, zipLocation)
-	if args.SetThemeID {
-		AddConfiguration(args.Directory, args.Environment, clientForNewTheme.GetConfiguration())
-	}
+		clientForNewTheme := themeClients[0].CreateTheme(name, zipLocation)
+		if setThemeID {
+			if err := addConfiguration(clientForNewTheme.GetConfiguration()); err != nil {
+				return err
+			}
+		}
 
-	os.Chdir(pwd)
-
-	downloadOptions := Args{}
-	downloadOptions.ThemeClient = clientForNewTheme
-
-	download(clientForNewTheme, []string{})
+		return download(clientForNewTheme, []string{})
+	},
 }
 
 func zipPath(version string) string {
@@ -92,7 +90,7 @@ func downloadAtomFeed() (atom.Feed, error) {
 }
 
 func findReleaseWith(feed atom.Feed, version string) (atom.Entry, error) {
-	if version == LatestRelease {
+	if version == latestRelease {
 		return feed.LatestEntry(), nil
 	}
 	for _, entry := range feed.Entries {

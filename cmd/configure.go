@@ -7,37 +7,57 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
 )
 
-// ConfigureCommand creates a configuration file
-func ConfigureCommand(args Args, done chan bool) {
-	if err := args.ConfigurationErrors(); err != nil {
-		kit.Fatal(err)
-	}
+var configureCmd = &cobra.Command{
+	Use:   "configure",
+	Short: "Create a configuration file",
+	Long: `Configure will create a new configuration file to
+access shopify using the theme kit.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var errs = []string{}
+		if len(domain) <= 0 {
+			errs = append(errs, "\t-domain cannot be blank")
+		}
+		if len(password) <= 0 {
+			errs = append(errs, "\t-password or access_token cannot be blank")
+		}
+		if len(errs) > 0 {
+			fullPath := filepath.Join(directory, "config.yml")
+			return fmt.Errorf("Cannot create %s!\nErrors:\n%s", fullPath, strings.Join(errs, "\n"))
+		}
 
-	config := args.DefaultConfigurationOptions()
-	_, err := config.Initialize()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+		config := kit.Configuration{
+			Domain:      domain,
+			AccessToken: password,
+			Password:    password,
+			BucketSize:  bucketsize,
+			RefillRate:  refillrate,
+			Timeout:     time.Duration(timeout) * time.Second,
+			ThemeID:     themeid,
+		}
 
-	AddConfiguration(args.Directory, args.Environment, config)
-	close(done)
+		_, err := config.Initialize()
+		if err != nil {
+			return err
+		}
+
+		return addConfiguration(config)
+	},
 }
 
-// AddConfiguration ... TODO
-func AddConfiguration(dir, environment string, config kit.Configuration) {
-	environmentLocation := filepath.Join(dir, "config.yml")
-	env, err := loadOrInitializeEnvironment(environmentLocation)
-	env.SetConfiguration(environment, config)
-
-	err = env.Save(environmentLocation)
+func addConfiguration(config kit.Configuration) error {
+	env, err := loadOrInitializeEnvironment(configPath)
 	if err != nil {
-		kit.Fatal(err)
+		return err
 	}
+	env.SetConfiguration(environment, config)
+	return env.Save(configPath)
 }
 
 func prepareConfigurationMigration(dir string) (func() bool, func() error) {
