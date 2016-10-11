@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	ThemeKitVersion = version{Major: 0, Minor: 4, Patch: 4}
+	ThemeKitVersion = version{Major: 0, Minor: 4, Patch: 6}
 )
 
 type versionComparisonResult int
