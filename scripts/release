@@ -107,7 +107,7 @@ end
 class ReleaseGenerator
   attr_reader :version, :releases, :storage_manager
 
-  DIST_DIR = File.expand_path(__FILE__ + "/../build/dist")
+  DIST_DIR = File.expand_path(__FILE__ + "/../../build/dist")
   BUILDS = %w(darwin-amd64 linux-386 linux-amd64 windows-386 windows-amd64)
 
   def initialize(version, storage_manager)
