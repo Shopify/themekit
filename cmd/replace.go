@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -34,18 +33,17 @@ exist on your local machine will be removed from shopify.`,
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	jobQueue := client.Process(wg)
-	root, _ := os.Getwd()
 	assetsActions := map[string]kit.AssetEvent{}
 	if len(filenames) == 0 {
 		for _, asset := range client.AssetList() {
 			assetsActions[asset.Key] = kit.NewRemovalEvent(asset)
 		}
-		for _, asset := range client.LocalAssets(root) {
+		for _, asset := range client.LocalAssets(directory) {
 			assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 		}
 	} else {
 		for _, filename := range filenames {
-			asset, err := theme.LoadAsset(root, filename)
+			asset, err := theme.LoadAsset(directory, filename)
 			if err != nil {
 				client.ErrorMessage(err.Error())
 			} else if asset.IsValid() {

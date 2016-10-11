@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"runtime"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Shopify/themekit/kit"
 )
 
@@ -24,6 +26,27 @@ type release struct {
 	Platforms []platform `json:"platforms"`
 }
 
+var updateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update Theme kit to the newest verion.",
+	Long: `Update will check for a new release, then
+if there is an applicable update it will
+download it and apply it.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		latestRelease, err := downloadReleaseForPlatform()
+		if err == nil {
+			if latestRelease.IsApplicable() {
+				fmt.Println("Updating from", kit.ThemeKitVersion, "to", kit.ParseVersionString(latestRelease.Version))
+				releaseForPlatform := findAppropriateRelease(latestRelease)
+				return kit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
+			} else {
+				return fmt.Errorf("No applicable update available.")
+			}
+		}
+		return err
+	},
+}
+
 func (r release) IsApplicable() bool {
 	return kit.ThemeKitVersion.Compare(kit.ParseVersionString(r.Version)) == kit.VersionLessThan
 }
@@ -34,18 +57,6 @@ func isNewReleaseAvailable() bool {
 		return false
 	}
 	return latestRelease.IsApplicable()
-}
-
-func UpdateCommand(args Args, done chan bool) {
-	latestRelease, err := downloadReleaseForPlatform()
-	if err == nil {
-		if latestRelease.IsApplicable() {
-			fmt.Println("Updating from", kit.ThemeKitVersion, "to", kit.ParseVersionString(latestRelease.Version))
-			releaseForPlatform := findAppropriateRelease(latestRelease)
-			kit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
-		}
-	}
-	close(done)
 }
 
 func downloadReleaseForPlatform() (release, error) {

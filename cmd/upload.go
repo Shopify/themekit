@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -33,16 +32,15 @@ to shopify.`,
 
 func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	jobQueue := client.Process(wg)
-	root, _ := os.Getwd()
 	if len(filenames) == 0 {
-		for _, asset := range client.LocalAssets(root) {
+		for _, asset := range client.LocalAssets(directory) {
 			if asset.IsValid() {
 				jobQueue <- kit.NewUploadEvent(asset)
 			}
 		}
 	} else {
 		for _, filename := range filenames {
-			asset, err := theme.LoadAsset(root, filename)
+			asset, err := theme.LoadAsset(directory, filename)
 			if err != nil {
 				client.ErrorMessage(err.Error())
 			} else if asset.IsValid() {

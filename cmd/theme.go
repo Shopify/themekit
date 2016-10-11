@@ -27,6 +27,7 @@ var (
 	environments kit.Environments
 	themeClients []kit.ThemeClient
 	directory    string
+	configPath   string
 	environment  string
 	allenvs      bool
 	notifyFile   string
@@ -53,8 +54,10 @@ Complete documentation is available at http://themekit.cat`,
 
 func init() {
 	pwd, _ := os.Getwd()
+	configPath = filepath.Join(pwd, "config.yml")
 
-	ThemeCmd.PersistentFlags().StringVarP(&directory, "dir", "d", pwd, "directory that config.yml is located")
+	ThemeCmd.PersistentFlags().StringVarP(&directory, "dir", "d", pwd, "directory that command will take effect.")
+	ThemeCmd.PersistentFlags().StringVarP(&configPath, "config", "c", configPath, "path to config.yml")
 	ThemeCmd.PersistentFlags().StringVarP(&environment, "env", "e", kit.DefaultEnvironment, "envionment to run the command")
 
 	ThemeCmd.PersistentFlags().StringVar(&password, "password", "", "theme password. This will override what is in your config.yml")
@@ -79,6 +82,7 @@ func init() {
 		watchCmd,
 		downloadCmd,
 		versionCmd,
+		updateCmd,
 	)
 }
 
@@ -87,7 +91,6 @@ func initializeConfig(cmdName string, timesout bool) error {
 		fmt.Println(kit.YellowText(fmt.Sprintf("%s\n%s\n%s", banner, updateAvailableMessage, banner)))
 	}
 
-	configPath := filepath.Join(directory, "config.yml")
 	var err error
 	if environments, err = kit.LoadEnvironmentsFromFile(configPath); err != nil {
 		return err
