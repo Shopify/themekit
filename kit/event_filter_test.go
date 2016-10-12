@@ -1,8 +1,6 @@
 package kit
 
 import (
-	"bytes"
-	"io"
 	"testing"
 	"time"
 
@@ -26,11 +24,7 @@ func TestEventFilterTurnsInvalidRegexpsIntoGlobs(t *testing.T) {
 }
 
 func TestBuildingEventFiltersFromMultipleReaders(t *testing.T) {
-	readers := []io.Reader{
-		bytes.NewReader([]byte("*.bat\nbuild/")),
-		bytes.NewReader([]byte("foo\nbar")),
-	}
-	e := newEventFilterFromReaders(readers)
+	e := newEventFilter([]string{"*.bat", "build/", "foo", "bar"})
 	inputEvents := []string{
 		"program.bat", "build/dist/program", "item.liquid", "gofoo", "gobar", "listing", "programbat", "config.yml",
 	}
@@ -39,14 +33,14 @@ func TestBuildingEventFiltersFromMultipleReaders(t *testing.T) {
 }
 
 func TestFilterRemovesEmptyStrings(t *testing.T) {
-	e := newEventFilterFromReaders([]io.Reader{})
+	e := newEventFilter([]string{})
 	inputEvents := []string{"hello", "", "world"}
 	expectedEvents := []string{"hello", "world"}
 	assertFilter(t, e, inputEvents, expectedEvents)
 }
 
 func TestDefaultFilters(t *testing.T) {
-	e := newEventFilterFromReaders([]io.Reader{})
+	e := newEventFilter([]string{})
 	inputEvents := []string{".git/HEAD", ".DS_Store", "config.yml", "templates/products.liquid"}
 	expectedEvents := []string{"templates/products.liquid"}
 	assertFilter(t, e, inputEvents, expectedEvents)
@@ -55,7 +49,7 @@ func TestDefaultFilters(t *testing.T) {
 func TestMatchesFilterWithEmptyInputDoesNotCrash(t *testing.T) {
 	e := newEventFilter([]string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"})
 	// Shouldn't crash
-	e.MatchesFilter("")
+	e.matchesFilter("")
 }
 
 func nextValue(channel chan string) string {
@@ -69,7 +63,7 @@ func nextValue(channel chan string) string {
 
 func assertFilter(t *testing.T, e eventFilter, inputs []string, expectedResults []string) {
 	events := make(chan string)
-	filtered := e.Filter(events)
+	filtered := e.filter(events)
 
 	go func() {
 		for _, event := range inputs {

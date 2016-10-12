@@ -3,7 +3,6 @@ package kit
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	re "regexp"
@@ -47,51 +46,34 @@ func newEventFilter(rawPatterns []string) eventFilter {
 	return eventFilter{filters: filters, globs: globs}
 }
 
-func newEventFilterFromReaders(readers []io.Reader) eventFilter {
-	patterns := []string{}
-	for _, reader := range readers {
-		data, err := ioutil.ReadAll(reader)
+func newEventFilterFromPatternsAndFiles(patterns []string, files []string) eventFilter {
+	for _, name := range files {
+		file, err := os.Open(name)
+		defer file.Close()
 		if err != nil {
 			Fatal(err)
 		}
-		otherPatterns := strings.Split(string(data), "\n")
-		patterns = append(patterns, otherPatterns...)
+		var data []byte
+		if data, err = ioutil.ReadAll(file); err != nil {
+			Fatal(err)
+		} else {
+			patterns = append(patterns, strings.Split(string(data), "\n")...)
+		}
 	}
 	return newEventFilter(patterns)
 }
 
-func newEventFilterFromIgnoreFiles(ignores []string) eventFilter {
-	files := filenamesToReaders(ignores)
-	return newEventFilterFromReaders(files)
-}
-
-func newEventFilterFromPatternsAndFiles(patterns []string, files []string) eventFilter {
-	readers := filenamesToReaders(files)
-	allReaders := make([]io.Reader, len(readers)+len(patterns))
-	pos := 0
-	for i := 0; i < len(readers); i++ {
-		allReaders[pos] = readers[i]
-		pos++
-	}
-	for i := 0; i < len(patterns); i++ {
-		allReaders[pos] = strings.NewReader(patterns[i])
-		pos++
-	}
-	return newEventFilterFromReaders(allReaders)
-}
-
-func (e eventFilter) FilterAssets(assets []theme.Asset) []theme.Asset {
+func (e eventFilter) filterAssets(assets []theme.Asset) []theme.Asset {
 	filteredAssets := []theme.Asset{}
 	for _, asset := range assets {
-		if !e.MatchesFilter(asset.Key) {
+		if !e.matchesFilter(asset.Key) {
 			filteredAssets = append(filteredAssets, asset)
 		}
 	}
 	return filteredAssets
 }
 
-// Filter ... TODO
-func (e eventFilter) Filter(events chan string) chan string {
+func (e eventFilter) filter(events chan string) chan string {
 	filtered := make(chan string)
 	go func() {
 		for {
@@ -99,7 +81,7 @@ func (e eventFilter) Filter(events chan string) chan string {
 			if !more {
 				return
 			}
-			if len(event) > 0 && !e.MatchesFilter(event) {
+			if len(event) > 0 && !e.matchesFilter(event) {
 				filtered <- event
 			}
 		}
@@ -107,8 +89,7 @@ func (e eventFilter) Filter(events chan string) chan string {
 	return filtered
 }
 
-// MatchesFilter ... TODO
-func (e eventFilter) MatchesFilter(event string) bool {
+func (e eventFilter) matchesFilter(event string) bool {
 	if len(event) == 0 {
 		return false
 	}
@@ -133,17 +114,4 @@ func (e eventFilter) String() string {
 	}
 	buffer.WriteString("-- done --")
 	return buffer.String()
-}
-
-func filenamesToReaders(ignores []string) []io.Reader {
-	files := make([]io.Reader, len(ignores))
-	for i, name := range ignores {
-		file, err := os.Open(name)
-		defer file.Close()
-		if err != nil {
-			Fatal(err)
-		}
-		files[i] = file
-	}
-	return files
 }

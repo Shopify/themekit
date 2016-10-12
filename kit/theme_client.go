@@ -156,7 +156,7 @@ func (t ThemeClient) AssetList() []theme.Asset {
 
 	sort.Sort(theme.ByAsset(assets["assets"]))
 
-	return t.filter.FilterAssets(ignoreCompiledAssets(assets["assets"]))
+	return t.filter.filterAssets(ignoreCompiledAssets(assets["assets"]))
 }
 
 // LocalAssets will return a slice of assets from the local disk. The
@@ -164,7 +164,7 @@ func (t ThemeClient) AssetList() []theme.Asset {
 func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
 	dir = fmt.Sprintf("%s%s", dir, string(filepath.Separator))
 
-	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.MatchesFilter)
+	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.matchesFilter)
 	if err != nil {
 		Fatal(err)
 	}
@@ -267,7 +267,7 @@ func (t ThemeClient) Process(done chan bool) chan AssetEvent {
 // if it is an update it will post to the server and if it is a remove it will DELETE
 // to the server. Any errors will be outputted to the event log.
 func (t ThemeClient) Perform(asset AssetEvent) {
-	if t.filter.MatchesFilter(asset.Asset().Key) {
+	if t.filter.matchesFilter(asset.Asset().Key) {
 		return
 	}
 
