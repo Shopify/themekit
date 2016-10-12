@@ -57,7 +57,7 @@ func (f fsAssetEvent) String() string {
 }
 
 func newFileWatcher(dir string, recur bool, filter eventFilter) (chan AssetEvent, error) {
-	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.MatchesFilter)
+	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.matchesFilter)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetE
 				}
 			case <-time.After(debounceTimeout):
 				for eventName, event := range recordedEvents {
-					if fsevent := handleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
+					if fsevent := handleEvent(event); !filter.matchesFilter(eventName) && fsevent.IsValid() {
 						results <- fsevent
 					}
 				}
