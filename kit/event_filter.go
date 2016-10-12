@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	re "regexp"
-	syn "regexp/syntax"
+	"regexp"
 	"strings"
 
 	"github.com/ryanuber/go-glob"
@@ -16,33 +15,34 @@ import (
 
 const configurationFilename = "config\\.yml"
 
-var defaultRegexes = []*re.Regexp{
-	re.MustCompile(`\.git/*`),
-	re.MustCompile(`\.DS_Store`),
+var defaultRegexes = []*regexp.Regexp{
+	regexp.MustCompile(`\.git/*`),
+	regexp.MustCompile(`\.DS_Store`),
 }
 
 var defaultGlobs = []string{}
 
 type eventFilter struct {
-	filters []*re.Regexp
+	filters []*regexp.Regexp
 	globs   []string
 }
 
 func newEventFilter(rawPatterns []string) eventFilter {
 	filters := defaultRegexes
 	globs := defaultGlobs
-	for _, pat := range rawPatterns {
-		if len(pat) <= 0 {
+	for _, pattern := range rawPatterns {
+		if len(pattern) <= 0 {
 			continue
 		}
-		regex, err := syn.Parse(pat, syn.POSIX)
-		if err != nil {
-			globs = append(globs, pat)
-		} else {
-			filters = append(filters, re.MustCompile(regex.String()))
+		if strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
+			filters = append(filters, regexp.MustCompile(pattern[1:len(pattern)-2]))
+		} else if strings.Contains(pattern, "*") {
+			globs = append(globs, pattern)
+		} else { //plain filename
+			globs = append(globs, "*"+pattern)
 		}
 	}
-	filters = append(filters, re.MustCompile(configurationFilename))
+	filters = append(filters, regexp.MustCompile(configurationFilename))
 	return eventFilter{filters: filters, globs: globs}
 }
 
