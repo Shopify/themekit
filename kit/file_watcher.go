@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	debounceTimeout = 500 * time.Millisecond
+	debounceTimeout = 1000 * time.Millisecond
 )
 
 var (
@@ -148,10 +148,9 @@ func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetE
 		for {
 			select {
 			case currentEvent = <-events:
-				if currentEvent.Op&fsnotify.Chmod == fsnotify.Chmod {
-					currentEvent.Op = fsnotify.Write
+				if currentEvent.Op != fsnotify.Chmod {
+					recordedEvents[currentEvent.Name] = currentEvent
 				}
-				recordedEvents[currentEvent.Name] = currentEvent
 			case <-time.After(debounceTimeout):
 				for eventName, event := range recordedEvents {
 					if fsevent := handleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
