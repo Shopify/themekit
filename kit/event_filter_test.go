@@ -10,7 +10,7 @@ import (
 func TestEventFilterRejectsEventsThatMatch(t *testing.T) {
 	e := newEventFilter([]string{"*.bat", "build/*", "*.ini", "config/settings.json"})
 
-	inputEvents := []string{"path/to/config/settings.json", "hello.bat", "build/hello/world", "build/world", "whatever", "foo.ini", "zubat"}
+	inputEvents := []string{"path/to/config/settings.json", "hello.bat", "total/path/build/hello/world", "build/world", "whatever", "foo.ini", "zubat"}
 	expectedEvents := []string{"whatever", "zubat"}
 	assertFilter(t, e, inputEvents, expectedEvents)
 }

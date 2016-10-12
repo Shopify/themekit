@@ -37,6 +37,9 @@ func newEventFilter(rawPatterns []string) eventFilter {
 		if strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
 			filters = append(filters, regexp.MustCompile(pattern[1:len(pattern)-2]))
 		} else if strings.Contains(pattern, "*") {
+			if !strings.HasPrefix(pattern, "*") {
+				pattern = "*" + pattern
+			}
 			globs = append(globs, pattern)
 		} else { //plain filename
 			globs = append(globs, "*"+pattern)
