@@ -189,7 +189,13 @@ of commands that are available, enter the following command into your terminal:<
   <li><code>theme_id</code>: The ID of the theme to upload changes to. <strong>Note</strong> Unlike previous versions of Theme Kit, leaving <code>theme_id</code> blank will no longer default to pointing to your live, production theme. To opt into that behavior, set <code>theme_id</code> to a value of <code>"live"</code></li>
   <li><code>password</code>: API credentials to update and manipulate themes on Shopify</li>
   <li><code>store</code>: Your <code>.myshopify.com</code> domain (i.e. pokeshop.myshopify.com). Note that you <strong>do not</strong> need to include <code>http://</code> or <code>https://</code></li>
-  <li><code>ignore_files</code>: A list of specific files to ignore (i.e. <code>config/settings.html</code>). You can also ignore based on patterns (such as all png files), but those patterns will need to be wrapped in double quotes (i.e. <code>"*.png"</code>).</li>
+  <li><code>ignore_files</code>: A list of specific files to ignore. There are three ways you can specify an ignore
+    <ul>
+      <li>Plain file name from (i.e. <code>config/settings.html</code>, <code>settings.html</code>).</li>
+      <li>Path globbing (i.e. <code>*.png</code>, <code>config/*</code>)</li>
+      <li>You can also ignore based on regex. (i.e. <code>/\.(txt|gif|bat)$/</code>)</li>
+    </ul>
+  </li>
   <li><code>ignores</code>: A list of files containing patterns of files that should be ignored. These files are somewhat similar to the <a href="https://www.kernel.org/pub/software/scm/git/docs/gitignore.html">.gitignore file</a></li>
   <li><code>bucket_size</code>: The size of your Access Tokens bucket. By default this is 40 and cannot be configured by the shop.</li>
   <li><code>refill_rate</code>: The rate at which tickets are replenished by the Shopify API (per second). By default this is 2 and cannot be configured by the shop.</li>
