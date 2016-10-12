@@ -16,9 +16,7 @@ import (
 func DownloadCommand(args Args, done chan bool) {
 	if len(args.Filenames) <= 0 {
 		for _, asset := range args.ThemeClient.AssetList() {
-			if err := writeToDisk(asset); err == nil {
-				client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
-			} else {
+			if err := writeToDisk(args.ThemeClient, asset); err != nil {
 				kit.Fatal(err)
 			}
 		}
@@ -31,9 +29,7 @@ func DownloadCommand(args Args, done chan bool) {
 					kit.Fatal(err)
 				}
 			} else {
-				if err := writeToDisk(asset); err == nil {
-					client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
-				} else {
+				if err := writeToDisk(args.ThemeClient, asset); err != nil {
 					kit.Fatal(err)
 				}
 			}
@@ -42,7 +38,7 @@ func DownloadCommand(args Args, done chan bool) {
 	done <- true
 }
 
-func writeToDisk(asset theme.Asset) error {
+func writeToDisk(client kit.ThemeClient, asset theme.Asset) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -81,7 +77,13 @@ func writeToDisk(asset theme.Asset) error {
 		_, err = prettyWrite(file, data)
 	}
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
+
+	return nil
 }
 
 func prettyWrite(file *os.File, data []byte) (n int, err error) {
