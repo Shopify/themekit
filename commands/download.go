@@ -16,46 +16,48 @@ import (
 func DownloadCommand(args Args, done chan bool) {
 	if len(args.Filenames) <= 0 {
 		for _, asset := range args.ThemeClient.AssetList() {
-			go writeToDisk(args.ThemeClient, asset)
+			if err := writeToDisk(args.ThemeClient, asset); err != nil {
+				kit.Fatal(err)
+			}
 		}
 	} else {
 		for _, filename := range args.Filenames {
 			if asset, err := args.ThemeClient.Asset(filename); err != nil {
 				if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
 					args.ThemeClient.Message("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
+				} else {
+					kit.Fatal(err)
 				}
 			} else {
-				go writeToDisk(args.ThemeClient, asset)
+				if err := writeToDisk(args.ThemeClient, asset); err != nil {
+					kit.Fatal(err)
+				}
 			}
 		}
 	}
 	done <- true
 }
 
-func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
+func writeToDisk(client kit.ThemeClient, asset theme.Asset) error {
 	dir, err := os.Getwd()
 	if err != nil {
-		kit.Fatal(err)
-		return
+		return err
 	}
 
 	perms, err := os.Stat(dir)
 	if err != nil {
-		kit.Fatal(err)
-		return
+		return err
 	}
 
 	filename := fmt.Sprintf("%s/%s", dir, asset.Key)
 	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
 	if err != nil {
-		kit.Fatal(err)
-		return
+		return err
 	}
 
 	file, err := os.Create(filename)
 	if err != nil {
-		kit.Fatal(err)
-		return
+		return err
 	}
 	defer file.Sync()
 	defer file.Close()
@@ -67,8 +69,7 @@ func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
 	case len(asset.Attachment) > 0:
 		data, err = base64.StdEncoding.DecodeString(asset.Attachment)
 		if err != nil {
-			kit.Fatal(fmt.Errorf("Could not decode %s. error: %s", asset.Key, err))
-			return
+			return fmt.Errorf("Could not decode %s. error: %s", asset.Key, err)
 		}
 	}
 
@@ -77,10 +78,12 @@ func writeToDisk(client kit.ThemeClient, asset theme.Asset) {
 	}
 
 	if err != nil {
-		kit.Fatal(err)
-	} else {
-		client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
+		return err
 	}
+
+	client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
+
+	return nil
 }
 
 func prettyWrite(file *os.File, data []byte) (n int, err error) {
@@ -92,7 +95,4 @@ func prettyWrite(file *os.File, data []byte) (n int, err error) {
 	default:
 		return file.Write(data)
 	}
-}
-
-func handleError(filename string, err error) {
 }
