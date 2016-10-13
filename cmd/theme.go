@@ -23,21 +23,22 @@ const (
 )
 
 var (
-	environments kit.Environments
-	themeClients []kit.ThemeClient
-	directory    string
-	configPath   string
-	environment  string
-	allenvs      bool
-	notifyFile   string
-	password     string
-	themeid      string
-	domain       string
-	bucketsize   int
-	refillrate   int
-	concurrency  int
-	proxy        string
-	timeout      time.Duration
+	environments     kit.Environments
+	themeClients     []kit.ThemeClient
+	directory        string
+	configPath       string
+	environment      string
+	allenvs          bool
+	notifyFile       string
+	password         string
+	themeid          string
+	domain           string
+	bucketsize       int
+	refillrate       int
+	concurrency      int
+	proxy            string
+	timeout          time.Duration
+	noUpdateNotifier bool
 
 	bootstrapVersion string
 	bootstrapPrefix  string
@@ -71,6 +72,7 @@ func init() {
 	ThemeCmd.PersistentFlags().IntVar(&concurrency, "concurrency", 0, "the refill rate for throttling. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
 
 	watchCmd.Flags().StringVarP(&notifyFile, "notify", "n", "", "file to touch when workers have gone idle")
 	watchCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
@@ -86,7 +88,7 @@ func init() {
 }
 
 func initializeConfig(cmdName string, timesout bool) error {
-	if cmdName != "update" && isNewReleaseAvailable() {
+	if cmdName != "update" && !noUpdateNotifier && isNewReleaseAvailable() {
 		fmt.Println(kit.YellowText(fmt.Sprintf("%s\n%s\n%s", banner, updateAvailableMessage, banner)))
 	}
 
