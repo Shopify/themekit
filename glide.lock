@@ -1,5 +1,5 @@
 hash: 132cd4840a70734284227c57c6824f727a6d3a922f3eb0465bdc985c632ea06a
-updated: 2016-10-07T16:45:51.296086841-04:00
+updated: 2016-10-13T14:08:58.607993512-04:00
 imports:
 - name: github.com/fatih/color
   version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
@@ -27,7 +27,7 @@ imports:
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1
-  version: 944cff21b3baf3ced9a880365682152ba577d348
+  version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: gopkg.in/yaml.v1
   version: 9f9df34309c04878acc86042b16630b0f696e1de
 testImports:
