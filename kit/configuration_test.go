@@ -65,7 +65,7 @@ func TestLoadingConfigurationWithMissingFields(t *testing.T) {
 
 func TestWritingAConfigurationFile(t *testing.T) {
 	buffer := new(bytes.Buffer)
-	config := Configuration{Domain: "hello.myshopify.com", AccessToken: "secret", BucketSize: 10, RefillRate: 4}
+	config := Configuration{Domain: "hello.myshopify.com", Password: "secret", BucketSize: 10, RefillRate: 4}
 	err := config.Write(buffer)
 	expectedConfiguration :=
 		`access_token: secret
@@ -80,7 +80,7 @@ refill_rate: 4
 func TestAddHeadersAddsPlatformAndArchitecture(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/foo/bar", nil)
 
-	config := Configuration{Domain: "hello.myshopify.com", AccessToken: "secret", BucketSize: 10, RefillRate: 4}
+	config := Configuration{Domain: "hello.myshopify.com", Password: "secret", BucketSize: 10, RefillRate: 4}
 	config.AddHeaders(req)
 
 	userAgent := req.Header.Get("User-Agent")

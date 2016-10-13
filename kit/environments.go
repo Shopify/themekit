@@ -15,22 +15,12 @@ const DefaultEnvironment string = "development"
 // Environments is a map of configurations to their environment name.
 type Environments map[string]Configuration
 
-// LoadEnvironments will unmarshal a byte array into the Environments array.
-func LoadEnvironments(contents []byte) (envs Environments, err error) {
-	envs = make(Environments)
-	err = yaml.Unmarshal(contents, &envs)
-	if err != nil {
-		return nil, err
-	}
-	return
-}
-
 // LoadEnvironmentsFromFile will read in the file from the location provided and
 // then unmarshal the data into environments.
-func LoadEnvironmentsFromFile(location string) (env Environments, err error) {
+func LoadEnvironments(location string) (env Environments, err error) {
 	contents, err := ioutil.ReadFile(location)
 	if err == nil {
-		return LoadEnvironments(contents)
+		err = yaml.Unmarshal(contents, &env)
 	}
 	return
 }

@@ -3,6 +3,7 @@ package kit
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"runtime"
@@ -16,7 +17,6 @@ import (
 // Configuration is the structure of a configuration for an environment. This will
 // get loaded into a theme client to dictate it's actions.
 type Configuration struct {
-	AccessToken  string        `yaml:"access_token,omitempty"`
 	Password     string        `yaml:"password,omitempty"`
 	ThemeID      string        `yaml:"theme_id,omitempty"`
 	Domain       string        `yaml:"store"`
@@ -44,11 +44,18 @@ const (
 )
 
 // LoadConfiguration will build a configuration object form a raw byte array.
-func LoadConfiguration(contents []byte) (Configuration, error) {
+func LoadConfiguration(location string) (Configuration, error) {
 	var conf Configuration
-	if err := yaml.Unmarshal(contents, &conf); err != nil {
+	contents, err := ioutil.ReadFile(location)
+	if err != nil {
 		return conf, err
 	}
+
+	err = yaml.Unmarshal(contents, &conf)
+	if err != nil {
+		return conf, err
+	}
+
 	return conf.Initialize()
 }
 
@@ -86,8 +93,8 @@ func (conf Configuration) Initialize() (Configuration, error) {
 		return conf, fmt.Errorf("invalid domain, must end in '.myshopify.com'")
 	}
 
-	if len(conf.AccessToken) == 0 && len(conf.Password) == 0 {
-		return conf, fmt.Errorf("missing password or access_token (using 'password' is encouraged. 'access_token', which does the same thing will be deprecated soon)")
+	if len(conf.Password) == 0 {
+		return conf, fmt.Errorf("missing password")
 	}
 	return conf, nil
 }
@@ -123,14 +130,7 @@ func (conf Configuration) AssetPath() string {
 
 // AddHeaders will add api headers to an http.Requests so that it is a valid request.
 func (conf Configuration) AddHeaders(req *http.Request) {
-	var accessToken string
-	if len(conf.Password) > 0 {
-		accessToken = conf.Password
-	} else {
-		accessToken = conf.AccessToken
-	}
-
-	req.Header.Add("X-Shopify-Access-Token", accessToken)
+	req.Header.Add("X-Shopify-Access-Token", conf.Password)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s)", runtime.GOOS, runtime.GOARCH))
@@ -138,5 +138,5 @@ func (conf Configuration) AddHeaders(req *http.Request) {
 
 // String will return a formatted string with the information about this configuration
 func (conf Configuration) String() string {
-	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", conf.AccessToken, conf.Domain, conf.BucketSize, conf.RefillRate, conf.URL)
+	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", conf.Password, conf.Domain, conf.BucketSize, conf.RefillRate, conf.URL)
 }

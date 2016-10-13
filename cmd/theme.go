@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -102,7 +100,7 @@ func initializeConfig(cmdName string, timesout bool) error {
 	}
 
 	var err error
-	if environments, err = kit.LoadEnvironmentsFromFile(configPath); err != nil {
+	if environments, err = kit.LoadEnvironments(configPath); err != nil {
 		return err
 	}
 
@@ -111,48 +109,23 @@ func initializeConfig(cmdName string, timesout bool) error {
 
 	if allenvs {
 		for env := range environments {
-			themeClients = append(themeClients, loadThemeClient(env, eventLog))
+			config, err := environments.GetConfiguration(env)
+			if err != nil {
+				return err
+			}
+			themeClients = append(themeClients, kit.NewThemeClient(eventLog, config))
 		}
 	} else {
-		themeClients = []kit.ThemeClient{loadThemeClient(environment, eventLog)}
+		config, err := environments.GetConfiguration(environment)
+		if err != nil {
+			return err
+		}
+		themeClients = []kit.ThemeClient{kit.NewThemeClient(eventLog, config)}
 	}
 
 	go consumeEventLog(eventLog, timesout, themeClients[0].GetConfiguration().Timeout)
 
 	return nil
-}
-
-func loadThemeClient(env string, eventLog chan kit.ThemeEvent) kit.ThemeClient {
-	client, err := loadThemeClientWithRetry(env, eventLog, false)
-	if err != nil {
-		if strings.Contains(err.Error(), "YAML error") {
-			err = fmt.Errorf("configuration error: does your configuration properly escape wildcards? \n\t\t\t%s", err)
-		} else if strings.Contains(err.Error(), "no such file or directory") {
-			err = fmt.Errorf("configuration error: %s", err)
-		}
-		kit.Fatal(err)
-	}
-	return client
-}
-
-func loadThemeClientWithRetry(env string, eventLog chan kit.ThemeEvent, isRetry bool) (kit.ThemeClient, error) {
-	config, err := environments.GetConfiguration(env)
-	if err != nil && len(environments) == 0 && !isRetry {
-		upgradeMessage := fmt.Sprintf("Looks like your configuration file is out of date. Upgrading to default environment '%s'", kit.DefaultEnvironment)
-		fmt.Println(kit.YellowText(upgradeMessage))
-		confirmationfn, savefn := prepareConfigurationMigration(directory)
-		if confirmationfn() && savefn() == nil {
-			return loadThemeClientWithRetry(env, eventLog, true)
-		}
-		return kit.ThemeClient{}, errors.New("loadThemeClientWithRetry: could not load or migrate the configuration")
-	} else if err != nil {
-		return kit.ThemeClient{}, err
-	}
-
-	if len(config.AccessToken) > 0 {
-		fmt.Println("DEPRECATION WARNING: 'access_token' (in conf.yml) will soon be deprecated. Use 'password' instead, with the same Password value obtained from https://<your-subdomain>.myshopify.com/admin/apps/private/<app_id>")
-	}
-	return kit.NewThemeClient(eventLog, config), nil
 }
 
 func consumeEventLog(eventLog chan kit.ThemeEvent, timesout bool, timeout time.Duration) {

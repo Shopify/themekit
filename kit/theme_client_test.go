@@ -195,10 +195,10 @@ func asset() theme.Asset {
 
 func conf(server *httptest.Server) Configuration {
 	return Configuration{
-		URL:         server.URL,
-		AccessToken: "abra",
-		BucketSize:  100,
-		RefillRate:  100,
+		URL:        server.URL,
+		Password:   "abra",
+		BucketSize: 100,
+		RefillRate: 100,
 	}
 }
 
