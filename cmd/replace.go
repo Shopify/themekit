@@ -38,7 +38,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		for _, asset := range client.AssetList() {
 			assetsActions[asset.Key] = kit.NewRemovalEvent(asset)
 		}
-		for _, asset := range client.LocalAssets(directory) {
+		for _, asset := range client.LocalAssets() {
 			assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 		}
 	} else {

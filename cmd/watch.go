@@ -23,7 +23,7 @@ run 'theme watch' while you are editing and it will detect create, update and de
 		for _, client := range themeClients {
 			config := client.GetConfiguration()
 			client.Message("Spawning %d workers for %s", config.Concurrency, kit.GreenText(config.Domain))
-			assetEvents := client.NewFileWatcher(directory, notifyFile)
+			assetEvents := client.NewFileWatcher(notifyFile)
 			for i := 0; i < config.Concurrency; i++ {
 				wg.Add(1)
 				go spawnWorker(assetEvents, client, &wg)

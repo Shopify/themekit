@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v1"
 )
 
@@ -20,7 +21,7 @@ type Configuration struct {
 	Password     string        `yaml:"password,omitempty"`
 	ThemeID      string        `yaml:"theme_id,omitempty"`
 	Domain       string        `yaml:"store"`
-	URL          string        `yaml:"-"`
+	Directory    string        `yaml:"directory,omitempty"`
 	IgnoredFiles []string      `yaml:"ignore_files,omitempty"`
 	BucketSize   int           `yaml:"bucket_size"`
 	RefillRate   int           `yaml:"refill_rate"`
@@ -41,6 +42,44 @@ const (
 	DefaultTimeout = 30 * time.Second
 )
 
+var (
+	defaultConfig     = Configuration{}
+	environmentConfig = Configuration{}
+	flagConfig        = Configuration{}
+)
+
+func init() {
+	pwd, _ := os.Getwd()
+
+	defaultConfig = Configuration{
+		Directory:   pwd,
+		BucketSize:  DefaultBucketSize,
+		RefillRate:  DefaultRefillRate,
+		Concurrency: DefaultConcurrency,
+		Timeout:     DefaultTimeout,
+	}
+
+	environmentConfig = Configuration{
+		Password:  os.Getenv("THEMEKIT_PASSWORD"),
+		ThemeID:   os.Getenv("THEMEKIT_THEME_ID"),
+		Domain:    os.Getenv("THEMEKIT_STORE"),
+		Directory: os.Getenv("THEMEKIT_DIR"),
+		Proxy:     os.Getenv("THEMEKIT_PROXY"),
+	}
+
+	environmentConfig.BucketSize, _ = strconv.Atoi(os.Getenv("THEMEKIT_BUCKET_SIZE"))
+	environmentConfig.RefillRate, _ = strconv.Atoi(os.Getenv("THEMEKIT_REFILL_RATE"))
+	environmentConfig.Concurrency, _ = strconv.Atoi(os.Getenv("THEMEKIT_CONCURRENCY"))
+
+	if timeout := os.Getenv("THEMEKIT_TIMEOUT"); timeout != "" {
+		environmentConfig.Timeout, _ = time.ParseDuration(timeout)
+	}
+}
+
+func SetFlagConfig(config Configuration) {
+	flagConfig = config
+}
+
 // LoadConfiguration will build a configuration object form a raw byte array.
 func LoadConfiguration(location string) (Configuration, error) {
 	var conf Configuration
@@ -57,49 +96,52 @@ func LoadConfiguration(location string) (Configuration, error) {
 	return conf.Initialize()
 }
 
-// Initialize will format a Configuration that has been unmarshalled form json.
-// It will set default values and validate settings.
+// Initialize will format a Configuration that combines the config from env variables,
+// flags and the config file. Then it will validate that config. It will return the
+// formatted configuration along with any validation errors.
 func (conf Configuration) Initialize() (Configuration, error) {
-	if conf.BucketSize <= 0 {
-		conf.BucketSize = DefaultBucketSize
-	}
-	if conf.RefillRate <= 0 {
-		conf.RefillRate = DefaultRefillRate
-	}
-	if conf.Concurrency <= 0 {
-		conf.Concurrency = DefaultConcurrency
-	}
-	if conf.Timeout <= 0 {
-		conf.Timeout = DefaultTimeout
-	}
+	newConfig := Configuration{}
+	mergo.Merge(&newConfig, &flagConfig)
+	mergo.Merge(&newConfig, &environmentConfig)
+	mergo.Merge(&newConfig, &conf)
+	mergo.Merge(&newConfig, &defaultConfig)
+	return newConfig, newConfig.Validate()
+}
 
-	conf.URL = conf.AdminURL()
+func (conf Configuration) Validate() error {
+	errors := []string{}
 
-	if !(strings.ToLower(strings.TrimSpace(conf.ThemeID)) == "live") {
-		// theme_id may be specified as 'live', indicating that the user
-		// is opting into always syncing to the current, production theme
-		if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); err == nil {
-			conf.URL = fmt.Sprintf("%s/themes/%d", conf.URL, themeID)
-		} else {
-			return conf, fmt.Errorf("missing theme_id.")
-		}
+	if _, err := strconv.ParseInt(conf.ThemeID, 10, 64); !conf.IsLive() && err != nil {
+		errors = append(errors, "missing theme_id.")
 	}
 
 	if len(conf.Domain) == 0 {
-		return conf, fmt.Errorf("missing domain")
+		errors = append(errors, "missing domain")
 	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") && !strings.HasSuffix(conf.Domain, "myshopify.io") {
-		return conf, fmt.Errorf("invalid domain, must end in '.myshopify.com'")
+		errors = append(errors, "invalid domain, must end in '.myshopify.com'")
 	}
 
 	if len(conf.Password) == 0 {
-		return conf, fmt.Errorf("missing password")
+		errors = append(errors, "missing password")
 	}
-	return conf, nil
+
+	if len(errors) > 0 {
+		return fmt.Errorf("Invalid configuration: %v", strings.Join(errors, ","))
+	}
+	return nil
 }
 
 // AdminURL will return the url to the shopify admin.
 func (conf Configuration) AdminURL() string {
-	return fmt.Sprintf("https://%s/admin", conf.Domain)
+	url := fmt.Sprintf("https://%s/admin", conf.Domain)
+	if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); !conf.IsLive() && err == nil {
+		url = fmt.Sprintf("%s/themes/%d", url, themeID)
+	}
+	return url
+}
+
+func (conf Configuration) IsLive() bool {
+	return strings.ToLower(strings.TrimSpace(conf.ThemeID)) != "live"
 }
 
 // Write will write out a configuration to a writer.
@@ -123,7 +165,7 @@ func (conf Configuration) Save(location string) error {
 
 // AssetPath will return the assets endpoint in the admin section of shopify.
 func (conf Configuration) AssetPath() string {
-	return fmt.Sprintf("%s/assets.json", conf.URL)
+	return fmt.Sprintf("%s/assets.json", conf.AdminURL())
 }
 
 // AddHeaders will add api headers to an http.Requests so that it is a valid request.
@@ -136,5 +178,5 @@ func (conf Configuration) AddHeaders(req *http.Request) {
 
 // String will return a formatted string with the information about this configuration
 func (conf Configuration) String() string {
-	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", conf.Password, conf.Domain, conf.BucketSize, conf.RefillRate, conf.URL)
+	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", conf.Password, conf.Domain, conf.BucketSize, conf.RefillRate, conf.AdminURL())
 }

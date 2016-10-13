@@ -33,7 +33,7 @@ to shopify.`,
 func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	jobQueue := client.Process(wg)
 	if len(filenames) == 0 {
-		for _, asset := range client.LocalAssets(directory) {
+		for _, asset := range client.LocalAssets() {
 			if asset.IsValid() {
 				jobQueue <- kit.NewUploadEvent(asset)
 			}

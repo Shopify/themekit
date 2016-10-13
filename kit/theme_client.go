@@ -87,7 +87,7 @@ func (t ThemeClient) GetConfiguration() Configuration {
 }
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
-func (t ThemeClient) NewFileWatcher(dir, notifyFile string) chan AssetEvent {
+func (t ThemeClient) NewFileWatcher(notifyFile string) chan AssetEvent {
 	newForeman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
 	if len(notifyFile) > 0 {
 		newForeman.OnIdle = func() {
@@ -96,7 +96,7 @@ func (t ThemeClient) NewFileWatcher(dir, notifyFile string) chan AssetEvent {
 		}
 	}
 	var err error
-	newForeman.JobQueue, err = newFileWatcher(dir, true, t.filter)
+	newForeman.JobQueue, err = newFileWatcher(t.config.Directory, true, t.filter)
 	if err != nil {
 		Fatal(err)
 	}
@@ -163,14 +163,12 @@ func (t ThemeClient) AssetList() []theme.Asset {
 
 // LocalAssets will return a slice of assets from the local disk. The
 // assets are filtered based on your config.
-func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
-	dir = fmt.Sprintf("%s%s", dir, string(filepath.Separator))
-
-	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.matchesFilter)
+func (t ThemeClient) LocalAssets() []theme.Asset {
+	dir := fmt.Sprintf("%s%s", t.config.Directory, string(filepath.Separator))
+	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.MatchesFilter)
 	if err != nil {
 		Fatal(err)
 	}
-
 	return assets
 }
 

@@ -39,7 +39,7 @@ access shopify using the theme kit.`,
 			ThemeID:    themeid,
 		}
 
-		_, err := config.Initialize()
+		config, err := config.Initialize()
 		if err != nil {
 			return err
 		}

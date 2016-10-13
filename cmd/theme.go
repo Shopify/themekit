@@ -59,18 +59,18 @@ func init() {
 	pwd, _ := os.Getwd()
 	configPath = filepath.Join(pwd, "config.yml")
 
-	ThemeCmd.PersistentFlags().StringVarP(&directory, "dir", "d", pwd, "directory that command will take effect.")
 	ThemeCmd.PersistentFlags().StringVarP(&configPath, "config", "c", configPath, "path to config.yml")
 	ThemeCmd.PersistentFlags().StringVarP(&environment, "env", "e", kit.DefaultEnvironment, "envionment to run the command")
 
+	ThemeCmd.PersistentFlags().StringVarP(&directory, "dir", "d", "", "directory that command will take effect. (default current directory)")
 	ThemeCmd.PersistentFlags().StringVar(&password, "password", "", "theme password. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&themeid, "themeid", "", "theme id. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&domain, "domain", "", "your shopify domain. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().IntVar(&bucketsize, "bucket", kit.DefaultBucketSize, "the bucket size for throttling. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().IntVar(&refillrate, "refill", kit.DefaultRefillRate, "the refill rate for throttling. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().IntVar(&concurrency, "concurrency", 1, "the refill rate for throttling. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().IntVar(&bucketsize, "bucket", 0, "the bucket size for throttling. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().IntVar(&refillrate, "refill", 0, "the refill rate for throttling. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().IntVar(&concurrency, "concurrency", 0, "the refill rate for throttling. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", kit.DefaultTimeout, "the timeout to kill any stalled processes. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 
 	watchCmd.Flags().StringVarP(&notifyFile, "notify", "n", "", "file to touch when workers have gone idle")
 	watchCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
@@ -89,6 +89,18 @@ func initializeConfig(cmdName string, timesout bool) error {
 	if cmdName != "update" && isNewReleaseAvailable() {
 		fmt.Println(kit.YellowText(fmt.Sprintf("%s\n%s\n%s", banner, updateAvailableMessage, banner)))
 	}
+
+	kit.SetFlagConfig(kit.Configuration{
+		Password:    password,
+		ThemeID:     themeid,
+		Domain:      domain,
+		Directory:   directory,
+		Proxy:       proxy,
+		BucketSize:  bucketsize,
+		RefillRate:  refillrate,
+		Concurrency: concurrency,
+		Timeout:     timeout,
+	})
 
 	var err error
 	if environments, err = kit.LoadEnvironments(configPath); err != nil {

@@ -1,8 +1,10 @@
 hash: 132cd4840a70734284227c57c6824f727a6d3a922f3eb0465bdc985c632ea06a
-updated: 2016-10-13T14:08:58.607993512-04:00
+updated: 2016-10-13T16:17:37.120590687-04:00
 imports:
 - name: github.com/fatih/color
   version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
+- name: github.com/imdario/mergo
+  version: 50d4dbd4eb0e84778abe37cefef140271d96fade
 - name: github.com/inconshreveable/go-update
   version: 8152e7eb6ccf8679a64582a66b78519688d156ad
   subpackages:
