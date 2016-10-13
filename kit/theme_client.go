@@ -172,6 +172,12 @@ func (t ThemeClient) LocalAssets() []theme.Asset {
 	return assets
 }
 
+// LoadAsset will load a single local asset on disk. It will return an error if there
+// is a problem loading the asset.
+func (t ThemeClient) LocalAsset(filename string) (theme.Asset, error) {
+	return theme.LoadAsset(t.config.Directory, filename)
+}
+
 // Asset will load up a single remote asset from the remote shopify servers.
 func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 	queryBuilder := func(path string) string {

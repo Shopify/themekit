@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
-	"github.com/Shopify/themekit/theme"
 )
 
 var replaceCmd = &cobra.Command{
@@ -43,7 +42,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		}
 	} else {
 		for _, filename := range filenames {
-			asset, err := theme.LoadAsset(directory, filename)
+			asset, err := client.LocalAsset(filename)
 			if err != nil {
 				client.ErrorMessage(err.Error())
 			} else if asset.IsValid() {
