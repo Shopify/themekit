@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -36,7 +35,7 @@ access shopify using the theme kit.`,
 			Password:   password,
 			BucketSize: bucketsize,
 			RefillRate: refillrate,
-			Timeout:    time.Duration(timeout) * time.Second,
+			Timeout:    timeout,
 			ThemeID:    themeid,
 		}
 

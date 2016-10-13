@@ -13,7 +13,8 @@ import (
 
 const (
 	banner                 string = "----------------------------------------"
-	updateAvailableMessage string = `| An update for Theme Kit is available |
+	updateAvailableMessage string = `
+| An update for Theme Kit is available |
 |                                      |
 | To apply the update simply type      |
 | the following command:               |
@@ -36,7 +37,7 @@ var (
 	refillrate   int
 	concurrency  int
 	proxy        string
-	timeout      int
+	timeout      time.Duration
 
 	bootstrapVersion string
 	bootstrapPrefix  string
@@ -69,7 +70,7 @@ func init() {
 	ThemeCmd.PersistentFlags().IntVar(&refillrate, "refill", kit.DefaultRefillRate, "the refill rate for throttling. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().IntVar(&concurrency, "concurrency", 1, "the refill rate for throttling. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().IntVarP(&timeout, "timeout", "t", kit.DefaultTimeoutInt, "the timeout to kill any stalled processes. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", kit.DefaultTimeout, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 
 	watchCmd.Flags().StringVarP(&notifyFile, "notify", "n", "", "file to touch when workers have gone idle")
 	watchCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
@@ -81,17 +82,7 @@ func init() {
 	bootstrapCmd.Flags().StringVar(&bootstrapPrefix, "prefix", "", "prefix to the Timber theme being created")
 	bootstrapCmd.Flags().BoolVar(&setThemeID, "setid", true, "update config with ID of created Theme")
 
-	ThemeCmd.AddCommand(
-		bootstrapCmd,
-		removeCmd,
-		replaceCmd,
-		uploadCmd,
-		watchCmd,
-		downloadCmd,
-		versionCmd,
-		updateCmd,
-		configureCmd,
-	)
+	ThemeCmd.AddCommand(bootstrapCmd, removeCmd, replaceCmd, uploadCmd, watchCmd, downloadCmd, versionCmd, updateCmd, configureCmd)
 }
 
 func initializeConfig(cmdName string, timesout bool) error {

@@ -37,10 +37,8 @@ const (
 	DefaultRefillRate int = 2
 	// DefaultConcurrency is the default amount of workers that will be spawned for any job.
 	DefaultConcurrency int = 2
-	// DefaultTimeoutInt in integer is the default timeout to kill any stalled processes.
-	DefaultTimeoutInt int = 30
 	// DefaultTimeout is the default timeout to kill any stalled processes.
-	DefaultTimeout time.Duration = time.Duration(DefaultTimeoutInt) * time.Second
+	DefaultTimeout = 30 * time.Second
 )
 
 // LoadConfiguration will build a configuration object form a raw byte array.
