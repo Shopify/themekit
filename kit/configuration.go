@@ -71,6 +71,14 @@ func init() {
 	environmentConfig.RefillRate, _ = strconv.Atoi(os.Getenv("THEMEKIT_REFILL_RATE"))
 	environmentConfig.Concurrency, _ = strconv.Atoi(os.Getenv("THEMEKIT_CONCURRENCY"))
 
+	if ignoredFiles := os.Getenv("THEMEKIT_IGNORE_FILES"); len(ignoredFiles) > 0 {
+		environmentConfig.IgnoredFiles = strings.Split(ignoredFiles, ",")
+	}
+
+	if ignores := os.Getenv("THEMEKIT_IGNORES"); len(ignores) > 0 {
+		environmentConfig.Ignores = strings.Split(ignores, ",")
+	}
+
 	if timeout := os.Getenv("THEMEKIT_TIMEOUT"); timeout != "" {
 		environmentConfig.Timeout, _ = time.ParseDuration(timeout)
 	}
@@ -105,6 +113,7 @@ func (conf Configuration) Initialize() (Configuration, error) {
 	mergo.Merge(&newConfig, &environmentConfig)
 	mergo.Merge(&newConfig, &conf)
 	mergo.Merge(&newConfig, &defaultConfig)
+	fmt.Println(newConfig.IgnoredFiles)
 	return newConfig, newConfig.Validate()
 }
 

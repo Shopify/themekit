@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -22,6 +23,32 @@ const (
 | theme update                         |`
 )
 
+type flagArray struct {
+	values []string
+}
+
+func (fa *flagArray) String() string {
+	return strings.Join(fa.values, ",")
+}
+
+func (fa *flagArray) Set(value string) error {
+	if len(value) > 0 {
+		fa.values = append(fa.values, value)
+	}
+	return nil
+}
+
+func (fa *flagArray) Type() string {
+	return "string"
+}
+
+func (fa *flagArray) Value() []string {
+	if len(fa.values) == 0 {
+		return nil
+	}
+	return fa.values
+}
+
 var (
 	environments     kit.Environments
 	themeClients     []kit.ThemeClient
@@ -39,6 +66,8 @@ var (
 	proxy            string
 	timeout          time.Duration
 	noUpdateNotifier bool
+	ignoredFiles     flagArray
+	ignores          flagArray
 
 	bootstrapVersion string
 	bootstrapPrefix  string
@@ -73,6 +102,8 @@ func init() {
 	ThemeCmd.PersistentFlags().StringVar(&proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
+	ThemeCmd.PersistentFlags().Var(&ignoredFiles, "ignored-file", "A single file to ignore, use the flag multiple times to add multiple.")
+	ThemeCmd.PersistentFlags().Var(&ignores, "ignores", "A path to a file that contains ignore patterns.")
 
 	watchCmd.Flags().StringVarP(&notifyFile, "notify", "n", "", "file to touch when workers have gone idle")
 	watchCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
@@ -93,15 +124,17 @@ func initializeConfig(cmdName string, timesout bool) error {
 	}
 
 	kit.SetFlagConfig(kit.Configuration{
-		Password:    password,
-		ThemeID:     themeid,
-		Domain:      domain,
-		Directory:   directory,
-		Proxy:       proxy,
-		BucketSize:  bucketsize,
-		RefillRate:  refillrate,
-		Concurrency: concurrency,
-		Timeout:     timeout,
+		Password:     password,
+		ThemeID:      themeid,
+		Domain:       domain,
+		Directory:    directory,
+		Proxy:        proxy,
+		BucketSize:   bucketsize,
+		RefillRate:   refillrate,
+		Concurrency:  concurrency,
+		IgnoredFiles: ignoredFiles.Value(),
+		Ignores:      ignores.Value(),
+		Timeout:      timeout,
 	})
 
 	var err error
