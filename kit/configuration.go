@@ -3,7 +3,6 @@ package kit
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"runtime"
@@ -72,22 +71,8 @@ func SetFlagConfig(config Configuration) {
 // flags and the config file. Then it will validate that config. It will return the
 // formatted configuration along with any validation errors. The config precedence
 // is flags, environment variables, then the config file.
-func LoadConfiguration(location string) (Configuration, error) {
-	var fileConf Configuration
-
-	if location != "" {
-		contents, err := ioutil.ReadFile(location)
-		if err != nil {
-			return fileConf, err
-		}
-
-		err = yaml.Unmarshal(contents, &fileConf)
-		if err != nil {
-			return fileConf, err
-		}
-	}
-
-	return fileConf.compile()
+func NewConfiguration() (Configuration, error) {
+	return Configuration{}.compile()
 }
 
 func (conf Configuration) compile() (Configuration, error) {
@@ -103,10 +88,10 @@ func (conf Configuration) Validate() error {
 	errors := []string{}
 
 	if conf.ThemeID == "" {
-		errors = append(errors, "missing theme_id.")
+		errors = append(errors, "missing theme_id")
 	} else if !conf.IsLive() {
 		if _, err := strconv.ParseInt(conf.ThemeID, 10, 64); err != nil {
-			errors = append(errors, "invalid theme_id.")
+			errors = append(errors, "invalid theme_id")
 		}
 	}
 

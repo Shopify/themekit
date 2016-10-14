@@ -54,12 +54,13 @@ func download(client kit.ThemeClient, filenames []string) error {
 }
 
 func writeToDisk(client kit.ThemeClient, asset theme.Asset) error {
-	perms, err := os.Stat(directory)
+	dir := client.GetConfiguration().Directory
+	perms, err := os.Stat(dir)
 	if err != nil {
 		return err
 	}
 
-	filename := fmt.Sprintf("%s/%s", directory, asset.Key)
+	filename := fmt.Sprintf("%s/%s", dir, asset.Key)
 	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
 	if err != nil {
 		return err

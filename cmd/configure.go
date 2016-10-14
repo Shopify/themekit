@@ -15,7 +15,7 @@ var configureCmd = &cobra.Command{
 access shopify using the theme kit.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		setFlagConfig()
-		config, err := kit.LoadConfiguration("")
+		config, err := kit.NewConfiguration()
 		if err != nil {
 			return err
 		}

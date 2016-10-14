@@ -26,31 +26,18 @@ The most popular theme on Shopify. Bootstrap will also setup
 your config file and create a new theme id for you.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		setFlagConfig()
-		config, err := kit.LoadConfiguration("")
-		if err != nil {
-			return err
-		}
-
-		eventLog := make(chan kit.ThemeEvent)
-		client := kit.NewThemeClient(eventLog, config)
-
-		go consumeEventLog(eventLog, true, config.Timeout)
 
 		zipLocation, err := zipPathForVersion(bootstrapVersion)
 		if err != nil {
 			return err
 		}
 
-		name := "Timber-" + bootstrapVersion
-		if len(bootstrapPrefix) > 0 {
-			name = bootstrapPrefix + "-" + name
-		}
+		eventLog := make(chan kit.ThemeEvent)
+		go consumeEventLog(eventLog, true, kit.DefaultTimeout)
 
-		client = client.CreateTheme(name, zipLocation)
-		if setThemeID {
-			if err := addConfiguration(client.GetConfiguration()); err != nil {
-				return err
-			}
+		client := kit.CreateTheme(bootstrapPrefix+"Timber-"+bootstrapVersion, zipLocation, eventLog)
+		if err := addConfiguration(client.GetConfiguration()); err != nil {
+			return err
 		}
 
 		return download(client, []string{})

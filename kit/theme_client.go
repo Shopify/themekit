@@ -202,10 +202,12 @@ func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 
 // CreateTheme will create a unpublished new theme on your shopify store and then
 // return a new theme client with the configuration of the new client.
-func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
+func CreateTheme(name, zipLocation string, eventLog chan ThemeEvent) ThemeClient {
+	config, _ := NewConfiguration()
+	client := NewThemeClient(eventLog, config)
 	var wg sync.WaitGroup
 	wg.Add(1)
-	path := fmt.Sprintf("%s/themes.json", t.config.AdminURL())
+	path := fmt.Sprintf("%s/themes.json", config.AdminURL())
 	contents := map[string]theme.Theme{
 		"theme": {Name: name, Source: zipLocation, Role: "unpublished"},
 	}
@@ -215,33 +217,32 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 		ready := false
 		data, _ := json.Marshal(contents)
 		for retries < createThemeMaxRetries && !ready {
-			if themeEvent = t.sendData("POST", path, data); !themeEvent.Successful() {
+			if themeEvent = client.sendData("POST", path, data); !themeEvent.Successful() {
 				retries++
 			} else {
 				ready = true
 			}
-			go func(client ThemeClient, event ThemeEvent) {
-				client.eventLog <- event
-			}(t, themeEvent)
+			go func(event ThemeEvent) {
+				eventLog <- event
+			}(themeEvent)
 		}
 		if retries >= createThemeMaxRetries {
-			err := fmt.Errorf(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
-			Fatal(err)
+			Fatal(fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation))
 		}
-		return
+		return themeEvent
 	}()
 
 	go func() {
-		for !t.isDoneProcessing(themeEvent.ThemeID) {
+		for !client.isDoneProcessing(themeEvent.ThemeID) {
 			time.Sleep(250 * time.Millisecond)
 		}
 		wg.Done()
 	}()
 
 	wg.Wait()
-	config := t.GetConfiguration()
 	config.ThemeID = fmt.Sprintf("%d", themeEvent.ThemeID)
-	return NewThemeClient(t.eventLog, config)
+
+	return client
 }
 
 // Process will create a new throttler and return the jobqueue. You can then send
