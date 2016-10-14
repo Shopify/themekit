@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caarlos0/env"
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v1"
 )
@@ -18,17 +19,17 @@ import (
 // Configuration is the structure of a configuration for an environment. This will
 // get loaded into a theme client to dictate it's actions.
 type Configuration struct {
-	Password     string        `yaml:"password,omitempty"`
-	ThemeID      string        `yaml:"theme_id,omitempty"`
-	Domain       string        `yaml:"store"`
-	Directory    string        `yaml:"directory,omitempty"`
-	IgnoredFiles []string      `yaml:"ignore_files,omitempty"`
-	BucketSize   int           `yaml:"bucket_size"`
-	RefillRate   int           `yaml:"refill_rate"`
-	Concurrency  int           `yaml:"concurrency,omitempty"`
-	Proxy        string        `yaml:"proxy,omitempty"`
-	Ignores      []string      `yaml:"ignores,omitempty"`
-	Timeout      time.Duration `yaml:"timeout,omitempty"`
+	Password     string        `yaml:"password,omitempty" env:"THEMEKIT_PASSWORD"`
+	ThemeID      string        `yaml:"theme_id,omitempty" env:"THEMEKIT_THEME_ID"`
+	Domain       string        `yaml:"store" env:"THEMEKIT_DOMAIN"`
+	Directory    string        `yaml:"directory,omitempty" env:"THEMEKIT_DIRECTORY"`
+	IgnoredFiles []string      `yaml:"ignore_files,omitempty" env:"THEMEKIT_IGNORE_FILES" envSeparator:":"`
+	BucketSize   int           `yaml:"bucket_size" env:"THEMEKIT_BUCKET_SIZE"`
+	RefillRate   int           `yaml:"refill_rate" env:"THEMEKIT_REFILL_RATE"`
+	Concurrency  int           `yaml:"concurrency,omitempty" env:"THEMEKIT_CONCURRENCY"`
+	Proxy        string        `yaml:"proxy,omitempty" env:"THEMEKIT_PROXY"`
+	Ignores      []string      `yaml:"ignores,omitempty" env:"THEMEKIT_IGNORES" envSeparator:":"`
+	Timeout      time.Duration `yaml:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
 }
 
 const (
@@ -59,29 +60,8 @@ func init() {
 		Timeout:     DefaultTimeout,
 	}
 
-	environmentConfig = Configuration{
-		Password:  os.Getenv("THEMEKIT_PASSWORD"),
-		ThemeID:   os.Getenv("THEMEKIT_THEME_ID"),
-		Domain:    os.Getenv("THEMEKIT_STORE"),
-		Directory: os.Getenv("THEMEKIT_DIR"),
-		Proxy:     os.Getenv("THEMEKIT_PROXY"),
-	}
-
-	environmentConfig.BucketSize, _ = strconv.Atoi(os.Getenv("THEMEKIT_BUCKET_SIZE"))
-	environmentConfig.RefillRate, _ = strconv.Atoi(os.Getenv("THEMEKIT_REFILL_RATE"))
-	environmentConfig.Concurrency, _ = strconv.Atoi(os.Getenv("THEMEKIT_CONCURRENCY"))
-
-	if ignoredFiles := os.Getenv("THEMEKIT_IGNORE_FILES"); len(ignoredFiles) > 0 {
-		environmentConfig.IgnoredFiles = strings.Split(ignoredFiles, ",")
-	}
-
-	if ignores := os.Getenv("THEMEKIT_IGNORES"); len(ignores) > 0 {
-		environmentConfig.Ignores = strings.Split(ignores, ",")
-	}
-
-	if timeout := os.Getenv("THEMEKIT_TIMEOUT"); timeout != "" {
-		environmentConfig.Timeout, _ = time.ParseDuration(timeout)
-	}
+	environmentConfig = Configuration{}
+	env.Parse(&environmentConfig)
 }
 
 func SetFlagConfig(config Configuration) {
@@ -113,7 +93,6 @@ func (conf Configuration) Initialize() (Configuration, error) {
 	mergo.Merge(&newConfig, &environmentConfig)
 	mergo.Merge(&newConfig, &conf)
 	mergo.Merge(&newConfig, &defaultConfig)
-	fmt.Println(newConfig.IgnoredFiles)
 	return newConfig, newConfig.Validate()
 }
 
