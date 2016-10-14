@@ -29,16 +29,14 @@ const (
 
 // LibraryInfo will return a string array with information about the library used
 // for logging.
-func LibraryInfo() []string {
-	return []string{
-		"ThemeKit - Shopify Theme Utilities",
-		ThemeKitVersion.String(),
-	}
+func LibraryInfo() string {
+	messageSeparator := "\n----------------------------------------------------------------\n"
+	info := fmt.Sprintf("\t%s %s", "ThemeKit - Shopify Theme Utilities", ThemeKitVersion.String())
+	return fmt.Sprintf("%s%s%s", messageSeparator, info, messageSeparator)
 }
 
 func PrintInfo() {
-	messageSeparator := "\n----------------------------------------------------------------\n"
-	fmt.Println(GreenText(fmt.Sprintf("%s%s%s", messageSeparator, LibraryInfo(), messageSeparator)))
+	fmt.Println(GreenText(LibraryInfo()))
 }
 
 type version struct {

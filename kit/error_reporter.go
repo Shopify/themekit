@@ -26,7 +26,6 @@ var GreenText = color.New(color.FgGreen).SprintFunc()
 // Fatal will print out the library information then log fatal the error message
 // passed in. This will stop the program.
 func Fatal(e error) {
-	messageSeparator := "\n----------------------------------------------------------------\n"
-	fmt.Println(RedText(fmt.Sprintf("%s%s%s", messageSeparator, LibraryInfo(), messageSeparator)))
+	fmt.Println(RedText(LibraryInfo()))
 	log.Fatal(RedText(e))
 }
