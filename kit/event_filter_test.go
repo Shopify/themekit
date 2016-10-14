@@ -8,7 +8,7 @@ import (
 )
 
 func TestEventFilterRejectsEventsThatMatch(t *testing.T) {
-	e := newEventFilter([]string{"*.bat", "build/*", "*.ini", "config/settings.json"})
+	e := newEventFilter([]string{"*.bat", "build/*", "*.ini", "config/settings.json"}, []string{})
 
 	inputEvents := []string{"path/to/config/settings.json", "hello.bat", "total/path/build/hello/world", "build/world", "whatever", "foo.ini", "zubat"}
 	expectedEvents := []string{"whatever", "zubat"}
@@ -16,28 +16,28 @@ func TestEventFilterRejectsEventsThatMatch(t *testing.T) {
 }
 
 func TestFilterFullRegex(t *testing.T) {
-	e := newEventFilter([]string{`/\.(txt|gif|bat)$/`, "config/settings.json", "*.ini"})
+	e := newEventFilter([]string{`/\.(txt|gif|bat)$/`, "config/settings.json", "*.ini"}, []string{})
 	inputEvents := []string{"path/to/config/settings.json", "hello.bat", "build/hello/world.gif", "build/world.txt", "whatever", "foo.ini", "zubat"}
 	expectedEvents := []string{"whatever", "zubat"}
 	assertFilter(t, e, inputEvents, expectedEvents)
 }
 
 func TestFilterRemovesEmptyStrings(t *testing.T) {
-	e := newEventFilter([]string{})
+	e := newEventFilter([]string{}, []string{})
 	inputEvents := []string{"hello", "", "world"}
 	expectedEvents := []string{"hello", "world"}
 	assertFilter(t, e, inputEvents, expectedEvents)
 }
 
 func TestDefaultFilters(t *testing.T) {
-	e := newEventFilter([]string{})
+	e := newEventFilter([]string{}, []string{})
 	inputEvents := []string{".git/HEAD", ".DS_Store", "templates/.DS_Store", "config.yml", "templates/products.liquid"}
 	expectedEvents := []string{"templates/products.liquid"}
 	assertFilter(t, e, inputEvents, expectedEvents)
 }
 
 func TestMatchesFilterWithEmptyInputDoesNotCrash(t *testing.T) {
-	e := newEventFilter([]string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"})
+	e := newEventFilter([]string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"}, []string{})
 	assert.Equal(t, false, e.matchesFilter(""))
 }
 

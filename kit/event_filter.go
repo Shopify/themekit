@@ -27,43 +27,25 @@ type eventFilter struct {
 	globs   []string
 }
 
-func newEventFilter(rawPatterns []string) eventFilter {
+func newEventFilter(rootDir string, patterns []string, files []string) eventFilter {
+	patterns = append(patterns, filesToPatterns(files)...)
+
 	filters := defaultRegexes
 	globs := defaultGlobs
-	for _, pattern := range rawPatterns {
+	for _, pattern := range patterns {
 		if len(pattern) <= 0 {
 			continue
 		}
 		if strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
 			filters = append(filters, regexp.MustCompile(pattern[1:len(pattern)-2]))
 		} else if strings.Contains(pattern, "*") {
-			if !strings.HasPrefix(pattern, "*") {
-				pattern = "*" + pattern
-			}
-			globs = append(globs, pattern)
+			globs = append(globs, rootDir+pattern)
 		} else { //plain filename
-			globs = append(globs, "*"+pattern)
+			globs = append(globs, rootDir+"*"+pattern)
 		}
 	}
 	filters = append(filters, regexp.MustCompile(configurationFilename))
 	return eventFilter{filters: filters, globs: globs}
-}
-
-func newEventFilterFromPatternsAndFiles(patterns []string, files []string) eventFilter {
-	for _, name := range files {
-		file, err := os.Open(name)
-		defer file.Close()
-		if err != nil {
-			Fatal(err)
-		}
-		var data []byte
-		if data, err = ioutil.ReadAll(file); err != nil {
-			Fatal(err)
-		} else {
-			patterns = append(patterns, strings.Split(string(data), "\n")...)
-		}
-	}
-	return newEventFilter(patterns)
 }
 
 func (e eventFilter) filterAssets(assets []theme.Asset) []theme.Asset {
@@ -117,4 +99,22 @@ func (e eventFilter) String() string {
 	}
 	buffer.WriteString("-- done --")
 	return buffer.String()
+}
+
+func filesToPatterns(files []string) []string {
+	patterns := []string{}
+	for _, name := range files {
+		file, err := os.Open(name)
+		defer file.Close()
+		if err != nil {
+			Fatal(err)
+		}
+		var data []byte
+		if data, err = ioutil.ReadAll(file); err != nil {
+			Fatal(err)
+		} else {
+			patterns = append(patterns, strings.Split(string(data), "\n")...)
+		}
+	}
+	return patterns
 }

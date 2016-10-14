@@ -76,7 +76,7 @@ func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient 
 		eventLog:   eventLog,
 		config:     config,
 		httpClient: newHTTPClient(config),
-		filter:     newEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores),
+		filter:     newEventFilter(config.Directory, config.IgnoredFiles, config.Ignores),
 	}
 }
 
@@ -165,7 +165,7 @@ func (t ThemeClient) AssetList() []theme.Asset {
 // assets are filtered based on your config.
 func (t ThemeClient) LocalAssets() []theme.Asset {
 	dir := fmt.Sprintf("%s%s", t.config.Directory, string(filepath.Separator))
-	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.MatchesFilter)
+	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.matchesFilter)
 	if err != nil {
 		Fatal(err)
 	}
