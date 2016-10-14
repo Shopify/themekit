@@ -255,12 +255,18 @@ func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
 // processing.
 func (t ThemeClient) Process(wg *sync.WaitGroup) chan AssetEvent {
 	newForeman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
+	var processWaitGroup sync.WaitGroup
 	go func() {
 		for {
 			job, more := <-newForeman.WorkerQueue
 			if more {
-				t.Perform(job)
+				processWaitGroup.Add(1)
+				go func() {
+					t.Perform(job)
+					processWaitGroup.Done()
+				}()
 			} else {
+				processWaitGroup.Wait()
 				wg.Done()
 				return
 			}
