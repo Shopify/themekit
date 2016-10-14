@@ -30,15 +30,21 @@ type eventFilter struct {
 func newEventFilter(rootDir string, patterns []string, files []string) eventFilter {
 	patterns = append(patterns, filesToPatterns(files)...)
 
+	rootDir += "/"
 	filters := defaultRegexes
 	globs := defaultGlobs
 	for _, pattern := range patterns {
-		if len(pattern) <= 0 {
+		pattern = strings.TrimSpace(pattern)
+
+		// blank lines or comments
+		if len(pattern) <= 0 || strings.HasPrefix(pattern, "#") {
 			continue
 		}
+
+		//full regex
 		if strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
 			filters = append(filters, regexp.MustCompile(pattern[1:len(pattern)-2]))
-		} else if strings.Contains(pattern, "*") {
+		} else if strings.Contains(pattern, "*") { // globs
 			globs = append(globs, rootDir+pattern)
 		} else { //plain filename
 			globs = append(globs, rootDir+"*"+pattern)

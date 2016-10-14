@@ -86,7 +86,8 @@ func LoadConfiguration(location string) (Configuration, error) {
 
 // Initialize will format a Configuration that combines the config from env variables,
 // flags and the config file. Then it will validate that config. It will return the
-// formatted configuration along with any validation errors.
+// formatted configuration along with any validation errors. The config precedence
+// is flags, environment variables, then the config file.
 func (conf Configuration) Initialize() (Configuration, error) {
 	newConfig := Configuration{}
 	mergo.Merge(&newConfig, &flagConfig)
