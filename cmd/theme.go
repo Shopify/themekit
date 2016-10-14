@@ -123,19 +123,7 @@ func initializeConfig(cmdName string, timesout bool) error {
 		fmt.Println(kit.YellowText(fmt.Sprintf("%s\n%s\n%s", banner, updateAvailableMessage, banner)))
 	}
 
-	kit.SetFlagConfig(kit.Configuration{
-		Password:     password,
-		ThemeID:      themeid,
-		Domain:       domain,
-		Directory:    directory,
-		Proxy:        proxy,
-		BucketSize:   bucketsize,
-		RefillRate:   refillrate,
-		Concurrency:  concurrency,
-		IgnoredFiles: ignoredFiles.Value(),
-		Ignores:      ignores.Value(),
-		Timeout:      timeout,
-	})
+	setFlagConfig()
 
 	var err error
 	if environments, err = kit.LoadEnvironments(configPath); err != nil {
@@ -164,6 +152,22 @@ func initializeConfig(cmdName string, timesout bool) error {
 	go consumeEventLog(eventLog, timesout, themeClients[0].GetConfiguration().Timeout)
 
 	return nil
+}
+
+func setFlagConfig() {
+	kit.SetFlagConfig(kit.Configuration{
+		Password:     password,
+		ThemeID:      themeid,
+		Domain:       domain,
+		Directory:    directory,
+		Proxy:        proxy,
+		BucketSize:   bucketsize,
+		RefillRate:   refillrate,
+		Concurrency:  concurrency,
+		IgnoredFiles: ignoredFiles.Value(),
+		Ignores:      ignores.Value(),
+		Timeout:      timeout,
+	})
 }
 
 func consumeEventLog(eventLog chan kit.ThemeEvent, timesout bool, timeout time.Duration) {

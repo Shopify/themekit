@@ -18,6 +18,7 @@ type Environments map[string]Configuration
 // LoadEnvironmentsFromFile will read in the file from the location provided and
 // then unmarshal the data into environments.
 func LoadEnvironments(location string) (env Environments, err error) {
+	env = map[string]Configuration{}
 	contents, err := ioutil.ReadFile(location)
 	if err == nil {
 		err = yaml.Unmarshal(contents, &env)
@@ -32,18 +33,12 @@ func (e Environments) SetConfiguration(environmentName string, conf Configuratio
 
 // GetConfiguration will return the configuration for the environment. An error will
 // be returned if the environment does not exist or the configuration is invalid.
-func (e Environments) GetConfiguration(environmentName string) (conf Configuration, err error) {
+func (e Environments) GetConfiguration(environmentName string) (Configuration, error) {
 	conf, exists := e[environmentName]
 	if !exists {
 		return conf, fmt.Errorf("%s does not exist in this environments list", environmentName)
 	}
-
-	validConfig, err := conf.Initialize()
-	if err != nil {
-		return conf, fmt.Errorf("could not load environment \"%s\": %s", environmentName, err)
-	}
-
-	return validConfig, nil
+	return conf.compile()
 }
 
 // Write will write out an environment to an io.Writer. It will return an error

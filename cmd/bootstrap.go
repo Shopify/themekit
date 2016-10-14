@@ -25,9 +25,16 @@ var bootstrapCmd = &cobra.Command{
 The most popular theme on Shopify. Bootstrap will also setup
 your config file and create a new theme id for you.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := initializeConfig(cmd.Name(), true); err != nil {
+		setFlagConfig()
+		config, err := kit.LoadConfiguration("")
+		if err != nil {
 			return err
 		}
+
+		eventLog := make(chan kit.ThemeEvent)
+		client := kit.NewThemeClient(eventLog, config)
+
+		go consumeEventLog(eventLog, true, config.Timeout)
 
 		zipLocation, err := zipPathForVersion(bootstrapVersion)
 		if err != nil {
@@ -39,14 +46,14 @@ your config file and create a new theme id for you.`,
 			name = bootstrapPrefix + "-" + name
 		}
 
-		clientForNewTheme := themeClients[0].CreateTheme(name, zipLocation)
+		client = client.CreateTheme(name, zipLocation)
 		if setThemeID {
-			if err := addConfiguration(clientForNewTheme.GetConfiguration()); err != nil {
+			if err := addConfiguration(client.GetConfiguration()); err != nil {
 				return err
 			}
 		}
 
-		return download(clientForNewTheme, []string{})
+		return download(client, []string{})
 	},
 }
 

@@ -22,7 +22,7 @@ type Configuration struct {
 	Password     string        `yaml:"password,omitempty" env:"THEMEKIT_PASSWORD"`
 	ThemeID      string        `yaml:"theme_id,omitempty" env:"THEMEKIT_THEME_ID"`
 	Domain       string        `yaml:"store" env:"THEMEKIT_DOMAIN"`
-	Directory    string        `yaml:"directory,omitempty" env:"THEMEKIT_DIRECTORY"`
+	Directory    string        `yaml:"-" env:"THEMEKIT_DIRECTORY"`
 	IgnoredFiles []string      `yaml:"ignore_files,omitempty" env:"THEMEKIT_IGNORE_FILES" envSeparator:":"`
 	BucketSize   int           `yaml:"bucket_size" env:"THEMEKIT_BUCKET_SIZE"`
 	RefillRate   int           `yaml:"refill_rate" env:"THEMEKIT_REFILL_RATE"`
@@ -68,27 +68,29 @@ func SetFlagConfig(config Configuration) {
 	flagConfig = config
 }
 
-// LoadConfiguration will build a configuration object form a raw byte array.
-func LoadConfiguration(location string) (Configuration, error) {
-	var conf Configuration
-	contents, err := ioutil.ReadFile(location)
-	if err != nil {
-		return conf, err
-	}
-
-	err = yaml.Unmarshal(contents, &conf)
-	if err != nil {
-		return conf, err
-	}
-
-	return conf.Initialize()
-}
-
-// Initialize will format a Configuration that combines the config from env variables,
+// LoadConfiguration will format a Configuration that combines the config from env variables,
 // flags and the config file. Then it will validate that config. It will return the
 // formatted configuration along with any validation errors. The config precedence
 // is flags, environment variables, then the config file.
-func (conf Configuration) Initialize() (Configuration, error) {
+func LoadConfiguration(location string) (Configuration, error) {
+	var fileConf Configuration
+
+	if location != "" {
+		contents, err := ioutil.ReadFile(location)
+		if err != nil {
+			return fileConf, err
+		}
+
+		err = yaml.Unmarshal(contents, &fileConf)
+		if err != nil {
+			return fileConf, err
+		}
+	}
+
+	return fileConf.compile()
+}
+
+func (conf Configuration) compile() (Configuration, error) {
 	newConfig := Configuration{}
 	mergo.Merge(&newConfig, &flagConfig)
 	mergo.Merge(&newConfig, &environmentConfig)
@@ -100,8 +102,12 @@ func (conf Configuration) Initialize() (Configuration, error) {
 func (conf Configuration) Validate() error {
 	errors := []string{}
 
-	if _, err := strconv.ParseInt(conf.ThemeID, 10, 64); !conf.IsLive() && err != nil {
+	if conf.ThemeID == "" {
 		errors = append(errors, "missing theme_id.")
+	} else if !conf.IsLive() {
+		if _, err := strconv.ParseInt(conf.ThemeID, 10, 64); err != nil {
+			errors = append(errors, "invalid theme_id.")
+		}
 	}
 
 	if len(conf.Domain) == 0 {
@@ -123,14 +129,16 @@ func (conf Configuration) Validate() error {
 // AdminURL will return the url to the shopify admin.
 func (conf Configuration) AdminURL() string {
 	url := fmt.Sprintf("https://%s/admin", conf.Domain)
-	if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); !conf.IsLive() && err == nil {
-		url = fmt.Sprintf("%s/themes/%d", url, themeID)
+	if !conf.IsLive() {
+		if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); err == nil {
+			url = fmt.Sprintf("%s/themes/%d", url, themeID)
+		}
 	}
 	return url
 }
 
 func (conf Configuration) IsLive() bool {
-	return strings.ToLower(strings.TrimSpace(conf.ThemeID)) != "live"
+	return strings.ToLower(strings.TrimSpace(conf.ThemeID)) == "live"
 }
 
 // Write will write out a configuration to a writer.
