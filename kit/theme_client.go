@@ -193,42 +193,35 @@ func CreateTheme(name, zipLocation string) (ThemeClient, error) {
 		return client, err
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	path := fmt.Sprintf("%s/themes.json", config.AdminURL())
-	contents := map[string]theme.Theme{
+	var themeEvent apiThemeEvent
+	retries := 0
+	data, err := json.Marshal(map[string]theme.Theme{
 		"theme": {Name: name, Source: zipLocation, Role: "unpublished"},
+	})
+	if err != nil {
+		return client, err
 	}
 
-	retries := 0
-	themeEvent, err := func() (themeEvent apiThemeEvent, err error) {
-		ready := false
-		data, _ := json.Marshal(contents)
-		for retries < createThemeMaxRetries && !ready {
-			themeEvent, err = client.sendData("POST", path, data)
-			if err != nil {
-				return themeEvent, nil
-			} else if !themeEvent.Successful() {
-				retries++
-			} else {
-				ready = true
-			}
-			Logf(themeEvent.String())
+	for retries < createThemeMaxRetries {
+		themeEvent, err = client.sendData("POST", fmt.Sprintf("%s/themes.json", config.AdminURL()), data)
+		if err != nil {
+			return client, err
+		} else if !themeEvent.Successful() {
+			retries++
+		} else {
+			break
 		}
-		if retries >= createThemeMaxRetries {
-			return themeEvent, fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation)
-		}
-		return themeEvent, nil
-	}()
+		Logf(themeEvent.String())
+	}
 
-	go func() {
-		for !client.isDoneProcessing(themeEvent.ThemeID) {
-			time.Sleep(250 * time.Millisecond)
-		}
-		wg.Done()
-	}()
+	if retries >= createThemeMaxRetries {
+		return client, fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation)
+	}
 
-	wg.Wait()
+	for !client.isDoneProcessing(themeEvent.ThemeID) {
+		time.Sleep(250 * time.Millisecond)
+	}
+
 	config.ThemeID = fmt.Sprintf("%d", themeEvent.ThemeID)
 
 	return client, err
