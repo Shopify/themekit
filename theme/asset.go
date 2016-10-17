@@ -110,8 +110,7 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 	}
 
 	if info.IsDir() {
-		err = errors.New("LoadAsset: File is a directory")
-		return
+		return asset, errors.New("LoadAsset: File is a directory")
 	}
 
 	buffer, err := ioutil.ReadAll(file)
@@ -125,7 +124,7 @@ func LoadAsset(root, filename string) (asset Asset, err error) {
 	} else {
 		asset.Attachment = encode64(buffer)
 	}
-	return
+	return asset, nil
 }
 
 func toSlash(path string) string {

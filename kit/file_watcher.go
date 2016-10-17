@@ -100,32 +100,27 @@ func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(s
 	return result, nil
 }
 
-func fwLoadAsset(event fsnotify.Event) theme.Asset {
+func handleEvent(event fsnotify.Event) (fsAssetEvent, error) {
+	var eventType EventType
 	root := filepath.Dir(event.Name)
 	filename := filepath.Base(event.Name)
-
 	asset, err := theme.LoadAsset(root, filename)
 	if err != nil {
-		if os.IsExist(err) {
-			Fatal(err)
-		} else {
-			asset = theme.Asset{}
-		}
+		return fsAssetEvent{}, err
 	}
 	asset.Key = extractAssetKey(event.Name)
-	return asset
-}
 
-func handleEvent(event fsnotify.Event) fsAssetEvent {
-	var eventType EventType
-	asset := fwLoadAsset(event)
 	switch event.Op {
 	case fsnotify.Create:
 		eventType = Update
 	case fsnotify.Remove:
 		eventType = Remove
 	}
-	return fsAssetEvent{asset: asset, eventType: eventType}
+
+	return fsAssetEvent{
+		asset:     asset,
+		eventType: eventType,
+	}, nil
 }
 
 func extractAssetKey(filename string) string {
@@ -153,7 +148,10 @@ func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetE
 				}
 			case <-time.After(debounceTimeout):
 				for eventName, event := range recordedEvents {
-					if fsevent := handleEvent(event); !filter.matchesFilter(eventName) && fsevent.IsValid() {
+					fsevent, err := handleEvent(event)
+					if err != nil {
+						Warnf("File event error: %s", err)
+					} else if fsevent.IsValid() && !filter.matchesFilter(eventName) {
 						results <- fsevent
 					}
 				}
