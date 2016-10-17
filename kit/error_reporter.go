@@ -50,6 +50,10 @@ func Errorf(content string, args ...interface{}) {
 	errorLogger.Println(RedText(fmt.Sprintf(content, args...)))
 }
 
+func Fatalf(content string, args ...interface{}) {
+	Fatal(fmt.Errorf(content, args...))
+}
+
 // Fatal will print out the library information then log fatal the error message
 // passed in. This will stop the program.
 func Fatal(e error) {

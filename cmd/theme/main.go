@@ -1,15 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/Shopify/themekit/cmd"
+	"github.com/Shopify/themekit/kit"
 )
 
 func main() {
 	if err := cmd.ThemeCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(-1)
+		kit.Fatal(err)
 	}
 }

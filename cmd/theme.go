@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -119,7 +118,7 @@ func init() {
 
 func initializeConfig(cmdName string, timesout bool) error {
 	if cmdName != "update" && !noUpdateNotifier && isNewReleaseAvailable() {
-		fmt.Println(kit.YellowText(fmt.Sprintf("%s\n%s\n%s", banner, updateAvailableMessage, banner)))
+		kit.Warnf("%s\n%s\n%s", banner, updateAvailableMessage, banner)
 	}
 
 	setFlagConfig()

@@ -36,7 +36,7 @@ func LibraryInfo() string {
 }
 
 func PrintInfo() {
-	fmt.Println(GreenText(LibraryInfo()))
+	Notifyf(LibraryInfo())
 }
 
 type version struct {
@@ -100,7 +100,7 @@ func ApplyUpdate(updateURL, digest string) error {
 	})
 	if err != nil {
 		if rerr := update.RollbackError(err); rerr != nil {
-			fmt.Printf("Failed to rollback from bad update: %v", rerr)
+			Errorf("Failed to rollback from bad update: %v", rerr)
 		}
 	}
 	return err

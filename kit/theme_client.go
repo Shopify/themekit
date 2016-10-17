@@ -199,7 +199,7 @@ func CreateTheme(name, zipLocation string) ThemeClient {
 			Logf(themeEvent.String())
 		}
 		if retries >= createThemeMaxRetries {
-			Fatal(fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation))
+			Fatalf("'%s' cannot be retrieved from Github.", zipLocation)
 		}
 		return themeEvent
 	}()
@@ -327,11 +327,11 @@ func newHTTPClient(config Configuration) (client *http.Client) {
 	}
 
 	if len(config.Proxy) > 0 {
-		fmt.Println("Proxy URL detected from Configuration:", config.Proxy)
-		fmt.Println("SSL Certificate Validation will be disabled!")
+		Warnf("Proxy URL detected from Configuration:", config.Proxy)
+		Warnf("SSL Certificate Validation will be disabled!")
 		proxyURL, err := url.Parse(config.Proxy)
 		if err != nil {
-			fmt.Println("Proxy configuration invalid:", err)
+			Fatalf("Proxy configuration invalid:", err)
 		}
 		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	}
