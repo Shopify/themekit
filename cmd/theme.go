@@ -136,14 +136,22 @@ func initializeConfig(cmdName string, timesout bool) error {
 			if err != nil {
 				return err
 			}
-			themeClients = append(themeClients, kit.NewThemeClient(config))
+			client, err := kit.NewThemeClient(config)
+			if err != nil {
+				return err
+			}
+			themeClients = append(themeClients, client)
 		}
 	} else {
 		config, err := environments.GetConfiguration(environment)
 		if err != nil {
 			return err
 		}
-		themeClients = []kit.ThemeClient{kit.NewThemeClient(config)}
+		client, err := kit.NewThemeClient(config)
+		if err != nil {
+			return err
+		}
+		themeClients = []kit.ThemeClient{client}
 	}
 
 	return nil

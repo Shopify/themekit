@@ -70,12 +70,22 @@ const (
 // NewThemeClient will build a new theme client from a configuration and a theme event
 // channel. The channel is used for logging all events. The configuration specifies how
 // the client will behave.
-func NewThemeClient(config Configuration) ThemeClient {
+func NewThemeClient(config Configuration) (ThemeClient, error) {
+	httpClient, err := newHTTPClient(config)
+	if err != nil {
+		return ThemeClient{}, err
+	}
+
+	filter, err := newEventFilter(config.Directory, config.IgnoredFiles, config.Ignores)
+	if err != nil {
+		return ThemeClient{}, err
+	}
+
 	return ThemeClient{
 		config:     config,
-		httpClient: newHTTPClient(config),
-		filter:     newEventFilter(config.Directory, config.IgnoredFiles, config.Ignores),
-	}
+		httpClient: httpClient,
+		filter:     filter,
+	}, nil
 }
 
 // GetConfiguration will return the clients built config. This is useful for grabbing
@@ -85,7 +95,7 @@ func (t ThemeClient) GetConfiguration() Configuration {
 }
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
-func (t ThemeClient) NewFileWatcher(notifyFile string) chan AssetEvent {
+func (t ThemeClient) NewFileWatcher(notifyFile string) (chan AssetEvent, error) {
 	newForeman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
 	if len(notifyFile) > 0 {
 		newForeman.OnIdle = func() {
@@ -96,10 +106,10 @@ func (t ThemeClient) NewFileWatcher(notifyFile string) chan AssetEvent {
 	var err error
 	newForeman.JobQueue, err = newFileWatcher(t.config.Directory, true, t.filter)
 	if err != nil {
-		Fatal(err)
+		return newForeman.JobQueue, err
 	}
 	newForeman.Restart()
-	return newForeman.WorkerQueue
+	return newForeman.WorkerQueue, nil
 }
 
 // AssetList will return a slice of remote assets from the shopify servers. The
@@ -137,13 +147,13 @@ func (t ThemeClient) AssetList() []theme.Asset {
 
 // LocalAssets will return a slice of assets from the local disk. The
 // assets are filtered based on your config.
-func (t ThemeClient) LocalAssets() []theme.Asset {
+func (t ThemeClient) LocalAssets() ([]theme.Asset, error) {
 	dir := fmt.Sprintf("%s%s", t.config.Directory, string(filepath.Separator))
 	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.matchesFilter)
 	if err != nil {
-		Fatal(err)
+		return assets, err
 	}
-	return assets
+	return assets, nil
 }
 
 // LoadAsset will load a single local asset on disk. It will return an error if there
@@ -176,9 +186,13 @@ func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 
 // CreateTheme will create a unpublished new theme on your shopify store and then
 // return a new theme client with the configuration of the new client.
-func CreateTheme(name, zipLocation string) ThemeClient {
+func CreateTheme(name, zipLocation string) (ThemeClient, error) {
 	config, _ := NewConfiguration()
-	client := NewThemeClient(config)
+	client, err := NewThemeClient(config)
+	if err != nil {
+		return client, err
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", config.AdminURL())
@@ -187,11 +201,14 @@ func CreateTheme(name, zipLocation string) ThemeClient {
 	}
 
 	retries := 0
-	themeEvent := func() (themeEvent apiThemeEvent) {
+	themeEvent, err := func() (themeEvent apiThemeEvent, err error) {
 		ready := false
 		data, _ := json.Marshal(contents)
 		for retries < createThemeMaxRetries && !ready {
-			if themeEvent = client.sendData("POST", path, data); !themeEvent.Successful() {
+			themeEvent, err = client.sendData("POST", path, data)
+			if err != nil {
+				return themeEvent, nil
+			} else if !themeEvent.Successful() {
 				retries++
 			} else {
 				ready = true
@@ -199,9 +216,9 @@ func CreateTheme(name, zipLocation string) ThemeClient {
 			Logf(themeEvent.String())
 		}
 		if retries >= createThemeMaxRetries {
-			Fatalf("'%s' cannot be retrieved from Github.", zipLocation)
+			return themeEvent, fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation)
 		}
-		return themeEvent
+		return themeEvent, nil
 	}()
 
 	go func() {
@@ -214,7 +231,7 @@ func CreateTheme(name, zipLocation string) ThemeClient {
 	wg.Wait()
 	config.ThemeID = fmt.Sprintf("%d", themeEvent.ThemeID)
 
-	return client
+	return client, err
 }
 
 // Process will create a new throttler and return the jobqueue. You can then send
@@ -283,17 +300,17 @@ func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
 	return apiResponse{code: resp.StatusCode, body: body, err: err}
 }
 
-func (t ThemeClient) sendData(method, path string, body []byte) (result apiThemeEvent) {
+func (t ThemeClient) sendData(method, path string, body []byte) (result apiThemeEvent, err error) {
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
-		Fatal(err)
+		return apiThemeEvent{}, err
 	}
 	t.config.AddHeaders(req)
 	resp, err := t.httpClient.Do(req)
 	if result = newAPIThemeEvent(resp, err); result.Successful() {
 		defer resp.Body.Close()
 	}
-	return result
+	return result, nil
 }
 
 func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
@@ -317,11 +334,11 @@ func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, e
 
 func (t ThemeClient) isDoneProcessing(themeID int64) bool {
 	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminURL(), themeID)
-	themeEvent := t.sendData("GET", path, []byte{})
-	return themeEvent.Previewable
+	themeEvent, err := t.sendData("GET", path, []byte{})
+	return err == nil && themeEvent.Previewable
 }
 
-func newHTTPClient(config Configuration) (client *http.Client) {
+func newHTTPClient(config Configuration) (client *http.Client, err error) {
 	client = &http.Client{
 		Timeout: config.Timeout,
 	}
@@ -331,7 +348,7 @@ func newHTTPClient(config Configuration) (client *http.Client) {
 		Warnf("SSL Certificate Validation will be disabled!")
 		proxyURL, err := url.Parse(config.Proxy)
 		if err != nil {
-			Fatalf("Proxy configuration invalid:", err)
+			return client, fmt.Errorf("Proxy configuration invalid:", err)
 		}
 		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	}

@@ -29,10 +29,17 @@ to shopify.`,
 	},
 }
 
-func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) error {
 	jobQueue := client.Process(wg)
+	defer close(jobQueue)
+
 	if len(filenames) == 0 {
-		for _, asset := range client.LocalAssets() {
+		localAssets, err := client.LocalAssets()
+		if err != nil {
+			return err
+		}
+
+		for _, asset := range localAssets {
 			if asset.IsValid() {
 				jobQueue <- kit.NewUploadEvent(asset)
 			}
@@ -41,11 +48,11 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		for _, filename := range filenames {
 			asset, err := client.LocalAsset(filename)
 			if err != nil {
-				kit.Errorf(err.Error())
+				return err
 			} else if asset.IsValid() {
 				jobQueue <- kit.NewUploadEvent(asset)
 			}
 		}
 	}
-	close(jobQueue)
+	return nil
 }

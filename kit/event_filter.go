@@ -27,8 +27,13 @@ type eventFilter struct {
 	globs   []string
 }
 
-func newEventFilter(rootDir string, patterns []string, files []string) eventFilter {
-	patterns = append(patterns, filesToPatterns(files)...)
+func newEventFilter(rootDir string, patterns []string, files []string) (eventFilter, error) {
+	filtPatters, err := filesToPatterns(files)
+	if err != nil {
+		return eventFilter{}, err
+	}
+
+	patterns = append(patterns, filtPatters...)
 
 	rootDir += "/"
 	filters := defaultRegexes
@@ -51,7 +56,7 @@ func newEventFilter(rootDir string, patterns []string, files []string) eventFilt
 		}
 	}
 	filters = append(filters, regexp.MustCompile(configurationFilename))
-	return eventFilter{filters: filters, globs: globs}
+	return eventFilter{filters: filters, globs: globs}, nil
 }
 
 func (e eventFilter) filterAssets(assets []theme.Asset) []theme.Asset {
@@ -107,20 +112,20 @@ func (e eventFilter) String() string {
 	return buffer.String()
 }
 
-func filesToPatterns(files []string) []string {
+func filesToPatterns(files []string) ([]string, error) {
 	patterns := []string{}
 	for _, name := range files {
 		file, err := os.Open(name)
 		defer file.Close()
 		if err != nil {
-			Fatal(err)
+			return patterns, err
 		}
 		var data []byte
 		if data, err = ioutil.ReadAll(file); err != nil {
-			Fatal(err)
+			return patterns, err
 		} else {
 			patterns = append(patterns, strings.Split(string(data), "\n")...)
 		}
 	}
-	return patterns
+	return patterns, nil
 }

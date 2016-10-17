@@ -32,7 +32,11 @@ your config file and create a new theme id for you.`,
 			return err
 		}
 
-		client := kit.CreateTheme(bootstrapPrefix+"Timber-"+bootstrapVersion, zipLocation)
+		client, err := kit.CreateTheme(bootstrapPrefix+"Timber-"+bootstrapVersion, zipLocation)
+		if err != nil {
+			return err
+		}
+
 		if err := addConfiguration(client.GetConfiguration()); err != nil {
 			return err
 		}

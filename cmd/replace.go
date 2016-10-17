@@ -30,21 +30,27 @@ exist on your local machine will be removed from shopify.`,
 	},
 }
 
-func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) error {
 	jobQueue := client.Process(wg)
+	defer close(jobQueue)
+
 	assetsActions := map[string]kit.AssetEvent{}
 	if len(filenames) == 0 {
 		for _, asset := range client.AssetList() {
 			assetsActions[asset.Key] = kit.NewRemovalEvent(asset)
 		}
-		for _, asset := range client.LocalAssets() {
+		localAssets, err := client.LocalAssets()
+		if err != nil {
+			return err
+		}
+		for _, asset := range localAssets {
 			assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 		}
 	} else {
 		for _, filename := range filenames {
 			asset, err := client.LocalAsset(filename)
 			if err != nil {
-				kit.Errorf(err.Error())
+				return err
 			} else if asset.IsValid() {
 				assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 			}
@@ -53,5 +59,5 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	for _, event := range assetsActions {
 		jobQueue <- event
 	}
-	close(jobQueue)
+	return nil
 }
