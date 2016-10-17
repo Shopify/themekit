@@ -32,10 +32,7 @@ your config file and create a new theme id for you.`,
 			return err
 		}
 
-		eventLog := make(chan kit.ThemeEvent)
-		go consumeEventLog(eventLog, true, kit.DefaultTimeout)
-
-		client := kit.CreateTheme(bootstrapPrefix+"Timber-"+bootstrapVersion, zipLocation, eventLog)
+		client := kit.CreateTheme(bootstrapPrefix+"Timber-"+bootstrapVersion, zipLocation)
 		if err := addConfiguration(client.GetConfiguration()); err != nil {
 			return err
 		}

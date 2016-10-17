@@ -44,7 +44,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		for _, filename := range filenames {
 			asset, err := client.LocalAsset(filename)
 			if err != nil {
-				client.ErrorMessage(err.Error())
+				kit.Errorf(err.Error())
 			} else if asset.IsValid() {
 				assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 			}

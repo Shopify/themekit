@@ -3,6 +3,7 @@ package kit
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/fatih/color"
 )
@@ -23,9 +24,35 @@ var BlueText = color.New(color.FgBlue).SprintFunc()
 // green when printed out.
 var GreenText = color.New(color.FgGreen).SprintFunc()
 
+var (
+	logger      *log.Logger
+	errorLogger *log.Logger
+)
+
+func init() {
+	logger = log.New(os.Stdout, "", 0)
+	errorLogger = log.New(os.Stderr, "", 0)
+}
+
+func Logf(content string, args ...interface{}) {
+	logger.Printf(content, args...)
+}
+
+func Notifyf(content string, args ...interface{}) {
+	logger.Println(GreenText(fmt.Sprintf(content, args...)))
+}
+
+func Warnf(content string, args ...interface{}) {
+	logger.Println(YellowText(fmt.Sprintf(content, args...)))
+}
+
+func Errorf(content string, args ...interface{}) {
+	errorLogger.Println(RedText(fmt.Sprintf(content, args...)))
+}
+
 // Fatal will print out the library information then log fatal the error message
 // passed in. This will stop the program.
 func Fatal(e error) {
-	fmt.Println(RedText(LibraryInfo()))
-	log.Fatal(RedText(e))
+	errorLogger.Println(RedText(LibraryInfo()))
+	errorLogger.Fatal(RedText(e))
 }

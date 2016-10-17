@@ -39,7 +39,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 		for _, filename := range filenames {
 			if asset, err := client.Asset(filename); err != nil {
 				if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
-					client.Message("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
+					fmt.Printf("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
 				} else {
 					return err
 				}
@@ -91,7 +91,7 @@ func writeToDisk(client kit.ThemeClient, asset theme.Asset) error {
 	if err != nil {
 		return err
 	}
-	client.Message(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
+	fmt.Println(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
 	return nil
 }
 

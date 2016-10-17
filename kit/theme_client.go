@@ -23,7 +23,6 @@ const createThemeMaxRetries int = 3
 // ThemeClient is the interactor with the shopify server. All actions are processed
 // with the client.
 type ThemeClient struct {
-	eventLog   chan ThemeEvent
 	config     Configuration
 	httpClient *http.Client
 	filter     eventFilter
@@ -71,9 +70,8 @@ const (
 // NewThemeClient will build a new theme client from a configuration and a theme event
 // channel. The channel is used for logging all events. The configuration specifies how
 // the client will behave.
-func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient {
+func NewThemeClient(config Configuration) ThemeClient {
 	return ThemeClient{
-		eventLog:   eventLog,
 		config:     config,
 		httpClient: newHTTPClient(config),
 		filter:     newEventFilter(config.Directory, config.IgnoredFiles, config.Ignores),
@@ -104,30 +102,6 @@ func (t ThemeClient) NewFileWatcher(notifyFile string) chan AssetEvent {
 	return newForeman.WorkerQueue
 }
 
-// Will output an error message to the eventLog
-func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
-	go func() {
-		t.eventLog <- basicEvent{
-			Formatter: func(b basicEvent) string { return RedText(fmt.Sprintf(content, args...)) },
-			EventType: "message",
-			Title:     "Notice",
-			Etype:     "basicEvent",
-		}
-	}()
-}
-
-// Will output a simple message to the eventLog
-func (t ThemeClient) Message(content string, args ...interface{}) {
-	go func() {
-		t.eventLog <- basicEvent{
-			Formatter: func(b basicEvent) string { return fmt.Sprintf(content, args...) },
-			EventType: "message",
-			Title:     "Notice",
-			Etype:     "basicEvent",
-		}
-	}()
-}
-
 // AssetList will return a slice of remote assets from the shopify servers. The
 // assets are sorted and any ignored files based on your config are filtered out.
 func (t ThemeClient) AssetList() []theme.Asset {
@@ -137,22 +111,22 @@ func (t ThemeClient) AssetList() []theme.Asset {
 
 	resp := t.query(queryBuilder)
 	if resp.err != nil {
-		t.ErrorMessage(resp.err.Error())
+		Errorf(resp.err.Error())
 	}
 
 	if resp.code >= 400 && resp.code < 500 {
-		t.ErrorMessage("Server responded with HTTP %d; please check your credentials.", resp.code)
+		Errorf("Server responded with HTTP %d; please check your credentials.", resp.code)
 		return []theme.Asset{}
 	}
 	if resp.code >= 500 {
-		t.ErrorMessage("Server responded with HTTP %d; try again in a few minutes.", resp.code)
+		Errorf("Server responded with HTTP %d; try again in a few minutes.", resp.code)
 		return []theme.Asset{}
 	}
 
 	var assets map[string][]theme.Asset
 	err := json.Unmarshal(resp.body, &assets)
 	if err != nil {
-		t.ErrorMessage(err.Error())
+		Errorf(err.Error())
 		return []theme.Asset{}
 	}
 
@@ -202,9 +176,9 @@ func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
 
 // CreateTheme will create a unpublished new theme on your shopify store and then
 // return a new theme client with the configuration of the new client.
-func CreateTheme(name, zipLocation string, eventLog chan ThemeEvent) ThemeClient {
+func CreateTheme(name, zipLocation string) ThemeClient {
 	config, _ := NewConfiguration()
-	client := NewThemeClient(eventLog, config)
+	client := NewThemeClient(config)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	path := fmt.Sprintf("%s/themes.json", config.AdminURL())
@@ -222,9 +196,7 @@ func CreateTheme(name, zipLocation string, eventLog chan ThemeEvent) ThemeClient
 			} else {
 				ready = true
 			}
-			go func(event ThemeEvent) {
-				eventLog <- event
-			}(themeEvent)
+			Logf(themeEvent.String())
 		}
 		if retries >= createThemeMaxRetries {
 			Fatal(fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation))
@@ -289,7 +261,7 @@ func (t ThemeClient) Perform(asset AssetEvent) {
 	}
 
 	resp, err := t.request(asset, event)
-	t.eventLog <- newAPIAssetEvent(resp, asset, err)
+	Logf(newAPIAssetEvent(resp, asset, err).String())
 }
 
 func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
@@ -350,7 +322,10 @@ func (t ThemeClient) isDoneProcessing(themeID int64) bool {
 }
 
 func newHTTPClient(config Configuration) (client *http.Client) {
-	client = &http.Client{}
+	client = &http.Client{
+		Timeout: config.Timeout,
+	}
+
 	if len(config.Proxy) > 0 {
 		fmt.Println("Proxy URL detected from Configuration:", config.Proxy)
 		fmt.Println("SSL Certificate Validation will be disabled!")

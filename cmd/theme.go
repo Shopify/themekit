@@ -129,7 +129,6 @@ func initializeConfig(cmdName string, timesout bool) error {
 		return err
 	}
 
-	eventLog := make(chan kit.ThemeEvent)
 	themeClients = []kit.ThemeClient{}
 
 	if allenvs {
@@ -138,17 +137,15 @@ func initializeConfig(cmdName string, timesout bool) error {
 			if err != nil {
 				return err
 			}
-			themeClients = append(themeClients, kit.NewThemeClient(eventLog, config))
+			themeClients = append(themeClients, kit.NewThemeClient(config))
 		}
 	} else {
 		config, err := environments.GetConfiguration(environment)
 		if err != nil {
 			return err
 		}
-		themeClients = []kit.ThemeClient{kit.NewThemeClient(eventLog, config)}
+		themeClients = []kit.ThemeClient{kit.NewThemeClient(config)}
 	}
-
-	go consumeEventLog(eventLog, timesout, themeClients[0].GetConfiguration().Timeout)
 
 	return nil
 }
@@ -167,24 +164,4 @@ func setFlagConfig() {
 		Ignores:      ignores.Value(),
 		Timeout:      timeout,
 	})
-}
-
-func consumeEventLog(eventLog chan kit.ThemeEvent, timesout bool, timeout time.Duration) {
-	eventTicked := true
-	for {
-		select {
-		case event := <-eventLog:
-			eventTicked = true
-			fmt.Printf("%s\n", event)
-		case <-time.Tick(timeout):
-			if !timesout {
-				break
-			}
-			if !eventTicked {
-				fmt.Printf("Theme Kit timed out after %v seconds\n", timeout)
-				os.Exit(1)
-			}
-			eventTicked = false
-		}
-	}
 }
