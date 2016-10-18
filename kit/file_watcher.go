@@ -29,52 +29,29 @@ var (
 	}
 )
 
-type (
-	fsAssetEvent struct {
-		asset     theme.Asset
-		eventType EventType
-	}
-	fileReader func(filename string) ([]byte, error)
-)
+type fileReader func(filename string) ([]byte, error)
 
-// Asset ... TODO
-func (f fsAssetEvent) Asset() theme.Asset {
-	return f.asset
-}
-
-// Type ... TODO
-func (f fsAssetEvent) Type() EventType {
-	return f.eventType
-}
-
-// IsValid ... TODO
-func (f fsAssetEvent) IsValid() bool {
-	return f.eventType == Remove || f.asset.IsValid()
-}
-
-func (f fsAssetEvent) String() string {
-	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
-}
-
-func newFileWatcher(dir string, recur bool, filter eventFilter) (chan AssetEvent, error) {
+func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilter, callback func(ThemeClient, AssetEvent, error)) error {
 	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.matchesFilter)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	watcher, err := fsnotify.NewWatcher()
 	// TODO: the watcher should be closed at the end!!
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, path := range dirsToWatch {
 		if err := watcher.Add(path); err != nil {
-			return nil, fmt.Errorf("Could not watch directory %s: %s", path, err)
+			return fmt.Errorf("Could not watch directory %s: %s", path, err)
 		}
 	}
 
-	return convertFsEvents(watcher.Events, filter), nil
+	convertFsEvents(client, watcher.Events, filter, callback)
+
+	return nil
 }
 
 func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(string) bool) ([]string, error) {
@@ -100,26 +77,28 @@ func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(s
 	return result, nil
 }
 
-func handleEvent(event fsnotify.Event) (fsAssetEvent, error) {
+func handleEvent(event fsnotify.Event) (AssetEvent, error) {
 	var eventType EventType
 	root := filepath.Dir(event.Name)
 	filename := filepath.Base(event.Name)
 	asset, err := theme.LoadAsset(root, filename)
 	if err != nil {
-		return fsAssetEvent{}, err
+		return AssetEvent{}, err
 	}
 	asset.Key = extractAssetKey(event.Name)
 
 	switch event.Op {
 	case fsnotify.Create:
 		eventType = Update
+	case fsnotify.Write:
+		eventType = Update
 	case fsnotify.Remove:
 		eventType = Remove
 	}
 
-	return fsAssetEvent{
-		asset:     asset,
-		eventType: eventType,
+	return AssetEvent{
+		Asset: asset,
+		Type:  eventType,
 	}, nil
 }
 
@@ -135,9 +114,8 @@ func extractAssetKey(filename string) string {
 	return ""
 }
 
-func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetEvent {
-	results := make(chan AssetEvent)
-	go func() {
+func convertFsEvents(client ThemeClient, events chan fsnotify.Event, filter eventFilter, callback func(ThemeClient, AssetEvent, error)) {
+	go func(client ThemeClient) {
 		var currentEvent fsnotify.Event
 		recordedEvents := map[string]fsnotify.Event{}
 		for {
@@ -148,17 +126,14 @@ func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetE
 				}
 			case <-time.After(debounceTimeout):
 				for eventName, event := range recordedEvents {
-					fsevent, err := handleEvent(event)
-					if err != nil {
-						Warnf("File event error: %s", err)
-					} else if fsevent.IsValid() && !filter.matchesFilter(eventName) {
-						results <- fsevent
+					if !filter.matchesFilter(eventName) {
+						event, err := handleEvent(event)
+						callback(client, event, err)
 					}
 				}
 				recordedEvents = map[string]fsnotify.Event{}
 				break
 			}
 		}
-	}()
-	return results
+	}(client)
 }

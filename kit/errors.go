@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type kitError interface {
+type Error interface {
 	Error() string
 	Fatal() bool
 }
@@ -25,7 +25,7 @@ func (err KitError) Error() string {
 
 // ThemeError is an error that is encountered during a request on a theme.
 type ThemeError struct {
-	resp shopifyResponse
+	resp ShopifyResponse
 }
 
 func (err ThemeError) Fatal() bool {
@@ -45,7 +45,7 @@ func (err ThemeError) Error() string {
 
 // AssetError is an error that is encountered during a request on a single asset.
 type AssetError struct {
-	resp shopifyResponse
+	resp ShopifyResponse
 }
 
 func (err AssetError) Fatal() bool {
@@ -67,7 +67,7 @@ func (err AssetError) Error() string {
 
 // List error are errors that are encountered during a request of remote assets
 type ListError struct {
-	resp shopifyResponse
+	resp ShopifyResponse
 }
 
 func (err ListError) Fatal() bool {

@@ -31,9 +31,6 @@ exist on your local machine will be removed from shopify.`,
 }
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) error {
-	jobQueue := client.Process(wg)
-	defer close(jobQueue)
-
 	assetsActions := map[string]kit.AssetEvent{}
 	if len(filenames) == 0 {
 		assets, remoteErr := client.AssetList()
@@ -42,7 +39,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 		}
 
 		for _, asset := range assets {
-			assetsActions[asset.Key] = kit.NewRemovalEvent(asset)
+			assetsActions[asset.Key] = kit.AssetEvent{Asset: asset, Type: kit.Remove}
 		}
 
 		localAssets, localErr := client.LocalAssets()
@@ -51,20 +48,37 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 		}
 
 		for _, asset := range localAssets {
-			assetsActions[asset.Key] = kit.NewUploadEvent(asset)
+			assetsActions[asset.Key] = kit.AssetEvent{Asset: asset, Type: kit.Update}
 		}
 	} else {
 		for _, filename := range filenames {
 			asset, err := client.LocalAsset(filename)
 			if err != nil {
 				return err
-			} else if asset.IsValid() {
-				assetsActions[asset.Key] = kit.NewUploadEvent(asset)
+			} else {
+				assetsActions[asset.Key] = kit.AssetEvent{Asset: asset, Type: kit.Update}
 			}
 		}
 	}
 	for _, event := range assetsActions {
-		jobQueue <- event
+		performReplace(client, event, wg)
 	}
 	return nil
+}
+
+func performReplace(client kit.ThemeClient, event kit.AssetEvent, wg *sync.WaitGroup) {
+	wg.Add(1)
+	client.Perform(event, func(resp *kit.ShopifyResponse, err kit.Error) {
+		if err != nil {
+			kit.Errorf(err.Error())
+		} else {
+			kit.Logf(
+				"Successfully performed %s on file %s from %s",
+				kit.BlueText(resp.EventType),
+				kit.BlueText(resp.Asset.Key),
+				kit.YellowText(resp.Host),
+			)
+		}
+		wg.Done()
+	})
 }

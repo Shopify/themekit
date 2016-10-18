@@ -75,7 +75,7 @@ func (client *httpClient) ThemePath(themeID int64) string {
 	return fmt.Sprintf("%s/themes/%d.json", client.AdminURL(), themeID)
 }
 
-func (client *httpClient) AssetQuery(event EventType, query map[string]string) (*shopifyResponse, kitError) {
+func (client *httpClient) AssetQuery(event EventType, query map[string]string) (*ShopifyResponse, Error) {
 	path := fmt.Sprintf("%s?fields=key,attachment,value", client.AssetPath())
 	for key, value := range query {
 		path += "&" + key + "=" + value
@@ -87,23 +87,23 @@ func (client *httpClient) AssetQuery(event EventType, query map[string]string) (
 	return client.sendRequest(rtype, event, path, nil)
 }
 
-func (client *httpClient) NewTheme(name, source string) (*shopifyResponse, kitError) {
+func (client *httpClient) NewTheme(name, source string) (*ShopifyResponse, Error) {
 	return client.sendJSON(themeRequest, Update, client.ThemesPath(), map[string]interface{}{
 		"theme": theme.Theme{Name: name, Source: source, Role: "unpublished"},
 	})
 }
 
-func (client *httpClient) GetTheme(themeID int64) (*shopifyResponse, kitError) {
+func (client *httpClient) GetTheme(themeID int64) (*ShopifyResponse, Error) {
 	return client.sendRequest(themeRequest, Retrieve, client.ThemePath(themeID), nil)
 }
 
-func (client *httpClient) AssetAction(event AssetEvent) (*shopifyResponse, kitError) {
-	return client.sendJSON(assetRequest, event.Type(), client.AssetPath(), map[string]interface{}{
-		"asset": event.Asset(),
+func (client *httpClient) AssetAction(event EventType, asset theme.Asset) (*ShopifyResponse, Error) {
+	return client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
+		"asset": asset,
 	})
 }
 
-func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, kitError) {
+func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, Error) {
 	req, err := http.NewRequest(event.ToMethod(), urlStr, body)
 	if err != nil {
 		return nil, KitError{err}
@@ -117,7 +117,7 @@ func (client *httpClient) newRequest(event EventType, urlStr string, body io.Rea
 	return req, nil
 }
 
-func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr string, body map[string]interface{}) (*shopifyResponse, kitError) {
+func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr string, body map[string]interface{}) (*ShopifyResponse, Error) {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return nil, KitError{err}
@@ -125,7 +125,7 @@ func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr st
 	return client.sendRequest(rtype, event, urlStr, bytes.NewBuffer(data))
 }
 
-func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr string, body io.Reader) (*shopifyResponse, kitError) {
+func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr string, body io.Reader) (*ShopifyResponse, Error) {
 	req, err := client.newRequest(event, urlStr, body)
 	if err != nil {
 		return nil, KitError{err}

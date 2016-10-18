@@ -25,7 +25,6 @@ type Configuration struct {
 	IgnoredFiles []string      `yaml:"ignore_files,omitempty" env:"THEMEKIT_IGNORE_FILES" envSeparator:":"`
 	BucketSize   int           `yaml:"bucket_size" env:"THEMEKIT_BUCKET_SIZE"`
 	RefillRate   int           `yaml:"refill_rate" env:"THEMEKIT_REFILL_RATE"`
-	Concurrency  int           `yaml:"concurrency,omitempty" env:"THEMEKIT_CONCURRENCY"`
 	Proxy        string        `yaml:"proxy,omitempty" env:"THEMEKIT_PROXY"`
 	Ignores      []string      `yaml:"ignores,omitempty" env:"THEMEKIT_IGNORES" envSeparator:":"`
 	Timeout      time.Duration `yaml:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
@@ -36,8 +35,6 @@ const (
 	DefaultBucketSize int = 40
 	// DefaultRefillRate is the rate in which processes are allowed to spawn at a time.
 	DefaultRefillRate int = 2
-	// DefaultConcurrency is the default amount of workers that will be spawned for any job.
-	DefaultConcurrency int = 2
 	// DefaultTimeout is the default timeout to kill any stalled processes.
 	DefaultTimeout = 30 * time.Second
 )
@@ -52,11 +49,10 @@ func init() {
 	pwd, _ := os.Getwd()
 
 	defaultConfig = Configuration{
-		Directory:   pwd,
-		BucketSize:  DefaultBucketSize,
-		RefillRate:  DefaultRefillRate,
-		Concurrency: DefaultConcurrency,
-		Timeout:     DefaultTimeout,
+		Directory:  pwd,
+		BucketSize: DefaultBucketSize,
+		RefillRate: DefaultRefillRate,
+		Timeout:    DefaultTimeout,
 	}
 
 	environmentConfig = Configuration{}

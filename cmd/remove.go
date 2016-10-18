@@ -31,15 +31,24 @@ var removeCmd = &cobra.Command{
 }
 
 func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-	jobQueue := client.Process(wg)
-	go func() {
-		for _, filename := range filenames {
-			asset := theme.Asset{Key: filename}
-			jobQueue <- kit.NewRemovalEvent(asset)
-			removeFile(filename)
-		}
-		close(jobQueue)
-	}()
+	for _, filename := range filenames {
+		asset := theme.Asset{Key: filename}
+		wg.Add(1)
+		client.DeleteAsset(asset, func(resp *kit.ShopifyResponse, err kit.Error) {
+			if err != nil {
+				kit.Errorf(err.Error())
+			} else {
+				kit.Logf(
+					"Successfully removed file %s from %s",
+					kit.BlueText(resp.Asset.Key),
+					kit.YellowText(resp.Host),
+				)
+				removeFile(resp.Asset.Key)
+			}
+			wg.Done()
+		})
+	}
+	wg.Done()
 }
 
 func removeFile(filename string) error {

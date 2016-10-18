@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/theme"
 )
 
 var uploadCmd = &cobra.Command{
@@ -30,9 +31,6 @@ to shopify.`,
 }
 
 func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) error {
-	jobQueue := client.Process(wg)
-	defer close(jobQueue)
-
 	if len(filenames) == 0 {
 		localAssets, err := client.LocalAssets()
 		if err != nil {
@@ -40,19 +38,36 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) erro
 		}
 
 		for _, asset := range localAssets {
-			if asset.IsValid() {
-				jobQueue <- kit.NewUploadEvent(asset)
-			}
+			performUpload(client, asset, wg)
 		}
 	} else {
 		for _, filename := range filenames {
 			asset, err := client.LocalAsset(filename)
 			if err != nil {
 				return err
-			} else if asset.IsValid() {
-				jobQueue <- kit.NewUploadEvent(asset)
+			} else {
+				performUpload(client, asset, wg)
 			}
 		}
 	}
+	wg.Done()
 	return nil
+}
+
+func performUpload(client kit.ThemeClient, asset theme.Asset, wg *sync.WaitGroup) {
+	wg.Add(1)
+	client.UpdateAsset(asset, func(resp *kit.ShopifyResponse, err kit.Error) {
+		if err != nil {
+			kit.Logf(err.Error())
+			kit.Logf(resp.String())
+		} else {
+			kit.Logf(
+				"Successfully performed %s on file %s from %s",
+				kit.BlueText(resp.EventType),
+				kit.BlueText(resp.Asset.Key),
+				kit.YellowText(resp.Host),
+			)
+		}
+		wg.Done()
+	})
 }

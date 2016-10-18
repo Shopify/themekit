@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"sync"
-
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
@@ -19,38 +17,29 @@ run 'theme watch' while you are editing and it will detect create, update and de
 			return err
 		}
 
-		wg := sync.WaitGroup{}
 		for _, client := range themeClients {
 			config := client.GetConfiguration()
 
-			assetEvents, err := client.NewFileWatcher(notifyFile)
+			kit.Logf("%s watching for file changes", kit.GreenText(config.Domain))
+			err := client.NewFileWatcher(notifyFile, handleWatchEvent)
 			if err != nil {
 				return err
 			}
-
-			kit.Logf("Spawning %d workers for %s", config.Concurrency, kit.GreenText(config.Domain))
-			for i := 0; i < config.Concurrency; i++ {
-				wg.Add(1)
-				go spawnWorker(assetEvents, client, &wg)
-				kit.Logf("%s Worker #%d ready to upload local changes", kit.GreenText(config.Domain), i)
-			}
 		}
-		wg.Wait()
+		<-make(chan int)
 		return nil
 	},
 }
 
-func spawnWorker(assetEvents chan kit.AssetEvent, client kit.ThemeClient, wg *sync.WaitGroup) {
-	for {
-		event, more := <-assetEvents
-		if !more {
-			wg.Done()
-			return
-		}
-		if event.Asset().IsValid() || event.Type() == kit.Remove {
-			kit.Logf("Received %s event on %s", kit.GreenText(event.Type().String()), kit.BlueText(event.Asset().Key))
-			resp, err := client.Perform(event)
-			if err != nil && err.Fatal() {
+func handleWatchEvent(client kit.ThemeClient, event kit.AssetEvent, err error) {
+	if event.Asset.IsValid() || event.Type == kit.Remove {
+		kit.Logf(
+			"Received %s event on %s",
+			kit.GreenText(event.Type.String()),
+			kit.BlueText(event.Asset.Key),
+		)
+		client.Perform(event, func(resp *kit.ShopifyResponse, err kit.Error) {
+			if err != nil {
 				kit.Errorf(err.Error())
 			} else {
 				kit.Logf(
@@ -60,6 +49,6 @@ func spawnWorker(assetEvents chan kit.AssetEvent, client kit.ThemeClient, wg *sy
 					kit.YellowText(resp.Host),
 				)
 			}
-		}
+		})
 	}
 }

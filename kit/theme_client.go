@@ -2,7 +2,6 @@ package kit
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -20,12 +19,7 @@ type ThemeClient struct {
 	config     Configuration
 	httpClient *httpClient
 	filter     eventFilter
-}
-
-type apiResponse struct {
-	code int
-	body []byte
-	err  error
+	foreman    *foreman
 }
 
 // NewThemeClient will build a new theme client from a configuration and a theme event
@@ -42,11 +36,16 @@ func NewThemeClient(config Configuration) (ThemeClient, error) {
 		return ThemeClient{}, err
 	}
 
-	return ThemeClient{
+	newClient := ThemeClient{
 		config:     config,
 		httpClient: httpClient,
 		filter:     filter,
-	}, nil
+		foreman:    newForeman(newLeakyBucket(config.BucketSize, config.RefillRate, 1)),
+	}
+
+	go newClient.process()
+
+	return newClient, nil
 }
 
 // GetConfiguration will return the clients built config. This is useful for grabbing
@@ -56,26 +55,13 @@ func (t ThemeClient) GetConfiguration() Configuration {
 }
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
-func (t ThemeClient) NewFileWatcher(notifyFile string) (chan AssetEvent, error) {
-	newForeman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
-	if len(notifyFile) > 0 {
-		newForeman.OnIdle = func() {
-			os.Create(notifyFile)
-			os.Chtimes(notifyFile, time.Now(), time.Now())
-		}
-	}
-	var err error
-	newForeman.JobQueue, err = newFileWatcher(t.config.Directory, true, t.filter)
-	if err != nil {
-		return newForeman.JobQueue, err
-	}
-	newForeman.Restart()
-	return newForeman.WorkerQueue, nil
+func (t ThemeClient) NewFileWatcher(notifyFile string, callback func(ThemeClient, AssetEvent, error)) error {
+	return newFileWatcher(t, t.config.Directory, true, t.filter, callback)
 }
 
 // AssetList will return a slice of remote assets from the shopify servers. The
 // assets are sorted and any ignored files based on your config are filtered out.
-func (t ThemeClient) AssetList() ([]theme.Asset, kitError) {
+func (t ThemeClient) AssetList() ([]theme.Asset, Error) {
 	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{})
 	if err != nil && err.Fatal() {
 		return []theme.Asset{}, err
@@ -102,7 +88,7 @@ func (t ThemeClient) LocalAsset(filename string) (theme.Asset, error) {
 }
 
 // Asset will load up a single remote asset from the remote shopify servers.
-func (t ThemeClient) Asset(filename string) (theme.Asset, kitError) {
+func (t ThemeClient) Asset(filename string) (theme.Asset, Error) {
 	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{"asset[key]": filename})
 	if err != nil {
 		return theme.Asset{}, err
@@ -124,8 +110,8 @@ func CreateTheme(name, zipLocation string) (ThemeClient, error) {
 		return client, err
 	}
 
-	var resp *shopifyResponse
-	var respErr kitError
+	var resp *ShopifyResponse
+	var respErr Error
 	retries := 0
 	for retries < createThemeMaxRetries {
 		resp, respErr = client.httpClient.NewTheme(name, zipLocation)
@@ -167,41 +153,51 @@ func (t ThemeClient) isDoneProcessing(themeID int64) bool {
 	return err == nil && resp.Theme.Previewable
 }
 
-// Process will create a new throttler and return the jobqueue. You can then send
-// asset events to the channel and they will be performed. If you close the job
-// queue, then the worker queue will be closed when it is finished, then the done
-// channel will be closed. This is a good way of knowing when your jobs are done
-// processing.
-func (t ThemeClient) Process(wg *sync.WaitGroup) chan AssetEvent {
-	newForeman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
-	var processWaitGroup sync.WaitGroup
-	go func() {
-		for {
-			job, more := <-newForeman.WorkerQueue
-			if more {
-				processWaitGroup.Add(1)
-				go func() {
-					t.Perform(job)
-					processWaitGroup.Done()
-				}()
-			} else {
-				processWaitGroup.Wait()
-				wg.Done()
-				return
-			}
-		}
-	}()
-	return newForeman.JobQueue
+func (t ThemeClient) CreateAsset(asset theme.Asset, callback eventCallback) {
+	t.UpdateAsset(asset, callback)
 }
 
-// Perform will send an http request to the shopify servers based on the asset event.
-// if it is an update it will post to the server and if it is a remove it will DELETE
-// to the server. Any errors will be outputted to the event log.
-func (t ThemeClient) Perform(asset AssetEvent) (*shopifyResponse, kitError) {
-	if t.filter.matchesFilter(asset.Asset().Key) {
-		return nil, KitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Asset().Key)))}
+func (t ThemeClient) UpdateAsset(asset theme.Asset, callback eventCallback) {
+	go func() {
+		t.foreman.JobQueue <- AssetEvent{Asset: asset, Type: Update, Callback: callback}
+	}()
+}
+
+func (t ThemeClient) DeleteAsset(asset theme.Asset, callback eventCallback) {
+	go func() {
+		t.foreman.JobQueue <- AssetEvent{Asset: asset, Type: Remove, Callback: callback}
+	}()
+}
+
+func (t ThemeClient) Perform(event AssetEvent, callback eventCallback) {
+	go func() {
+		event.Callback = callback
+		t.foreman.JobQueue <- event
+	}()
+}
+
+func (t ThemeClient) process() {
+	var processWaitGroup sync.WaitGroup
+	for {
+		job, more := <-t.foreman.WorkerQueue
+		if more {
+			processWaitGroup.Add(1)
+			go func() {
+				t.perform(job)
+				processWaitGroup.Done()
+			}()
+		} else {
+			processWaitGroup.Wait()
+			return
+		}
 	}
-	return t.httpClient.AssetAction(asset)
+}
+
+func (t ThemeClient) perform(event AssetEvent) {
+	if t.filter.matchesFilter(event.Asset.Key) {
+		event.Callback(&ShopifyResponse{}, KitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", event.Asset.Key)))})
+	}
+	event.Callback(t.httpClient.AssetAction(event.Type, event.Asset))
 }
 
 func ignoreCompiledAssets(assets []theme.Asset) []theme.Asset {

@@ -61,7 +61,6 @@ var (
 	domain           string
 	bucketsize       int
 	refillrate       int
-	concurrency      int
 	proxy            string
 	timeout          time.Duration
 	noUpdateNotifier bool
@@ -97,7 +96,6 @@ func init() {
 	ThemeCmd.PersistentFlags().StringVar(&domain, "domain", "", "your shopify domain. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().IntVar(&bucketsize, "bucket", 0, "the bucket size for throttling. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().IntVar(&refillrate, "refill", 0, "the refill rate for throttling. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().IntVar(&concurrency, "concurrency", 0, "the refill rate for throttling. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
@@ -166,7 +164,6 @@ func setFlagConfig() {
 		Proxy:        proxy,
 		BucketSize:   bucketsize,
 		RefillRate:   refillrate,
-		Concurrency:  concurrency,
 		IgnoredFiles: ignoredFiles.Value(),
 		Ignores:      ignores.Value(),
 		Timeout:      timeout,

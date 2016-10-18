@@ -10,7 +10,7 @@ import (
 	"github.com/Shopify/themekit/theme"
 )
 
-type shopifyResponse struct {
+type ShopifyResponse struct {
 	Type      requestType   `json:"-"`
 	Host      string        `json:"host"`
 	URL       *url.URL      `json:"url"`
@@ -22,13 +22,13 @@ type shopifyResponse struct {
 	Errors    string        `json:"errors"`
 }
 
-func newShopifyResponse(rtype requestType, event EventType, resp *http.Response, err error) (*shopifyResponse, kitError) {
+func newShopifyResponse(rtype requestType, event EventType, resp *http.Response, err error) (*ShopifyResponse, Error) {
 	if resp == nil || err != nil {
 		return nil, KitError{err}
 	}
 	defer resp.Body.Close()
 
-	newResponse := &shopifyResponse{
+	newResponse := &ShopifyResponse{
 		Type:      rtype,
 		Host:      resp.Request.URL.Host,
 		URL:       resp.Request.URL,
@@ -46,23 +46,23 @@ func newShopifyResponse(rtype requestType, event EventType, resp *http.Response,
 	return newResponse, newResponse.Error()
 }
 
-func (resp shopifyResponse) Successful() bool {
+func (resp ShopifyResponse) Successful() bool {
 	return resp.Code >= 200 && resp.Code < 300 && len(resp.Errors) == 0
 }
 
-func (resp shopifyResponse) IsThemeRequest() bool {
+func (resp ShopifyResponse) IsThemeRequest() bool {
 	return resp.Type == themeRequest
 }
 
-func (resp shopifyResponse) IsAssetRequest() bool {
+func (resp ShopifyResponse) IsAssetRequest() bool {
 	return resp.Type == assetRequest
 }
 
-func (resp shopifyResponse) IsListRequest() bool {
+func (resp ShopifyResponse) IsListRequest() bool {
 	return resp.Type == listRequest
 }
 
-func (resp shopifyResponse) String() string {
+func (resp ShopifyResponse) String() string {
 	return fmt.Sprintf(`[%s] Performed %s at %s
 	Request: %s
 	Theme: %s
@@ -80,7 +80,7 @@ func (resp shopifyResponse) String() string {
 	)
 }
 
-func (resp shopifyResponse) Error() kitError {
+func (resp ShopifyResponse) Error() Error {
 	if !resp.Successful() {
 		if resp.IsThemeRequest() {
 			return ThemeError{resp}
@@ -95,7 +95,7 @@ func (resp shopifyResponse) Error() kitError {
 	return nil
 }
 
-func (resp shopifyResponse) fmtErrors() string {
+func (resp ShopifyResponse) fmtErrors() string {
 	//output := []string{}
 	//for attr, errors := range resp.Errors {
 	//output = append(output, fmt.Sprintf("%s error: %s", attr, strings.Join(errors, ",")))
