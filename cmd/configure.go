@@ -19,11 +19,11 @@ access shopify using the theme kit.`,
 		if err != nil {
 			return err
 		}
-		return addConfiguration(config)
+		return saveConfiguration(config)
 	},
 }
 
-func addConfiguration(config kit.Configuration) error {
+func saveConfiguration(config kit.Configuration) error {
 	env, err := kit.LoadEnvironments(configPath)
 	if err != nil && !os.IsNotExist(err) {
 		return err

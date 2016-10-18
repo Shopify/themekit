@@ -42,11 +42,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 	} else {
 		for _, filename := range filenames {
 			if asset, err := client.Asset(filename); err != nil {
-				if nonFatal, ok := err.(kit.NonFatalNetworkError); ok {
-					kit.Warnf("[%s] Could not complete %s for %s", kit.RedText(fmt.Sprintf("%d", nonFatal.Code)), kit.YellowText(nonFatal.Verb), kit.BlueText(filename))
-				} else {
-					return err
-				}
+				return err
 			} else {
 				if err := writeToDisk(client, asset); err != nil {
 					return err

@@ -19,6 +19,14 @@ type httpClient struct {
 	config Configuration
 }
 
+type requestType int
+
+const (
+	themeRequest requestType = iota
+	assetRequest
+	listRequest
+)
+
 func newHTTPClient(config Configuration) (*httpClient, error) {
 	client := &httpClient{
 		client: &http.Client{Timeout: config.Timeout},
@@ -67,34 +75,38 @@ func (client *httpClient) ThemePath(themeID int64) string {
 	return fmt.Sprintf("%s/themes/%d.json", client.AdminURL(), themeID)
 }
 
-func (client *httpClient) AssetQuery(event EventType, query map[string]string) (*shopifyResponse, error) {
+func (client *httpClient) AssetQuery(event EventType, query map[string]string) (*shopifyResponse, kitError) {
 	path := fmt.Sprintf("%s?fields=key,attachment,value", client.AssetPath())
 	for key, value := range query {
 		path += "&" + key + "=" + value
 	}
-	return client.sendRequest(event, path, nil)
+	rtype := assetRequest
+	if len(query) > 0 {
+		rtype = listRequest
+	}
+	return client.sendRequest(rtype, event, path, nil)
 }
 
-func (client *httpClient) NewTheme(name, source string) (*shopifyResponse, error) {
-	return client.sendJSON(Update, client.AssetPath(), map[string]interface{}{
+func (client *httpClient) NewTheme(name, source string) (*shopifyResponse, kitError) {
+	return client.sendJSON(themeRequest, Update, client.ThemesPath(), map[string]interface{}{
 		"theme": theme.Theme{Name: name, Source: source, Role: "unpublished"},
 	})
 }
 
-func (client *httpClient) GetTheme(themeID int64) (*shopifyResponse, error) {
-	return client.sendRequest(Retrieve, client.ThemePath(themeID), nil)
+func (client *httpClient) GetTheme(themeID int64) (*shopifyResponse, kitError) {
+	return client.sendRequest(themeRequest, Retrieve, client.ThemePath(themeID), nil)
 }
 
-func (client *httpClient) AssetAction(event AssetEvent) (*shopifyResponse, error) {
-	return client.sendJSON(event.Type(), client.AssetPath(), map[string]interface{}{
+func (client *httpClient) AssetAction(event AssetEvent) (*shopifyResponse, kitError) {
+	return client.sendJSON(assetRequest, event.Type(), client.AssetPath(), map[string]interface{}{
 		"asset": event.Asset(),
 	})
 }
 
-func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, error) {
+func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, kitError) {
 	req, err := http.NewRequest(event.ToMethod(), urlStr, body)
 	if err != nil {
-		return nil, err
+		return nil, KitError{err}
 	}
 
 	req.Header.Add("X-Shopify-Access-Token", client.config.Password)
@@ -105,19 +117,19 @@ func (client *httpClient) newRequest(event EventType, urlStr string, body io.Rea
 	return req, nil
 }
 
-func (client *httpClient) sendJSON(event EventType, urlStr string, body map[string]interface{}) (*shopifyResponse, error) {
+func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr string, body map[string]interface{}) (*shopifyResponse, kitError) {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return nil, err
+		return nil, KitError{err}
 	}
-	return client.sendRequest(event, client.AssetPath(), bytes.NewBuffer(data))
+	return client.sendRequest(rtype, event, urlStr, bytes.NewBuffer(data))
 }
 
-func (client *httpClient) sendRequest(event EventType, urlStr string, body io.Reader) (*shopifyResponse, error) {
+func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr string, body io.Reader) (*shopifyResponse, kitError) {
 	req, err := client.newRequest(event, urlStr, body)
 	if err != nil {
-		return nil, err
+		return nil, KitError{err}
 	}
-	resp, err := client.client.Do(req)
-	return newShopifyResponse(event, resp, err)
+	resp, respErr := client.client.Do(req)
+	return newShopifyResponse(rtype, event, resp, respErr)
 }

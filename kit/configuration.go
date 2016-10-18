@@ -95,10 +95,23 @@ func (conf Configuration) Validate() error {
 		}
 	}
 
+	if err := conf.validateNoThemeId(); err != nil {
+		errors = append(errors, err.Error())
+	}
+
+	if len(errors) > 0 {
+		return fmt.Errorf("Invalid configuration: %v", strings.Join(errors, ","))
+	}
+	return nil
+}
+
+func (conf Configuration) validateNoThemeId() error {
+	errors := []string{}
+
 	if len(conf.Domain) == 0 {
 		errors = append(errors, "missing domain")
 	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") && !strings.HasSuffix(conf.Domain, "myshopify.io") {
-		errors = append(errors, "invalid domain, must end in '.myshopify.com'")
+		errors = append(errors, "invalid domain must end in '.myshopify.com'")
 	}
 
 	if len(conf.Password) == 0 {
@@ -106,7 +119,7 @@ func (conf Configuration) Validate() error {
 	}
 
 	if len(errors) > 0 {
-		return fmt.Errorf("Invalid configuration: %v", strings.Join(errors, ","))
+		return fmt.Errorf(strings.Join(errors, ","))
 	}
 	return nil
 }

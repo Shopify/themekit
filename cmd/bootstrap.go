@@ -37,7 +37,7 @@ your config file and create a new theme id for you.`,
 			return err
 		}
 
-		if err := addConfiguration(client.GetConfiguration()); err != nil {
+		if err := saveConfiguration(client.GetConfiguration()); err != nil {
 			return err
 		}
 

@@ -5,150 +5,101 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
+	"net/url"
 
 	"github.com/Shopify/themekit/theme"
 )
 
 type shopifyResponse struct {
-	Host      string              `json:"host"`
-	Code      int                 `json:"status_code"`
-	Theme     theme.Theme         `json:"theme"`
-	Asset     theme.Asset         `json:"asset"`
-	Assets    []theme.Asset       `json:"assets"`
-	EventType EventType           `json:"event_type"`
-	Errors    map[string][]string `json:"errors"`
+	Type      requestType   `json:"-"`
+	Host      string        `json:"host"`
+	URL       *url.URL      `json:"url"`
+	Code      int           `json:"status_code"`
+	Theme     theme.Theme   `json:"theme"`
+	Asset     theme.Asset   `json:"asset"`
+	Assets    []theme.Asset `json:"assets"`
+	EventType EventType     `json:"event_type"`
+	Errors    string        `json:"errors"`
 }
 
-func newShopifyResponse(event EventType, resp *http.Response, err error) (*shopifyResponse, error) {
+func newShopifyResponse(rtype requestType, event EventType, resp *http.Response, err error) (*shopifyResponse, kitError) {
 	if resp == nil || err != nil {
-		return nil, err
+		return nil, KitError{err}
 	}
 	defer resp.Body.Close()
+
 	newResponse := &shopifyResponse{
+		Type:      rtype,
 		Host:      resp.Request.URL.Host,
+		URL:       resp.Request.URL,
 		Code:      resp.StatusCode,
 		EventType: event,
 	}
+
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, KitError{err}
 	}
-	err = json.Unmarshal(bytes, &newResponse)
-	return newResponse, err
+
+	json.Unmarshal(bytes, &newResponse)
+
+	return newResponse, newResponse.Error()
 }
 
 func (resp shopifyResponse) Successful() bool {
-	return resp.Code >= 200 && resp.Code < 300
+	return resp.Code >= 200 && resp.Code < 300 && len(resp.Errors) == 0
 }
 
 func (resp shopifyResponse) IsThemeRequest() bool {
-	return resp.Theme.Name != ""
+	return resp.Type == themeRequest
 }
 
 func (resp shopifyResponse) IsAssetRequest() bool {
-	return resp.Asset.Key != ""
+	return resp.Type == assetRequest
 }
 
 func (resp shopifyResponse) IsListRequest() bool {
-	return resp.Assets != nil
+	return resp.Type == listRequest
 }
 
 func (resp shopifyResponse) String() string {
-	if resp.IsThemeRequest() {
-		return resp.ThemeString()
-	} else if resp.IsAssetRequest() {
-		return resp.AssetString()
-	} else if resp.IsListRequest() {
-		return resp.ListString()
-	}
-	return fmt.Sprintf(
-		"[%s] Performed %s to %s at %s\n\t%s",
+	return fmt.Sprintf(`[%s] Performed %s at %s
+	Request: %s
+	Theme: %s
+	Asset: %s
+	Assets: %s
+	Errors: %s`,
 		RedText(fmt.Sprintf("%d", resp.Code)),
 		YellowText(resp.EventType),
 		YellowText(resp.Host),
+		YellowText(resp.URL),
+		YellowText(resp.Theme),
+		YellowText(resp.Asset),
+		YellowText(resp.Assets),
 		resp.fmtErrors(),
 	)
 }
 
-func (resp shopifyResponse) ThemeString() string {
-	if resp.Successful() {
-		return fmt.Sprintf(
-			"[%s]Modifications made to theme '%s' with id of %s on shop %s",
-			GreenText(fmt.Sprintf("%d", resp.Code)),
-			BlueText(resp.Theme.Name),
-			BlueText(fmt.Sprintf("%d", resp.Theme.ID)),
-			YellowText(resp.Host),
-		)
+func (resp shopifyResponse) Error() kitError {
+	if !resp.Successful() {
+		if resp.IsThemeRequest() {
+			return ThemeError{resp}
+		} else if resp.IsAssetRequest() {
+			return AssetError{resp}
+		} else if resp.IsListRequest() {
+			return ListError{resp}
+		} else {
+			return KitError{fmt.Errorf(resp.Errors)}
+		}
 	}
-
-	return fmt.Sprintf(
-		"[%s]Encoutered error with request to %s\n\t%s",
-		RedText(fmt.Sprintf("%d", resp.Code)),
-		YellowText(resp.Host),
-		resp.fmtErrors(),
-	)
-}
-
-func (resp shopifyResponse) AssetString() string {
-	if resp.Successful() {
-		return fmt.Sprintf(
-			"Successfully performed %s operation for file %s to %s",
-			GreenText(resp.EventType),
-			BlueText(resp.Asset.Key),
-			YellowText(resp.Host),
-		)
-	} else if resp.Code == 422 {
-		return RedText(fmt.Sprintf(
-			"Could not upload %s:\n\t%s",
-			resp.Asset.Key,
-			resp.fmtErrors(),
-		))
-	} else if resp.Code == 403 || resp.Code == 401 {
-		return fmt.Sprintf(
-			"[%s]Insufficient permissions to perform %s to %s",
-			RedText(fmt.Sprintf("%d", resp.Code)),
-			YellowText(resp.EventType),
-			BlueText(resp.Asset.Key),
-		)
-	} else if resp.Code == 404 {
-		return fmt.Sprintf(
-			"[%s]Could not complete operation because %s does not exist",
-			RedText(fmt.Sprintf("%d", resp.Code)),
-			BlueText(resp.Asset.Key),
-		)
-	} else {
-		return fmt.Sprintf(
-			"[%s]Could not perform %s to %s at %s\n\t%s",
-			RedText(fmt.Sprintf("%d", resp.Code)),
-			YellowText(resp.EventType),
-			BlueText(resp.Asset.Key),
-			YellowText(resp.Host),
-			resp.fmtErrors(),
-		)
-	}
-	return ""
-}
-
-func (resp shopifyResponse) ListString() string {
-	if resp.Code >= 400 && resp.Code < 500 {
-		return fmt.Sprintf(
-			"Server responded with HTTP %d; please check your credentials.",
-			resp.Code,
-		)
-	} else if resp.Code >= 500 {
-		return fmt.Sprintf(
-			"Server responded with HTTP %d; try again in a few minutes.",
-			resp.Code,
-		)
-	}
-	return ""
+	return nil
 }
 
 func (resp shopifyResponse) fmtErrors() string {
-	output := []string{}
-	for attr, errors := range resp.Errors {
-		output = append(output, fmt.Sprintf("%s error: %s", attr, strings.Join(errors, ",")))
-	}
-	return strings.Join(output, ",")
+	//output := []string{}
+	//for attr, errors := range resp.Errors {
+	//output = append(output, fmt.Sprintf("%s error: %s", attr, strings.Join(errors, ",")))
+	//}
+	//return strings.Join(output, ",")
+	return resp.Errors
 }

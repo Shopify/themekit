@@ -28,18 +28,6 @@ type apiResponse struct {
 	err  error
 }
 
-// NonFatalNetworkError is an error for describing an asset request that failed
-// but is not critical. For instance updating a file that does not exist.
-type NonFatalNetworkError struct {
-	Code    int
-	Verb    string
-	Message string
-}
-
-func (e NonFatalNetworkError) Error() string {
-	return fmt.Sprintf("%d %s %s", e.Code, e.Verb, e.Message)
-}
-
 // NewThemeClient will build a new theme client from a configuration and a theme event
 // channel. The channel is used for logging all events. The configuration specifies how
 // the client will behave.
@@ -87,15 +75,13 @@ func (t ThemeClient) NewFileWatcher(notifyFile string) (chan AssetEvent, error) 
 
 // AssetList will return a slice of remote assets from the shopify servers. The
 // assets are sorted and any ignored files based on your config are filtered out.
-func (t ThemeClient) AssetList() ([]theme.Asset, error) {
+func (t ThemeClient) AssetList() ([]theme.Asset, kitError) {
 	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{})
-	if err != nil {
+	if err != nil && err.Fatal() {
 		return []theme.Asset{}, err
-	} else if !resp.Successful() {
-		return []theme.Asset{}, fmt.Errorf(resp.String())
 	}
 	sort.Sort(theme.ByAsset(resp.Assets))
-	return t.filter.filterAssets(ignoreCompiledAssets(resp.Assets)), nil
+	return t.filter.filterAssets(ignoreCompiledAssets(resp.Assets)), err
 }
 
 // LocalAssets will return a slice of assets from the local disk. The
@@ -116,44 +102,64 @@ func (t ThemeClient) LocalAsset(filename string) (theme.Asset, error) {
 }
 
 // Asset will load up a single remote asset from the remote shopify servers.
-func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
+func (t ThemeClient) Asset(filename string) (theme.Asset, kitError) {
 	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{"asset[key]": filename})
-	return resp.Asset, err
+	if err != nil {
+		return theme.Asset{}, err
+	}
+	return resp.Asset, nil
 }
 
 // CreateTheme will create a unpublished new theme on your shopify store and then
 // return a new theme client with the configuration of the new client.
 func CreateTheme(name, zipLocation string) (ThemeClient, error) {
 	config, _ := NewConfiguration()
+	err := config.validateNoThemeId()
+	if err != nil {
+		return ThemeClient{}, fmt.Errorf("Invalid options: %v", err)
+	}
+
 	client, err := NewThemeClient(config)
 	if err != nil {
 		return client, err
 	}
 
 	var resp *shopifyResponse
+	var respErr kitError
 	retries := 0
 	for retries < createThemeMaxRetries {
-		resp, err = client.httpClient.NewTheme(name, zipLocation)
-		if err != nil {
-			return client, err
-		} else if !resp.Successful() {
-			retries++
-			if retries >= createThemeMaxRetries {
-				return client, fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation)
+		resp, respErr = client.httpClient.NewTheme(name, zipLocation)
+		if respErr != nil {
+			if respErr.Fatal() {
+				return client, respErr
 			}
-		} else {
+		}
+
+		retries++
+
+		if resp.Successful() {
+			Logf(
+				"[%s]Successfully created theme '%s' with id of %s on shop %s",
+				GreenText(fmt.Sprintf("%d", resp.Code)),
+				BlueText(resp.Theme.Name),
+				BlueText(fmt.Sprintf("%d", resp.Theme.ID)),
+				YellowText(resp.Host),
+			)
 			break
 		}
-		Logf(resp.String())
+
+		if retries >= createThemeMaxRetries {
+			return client, KitError{fmt.Errorf("Cannot create a theme. Please check log for errors.")}
+		}
 	}
 
 	for !client.isDoneProcessing(resp.Theme.ID) {
 		time.Sleep(250 * time.Millisecond)
 	}
 
-	config.ThemeID = fmt.Sprintf("%d", resp.Theme.ID)
+	client.config.ThemeID = fmt.Sprintf("%d", resp.Theme.ID)
 
-	return client, err
+	return client, nil
 }
 
 func (t ThemeClient) isDoneProcessing(themeID int64) bool {
@@ -191,16 +197,11 @@ func (t ThemeClient) Process(wg *sync.WaitGroup) chan AssetEvent {
 // Perform will send an http request to the shopify servers based on the asset event.
 // if it is an update it will post to the server and if it is a remove it will DELETE
 // to the server. Any errors will be outputted to the event log.
-func (t ThemeClient) Perform(asset AssetEvent) error {
+func (t ThemeClient) Perform(asset AssetEvent) (*shopifyResponse, kitError) {
 	if t.filter.matchesFilter(asset.Asset().Key) {
-		return fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Asset().Key)))
+		return nil, KitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Asset().Key)))}
 	}
-	resp, err := t.httpClient.AssetAction(asset)
-	if err != nil {
-		return err
-	}
-	Logf(resp.String())
-	return nil
+	return t.httpClient.AssetAction(asset)
 }
 
 func ignoreCompiledAssets(assets []theme.Asset) []theme.Asset {

@@ -49,9 +49,16 @@ func spawnWorker(assetEvents chan kit.AssetEvent, client kit.ThemeClient, wg *sy
 		}
 		if event.Asset().IsValid() || event.Type() == kit.Remove {
 			kit.Logf("Received %s event on %s", kit.GreenText(event.Type().String()), kit.BlueText(event.Asset().Key))
-			err := client.Perform(event)
-			if err != nil {
+			resp, err := client.Perform(event)
+			if err != nil && err.Fatal() {
 				kit.Errorf(err.Error())
+			} else {
+				kit.Logf(
+					"Successfully performed %s operation for file %s to %s",
+					kit.GreenText(resp.EventType),
+					kit.BlueText(resp.Asset.Key),
+					kit.YellowText(resp.Host),
+				)
 			}
 		}
 	}
