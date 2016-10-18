@@ -69,7 +69,7 @@ func (resp ShopifyResponse) String() string {
 	Asset: %s
 	Assets: %s
 	Errors: %s`,
-		RedText(fmt.Sprintf("%d", resp.Code)),
+		RedText(resp.Code),
 		YellowText(resp.EventType),
 		YellowText(resp.Host),
 		YellowText(resp.URL),

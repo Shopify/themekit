@@ -95,7 +95,7 @@ func findReleaseWith(feed atom.Feed, version string) (atom.Entry, error) {
 
 func buildInvalidVersionError(feed atom.Feed, version string) error {
 	buff := bytes.NewBuffer([]byte{})
-	buff.WriteString(kit.RedText("Invalid Timber Version: " + version))
+	buff.WriteString(kit.RedText("Invalid Timber Version: ", version))
 	buff.WriteString("\nAvailable Versions Are:")
 	buff.WriteString("\n  - master")
 	buff.WriteString("\n  - latest")

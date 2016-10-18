@@ -100,7 +100,7 @@ func ApplyUpdate(updateURL, digest string) error {
 	})
 	if err != nil {
 		if rerr := update.RollbackError(err); rerr != nil {
-			Errorf("Failed to rollback from bad update: %v", rerr)
+			LogErrorf("Failed to rollback from bad update: %v", rerr)
 		}
 	}
 	return err

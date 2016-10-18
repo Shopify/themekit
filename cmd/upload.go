@@ -58,9 +58,9 @@ func performUpload(client kit.ThemeClient, asset theme.Asset, wg *sync.WaitGroup
 	wg.Add(1)
 	client.UpdateAsset(asset, func(resp *kit.ShopifyResponse, err kit.Error) {
 		if err != nil {
-			kit.Logf(err.Error())
+			kit.Print(err)
 		} else {
-			kit.Logf(
+			kit.Printf(
 				"Successfully performed %s on file %s from %s",
 				kit.GreenText(resp.EventType),
 				kit.GreenText(resp.Asset.Key),

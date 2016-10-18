@@ -40,7 +40,7 @@ download it and apply it.`,
 		latestRelease, err := downloadReleaseForPlatform()
 		if err == nil {
 			if latestRelease.IsApplicable() {
-				kit.Warnf("Updating from", kit.ThemeKitVersion, "to", kit.ParseVersionString(latestRelease.Version))
+				kit.LogWarn("Updating from", kit.ThemeKitVersion, "to", kit.ParseVersionString(latestRelease.Version))
 				releaseForPlatform := findAppropriateRelease(latestRelease)
 				return kit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
 			} else {

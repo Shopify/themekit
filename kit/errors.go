@@ -36,7 +36,7 @@ func (err ThemeError) Error() string {
 	return fmt.Sprintf(`[%s]Theme request encountered status at host <%s>
 	Status text: %s
 	Errors: %s`,
-		RedText(fmt.Sprintf("%d", err.resp.Code)),
+		RedText(err.resp.Code),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
 		err.resp.Errors,
@@ -56,7 +56,7 @@ func (err AssetError) Error() string {
 	return fmt.Sprintf(`[%s]Asset Perform %s to %s at host <%s>
 	Status text: %s
 	Errors: %s`,
-		RedText(fmt.Sprintf("%d", err.resp.Code)),
+		RedText(err.resp.Code),
 		YellowText(err.resp.EventType),
 		BlueText(err.resp.Asset.Key),
 		YellowText(err.resp.Host),
@@ -78,7 +78,7 @@ func (err ListError) Error() string {
 	return fmt.Sprintf(`[%s]Assets Perform %s at host <%s>
 	Status text: %s
 	Errors: %s`,
-		RedText(fmt.Sprintf("%d", err.resp.Code)),
+		RedText(err.resp.Code),
 		YellowText(err.resp.EventType),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),

@@ -116,7 +116,7 @@ func init() {
 
 func initializeConfig(cmdName string, timesout bool) error {
 	if cmdName != "update" && !noUpdateNotifier && isNewReleaseAvailable() {
-		kit.Warnf("%s\n%s\n%s", banner, updateAvailableMessage, banner)
+		kit.LogWarnf("%s\n%s\n%s", banner, updateAvailableMessage, banner)
 	}
 
 	setFlagConfig()

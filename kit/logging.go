@@ -24,39 +24,51 @@ var BlueText = color.New(color.FgBlue).SprintFunc()
 // green when printed out.
 var GreenText = color.New(color.FgGreen).SprintFunc()
 
-var (
-	logger      *log.Logger
-	errorLogger *log.Logger
-)
-
 func init() {
-	logger = log.New(os.Stdout, "", 0)
-	errorLogger = log.New(os.Stderr, "", 0)
+	log.SetFlags(0)
+	log.SetOutput(os.Stderr)
 }
 
-func Logf(content string, args ...interface{}) {
-	logger.Printf(content, args...)
+func Printf(content string, args ...interface{}) {
+	fmt.Println(fmt.Sprintf(content, args...))
+}
+
+func Print(args ...interface{}) {
+	fmt.Println(args...)
 }
 
 func Notifyf(content string, args ...interface{}) {
-	logger.Println(GreenText(fmt.Sprintf(content, args...)))
+	fmt.Println(GreenText(fmt.Sprintf(content, args...)))
 }
 
-func Warnf(content string, args ...interface{}) {
-	logger.Println(YellowText(fmt.Sprintf(content, args...)))
+func LogNotify(args ...interface{}) {
+	log.Println(GreenText(fmt.Sprint(args...)))
 }
 
-func Errorf(content string, args ...interface{}) {
-	errorLogger.Println(RedText(fmt.Sprintf(content, args...)))
+func LogWarnf(content string, args ...interface{}) {
+	log.Println(YellowText(fmt.Sprintf(content, args...)))
 }
 
-func Fatalf(content string, args ...interface{}) {
-	Fatal(fmt.Errorf(content, args...))
+func LogWarn(args ...interface{}) {
+	log.Println(YellowText(fmt.Sprint(args...)))
 }
 
-// Fatal will print out the library information then log fatal the error message
+func LogErrorf(content string, args ...interface{}) {
+	log.Println(RedText(fmt.Sprintf(content, args...)))
+}
+
+func LogError(args ...interface{}) {
+	log.Println(RedText(fmt.Sprint(args...)))
+}
+
+func LogFatalf(content string, args ...interface{}) {
+	log.Println(RedText(LibraryInfo()))
+	log.Fatal(RedText(fmt.Sprintf(content, args...)))
+}
+
+// LogFatal will print out the library information then log fatal the error message
 // passed in. This will stop the program.
-func Fatal(e error) {
-	errorLogger.Println(RedText(LibraryInfo()))
-	errorLogger.Fatal(RedText(e))
+func LogFatal(args ...interface{}) {
+	log.Println(RedText(LibraryInfo()))
+	log.Fatal(RedText(fmt.Sprint(args...)))
 }

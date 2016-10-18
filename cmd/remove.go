@@ -36,9 +36,9 @@ func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		wg.Add(1)
 		client.DeleteAsset(asset, func(resp *kit.ShopifyResponse, err kit.Error) {
 			if err != nil {
-				kit.Errorf(err.Error())
+				kit.LogError(err)
 			} else {
-				kit.Logf(
+				kit.Printf(
 					"Successfully removed file %s from %s",
 					kit.BlueText(resp.Asset.Key),
 					kit.YellowText(resp.Host),

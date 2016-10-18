@@ -130,11 +130,11 @@ func CreateTheme(name, zipLocation string) (ThemeClient, error) {
 		retries++
 
 		if resp.Successful() {
-			Logf(
+			Printf(
 				"[%s]Successfully created theme '%s' with id of %s on shop %s",
-				GreenText(fmt.Sprintf("%d", resp.Code)),
+				GreenText(resp.Code),
 				BlueText(resp.Theme.Name),
-				BlueText(fmt.Sprintf("%d", resp.Theme.ID)),
+				BlueText(resp.Theme.ID),
 				YellowText(resp.Host),
 			)
 			break

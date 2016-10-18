@@ -34,8 +34,8 @@ func newHTTPClient(config Configuration) (*httpClient, error) {
 	}
 
 	if len(config.Proxy) > 0 {
-		Warnf("Proxy URL detected from Configuration:", config.Proxy)
-		Warnf("SSL Certificate Validation will be disabled!")
+		LogWarnf("Proxy URL detected from Configuration: %s", config.Proxy)
+		LogWarn("SSL Certificate Validation will be disabled!")
 		proxyURL, err := url.Parse(config.Proxy)
 		if err != nil {
 			return client, err

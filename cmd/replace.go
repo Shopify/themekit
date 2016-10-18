@@ -71,9 +71,9 @@ func performReplace(client kit.ThemeClient, event kit.AssetEvent, wg *sync.WaitG
 	wg.Add(1)
 	client.Perform(event, func(resp *kit.ShopifyResponse, err kit.Error) {
 		if err != nil {
-			kit.Errorf(err.Error())
+			kit.LogError(err)
 		} else {
-			kit.Logf(
+			kit.Printf(
 				"Successfully performed %s on file %s from %s",
 				kit.GreenText(resp.EventType),
 				kit.GreenText(resp.Asset.Key),

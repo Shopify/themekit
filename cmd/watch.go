@@ -19,7 +19,7 @@ run 'theme watch' while you are editing and it will detect create, update and de
 
 		for _, client := range themeClients {
 			config := client.GetConfiguration()
-			kit.Logf("Watching for file changes for theme %v on host %s ", kit.GreenText(config.ThemeID), kit.YellowText(config.Domain))
+			kit.Printf("Watching for file changes for theme %v on host %s ", kit.GreenText(config.ThemeID), kit.YellowText(config.Domain))
 			err := client.NewFileWatcher(notifyFile, handleWatchEvent)
 			if err != nil {
 				return err
@@ -32,16 +32,16 @@ run 'theme watch' while you are editing and it will detect create, update and de
 
 func handleWatchEvent(client kit.ThemeClient, event kit.AssetEvent, err error) {
 	if event.Asset.IsValid() || event.Type == kit.Remove {
-		kit.Logf(
+		kit.Printf(
 			"Received %s event on %s",
 			kit.GreenText(event.Type.String()),
 			kit.BlueText(event.Asset.Key),
 		)
 		client.Perform(event, func(resp *kit.ShopifyResponse, err kit.Error) {
 			if err != nil {
-				kit.Errorf(err.Error())
+				kit.LogError(err)
 			} else {
-				kit.Logf(
+				kit.Printf(
 					"Successfully performed %s operation for file %s to %s",
 					kit.GreenText(resp.EventType),
 					kit.BlueText(resp.Asset.Key),

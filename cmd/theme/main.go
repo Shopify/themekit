@@ -7,6 +7,6 @@ import (
 
 func main() {
 	if err := cmd.ThemeCmd.Execute(); err != nil {
-		kit.Fatal(err)
+		kit.LogFatal(err)
 	}
 }
