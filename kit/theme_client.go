@@ -1,13 +1,7 @@
 package kit
 
 import (
-	"bytes"
-	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -24,7 +18,7 @@ const createThemeMaxRetries int = 3
 // with the client.
 type ThemeClient struct {
 	config     Configuration
-	httpClient *http.Client
+	httpClient *httpClient
 	filter     eventFilter
 }
 
@@ -32,20 +26,6 @@ type apiResponse struct {
 	code int
 	body []byte
 	err  error
-}
-
-// EventType is an enum of event types to compare agains event.Type()
-type EventType int
-
-func (e EventType) String() string {
-	switch e {
-	case Update:
-		return "Update"
-	case Remove:
-		return "Remove"
-	default:
-		return "Unknown"
-	}
 }
 
 // NonFatalNetworkError is an error for describing an asset request that failed
@@ -59,13 +39,6 @@ type NonFatalNetworkError struct {
 func (e NonFatalNetworkError) Error() string {
 	return fmt.Sprintf("%d %s %s", e.Code, e.Verb, e.Message)
 }
-
-const (
-	// Update specifies that an AssetEvent is an update event.
-	Update EventType = iota
-	// Remove specifies that an AssetEvent is an delete event.
-	Remove
-)
 
 // NewThemeClient will build a new theme client from a configuration and a theme event
 // channel. The channel is used for logging all events. The configuration specifies how
@@ -114,35 +87,15 @@ func (t ThemeClient) NewFileWatcher(notifyFile string) (chan AssetEvent, error) 
 
 // AssetList will return a slice of remote assets from the shopify servers. The
 // assets are sorted and any ignored files based on your config are filtered out.
-func (t ThemeClient) AssetList() []theme.Asset {
-	queryBuilder := func(path string) string {
-		return path
-	}
-
-	resp := t.query(queryBuilder)
-	if resp.err != nil {
-		Errorf(resp.err.Error())
-	}
-
-	if resp.code >= 400 && resp.code < 500 {
-		Errorf("Server responded with HTTP %d; please check your credentials.", resp.code)
-		return []theme.Asset{}
-	}
-	if resp.code >= 500 {
-		Errorf("Server responded with HTTP %d; try again in a few minutes.", resp.code)
-		return []theme.Asset{}
-	}
-
-	var assets map[string][]theme.Asset
-	err := json.Unmarshal(resp.body, &assets)
+func (t ThemeClient) AssetList() ([]theme.Asset, error) {
+	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{})
 	if err != nil {
-		Errorf(err.Error())
-		return []theme.Asset{}
+		return []theme.Asset{}, err
+	} else if !resp.Successful() {
+		return []theme.Asset{}, fmt.Errorf(resp.String())
 	}
-
-	sort.Sort(theme.ByAsset(assets["assets"]))
-
-	return t.filter.filterAssets(ignoreCompiledAssets(assets["assets"]))
+	sort.Sort(theme.ByAsset(resp.Assets))
+	return t.filter.filterAssets(ignoreCompiledAssets(resp.Assets)), nil
 }
 
 // LocalAssets will return a slice of assets from the local disk. The
@@ -164,24 +117,8 @@ func (t ThemeClient) LocalAsset(filename string) (theme.Asset, error) {
 
 // Asset will load up a single remote asset from the remote shopify servers.
 func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
-	queryBuilder := func(path string) string {
-		return fmt.Sprintf("%s&asset[key]=%s", path, filename)
-	}
-
-	resp := t.query(queryBuilder)
-	if resp.err != nil {
-		return theme.Asset{}, resp.err
-	}
-	if resp.code >= 400 {
-		return theme.Asset{}, NonFatalNetworkError{Code: resp.code, Verb: "GET", Message: "not found"}
-	}
-	var asset map[string]theme.Asset
-	err := json.Unmarshal(resp.body, &asset)
-	if err != nil {
-		return theme.Asset{}, err
-	}
-
-	return asset["asset"], nil
+	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{"asset[key]": filename})
+	return resp.Asset, err
 }
 
 // CreateTheme will create a unpublished new theme on your shopify store and then
@@ -193,38 +130,35 @@ func CreateTheme(name, zipLocation string) (ThemeClient, error) {
 		return client, err
 	}
 
-	var themeEvent apiThemeEvent
+	var resp *shopifyResponse
 	retries := 0
-	data, err := json.Marshal(map[string]theme.Theme{
-		"theme": {Name: name, Source: zipLocation, Role: "unpublished"},
-	})
-	if err != nil {
-		return client, err
-	}
-
 	for retries < createThemeMaxRetries {
-		themeEvent, err = client.sendData("POST", fmt.Sprintf("%s/themes.json", config.AdminURL()), data)
+		resp, err = client.httpClient.NewTheme(name, zipLocation)
 		if err != nil {
 			return client, err
-		} else if !themeEvent.Successful() {
+		} else if !resp.Successful() {
 			retries++
+			if retries >= createThemeMaxRetries {
+				return client, fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation)
+			}
 		} else {
 			break
 		}
-		Logf(themeEvent.String())
+		Logf(resp.String())
 	}
 
-	if retries >= createThemeMaxRetries {
-		return client, fmt.Errorf("'%s' cannot be retrieved from Github.", zipLocation)
-	}
-
-	for !client.isDoneProcessing(themeEvent.ThemeID) {
+	for !client.isDoneProcessing(resp.Theme.ID) {
 		time.Sleep(250 * time.Millisecond)
 	}
 
-	config.ThemeID = fmt.Sprintf("%d", themeEvent.ThemeID)
+	config.ThemeID = fmt.Sprintf("%d", resp.Theme.ID)
 
 	return client, err
+}
+
+func (t ThemeClient) isDoneProcessing(themeID int64) bool {
+	resp, err := t.httpClient.GetTheme(themeID)
+	return err == nil && resp.Theme.Previewable
 }
 
 // Process will create a new throttler and return the jobqueue. You can then send
@@ -257,95 +191,16 @@ func (t ThemeClient) Process(wg *sync.WaitGroup) chan AssetEvent {
 // Perform will send an http request to the shopify servers based on the asset event.
 // if it is an update it will post to the server and if it is a remove it will DELETE
 // to the server. Any errors will be outputted to the event log.
-func (t ThemeClient) Perform(asset AssetEvent) {
+func (t ThemeClient) Perform(asset AssetEvent) error {
 	if t.filter.matchesFilter(asset.Asset().Key) {
-		return
+		return fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Asset().Key)))
 	}
-
-	var event string
-	switch asset.Type() {
-	case Update:
-		event = "PUT"
-	case Remove:
-		event = "DELETE"
-	}
-
-	resp, err := t.request(asset, event)
-	Logf(newAPIAssetEvent(resp, asset, err).String())
-}
-
-func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
-	path := fmt.Sprintf("%s?fields=key,attachment,value", t.config.AssetPath())
-	path = queryBuilder(path)
-
-	req, err := http.NewRequest("GET", path, nil)
+	resp, err := t.httpClient.AssetAction(asset)
 	if err != nil {
-		return apiResponse{err: err}
+		return err
 	}
-
-	t.config.AddHeaders(req)
-	resp, err := t.httpClient.Do(req)
-	if err != nil {
-		return apiResponse{err: err}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return apiResponse{code: resp.StatusCode, body: body, err: err}
-}
-
-func (t ThemeClient) sendData(method, path string, body []byte) (result apiThemeEvent, err error) {
-	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
-	if err != nil {
-		return apiThemeEvent{}, err
-	}
-	t.config.AddHeaders(req)
-	resp, err := t.httpClient.Do(req)
-	if result = newAPIThemeEvent(resp, err); result.Successful() {
-		defer resp.Body.Close()
-	}
-	return result, nil
-}
-
-func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
-	path := t.config.AssetPath()
-	data := map[string]theme.Asset{"asset": event.Asset()}
-
-	encoded, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
-
-	if err != nil {
-		return nil, err
-	}
-
-	t.config.AddHeaders(req)
-	return t.httpClient.Do(req)
-}
-
-func (t ThemeClient) isDoneProcessing(themeID int64) bool {
-	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminURL(), themeID)
-	themeEvent, err := t.sendData("GET", path, []byte{})
-	return err == nil && themeEvent.Previewable
-}
-
-func newHTTPClient(config Configuration) (client *http.Client, err error) {
-	client = &http.Client{
-		Timeout: config.Timeout,
-	}
-
-	if len(config.Proxy) > 0 {
-		Warnf("Proxy URL detected from Configuration:", config.Proxy)
-		Warnf("SSL Certificate Validation will be disabled!")
-		proxyURL, err := url.Parse(config.Proxy)
-		if err != nil {
-			return client, fmt.Errorf("Proxy configuration invalid:", err)
-		}
-		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-	}
-	return
+	Logf(resp.String())
+	return nil
 }
 
 func ignoreCompiledAssets(assets []theme.Asset) []theme.Asset {

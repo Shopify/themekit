@@ -49,7 +49,10 @@ func spawnWorker(assetEvents chan kit.AssetEvent, client kit.ThemeClient, wg *sy
 		}
 		if event.Asset().IsValid() || event.Type() == kit.Remove {
 			kit.Logf("Received %s event on %s", kit.GreenText(event.Type().String()), kit.BlueText(event.Asset().Key))
-			client.Perform(event)
+			err := client.Perform(event)
+			if err != nil {
+				kit.Errorf(err.Error())
+			}
 		}
 	}
 }

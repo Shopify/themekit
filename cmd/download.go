@@ -30,7 +30,11 @@ and write them to disk.`,
 
 func download(client kit.ThemeClient, filenames []string) error {
 	if len(filenames) <= 0 {
-		for _, asset := range client.AssetList() {
+		assets, err := client.AssetList()
+		if err != nil {
+			return err
+		}
+		for _, asset := range assets {
 			if err := writeToDisk(client, asset); err != nil {
 				return err
 			}

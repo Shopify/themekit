@@ -150,6 +150,16 @@ func (conf Configuration) AssetPath() string {
 	return fmt.Sprintf("%s/assets.json", conf.AdminURL())
 }
 
+// ThemesPath will return the endpoint of the themes interactions.
+func (conf Configuration) ThemesPath() string {
+	return fmt.Sprintf("%s/themes.json", conf.AdminURL())
+}
+
+// ThemePath will return the endpoint of the a single theme.
+func (conf Configuration) ThemePath(themeID int64) string {
+	return fmt.Sprintf("%s/themes/%d.json", conf.AdminURL(), themeID)
+}
+
 // AddHeaders will add api headers to an http.Requests so that it is a valid request.
 func (conf Configuration) AddHeaders(req *http.Request) {
 	req.Header.Add("X-Shopify-Access-Token", conf.Password)

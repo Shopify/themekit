@@ -36,13 +36,20 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 
 	assetsActions := map[string]kit.AssetEvent{}
 	if len(filenames) == 0 {
-		for _, asset := range client.AssetList() {
+		assets, err := client.AssetList()
+		if err != nil {
+			return err
+		}
+
+		for _, asset := range assets {
 			assetsActions[asset.Key] = kit.NewRemovalEvent(asset)
 		}
+
 		localAssets, err := client.LocalAssets()
 		if err != nil {
 			return err
 		}
+
 		for _, asset := range localAssets {
 			assetsActions[asset.Key] = kit.NewUploadEvent(asset)
 		}
