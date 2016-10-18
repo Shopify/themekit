@@ -76,7 +76,7 @@ func (resp ShopifyResponse) String() string {
 		YellowText(resp.Theme),
 		YellowText(resp.Asset),
 		YellowText(resp.Assets),
-		resp.fmtErrors(),
+		resp.Errors,
 	)
 }
 
@@ -93,13 +93,4 @@ func (resp ShopifyResponse) Error() Error {
 		}
 	}
 	return nil
-}
-
-func (resp ShopifyResponse) fmtErrors() string {
-	//output := []string{}
-	//for attr, errors := range resp.Errors {
-	//output = append(output, fmt.Sprintf("%s error: %s", attr, strings.Join(errors, ",")))
-	//}
-	//return strings.Join(output, ",")
-	return resp.Errors
 }

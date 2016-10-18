@@ -39,7 +39,7 @@ func (err ThemeError) Error() string {
 		RedText(fmt.Sprintf("%d", err.resp.Code)),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		err.resp.fmtErrors(),
+		err.resp.Errors,
 	)
 }
 
@@ -61,7 +61,7 @@ func (err AssetError) Error() string {
 		BlueText(err.resp.Asset.Key),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		err.resp.fmtErrors(),
+		err.resp.Errors,
 	)
 }
 
@@ -82,6 +82,6 @@ func (err ListError) Error() string {
 		YellowText(err.resp.EventType),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		err.resp.fmtErrors(),
+		err.resp.Errors,
 	)
 }

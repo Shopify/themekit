@@ -63,6 +63,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 	for _, event := range assetsActions {
 		performReplace(client, event, wg)
 	}
+	wg.Done()
 	return nil
 }
 
@@ -74,8 +75,8 @@ func performReplace(client kit.ThemeClient, event kit.AssetEvent, wg *sync.WaitG
 		} else {
 			kit.Logf(
 				"Successfully performed %s on file %s from %s",
-				kit.BlueText(resp.EventType),
-				kit.BlueText(resp.Asset.Key),
+				kit.GreenText(resp.EventType),
+				kit.GreenText(resp.Asset.Key),
 				kit.YellowText(resp.Host),
 			)
 		}

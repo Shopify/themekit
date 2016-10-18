@@ -30,6 +30,7 @@ and write them to disk.`,
 
 func download(client kit.ThemeClient, filenames []string) error {
 	if len(filenames) <= 0 {
+		kit.Logf("fetching assets from %s", kit.YellowText(client.GetConfiguration().Domain))
 		assets, err := client.AssetList()
 		if err != nil {
 			return err
@@ -41,6 +42,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 		}
 	} else {
 		for _, filename := range filenames {
+			kit.Logf("fetching %s from %s", filename, kit.YellowText(client.GetConfiguration().Domain))
 			if asset, err := client.Asset(filename); err != nil {
 				return err
 			} else {

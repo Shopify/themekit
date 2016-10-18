@@ -98,9 +98,12 @@ func (client *httpClient) GetTheme(themeID int64) (*ShopifyResponse, Error) {
 }
 
 func (client *httpClient) AssetAction(event EventType, asset theme.Asset) (*ShopifyResponse, Error) {
-	return client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
+	resp, _ := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
 		"asset": asset,
 	})
+	// If there were any errors the asset is nil so lets set it and reformat errors
+	resp.Asset = asset
+	return resp, resp.Error()
 }
 
 func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, Error) {
