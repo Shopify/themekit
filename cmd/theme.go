@@ -129,6 +129,8 @@ func initializeConfig(cmdName string, timesout bool) error {
 	themeClients = []kit.ThemeClient{}
 
 	if allenvs {
+		//top up the drip rate to reflect how many events will be running concurrently
+		kit.SetDripRate(len(environments))
 		for env := range environments {
 			config, err := environments.GetConfiguration(env)
 			if err != nil {

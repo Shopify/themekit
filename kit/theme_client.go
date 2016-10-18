@@ -13,6 +13,12 @@ import (
 
 const createThemeMaxRetries int = 3
 
+var dripRate = 1 * time.Second
+
+func SetDripRate(rate int) {
+	dripRate = time.Duration(rate) * time.Second
+}
+
 // ThemeClient is the interactor with the shopify server. All actions are processed
 // with the client.
 type ThemeClient struct {
@@ -40,7 +46,7 @@ func NewThemeClient(config Configuration) (ThemeClient, error) {
 		config:     config,
 		httpClient: httpClient,
 		filter:     filter,
-		foreman:    newForeman(newLeakyBucket(config.BucketSize, config.RefillRate, 1)),
+		foreman:    newForeman(newLeakyBucket(config.BucketSize, config.RefillRate, dripRate)),
 	}
 
 	go newClient.process()

@@ -13,15 +13,14 @@ type leakyBucket struct {
 	ticker      *time.Ticker
 }
 
-func newLeakyBucket(size, refill, duration int) *leakyBucket {
-	dur := time.Duration(duration) * time.Second
+func newLeakyBucket(size, refill int, duration time.Duration) *leakyBucket {
 	newBucket := &leakyBucket{
 		Size:        size,
 		Refill:      refill,
-		Duration:    dur,
+		Duration:    duration,
 		bucket:      make(chan bool, size),
 		stopFilling: make(chan bool),
-		ticker:      time.NewTicker(dur),
+		ticker:      time.NewTicker(duration),
 	}
 	return newBucket
 }
