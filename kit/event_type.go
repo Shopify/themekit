@@ -18,8 +18,10 @@ type AssetEvent struct {
 }
 
 const (
+	// Create specifies that an AssetEvent is a create event.
+	Create EventType = iota
 	// Retrieve specifies that an AssetEvent is an update event.
-	Retrieve EventType = iota
+	Retrieve
 	// Update specifies that an AssetEvent is an update event.
 	Update
 	// Remove specifies that an AssetEvent is an delete event.
@@ -43,8 +45,10 @@ func (e EventType) ToMethod() string {
 	switch e {
 	case Retrieve:
 		return "GET"
-	case Update:
+	case Create:
 		return "POST"
+	case Update:
+		return "PUT"
 	case Remove:
 		return "DELETE"
 	default:
