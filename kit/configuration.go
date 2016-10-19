@@ -2,17 +2,13 @@ package kit
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/caarlos0/env"
 	"github.com/imdario/mergo"
-	"gopkg.in/yaml.v1"
 )
 
 // Configuration is the structure of a configuration for an environment. This will
@@ -55,7 +51,6 @@ func init() {
 		Timeout:    DefaultTimeout,
 	}
 
-	environmentConfig = Configuration{}
 	env.Parse(&environmentConfig)
 }
 
@@ -125,65 +120,33 @@ func (conf Configuration) validateNoThemeID() error {
 	return nil
 }
 
-// AdminURL will return the url to the shopify admin.
-func (conf Configuration) AdminURL() string {
-	url := fmt.Sprintf("https://%s/admin", conf.Domain)
-	if !conf.IsLive() {
-		if themeID, err := strconv.ParseInt(conf.ThemeID, 10, 64); err == nil {
-			url = fmt.Sprintf("%s/themes/%d", url, themeID)
-		}
-	}
-	return url
-}
-
 // IsLive will return true if the configurations theme id is set to live
 func (conf Configuration) IsLive() bool {
 	return strings.ToLower(strings.TrimSpace(conf.ThemeID)) == "live"
 }
 
-// Write will write out a configuration to a writer.
-func (conf Configuration) Write(w io.Writer) error {
-	bytes, err := yaml.Marshal(conf)
-	if err == nil {
-		_, err = w.Write(bytes)
-	}
-	return err
-}
-
-// Save will write out the configuration to a file.
-func (conf Configuration) Save(location string) error {
-	file, err := os.OpenFile(location, os.O_WRONLY|os.O_CREATE, 0644)
-	defer file.Close()
-	if err == nil {
-		err = conf.Write(file)
-	}
-	return err
-}
-
-// AssetPath will return the assets endpoint in the admin section of shopify.
-func (conf Configuration) AssetPath() string {
-	return fmt.Sprintf("%s/assets.json", conf.AdminURL())
-}
-
-// ThemesPath will return the endpoint of the themes interactions.
-func (conf Configuration) ThemesPath() string {
-	return fmt.Sprintf("%s/themes.json", conf.AdminURL())
-}
-
-// ThemePath will return the endpoint of the a single theme.
-func (conf Configuration) ThemePath(themeID int64) string {
-	return fmt.Sprintf("%s/themes/%d.json", conf.AdminURL(), themeID)
-}
-
-// AddHeaders will add api headers to an http.Requests so that it is a valid request.
-func (conf Configuration) AddHeaders(req *http.Request) {
-	req.Header.Add("X-Shopify-Access-Token", conf.Password)
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s)", runtime.GOOS, runtime.GOARCH))
-}
-
 // String will return a formatted string with the information about this configuration
 func (conf Configuration) String() string {
-	return fmt.Sprintf("<token:%s domain:%s bucket:%d refill:%d url:%s>", conf.Password, conf.Domain, conf.BucketSize, conf.RefillRate, conf.AdminURL())
+	return fmt.Sprintf(`
+Password     %v
+ThemeID      %v
+Domain       %v
+Directory    %v
+IgnoredFiles %v
+BucketSize   %v
+RefillRate   %v
+Proxy        %v
+Ignores      %v
+Timeout      %v
+	`,
+		conf.Password,
+		conf.ThemeID,
+		conf.Domain,
+		conf.Directory,
+		conf.IgnoredFiles,
+		conf.BucketSize,
+		conf.RefillRate,
+		conf.Proxy,
+		conf.Ignores,
+		conf.Timeout)
 }

@@ -1,67 +1,110 @@
 package kit
 
 import (
+	"regexp"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/Shopify/themekit/theme"
 )
 
-func TestEventFilterRejectsEventsThatMatch(t *testing.T) {
-	e := newEventFilter([]string{"*.bat", "build/*", "*.ini", "config/settings.json"}, []string{})
+const (
+	rootDir           = "./root/dir/"
+	ignoreFixturePath = "../fixtures/event_filter/valid_patterns"
+)
 
-	inputEvents := []string{"path/to/config/settings.json", "hello.bat", "total/path/build/hello/world", "build/world", "whatever", "foo.ini", "zubat"}
-	expectedEvents := []string{"whatever", "zubat"}
-	assertFilter(t, e, inputEvents, expectedEvents)
+type EventFilterTestSuite struct {
+	suite.Suite
 }
 
-func TestFilterFullRegex(t *testing.T) {
-	e := newEventFilter([]string{`/\.(txt|gif|bat)$/`, "config/settings.json", "*.ini"}, []string{})
-	inputEvents := []string{"path/to/config/settings.json", "hello.bat", "build/hello/world.gif", "build/world.txt", "whatever", "foo.ini", "zubat"}
-	expectedEvents := []string{"whatever", "zubat"}
-	assertFilter(t, e, inputEvents, expectedEvents)
-}
+func (suite *EventFilterTestSuite) TestNewEventFilter() {
+	// loads files
+	filter, err := newEventFilter(rootDir, []string{}, []string{ignoreFixturePath})
+	if assert.Nil(suite.T(), err) {
+		assert.Equal(suite.T(), append(defaultRegexes, regexp.MustCompile(`\.(txt|gif|bat)$`)), filter.filters)
+		assert.Equal(suite.T(), []string{"./root/dir/*config/settings.json", "./root/dir/*.png"}, filter.globs)
+	}
 
-func TestFilterRemovesEmptyStrings(t *testing.T) {
-	e := newEventFilter([]string{}, []string{})
-	inputEvents := []string{"hello", "", "world"}
-	expectedEvents := []string{"hello", "world"}
-	assertFilter(t, e, inputEvents, expectedEvents)
-}
+	// loads files
+	_, err = newEventFilter(rootDir, []string{}, []string{"bad path"})
+	assert.NotNil(suite.T(), err)
 
-func TestDefaultFilters(t *testing.T) {
-	e := newEventFilter([]string{}, []string{})
-	inputEvents := []string{".git/HEAD", ".DS_Store", "templates/.DS_Store", "config.yml", "templates/products.liquid"}
-	expectedEvents := []string{"templates/products.liquid"}
-	assertFilter(t, e, inputEvents, expectedEvents)
-}
-
-func TestMatchesFilterWithEmptyInputDoesNotCrash(t *testing.T) {
-	e := newEventFilter([]string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"}, []string{})
-	assert.Equal(t, false, e.matchesFilter(""))
-}
-
-func nextValue(channel chan string) string {
-	select {
-	case result := <-channel:
-		return result
-	case <-time.After(10 * time.Millisecond):
-		return ""
+	filter, err = newEventFilter(rootDir, []string{"config/settings.json", "*.png", "/\\.(txt|gif|bat)$/"}, []string{})
+	if assert.Nil(suite.T(), err) {
+		assert.Equal(suite.T(), append(defaultRegexes, regexp.MustCompile(`\.(txt|gif|bat)$`)), filter.filters)
+		assert.Equal(suite.T(), []string{"./root/dir/*config/settings.json", "./root/dir/*.png"}, filter.globs)
 	}
 }
 
-func assertFilter(t *testing.T, e eventFilter, inputs []string, expectedResults []string) {
-	events := make(chan string)
-	filtered := e.filter(events)
+func (suite *EventFilterTestSuite) TestFilterAssets() {
+	filter, err := newEventFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
+	if assert.Nil(suite.T(), err) {
+		inputAssets := []theme.Asset{{Key: "test/foo"}, {Key: "foo.txt"}, {Key: "test.bat"}, {Key: "zubat"}}
+		expectedAssets := []theme.Asset{{Key: "test/foo"}, {Key: "zubat"}}
 
-	go func() {
-		for _, event := range inputs {
-			events <- event
+		assert.Equal(suite.T(), expectedAssets, filter.filterAssets(inputAssets))
+	}
+}
+
+func (suite *EventFilterTestSuite) TestMatchesFilter() {
+	check := func(filter eventFilter, input []string, shouldOutput []string) {
+		output := []string{}
+		for _, path := range input {
+			if !filter.matchesFilter(path) {
+				output = append(output, path)
+			}
 		}
-		close(events)
-	}()
-
-	for _, expected := range expectedResults {
-		assert.Equal(t, expected, nextValue(filtered))
+		assert.Equal(suite.T(), shouldOutput, output)
 	}
+
+	// it filters plain filenames
+	filter, err := newEventFilter(rootDir, []string{"build/", "test.txt"}, []string{})
+	if assert.Nil(suite.T(), err) {
+		check(
+			filter,
+			[]string{rootDir + "/foo/test.txt", "test.txt", "test/test.txt", "build/hello/world", "build/world", "test/build/world", "zubat"},
+			[]string{"zubat"},
+		)
+	}
+
+	// it filters globs
+	filter, err = newEventFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
+	if assert.Nil(suite.T(), err) {
+		check(
+			filter,
+			[]string{rootDir + "config/settings.json", "hello.bat", "build/hello/world.gif", "build/world.txt", "whatever", "foo.ini", "zubat"},
+			[]string{"whatever", "zubat"},
+		)
+	}
+
+	// filters proper regex
+	filter, err = newEventFilter(rootDir, []string{`/\.(txt|gif|bat|json|ini)$/`}, []string{})
+	if assert.Nil(suite.T(), err) {
+		check(
+			filter,
+			[]string{rootDir + "config/settings.json", "hello.bat", "build/hello/world.gif", "build/world.txt", "whatever", "foo.ini", "zubat"},
+			[]string{"whatever", "zubat"},
+		)
+	}
+
+	//check default filters
+	filter, err = newEventFilter(rootDir, []string{}, []string{})
+	if assert.Nil(suite.T(), err) {
+		check(
+			filter,
+			[]string{".git/HEAD", ".DS_Store", "templates/.DS_Store", "config.yml", "templates/products.liquid"},
+			[]string{"templates/products.liquid"},
+		)
+	}
+
+	filter, err = newEventFilter(rootDir, []string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"}, []string{})
+	if assert.Nil(suite.T(), err) {
+		assert.Equal(suite.T(), false, filter.matchesFilter(""))
+	}
+}
+
+func TestEventFilterTestSuite(t *testing.T) {
+	suite.Run(t, new(EventFilterTestSuite))
 }

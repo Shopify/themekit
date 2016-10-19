@@ -10,6 +10,7 @@ dependencies:
     - rsync -azC --delete ./ "$PROJECT_PATH/"
     - sudo add-apt-repository ppa:masterminds/glide && sudo apt-get update
     - sudo apt-get install glide
+    - go get -u github.com/golang/lint/golint
 test:
   pre:
     - cd $PROJECT_PATH && make vet

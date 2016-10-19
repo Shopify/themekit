@@ -20,11 +20,11 @@ type versionComparisonResult int
 
 const (
 	// VersionLessThan is a versionComparisonResult for a version that is less than
-	VersionLessThan versionComparisonResult = -1
+	VersionLessThan versionComparisonResult = iota - 1
 	// VersionEqual is a versionComparisonResult for a version that is equal
-	VersionEqual = 0
+	VersionEqual
 	// VersionGreaterThan is a versionComparisonResult for a version that is greater than
-	VersionGreaterThan = 1
+	VersionGreaterThan
 )
 
 // LibraryInfo will return a string array with information about the library used

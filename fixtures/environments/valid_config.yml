@@ -1,6 +1,6 @@
 development:
   store: example.myshopify.com
-  access_token: abracadabra
+  password: abracadabra
   theme_id: 1
   ignore_files:
   - charmander
@@ -10,7 +10,7 @@ development:
   bucket_size: 0
 default:
   store: example.myshopify.com
-  access_token: abracadabra
+  password: abracadabra
   theme_id: 2
   ignore_files:
   - charmander
@@ -20,7 +20,7 @@ default:
   bucket_size: 0
 production:
   store: example.myshopify.com
-  access_token: abracadabra
+  password: abracadabra
   theme_id: 3
   ignore_files:
   - charmander

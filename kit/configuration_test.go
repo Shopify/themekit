@@ -1,137 +1,120 @@
 package kit
 
 import (
-	"bytes"
-	"net/http"
-	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestLoadingAValidConfiguration(t *testing.T) {
-	config, err := LoadConfiguration([]byte(validConfiguration))
-	assert.Nil(t, err)
-	assert.Equal(t, "example.myshopify.com", config.Domain)
-	assert.Equal(t, "abracadabra", config.Password)
-	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234", config.URL)
-	assert.Equal(t, "https://example.myshopify.com/admin/themes/1234/assets.json", config.AssetPath())
-	assert.Equal(t, 4, config.Concurrency)
-	assert.Nil(t, config.IgnoredFiles)
+type ConfigurationTestSuite struct {
+	suite.Suite
 }
 
-func TestLoadingAValidConfigurationWithLiveTheme(t *testing.T) {
-	config, err := LoadConfiguration([]byte(validConfigurationWithLiveTheme))
-	assert.Nil(t, err)
-	assert.Equal(t, "example.myshopify.com", config.Domain)
-	assert.Equal(t, "abracadabra", config.Password)
-	assert.Equal(t, "https://example.myshopify.com/admin", config.URL)
-	assert.Equal(t, "https://example.myshopify.com/admin/assets.json", config.AssetPath())
-	assert.Equal(t, 4, config.Concurrency)
-	assert.Nil(t, config.IgnoredFiles)
+func (suite *ConfigurationTestSuite) TearDownTest() {
+	environmentConfig = Configuration{}
+	flagConfig = Configuration{}
 }
 
-func TestLoadingAValidConfigurationWithIgnoredFiles(t *testing.T) {
-	config, err := LoadConfiguration([]byte(validConfigurationWithIgnoredFiles))
-	assert.Nil(t, err)
-	assert.Equal(t, "example.myshopify.com", config.Domain)
-	assert.Equal(t, "abracadabra", config.Password)
-	assert.Equal(t, []string{"charmander", "bulbasaur", "squirtle"}, config.IgnoredFiles)
+func (suite *ConfigurationTestSuite) TestSetFlagConfig() {
+	config, _ := NewConfiguration()
+	assert.Equal(suite.T(), defaultConfig, config)
+
+	flagConfig := Configuration{
+		Directory:  "my/dir/now",
+		BucketSize: 100,
+		RefillRate: 100,
+		Timeout:    DefaultTimeout,
+	}
+	SetFlagConfig(flagConfig)
+
+	config, _ = NewConfiguration()
+	assert.Equal(suite.T(), flagConfig, config)
 }
 
-func TestLoadingSupportedConfiguration(t *testing.T) {
-	config, err := LoadConfiguration([]byte(supportedConfiguration))
-	assert.Nil(t, err)
-	assert.Equal(t, "example.myshopify.com", config.Domain)
-	assert.Equal(t, "abracadabra", config.Password)
-}
+func (suite *ConfigurationTestSuite) TestEnvConfig() {
+	config, _ := NewConfiguration()
+	assert.Equal(suite.T(), defaultConfig, config)
 
-func TestLoadingConfigurationWithMissingFields(t *testing.T) {
-	tests := []struct {
-		src, expectedError string
-	}{
-		{configurationWithoutAccessTokenAndPassword, "missing password or access_token (using 'password' is encouraged. 'access_token', which does the same thing will be deprecated soon)"},
-		{configurationWithoutDomain, "missing domain"},
-		{configurationWithInvalidDomain, "invalid domain, must end in '.myshopify.com'"},
+	environmentConfig = Configuration{
+		Password:     "password",
+		ThemeID:      "themeid",
+		Domain:       "nope.myshopify.com",
+		Directory:    "my/dir",
+		IgnoredFiles: []string{"one", "two", "three"},
+		BucketSize:   100,
+		RefillRate:   100,
+		Proxy:        ":3000",
+		Ignores:      []string{"four", "five", "six"},
+		Timeout:      40 * time.Second,
 	}
 
-	for _, data := range tests {
-		_, err := LoadConfiguration([]byte(data.src))
-		assert.NotNil(t, err)
-		assert.Equal(t, data.expectedError, err.Error())
+	config, _ = NewConfiguration()
+	assert.Equal(suite.T(), environmentConfig, config)
+}
+
+func (suite *ConfigurationTestSuite) TestConfigPrecedence() {
+	config := Configuration{Password: "file"}
+	config, _ = config.compile()
+	assert.Equal(suite.T(), "file", config.Password)
+
+	environmentConfig = Configuration{Password: "environment"}
+	config, _ = config.compile()
+	assert.Equal(suite.T(), "environment", config.Password)
+
+	flagConfig = Configuration{Password: "flag"}
+	config, _ = config.compile()
+	assert.Equal(suite.T(), "flag", config.Password)
+}
+
+func (suite *ConfigurationTestSuite) TestValidate() {
+	config := Configuration{Password: "file", ThemeID: "123", Domain: "test.myshopify.com"}
+	assert.Nil(suite.T(), config.Validate())
+
+	config = Configuration{Password: "file", ThemeID: "live", Domain: "test.myshopify.com"}
+	assert.Nil(suite.T(), config.Validate())
+
+	config = Configuration{ThemeID: "123", Domain: "test.myshopify.com"}
+	err := config.Validate()
+	if assert.NotNil(suite.T(), err) {
+		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "missing password"))
+	}
+
+	config = Configuration{Password: "test", ThemeID: "123", Domain: "test.nope.com"}
+	err = config.Validate()
+	if assert.NotNil(suite.T(), err) {
+		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "invalid domain"))
+	}
+
+	config = Configuration{Password: "test", ThemeID: "123"}
+	err = config.Validate()
+	if assert.NotNil(suite.T(), err) {
+		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "missing domain"))
+	}
+
+	config = Configuration{Password: "file", Domain: "test.myshopify.com"}
+	err = config.Validate()
+	if assert.NotNil(suite.T(), err) {
+		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "missing theme_id"))
+	}
+
+	config = Configuration{Password: "file", ThemeID: "abc", Domain: "test.myshopify.com"}
+	err = config.Validate()
+	if assert.NotNil(suite.T(), err) {
+		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "invalid theme_id"))
 	}
 }
 
-func TestWritingAConfigurationFile(t *testing.T) {
-	buffer := new(bytes.Buffer)
-	config := Configuration{Domain: "hello.myshopify.com", Password: "secret", BucketSize: 10, RefillRate: 4}
-	err := config.Write(buffer)
-	expectedConfiguration :=
-		`access_token: secret
-store: hello.myshopify.com
-bucket_size: 10
-refill_rate: 4
-`
-	assert.Nil(t, err, "An error should not have been raised")
-	assert.Equal(t, expectedConfiguration, string(buffer.Bytes()))
+func (suite *ConfigurationTestSuite) TestIsLive() {
+	config := Configuration{ThemeID: "123"}
+	assert.Equal(suite.T(), false, config.IsLive())
+
+	config = Configuration{ThemeID: "live"}
+	assert.Equal(suite.T(), true, config.IsLive())
 }
 
-func TestAddHeadersAddsPlatformAndArchitecture(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/foo/bar", nil)
-
-	config := Configuration{Domain: "hello.myshopify.com", Password: "secret", BucketSize: 10, RefillRate: 4}
-	config.AddHeaders(req)
-
-	userAgent := req.Header.Get("User-Agent")
-	assert.True(t, strings.Contains(userAgent, runtime.GOOS))
-	assert.True(t, strings.Contains(userAgent, runtime.GOARCH))
+func TestConfigurationTestSuite(t *testing.T) {
+	suite.Run(t, new(ConfigurationTestSuite))
 }
-
-const (
-	validConfiguration = `
-  store: example.myshopify.com
-  password: abracadabra
-  concurrency: 4
-  theme_id: 1234
-  `
-
-	validConfigurationWithLiveTheme = `
-  store: example.myshopify.com
-  password: abracadabra
-  concurrency: 4
-  theme_id: live
-  `
-
-	validConfigurationWithIgnoredFiles = `
-  store: example.myshopify.com
-  password: abracadabra
-  theme_id: 1234
-  ignore_files:
-    - charmander
-    - bulbasaur
-    - squirtle
-  `
-
-	supportedConfiguration = `
-  store: example.myshopify.com
-  password: abracadabra
-  theme_id: 12345
-  `
-
-	configurationWithoutAccessTokenAndPassword = `
-  store: foo.myshopify.com
-  theme_id: 123
-  `
-
-	configurationWithoutDomain = `
-  password: foobar
-  theme_id: 1234
-  `
-
-	configurationWithInvalidDomain = `
-  store: example.something.net
-  password: abracadabra
-  theme_id: 1234
-  `
-)

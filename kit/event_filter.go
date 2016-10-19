@@ -13,29 +13,32 @@ import (
 	"github.com/Shopify/themekit/theme"
 )
 
-const configurationFilename = "config\\.yml"
-
 var defaultRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`\.git/*`),
 	regexp.MustCompile(`\.DS_Store`),
+	regexp.MustCompile(`config.yml`),
 }
 
 var defaultGlobs = []string{}
 
 type eventFilter struct {
+	rootDir string
 	filters []*regexp.Regexp
 	globs   []string
 }
 
 func newEventFilter(rootDir string, patterns []string, files []string) (eventFilter, error) {
-	filtPatters, err := filesToPatterns(files)
+	filePatterns, err := filesToPatterns(files)
 	if err != nil {
 		return eventFilter{}, err
 	}
 
-	patterns = append(patterns, filtPatters...)
+	patterns = append(patterns, filePatterns...)
 
-	rootDir += "/"
+	if !strings.HasSuffix(rootDir, "/") {
+		rootDir += "/"
+	}
+
 	filters := defaultRegexes
 	globs := defaultGlobs
 	for _, pattern := range patterns {
@@ -48,15 +51,29 @@ func newEventFilter(rootDir string, patterns []string, files []string) (eventFil
 
 		//full regex
 		if strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
-			filters = append(filters, regexp.MustCompile(pattern[1:len(pattern)-2]))
-		} else if strings.Contains(pattern, "*") { // globs
-			globs = append(globs, rootDir+pattern)
-		} else { //plain filename
-			globs = append(globs, rootDir+"*"+pattern)
+			filters = append(filters, regexp.MustCompile(pattern[1:len(pattern)-1]))
+			continue
 		}
+
+		// if specifying a directory match everything below it
+		if strings.HasSuffix(pattern, "/") {
+			pattern += "*"
+		}
+
+		// The pattern will be scoped to root directory so it should match anything
+		// within that space
+		if !strings.HasPrefix(pattern, "*") {
+			pattern = "*" + pattern
+		}
+
+		globs = append(globs, rootDir+pattern)
 	}
-	filters = append(filters, regexp.MustCompile(configurationFilename))
-	return eventFilter{filters: filters, globs: globs}, nil
+
+	return eventFilter{
+		rootDir: rootDir,
+		filters: filters,
+		globs:   globs,
+	}, nil
 }
 
 func (e eventFilter) filterAssets(assets []theme.Asset) []theme.Asset {
@@ -69,22 +86,6 @@ func (e eventFilter) filterAssets(assets []theme.Asset) []theme.Asset {
 	return filteredAssets
 }
 
-func (e eventFilter) filter(events chan string) chan string {
-	filtered := make(chan string)
-	go func() {
-		for {
-			event, more := <-events
-			if !more {
-				return
-			}
-			if len(event) > 0 && !e.matchesFilter(event) {
-				filtered <- event
-			}
-		}
-	}()
-	return filtered
-}
-
 func (e eventFilter) matchesFilter(event string) bool {
 	if len(event) == 0 {
 		return false
@@ -94,8 +95,8 @@ func (e eventFilter) matchesFilter(event string) bool {
 			return true
 		}
 	}
-	for _, g := range e.globs {
-		if glob.Glob(g, event) {
+	for _, pattern := range e.globs {
+		if glob.Glob(pattern, event) || glob.Glob(pattern, e.rootDir+event) {
 			return true
 		}
 	}

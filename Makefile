@@ -1,7 +1,7 @@
 .PHONY: all build clean zip help
 
 test: ## Run all tests
-	go test -race $(shell glide novendor)
+	go test -race -cover $(shell glide novendor)
 
 vet: ## Verify go code.
 	@go vet $(shell glide novendor)
@@ -46,6 +46,10 @@ zip: ## Create zip file with distributable binaries
 
 upload_to_s3: ## Upload zip file with binaries to S3
 	@echo "uploading to S3" && bundle exec ruby ./scripts/release && echo "upload complete";
+
+tools: ## Installs tools required for developing theme kit
+	@curl https://glide.sh/get | sh
+	@go get -u github.com/golang/lint/golint
 
 help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

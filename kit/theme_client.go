@@ -63,7 +63,7 @@ func (t ThemeClient) GetConfiguration() Configuration {
 }
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
-func (t ThemeClient) NewFileWatcher(notifyFile string, callback func(ThemeClient, AssetEvent, error)) error {
+func (t ThemeClient) NewFileWatcher(notifyFile string, callback func(ThemeClient, AssetEvent, error)) (*FileWatcher, error) {
 	return newFileWatcher(t, t.config.Directory, true, t.filter, callback)
 }
 

@@ -2,7 +2,6 @@ package kit
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 
@@ -41,22 +40,9 @@ func (e Environments) GetConfiguration(environmentName string) (Configuration, e
 	return conf.compile()
 }
 
-// Write will write out an environment to an io.Writer. It will return an error
-// if there was an error marshalling the environment or writing.
-func (e Environments) Write(w io.Writer) error {
-	bytes, err := yaml.Marshal(e)
-	if err == nil {
-		_, err = w.Write(bytes)
-	}
-	return err
-}
-
 // String will return a formatted string of the environment.
 func (e Environments) String() string {
-	bytes, err := yaml.Marshal(e)
-	if err != nil {
-		return "environments: cannot serialize"
-	}
+	bytes, _ := yaml.Marshal(e)
 	return string(bytes)
 }
 
@@ -65,7 +51,10 @@ func (e Environments) Save(location string) error {
 	file, err := os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	defer file.Close()
 	if err == nil {
-		err = e.Write(file)
+		bytes, err := yaml.Marshal(e)
+		if err == nil {
+			_, err = file.Write(bytes)
+		}
 	}
 	return err
 }
