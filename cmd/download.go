@@ -43,12 +43,12 @@ func download(client kit.ThemeClient, filenames []string) error {
 	} else {
 		for _, filename := range filenames {
 			kit.Printf("Fetching %s from %s", filename, kit.YellowText(client.GetConfiguration().Domain))
-			if asset, err := client.Asset(filename); err != nil {
+			asset, err := client.Asset(filename)
+			if err != nil {
 				return err
-			} else {
-				if err := writeToDisk(client, asset); err != nil {
-					return err
-				}
+			}
+			if err := writeToDisk(client, asset); err != nil {
+				return err
 			}
 		}
 	}
@@ -93,7 +93,7 @@ func writeToDisk(client kit.ThemeClient, asset theme.Asset) error {
 	if err != nil {
 		return err
 	}
-	kit.Notifyf("Successfully wrote %s to disk", filename)
+	kit.LogNotifyf("Successfully wrote %s to disk", filename)
 	return nil
 }
 

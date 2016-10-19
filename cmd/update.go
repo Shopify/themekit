@@ -40,19 +40,18 @@ download it and apply it.`,
 		latestRelease, err := downloadReleaseForPlatform()
 		if err == nil {
 			if latestRelease.IsApplicable() {
-				kit.LogWarn("Updating from", kit.ThemeKitVersion, "to", kit.ParseVersionString(latestRelease.Version))
+				kit.LogWarn("Updating from", kit.ThemeKitVersion, "to", latestRelease.Version)
 				releaseForPlatform := findAppropriateRelease(latestRelease)
 				return kit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
-			} else {
-				return fmt.Errorf("No applicable update available.")
 			}
+			return fmt.Errorf("No applicable update available.")
 		}
 		return err
 	},
 }
 
 func (r release) IsApplicable() bool {
-	return kit.ThemeKitVersion.Compare(kit.ParseVersionString(r.Version)) == kit.VersionLessThan
+	return kit.ThemeKitVersion.Compare(r.Version) == kit.VersionLessThan
 }
 
 func isNewReleaseAvailable() bool {

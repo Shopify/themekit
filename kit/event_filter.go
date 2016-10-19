@@ -123,9 +123,8 @@ func filesToPatterns(files []string) ([]string, error) {
 		var data []byte
 		if data, err = ioutil.ReadAll(file); err != nil {
 			return patterns, err
-		} else {
-			patterns = append(patterns, strings.Split(string(data), "\n")...)
 		}
+		patterns = append(patterns, strings.Split(string(data), "\n")...)
 	}
 	return patterns, nil
 }

@@ -35,8 +35,9 @@ func LibraryInfo() string {
 	return fmt.Sprintf("%s%s%s", messageSeparator, info, messageSeparator)
 }
 
+// PrintInfo will output the version banner for the themekit library.
 func PrintInfo() {
-	Notifyf(LibraryInfo())
+	LogNotify(LibraryInfo())
 }
 
 type version struct {
@@ -56,7 +57,8 @@ func (v version) toArray() [3]int {
 // Compare ... I often get confused by comparison, so comparison results are going
 // to be the same as what <=> would return in Ruby.
 // http://ruby-doc.org/core-1.9.3/Comparable.html
-func (v version) Compare(o version) versionComparisonResult {
+func (v version) Compare(versionString string) versionComparisonResult {
+	o := parseVersionString(versionString)
 	vAry := v.toArray()
 	oAry := o.toArray()
 	for i := 0; i < len(vAry); i++ {
@@ -70,8 +72,7 @@ func (v version) Compare(o version) versionComparisonResult {
 	return VersionEqual
 }
 
-// ParseVersionString will parse a string and convert it into a version for comparison.
-func ParseVersionString(ver string) version {
+func parseVersionString(ver string) version {
 	sanitizedVer := strings.Replace(ver, "v", "", 1)
 	expandedVersionString := strings.Split(sanitizedVer, ".")
 	major, _ := strconv.Atoi(expandedVersionString[0])

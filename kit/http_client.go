@@ -107,9 +107,9 @@ func (client *httpClient) AssetAction(event EventType, asset theme.Asset) (*Shop
 }
 
 func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, Error) {
-	req, err := http.NewRequest(event.ToMethod(), urlStr, body)
+	req, err := http.NewRequest(event.toMethod(), urlStr, body)
 	if err != nil {
-		return nil, KitError{err}
+		return nil, kitError{err}
 	}
 
 	req.Header.Add("X-Shopify-Access-Token", client.config.Password)
@@ -123,7 +123,7 @@ func (client *httpClient) newRequest(event EventType, urlStr string, body io.Rea
 func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr string, body map[string]interface{}) (*ShopifyResponse, Error) {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return nil, KitError{err}
+		return nil, kitError{err}
 	}
 	return client.sendRequest(rtype, event, urlStr, bytes.NewBuffer(data))
 }
@@ -131,7 +131,7 @@ func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr st
 func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr string, body io.Reader) (*ShopifyResponse, Error) {
 	req, err := client.newRequest(event, urlStr, body)
 	if err != nil {
-		return nil, KitError{err}
+		return nil, kitError{err}
 	}
 	resp, respErr := client.client.Do(req)
 	return newShopifyResponse(rtype, event, resp, respErr)

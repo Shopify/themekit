@@ -5,34 +5,34 @@ import (
 	"net/http"
 )
 
+// Error is an error that can be determined if it is fatal to the applications
+// operation.
 type Error interface {
 	Error() string
 	Fatal() bool
 }
 
-// ThemeError is an error that is encountered during a request on a theme.
-type KitError struct {
+type kitError struct {
 	err error
 }
 
-func (err KitError) Fatal() bool {
+func (err kitError) Fatal() bool {
 	return true
 }
 
-func (err KitError) Error() string {
+func (err kitError) Error() string {
 	return err.err.Error()
 }
 
-// ThemeError is an error that is encountered during a request on a theme.
-type ThemeError struct {
+type themeError struct {
 	resp ShopifyResponse
 }
 
-func (err ThemeError) Fatal() bool {
+func (err themeError) Fatal() bool {
 	return !err.resp.Successful()
 }
 
-func (err ThemeError) Error() string {
+func (err themeError) Error() string {
 	return fmt.Sprintf(`[%s]Theme request encountered status at host <%s>
 	Status text: %s
 	Errors: %s`,
@@ -43,16 +43,15 @@ func (err ThemeError) Error() string {
 	)
 }
 
-// AssetError is an error that is encountered during a request on a single asset.
-type AssetError struct {
+type assetError struct {
 	resp ShopifyResponse
 }
 
-func (err AssetError) Fatal() bool {
+func (err assetError) Fatal() bool {
 	return err.resp.Code != 404 && err.resp.Code >= 400
 }
 
-func (err AssetError) Error() string {
+func (err assetError) Error() string {
 	return fmt.Sprintf(`[%s]Asset Perform %s to %s at host <%s>
 	Status text: %s
 	Errors: %s`,
@@ -65,16 +64,15 @@ func (err AssetError) Error() string {
 	)
 }
 
-// List error are errors that are encountered during a request of remote assets
-type ListError struct {
+type listError struct {
 	resp ShopifyResponse
 }
 
-func (err ListError) Fatal() bool {
+func (err listError) Fatal() bool {
 	return err.resp.Code >= 400
 }
 
-func (err ListError) Error() string {
+func (err listError) Error() string {
 	return fmt.Sprintf(`[%s]Assets Perform %s at host <%s>
 	Status text: %s
 	Errors: %s`,

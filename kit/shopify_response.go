@@ -10,6 +10,11 @@ import (
 	"github.com/Shopify/themekit/theme"
 )
 
+// ShopifyResponse is a general response for all server requests. It will format
+// errors from any bad responses from the server. If the response is Successful()
+// then the data item that you requested should be defined. If it was a theme request
+// then Theme will be defined. If you have mad an asset query then Assets will be
+// defined. If you did an action on a single asset then Asset will be defined.
 type ShopifyResponse struct {
 	Type      requestType   `json:"-"`
 	Host      string        `json:"host"`
@@ -24,7 +29,7 @@ type ShopifyResponse struct {
 
 func newShopifyResponse(rtype requestType, event EventType, resp *http.Response, err error) (*ShopifyResponse, Error) {
 	if resp == nil || err != nil {
-		return nil, KitError{err}
+		return nil, kitError{err}
 	}
 	defer resp.Body.Close()
 
@@ -38,7 +43,7 @@ func newShopifyResponse(rtype requestType, event EventType, resp *http.Response,
 
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, KitError{err}
+		return nil, kitError{err}
 	}
 
 	json.Unmarshal(bytes, &newResponse)
@@ -46,19 +51,21 @@ func newShopifyResponse(rtype requestType, event EventType, resp *http.Response,
 	return newResponse, newResponse.Error()
 }
 
+// Successful will return true if the response code >= 200 and < 300 and if no
+// errors were returned from the server.
 func (resp ShopifyResponse) Successful() bool {
 	return resp.Code >= 200 && resp.Code < 300 && len(resp.Errors) == 0
 }
 
-func (resp ShopifyResponse) IsThemeRequest() bool {
+func (resp ShopifyResponse) isThemeRequest() bool {
 	return resp.Type == themeRequest
 }
 
-func (resp ShopifyResponse) IsAssetRequest() bool {
+func (resp ShopifyResponse) isAssetRequest() bool {
 	return resp.Type == assetRequest
 }
 
-func (resp ShopifyResponse) IsListRequest() bool {
+func (resp ShopifyResponse) isListRequest() bool {
 	return resp.Type == listRequest
 }
 
@@ -82,15 +89,14 @@ func (resp ShopifyResponse) String() string {
 
 func (resp ShopifyResponse) Error() Error {
 	if !resp.Successful() {
-		if resp.IsThemeRequest() {
-			return ThemeError{resp}
-		} else if resp.IsAssetRequest() {
-			return AssetError{resp}
-		} else if resp.IsListRequest() {
-			return ListError{resp}
-		} else {
-			return KitError{fmt.Errorf(resp.Errors)}
+		if resp.isThemeRequest() {
+			return themeError{resp}
+		} else if resp.isAssetRequest() {
+			return assetError{resp}
+		} else if resp.isListRequest() {
+			return listError{resp}
 		}
+		return kitError{fmt.Errorf(resp.Errors)}
 	}
 	return nil
 }

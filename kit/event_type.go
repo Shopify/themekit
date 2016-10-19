@@ -41,7 +41,7 @@ func (e EventType) String() string {
 	}
 }
 
-func (e EventType) ToMethod() string {
+func (e EventType) toMethod() string {
 	switch e {
 	case Retrieve:
 		return "GET"

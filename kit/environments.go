@@ -15,7 +15,7 @@ const DefaultEnvironment string = "development"
 // Environments is a map of configurations to their environment name.
 type Environments map[string]Configuration
 
-// LoadEnvironmentsFromFile will read in the file from the location provided and
+// LoadEnvironments will read in the file from the location provided and
 // then unmarshal the data into environments.
 func LoadEnvironments(location string) (env Environments, err error) {
 	env = map[string]Configuration{}

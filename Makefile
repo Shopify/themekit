@@ -1,10 +1,13 @@
 .PHONY: all build clean zip help
 
 test: ## Run all tests
-	go test -v -race $(glide novendor)
+	go test -race $(shell glide novendor)
 
-vet: ## Lint a verify go code.
-	go vet $(glide novendor)
+vet: ## Verify go code.
+	@go vet $(shell glide novendor)
+
+lint: ## Lint all packages
+	@glide novendor | xargs -n 1 golint -set_exit_status
 
 dist: clean  ## Build binaries for all platforms, zip, and upload to S3
 	@$(MAKE) windows && $(MAKE) mac && $(MAKE) linux && $(MAKE) zip && $(MAKE) upload_to_s3;

@@ -55,9 +55,8 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 			asset, err := client.LocalAsset(filename)
 			if err != nil {
 				return err
-			} else {
-				assetsActions[asset.Key] = kit.AssetEvent{Asset: asset, Type: kit.Update}
 			}
+			assetsActions[asset.Key] = kit.AssetEvent{Asset: asset, Type: kit.Update}
 		}
 	}
 	for _, event := range assetsActions {

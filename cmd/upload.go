@@ -45,9 +45,8 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) erro
 			asset, err := client.LocalAsset(filename)
 			if err != nil {
 				return err
-			} else {
-				performUpload(client, asset, wg)
 			}
+			performUpload(client, asset, wg)
 		}
 	}
 	wg.Done()

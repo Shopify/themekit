@@ -13,5 +13,6 @@ dependencies:
 test:
   pre:
     - cd $PROJECT_PATH && make vet
+    - cd $PROJECT_PATH && make lint
   override:
     - cd $PROJECT_PATH && make test

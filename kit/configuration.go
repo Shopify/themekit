@@ -59,12 +59,15 @@ func init() {
 	env.Parse(&environmentConfig)
 }
 
+// SetFlagConfig will set the configuration that is set by your applications flags.
+// Set the flag config before inializing any theme clients so that the loaded
+// configurations will have the proper config precedence.
 func SetFlagConfig(config Configuration) {
 	flagConfig = config
 }
 
-// LoadConfiguration will format a Configuration that combines the config from env variables,
-// flags and the config file. Then it will validate that config. It will return the
+// NewConfiguration will format a Configuration that combines the config from env variables,
+// flags. Then it will validate that config. It will return the
 // formatted configuration along with any validation errors. The config precedence
 // is flags, environment variables, then the config file.
 func NewConfiguration() (Configuration, error) {
@@ -80,6 +83,8 @@ func (conf Configuration) compile() (Configuration, error) {
 	return newConfig, newConfig.Validate()
 }
 
+// Validate will check the configuration for any problems that will cause theme kit
+// to function incorrectly.
 func (conf Configuration) Validate() error {
 	errors := []string{}
 
@@ -91,7 +96,7 @@ func (conf Configuration) Validate() error {
 		}
 	}
 
-	if err := conf.validateNoThemeId(); err != nil {
+	if err := conf.validateNoThemeID(); err != nil {
 		errors = append(errors, err.Error())
 	}
 
@@ -101,7 +106,7 @@ func (conf Configuration) Validate() error {
 	return nil
 }
 
-func (conf Configuration) validateNoThemeId() error {
+func (conf Configuration) validateNoThemeID() error {
 	errors := []string{}
 
 	if len(conf.Domain) == 0 {
@@ -131,6 +136,7 @@ func (conf Configuration) AdminURL() string {
 	return url
 }
 
+// IsLive will return true if the configurations theme id is set to live
 func (conf Configuration) IsLive() bool {
 	return strings.ToLower(strings.TrimSpace(conf.ThemeID)) == "live"
 }

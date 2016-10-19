@@ -72,6 +72,7 @@ var (
 	setThemeID       bool
 )
 
+// ThemeCmd is the main entry point to the theme kit command line interface.
 var ThemeCmd = &cobra.Command{
 	Use:   "theme",
 	Short: "Theme Kit is a tool kit for manipulating shopify themes",

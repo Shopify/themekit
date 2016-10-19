@@ -15,6 +15,8 @@ const createThemeMaxRetries int = 3
 
 var dripRate = 1 * time.Second
 
+// SetDripRate will set the drip rate for all leaky bucket throttling. This allows,
+// the user to minimize the amount of work being done through multiple clients.
 func SetDripRate(rate int) {
 	dripRate = time.Duration(rate) * time.Second
 }
@@ -87,7 +89,7 @@ func (t ThemeClient) LocalAssets() ([]theme.Asset, error) {
 	return assets, nil
 }
 
-// LoadAsset will load a single local asset on disk. It will return an error if there
+// LocalAsset will load a single local asset on disk. It will return an error if there
 // is a problem loading the asset.
 func (t ThemeClient) LocalAsset(filename string) (theme.Asset, error) {
 	return theme.LoadAsset(t.config.Directory, filename)
@@ -106,7 +108,7 @@ func (t ThemeClient) Asset(filename string) (theme.Asset, Error) {
 // return a new theme client with the configuration of the new client.
 func CreateTheme(name, zipLocation string) (ThemeClient, error) {
 	config, _ := NewConfiguration()
-	err := config.validateNoThemeId()
+	err := config.validateNoThemeID()
 	if err != nil {
 		return ThemeClient{}, fmt.Errorf("Invalid options: %v", err)
 	}
@@ -141,7 +143,7 @@ func CreateTheme(name, zipLocation string) (ThemeClient, error) {
 		}
 
 		if retries >= createThemeMaxRetries {
-			return client, KitError{fmt.Errorf("Cannot create a theme. Please check log for errors.")}
+			return client, kitError{fmt.Errorf("Cannot create a theme. Please check log for errors.")}
 		}
 	}
 
@@ -159,22 +161,32 @@ func (t ThemeClient) isDoneProcessing(themeID int64) bool {
 	return err == nil && resp.Theme.Previewable
 }
 
+// CreateAsset will take an asset and a callback func(*ShopifyResponse, Error) and
+// it wil call that callback when the asset has been created. If there was an error,
+// in the request then error will be defined otherwise the response will have the
+// appropropriate data for usage.
 func (t ThemeClient) CreateAsset(asset theme.Asset, callback eventCallback) {
 	t.UpdateAsset(asset, callback)
 }
 
+// UpdateAsset will take an asset and a callback func(*ShopifyResponse, Error) and
+// it wil call that callback when the asset has been updated. If there was an error,
+// in the request then error will be defined otherwise the response will have the
+// appropropriate data for usage.
 func (t ThemeClient) UpdateAsset(asset theme.Asset, callback eventCallback) {
-	go func() {
-		t.foreman.JobQueue <- AssetEvent{Asset: asset, Type: Update, Callback: callback}
-	}()
+	t.Perform(AssetEvent{Asset: asset, Type: Update}, callback)
 }
 
+// DeleteAsset will take an asset and a callback func(*ShopifyResponse, Error) and
+// it wil call that callback when the asset has been deleted. If there was an error,
+// in the request then error will be defined otherwise the response will have the
+// appropropriate data for usage.
 func (t ThemeClient) DeleteAsset(asset theme.Asset, callback eventCallback) {
-	go func() {
-		t.foreman.JobQueue <- AssetEvent{Asset: asset, Type: Remove, Callback: callback}
-	}()
+	t.Perform(AssetEvent{Asset: asset, Type: Remove}, callback)
 }
 
+// Perform will take in any asset event, and a callback func(*ShopifyResponse, Error),
+// and call the callback when that event has taken place
 func (t ThemeClient) Perform(event AssetEvent, callback eventCallback) {
 	go func() {
 		event.Callback = callback
@@ -201,7 +213,7 @@ func (t ThemeClient) process() {
 
 func (t ThemeClient) perform(event AssetEvent) {
 	if t.filter.matchesFilter(event.Asset.Key) {
-		event.Callback(&ShopifyResponse{}, KitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", event.Asset.Key)))})
+		event.Callback(&ShopifyResponse{}, kitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", event.Asset.Key)))})
 	}
 	event.Callback(t.httpClient.AssetAction(event.Type, event.Asset))
 }
