@@ -18,8 +18,9 @@ import (
 var apiLimit = newRateLimiter(time.Second / 2)
 
 type httpClient struct {
-	client *http.Client
-	config Configuration
+	insecure bool
+	client   *http.Client
+	config   Configuration
 }
 
 type requestType int
@@ -54,13 +55,18 @@ func newHTTPClient(config Configuration) (*httpClient, error) {
 
 // AdminURL will return the url to the shopify admin.
 func (client *httpClient) AdminURL() string {
-	url := fmt.Sprintf("https://%s/admin", client.config.Domain)
+	adminURL := fmt.Sprintf("%s/admin", client.config.Domain)
 	if !client.config.IsLive() {
 		if themeID, err := strconv.ParseInt(client.config.ThemeID, 10, 64); err == nil {
-			url = fmt.Sprintf("%s/themes/%d", url, themeID)
+			adminURL = fmt.Sprintf("%s/themes/%d", adminURL, themeID)
 		}
 	}
-	return url
+	parsedURL, _ := url.Parse(adminURL)
+	parsedURL.Scheme = "https"
+	if client.insecure {
+		parsedURL.Scheme = "http"
+	}
+	return parsedURL.String()
 }
 
 // AssetPath will return the assets endpoint in the admin section of shopify.
@@ -83,15 +89,15 @@ func (client *httpClient) AssetQuery(event EventType, query map[string]string) (
 	for key, value := range query {
 		path += "&" + key + "=" + value
 	}
-	rtype := assetRequest
+	rtype := listRequest
 	if len(query) > 0 {
-		rtype = listRequest
+		rtype = assetRequest
 	}
 	return client.sendRequest(rtype, event, path, nil)
 }
 
 func (client *httpClient) NewTheme(name, source string) (*ShopifyResponse, Error) {
-	return client.sendJSON(themeRequest, Update, client.ThemesPath(), map[string]interface{}{
+	return client.sendJSON(themeRequest, Create, client.ThemesPath(), map[string]interface{}{
 		"theme": theme.Theme{Name: name, Source: source, Role: "unpublished"},
 	})
 }
