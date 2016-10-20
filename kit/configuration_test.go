@@ -23,10 +23,8 @@ func (suite *ConfigurationTestSuite) TestSetFlagConfig() {
 	assert.Equal(suite.T(), defaultConfig, config)
 
 	flagConfig := Configuration{
-		Directory:  "my/dir/now",
-		BucketSize: 100,
-		RefillRate: 100,
-		Timeout:    DefaultTimeout,
+		Directory: "my/dir/now",
+		Timeout:   DefaultTimeout,
 	}
 	SetFlagConfig(flagConfig)
 
@@ -44,8 +42,6 @@ func (suite *ConfigurationTestSuite) TestEnvConfig() {
 		Domain:       "nope.myshopify.com",
 		Directory:    "my/dir",
 		IgnoredFiles: []string{"one", "two", "three"},
-		BucketSize:   100,
-		RefillRate:   100,
 		Proxy:        ":3000",
 		Ignores:      []string{"four", "five", "six"},
 		Timeout:      40 * time.Second,

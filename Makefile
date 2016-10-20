@@ -9,7 +9,7 @@ vet: ## Verify go code.
 lint: ## Lint all packages
 	@glide novendor | xargs -n 1 golint -set_exit_status
 
-dist: clean  ## Build binaries for all platforms, zip, and upload to S3
+dist: lint vet test clean  ## Build binaries for all platforms, zip, and upload to S3
 	@$(MAKE) windows && $(MAKE) mac && $(MAKE) linux && $(MAKE) zip && $(MAKE) upload_to_s3;
 
 clean: ## Remove all temporary build artifacts

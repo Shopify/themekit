@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	debounceTimeout = 1000 * time.Millisecond
+	debounceTimeout = 1 * time.Second
 )
 
 var (
@@ -29,6 +29,10 @@ var (
 	}
 )
 
+// FileEventCallback is the callback that is called when there is an event from
+// a file watcher.
+type FileEventCallback func(ThemeClient, theme.Asset, EventType, error)
+
 // FileWatcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
 type FileWatcher struct {
@@ -36,10 +40,10 @@ type FileWatcher struct {
 	client   ThemeClient
 	watcher  *fsnotify.Watcher
 	filter   eventFilter
-	callback func(ThemeClient, AssetEvent, error)
+	callback FileEventCallback
 }
 
-func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilter, callback func(ThemeClient, AssetEvent, error)) (*FileWatcher, error) {
+func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilter, callback FileEventCallback) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -76,7 +80,9 @@ func convertFsEvents(watcher *FileWatcher) {
 				close(watcher.done)
 				return
 			}
-			recordedEvents[currentEvent.Name] = currentEvent
+			if currentEvent.Op != fsnotify.Chmod {
+				recordedEvents[currentEvent.Name] = currentEvent
+			}
 		case <-time.After(debounceTimeout):
 			callbackEvents(watcher, recordedEvents)
 			recordedEvents = map[string]fsnotify.Event{}
@@ -87,8 +93,7 @@ func convertFsEvents(watcher *FileWatcher) {
 func callbackEvents(watcher *FileWatcher, recordedEvents map[string]fsnotify.Event) {
 	for eventName, event := range recordedEvents {
 		if !watcher.filter.matchesFilter(eventName) {
-			event, err := handleEvent(event)
-			watcher.callback(watcher.client, event, err)
+			go handleEvent(watcher, event)
 		}
 	}
 }
@@ -110,19 +115,8 @@ func (watcher *FileWatcher) StopWatching() {
 	watcher.watcher.Close()
 }
 
-func handleEvent(event fsnotify.Event) (AssetEvent, error) {
+func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 	var eventType EventType
-	root := filepath.Dir(event.Name)
-	filename := filepath.Base(event.Name)
-	asset, err := theme.LoadAsset(root, filename)
-	if err != nil {
-		return AssetEvent{}, err
-	}
-
-	asset.Key = extractAssetKey(event.Name)
-	if asset.Key == "" {
-		err = fmt.Errorf("File not in project workspace.")
-	}
 
 	switch event.Op {
 	case fsnotify.Chmod, fsnotify.Create, fsnotify.Write:
@@ -131,10 +125,17 @@ func handleEvent(event fsnotify.Event) (AssetEvent, error) {
 		eventType = Remove
 	}
 
-	return AssetEvent{
-		Asset: asset,
-		Type:  eventType,
-	}, err
+	root := filepath.Dir(event.Name)
+	filename := filepath.Base(event.Name)
+	asset, err := theme.LoadAsset(root, filename)
+	if err == nil {
+		asset.Key = extractAssetKey(event.Name)
+		if asset.Key == "" {
+			err = fmt.Errorf("File not in project workspace.")
+		}
+	}
+
+	watcher.callback(watcher.client, asset, eventType, err)
 }
 
 func extractAssetKey(filename string) string {

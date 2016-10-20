@@ -6,8 +6,6 @@ development:
   - charmander
   - bulbasaur
   - squirtle
-  refill_rate: 0
-  bucket_size: 0
 default:
   store: example.myshopify.com
   password: abracadabra
@@ -16,8 +14,6 @@ default:
   - charmander
   - bulbasaur
   - squirtle
-  refill_rate: 0
-  bucket_size: 0
 production:
   store: example.myshopify.com
   password: abracadabra
@@ -26,5 +22,3 @@ production:
   - charmander
   - bulbasaur
   - squirtle
-  refill_rate: 0
-  bucket_size: 0

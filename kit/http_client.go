@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"runtime"
 	"strconv"
+	"time"
 
 	"github.com/Shopify/themekit/theme"
 )
+
+var apiLimit = newRateLimiter(time.Second / 2)
 
 type httpClient struct {
 	client *http.Client
@@ -133,6 +136,7 @@ func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr
 	if err != nil {
 		return nil, kitError{err}
 	}
+	apiLimit.Wait()
 	resp, respErr := client.client.Do(req)
 	return newShopifyResponse(rtype, event, resp, respErr)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/theme"
 )
 
 var replaceCmd = &cobra.Command{
@@ -31,7 +32,7 @@ exist on your local machine will be removed from shopify.`,
 }
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) error {
-	assetsActions := map[string]kit.AssetEvent{}
+	assetsActions := map[theme.Asset]kit.EventType{}
 	if len(filenames) == 0 {
 		assets, remoteErr := client.AssetList()
 		if remoteErr != nil {
@@ -39,7 +40,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 		}
 
 		for _, asset := range assets {
-			assetsActions[asset.Key] = kit.AssetEvent{Asset: asset, Type: kit.Remove}
+			assetsActions[asset] = kit.Remove
 		}
 
 		localAssets, localErr := client.LocalAssets()
@@ -48,7 +49,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 		}
 
 		for _, asset := range localAssets {
-			assetsActions[asset.Key] = kit.AssetEvent{Asset: asset, Type: kit.Update}
+			assetsActions[asset] = kit.Update
 		}
 	} else {
 		for _, filename := range filenames {
@@ -56,29 +57,30 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 			if err != nil {
 				return err
 			}
-			assetsActions[asset.Key] = kit.AssetEvent{Asset: asset, Type: kit.Update}
+			assetsActions[asset] = kit.Update
 		}
 	}
-	for _, event := range assetsActions {
-		performReplace(client, event, wg)
+
+	for asset, event := range assetsActions {
+		wg.Add(1)
+		go performReplace(client, asset, event, wg)
 	}
+
 	wg.Done()
 	return nil
 }
 
-func performReplace(client kit.ThemeClient, event kit.AssetEvent, wg *sync.WaitGroup) {
-	wg.Add(1)
-	client.Perform(event, func(resp *kit.ShopifyResponse, err kit.Error) {
-		if err != nil {
-			kit.LogError(err)
-		} else {
-			kit.Printf(
-				"Successfully performed %s on file %s from %s",
-				kit.GreenText(resp.EventType),
-				kit.GreenText(resp.Asset.Key),
-				kit.YellowText(resp.Host),
-			)
-		}
-		wg.Done()
-	})
+func performReplace(client kit.ThemeClient, asset theme.Asset, event kit.EventType, wg *sync.WaitGroup) {
+	resp, err := client.Perform(asset, event)
+	if err != nil {
+		kit.LogError(err)
+	} else {
+		kit.Printf(
+			"Successfully performed %s on file %s from %s",
+			kit.GreenText(resp.EventType),
+			kit.GreenText(resp.Asset.Key),
+			kit.YellowText(resp.Host),
+		)
+	}
+	wg.Done()
 }

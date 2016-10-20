@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/theme"
 )
 
 var watchCmd = &cobra.Command{
@@ -30,24 +31,21 @@ run 'theme watch' while you are editing and it will detect create, update and de
 	},
 }
 
-func handleWatchEvent(client kit.ThemeClient, event kit.AssetEvent, err error) {
-	if event.Asset.IsValid() || event.Type == kit.Remove {
+func handleWatchEvent(client kit.ThemeClient, asset theme.Asset, event kit.EventType, err error) {
+	kit.Printf(
+		"Received %s event on %s",
+		kit.GreenText(event),
+		kit.BlueText(asset.Key),
+	)
+	resp, err := client.Perform(asset, event)
+	if err != nil {
+		kit.LogError(err)
+	} else {
 		kit.Printf(
-			"Received %s event on %s",
-			kit.GreenText(event.Type.String()),
-			kit.BlueText(event.Asset.Key),
+			"Successfully performed %s operation for file %s to %s",
+			kit.GreenText(resp.EventType),
+			kit.BlueText(resp.Asset.Key),
+			kit.YellowText(resp.Host),
 		)
-		client.Perform(event, func(resp *kit.ShopifyResponse, err kit.Error) {
-			if err != nil {
-				kit.LogError(err)
-			} else {
-				kit.Printf(
-					"Successfully performed %s operation for file %s to %s",
-					kit.GreenText(resp.EventType),
-					kit.BlueText(resp.Asset.Key),
-					kit.YellowText(resp.Host),
-				)
-			}
-		})
 	}
 }

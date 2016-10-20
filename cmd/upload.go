@@ -38,7 +38,8 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) erro
 		}
 
 		for _, asset := range localAssets {
-			performUpload(client, asset, wg)
+			wg.Add(1)
+			go performUpload(client, asset, wg)
 		}
 	} else {
 		for _, filename := range filenames {
@@ -46,7 +47,8 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) erro
 			if err != nil {
 				return err
 			}
-			performUpload(client, asset, wg)
+			wg.Add(1)
+			go performUpload(client, asset, wg)
 		}
 	}
 	wg.Done()
@@ -54,18 +56,15 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) erro
 }
 
 func performUpload(client kit.ThemeClient, asset theme.Asset, wg *sync.WaitGroup) {
-	wg.Add(1)
-	client.UpdateAsset(asset, func(resp *kit.ShopifyResponse, err kit.Error) {
-		if err != nil {
-			kit.Print(err)
-		} else {
-			kit.Printf(
-				"Successfully performed %s on file %s from %s",
-				kit.GreenText(resp.EventType),
-				kit.GreenText(resp.Asset.Key),
-				kit.YellowText(resp.Host),
-			)
-		}
-		wg.Done()
-	})
+	resp, err := client.UpdateAsset(asset)
+	if err != nil {
+		kit.Print(err)
+	} else {
+		kit.Printf(
+			"Successfully performed Update on file %s from %s",
+			kit.GreenText(asset.Key),
+			kit.YellowText(resp.Host),
+		)
+	}
+	wg.Done()
 }

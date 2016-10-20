@@ -59,8 +59,6 @@ var (
 	password         string
 	themeid          string
 	domain           string
-	bucketsize       int
-	refillrate       int
 	proxy            string
 	timeout          time.Duration
 	noUpdateNotifier bool
@@ -95,8 +93,6 @@ func init() {
 	ThemeCmd.PersistentFlags().StringVar(&password, "password", "", "theme password. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&themeid, "themeid", "", "theme id. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&domain, "domain", "", "your shopify domain. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().IntVar(&bucketsize, "bucket", 0, "the bucket size for throttling. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().IntVar(&refillrate, "refill", 0, "the refill rate for throttling. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
@@ -130,8 +126,6 @@ func initializeConfig(cmdName string, timesout bool) error {
 	themeClients = []kit.ThemeClient{}
 
 	if allenvs {
-		//top up the drip rate to reflect how many events will be running concurrently
-		kit.SetDripRate(len(environments))
 		for env := range environments {
 			config, err := environments.GetConfiguration(env)
 			if err != nil {
@@ -165,8 +159,6 @@ func setFlagConfig() {
 		Domain:       domain,
 		Directory:    directory,
 		Proxy:        proxy,
-		BucketSize:   bucketsize,
-		RefillRate:   refillrate,
 		IgnoredFiles: ignoredFiles.Value(),
 		Ignores:      ignores.Value(),
 		Timeout:      timeout,

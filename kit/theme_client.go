@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Shopify/themekit/theme"
@@ -13,21 +12,12 @@ import (
 
 const createThemeMaxRetries int = 3
 
-var dripRate = 1 * time.Second
-
-// SetDripRate will set the drip rate for all leaky bucket throttling. This allows,
-// the user to minimize the amount of work being done through multiple clients.
-func SetDripRate(rate int) {
-	dripRate = time.Duration(rate) * time.Second
-}
-
 // ThemeClient is the interactor with the shopify server. All actions are processed
 // with the client.
 type ThemeClient struct {
 	config     Configuration
 	httpClient *httpClient
 	filter     eventFilter
-	foreman    *foreman
 }
 
 // NewThemeClient will build a new theme client from a configuration and a theme event
@@ -48,10 +38,7 @@ func NewThemeClient(config Configuration) (ThemeClient, error) {
 		config:     config,
 		httpClient: httpClient,
 		filter:     filter,
-		foreman:    newForeman(newLeakyBucket(config.BucketSize, config.RefillRate, dripRate)),
 	}
-
-	go newClient.process()
 
 	return newClient, nil
 }
@@ -63,7 +50,7 @@ func (t ThemeClient) GetConfiguration() Configuration {
 }
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
-func (t ThemeClient) NewFileWatcher(notifyFile string, callback func(ThemeClient, AssetEvent, error)) (*FileWatcher, error) {
+func (t ThemeClient) NewFileWatcher(notifyFile string, callback FileEventCallback) (*FileWatcher, error) {
 	return newFileWatcher(t, t.config.Directory, true, t.filter, callback)
 }
 
@@ -161,61 +148,36 @@ func (t ThemeClient) isDoneProcessing(themeID int64) bool {
 	return err == nil && resp.Theme.Previewable
 }
 
-// CreateAsset will take an asset and a callback func(*ShopifyResponse, Error) and
-// it wil call that callback when the asset has been created. If there was an error,
-// in the request then error will be defined otherwise the response will have the
-// appropropriate data for usage.
-func (t ThemeClient) CreateAsset(asset theme.Asset, callback eventCallback) {
-	t.UpdateAsset(asset, callback)
+// CreateAsset will take an asset and will return  when the asset has been created.
+// If there was an error, in the request then error will be defined otherwise the
+//response will have the appropropriate data for usage.
+func (t ThemeClient) CreateAsset(asset theme.Asset) (*ShopifyResponse, Error) {
+	return t.UpdateAsset(asset)
 }
 
-// UpdateAsset will take an asset and a callback func(*ShopifyResponse, Error) and
-// it wil call that callback when the asset has been updated. If there was an error,
-// in the request then error will be defined otherwise the response will have the
-// appropropriate data for usage.
-func (t ThemeClient) UpdateAsset(asset theme.Asset, callback eventCallback) {
-	t.Perform(AssetEvent{Asset: asset, Type: Update}, callback)
+// UpdateAsset will take an asset and will return  when the asset has been updated.
+// If there was an error, in the request then error will be defined otherwise the
+//response will have the appropropriate data for usage.
+func (t ThemeClient) UpdateAsset(asset theme.Asset) (*ShopifyResponse, Error) {
+	return t.Perform(asset, Update)
 }
 
-// DeleteAsset will take an asset and a callback func(*ShopifyResponse, Error) and
-// it wil call that callback when the asset has been deleted. If there was an error,
-// in the request then error will be defined otherwise the response will have the
-// appropropriate data for usage.
-func (t ThemeClient) DeleteAsset(asset theme.Asset, callback eventCallback) {
-	t.Perform(AssetEvent{Asset: asset, Type: Remove}, callback)
+// DeleteAsset will take an asset and will return  when the asset has been deleted.
+// If there was an error, in the request then error will be defined otherwise the
+//response will have the appropropriate data for usage.
+func (t ThemeClient) DeleteAsset(asset theme.Asset) (*ShopifyResponse, Error) {
+	return t.Perform(asset, Remove)
 }
 
-// Perform will take in any asset event, and a callback func(*ShopifyResponse, Error),
-// and call the callback when that event has taken place
-func (t ThemeClient) Perform(event AssetEvent, callback eventCallback) {
-	go func() {
-		event.Callback = callback
-		t.foreman.JobQueue <- event
-	}()
-}
-
-func (t ThemeClient) process() {
-	var processWaitGroup sync.WaitGroup
-	for {
-		job, more := <-t.foreman.WorkerQueue
-		if more {
-			processWaitGroup.Add(1)
-			go func() {
-				t.perform(job)
-				processWaitGroup.Done()
-			}()
-		} else {
-			processWaitGroup.Wait()
-			return
-		}
+// Perform will take in any asset and event type, and return after the request has taken
+// place
+// If there was an error, in the request then error will be defined otherwise the
+//response will have the appropropriate data for usage.
+func (t ThemeClient) Perform(asset theme.Asset, event EventType) (*ShopifyResponse, Error) {
+	if t.filter.matchesFilter(asset.Key) {
+		return &ShopifyResponse{}, kitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Key)))}
 	}
-}
-
-func (t ThemeClient) perform(event AssetEvent) {
-	if t.filter.matchesFilter(event.Asset.Key) {
-		event.Callback(&ShopifyResponse{}, kitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", event.Asset.Key)))})
-	}
-	event.Callback(t.httpClient.AssetAction(event.Type, event.Asset))
+	return t.httpClient.AssetAction(event, asset)
 }
 
 func ignoreCompiledAssets(assets []theme.Asset) []theme.Asset {

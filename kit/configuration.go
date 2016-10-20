@@ -19,18 +19,12 @@ type Configuration struct {
 	Domain       string        `yaml:"store" env:"THEMEKIT_DOMAIN"`
 	Directory    string        `yaml:"-" env:"THEMEKIT_DIRECTORY"`
 	IgnoredFiles []string      `yaml:"ignore_files,omitempty" env:"THEMEKIT_IGNORE_FILES" envSeparator:":"`
-	BucketSize   int           `yaml:"bucket_size" env:"THEMEKIT_BUCKET_SIZE"`
-	RefillRate   int           `yaml:"refill_rate" env:"THEMEKIT_REFILL_RATE"`
 	Proxy        string        `yaml:"proxy,omitempty" env:"THEMEKIT_PROXY"`
 	Ignores      []string      `yaml:"ignores,omitempty" env:"THEMEKIT_IGNORES" envSeparator:":"`
 	Timeout      time.Duration `yaml:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
 }
 
 const (
-	// DefaultBucketSize is the default maximum amount of processes to run at the same time.
-	DefaultBucketSize int = 40
-	// DefaultRefillRate is the rate in which processes are allowed to spawn at a time.
-	DefaultRefillRate int = 2
 	// DefaultTimeout is the default timeout to kill any stalled processes.
 	DefaultTimeout = 30 * time.Second
 )
@@ -45,10 +39,8 @@ func init() {
 	pwd, _ := os.Getwd()
 
 	defaultConfig = Configuration{
-		Directory:  pwd,
-		BucketSize: DefaultBucketSize,
-		RefillRate: DefaultRefillRate,
-		Timeout:    DefaultTimeout,
+		Directory: pwd,
+		Timeout:   DefaultTimeout,
 	}
 
 	env.Parse(&environmentConfig)
@@ -133,8 +125,6 @@ ThemeID      %v
 Domain       %v
 Directory    %v
 IgnoredFiles %v
-BucketSize   %v
-RefillRate   %v
 Proxy        %v
 Ignores      %v
 Timeout      %v
@@ -144,8 +134,6 @@ Timeout      %v
 		conf.Domain,
 		conf.Directory,
 		conf.IgnoredFiles,
-		conf.BucketSize,
-		conf.RefillRate,
 		conf.Proxy,
 		conf.Ignores,
 		conf.Timeout)

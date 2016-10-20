@@ -1,6 +1,7 @@
 package kit
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -22,24 +23,28 @@ type FileWatcherTestSuite struct {
 }
 
 func (suite *FileWatcherTestSuite) TestNewFileReader() {
-	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, AssetEvent, error) {})
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, theme.Asset, EventType, error) {})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, watcher.IsWatching())
 	watcher.StopWatching()
 }
 
 func (suite *FileWatcherTestSuite) TestConvertFsEvents() {
-	results := []AssetEvent{}
-	callback := func(client ThemeClient, event AssetEvent, err error) {
-		results = append(results, event)
-		assert.Nil(suite.T(), err)
-	}
+	assetChan := make(chan theme.Asset, 4)
 	eventChan := make(chan fsnotify.Event)
+	var wg sync.WaitGroup
+	wg.Add(2)
 
 	newWatcher := &FileWatcher{
-		done:     make(chan bool),
-		watcher:  &fsnotify.Watcher{Events: eventChan},
-		callback: callback,
+		done:    make(chan bool),
+		watcher: &fsnotify.Watcher{Events: eventChan},
+	}
+
+	newWatcher.callback = func(client ThemeClient, asset theme.Asset, event EventType, err error) {
+		assert.Nil(suite.T(), err)
+		assert.Equal(suite.T(), Update, event)
+		assetChan <- asset
+		wg.Done()
 	}
 
 	go convertFsEvents(newWatcher)
@@ -57,40 +62,45 @@ func (suite *FileWatcherTestSuite) TestConvertFsEvents() {
 		close(eventChan)
 	}()
 
-	func() {
-		for {
-			select {
-			case _, ok := <-newWatcher.done:
-				if !ok {
-					return
-				}
-			}
-		}
-	}()
-
+	wg.Wait()
 	// test that the events are debounced
-	assert.Equal(suite.T(), 2, len(results))
+	assert.Equal(suite.T(), 2, len(assetChan))
 }
 
 func (suite *FileWatcherTestSuite) TestCallbackEvents() {
-	newWatcher := &FileWatcher{callback: func(client ThemeClient, event AssetEvent, err error) {
-		assert.Nil(suite.T(), err)
-		assert.Equal(suite.T(), AssetEvent{Asset: theme.Asset{Key: "templates/template.liquid", Value: ""}, Type: Update}, event)
-	}}
-	callbackEvents(newWatcher, map[string]fsnotify.Event{
+	events := map[string]fsnotify.Event{
 		watchFixturePath + "/templates/template.liquid": {Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
-	})
+	}
 
-	newWatcher = &FileWatcher{callback: func(client ThemeClient, event AssetEvent, err error) {
-		assert.NotNil(suite.T(), err)
+	var wg sync.WaitGroup
+	wg.Add(len(events))
+
+	newWatcher := &FileWatcher{callback: func(client ThemeClient, asset theme.Asset, event EventType, err error) {
+		assert.Nil(suite.T(), err)
+		assert.Equal(suite.T(), theme.Asset{Key: "templates/template.liquid", Value: ""}, asset)
+		assert.Equal(suite.T(), Update, event)
+		wg.Done()
 	}}
-	callbackEvents(newWatcher, map[string]fsnotify.Event{
+
+	callbackEvents(newWatcher, events)
+
+	newWatcher = &FileWatcher{callback: func(client ThemeClient, asset theme.Asset, event EventType, err error) {
+		assert.NotNil(suite.T(), err)
+		wg.Done()
+	}}
+
+	events = map[string]fsnotify.Event{
 		"nope/template.liquid": {Name: "nope/template.liquid", Op: fsnotify.Write},
-	})
+	}
+	wg.Add(len(events))
+
+	callbackEvents(newWatcher, events)
+
+	wg.Wait()
 }
 
 func (suite *FileWatcherTestSuite) TestStopWatching() {
-	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, AssetEvent, error) {})
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, theme.Asset, EventType, error) {})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, watcher.IsWatching())
 	watcher.StopWatching()
@@ -99,21 +109,25 @@ func (suite *FileWatcherTestSuite) TestStopWatching() {
 }
 
 func (suite *FileWatcherTestSuite) TestHandleEvent() {
-	_, err := handleEvent(fsnotify.Event{Name: "gone/oath", Op: fsnotify.Remove})
-	assert.NotNil(suite.T(), err)
+	writes := []fsnotify.Op{
+		fsnotify.Create,
+		fsnotify.Write,
+		fsnotify.Remove,
+	}
 
-	writes := map[fsnotify.Op]EventType{
-		fsnotify.Chmod:  Update,
-		fsnotify.Create: Update,
-		fsnotify.Write:  Update,
-		fsnotify.Remove: Remove,
-	}
-	for fsEvent, themekitEvent := range writes {
-		event := fsnotify.Event{Name: textFixturePath, Op: fsEvent}
-		assetEvent, err := handleEvent(event)
-		assert.Equal(suite.T(), themekitEvent, assetEvent.Type)
+	var wg sync.WaitGroup
+	wg.Add(len(writes))
+
+	watcher := &FileWatcher{callback: func(client ThemeClient, asset theme.Asset, event EventType, err error) {
 		assert.Equal(suite.T(), "File not in project workspace.", err.Error())
+		wg.Done()
+	}}
+
+	for _, fsEvent := range writes {
+		handleEvent(watcher, fsnotify.Event{Name: textFixturePath, Op: fsEvent})
 	}
+
+	wg.Wait()
 }
 
 func (suite *FileWatcherTestSuite) TestExtractAssetKey() {
