@@ -30,6 +30,8 @@ const (
 
 func (e EventType) String() string {
 	switch e {
+	case Create:
+		return "Create"
 	case Retrieve:
 		return "Retrieve"
 	case Update:

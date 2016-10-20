@@ -2,10 +2,13 @@ package kit
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/fsnotify.v1"
+
+	"github.com/Shopify/themekit/theme"
 )
 
 const (
@@ -15,17 +18,84 @@ const (
 
 type FileWatcherTestSuite struct {
 	suite.Suite
+	watcher *FileWatcher
 }
 
 func (suite *FileWatcherTestSuite) TestNewFileReader() {
-	client := ThemeClient{}
-	newFileWatcher(client, watchFixturePath, true, eventFilter{}, func(ThemeClient, AssetEvent, error) {})
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, AssetEvent, error) {})
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), true, watcher.IsWatching())
+	watcher.StopWatching()
 }
 
 func (suite *FileWatcherTestSuite) TestConvertFsEvents() {
+	results := []AssetEvent{}
+	callback := func(client ThemeClient, event AssetEvent, err error) {
+		results = append(results, event)
+		assert.Nil(suite.T(), err)
+	}
+	eventChan := make(chan fsnotify.Event)
+
+	newWatcher := &FileWatcher{
+		done:     make(chan bool),
+		watcher:  &fsnotify.Watcher{Events: eventChan},
+		callback: callback,
+	}
+
+	go convertFsEvents(newWatcher)
+
+	go func() {
+		writes := []fsnotify.Event{
+			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
+			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
+			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
+			{Name: watchFixturePath + "/templates/customers/test.liquid", Op: fsnotify.Write},
+		}
+		for _, fsEvent := range writes {
+			eventChan <- fsEvent
+		}
+		close(eventChan)
+	}()
+
+	func() {
+		for {
+			select {
+			case _, ok := <-newWatcher.done:
+				if !ok {
+					return
+				}
+			}
+		}
+	}()
+
+	// test that the events are debounced
+	assert.Equal(suite.T(), 2, len(results))
+}
+
+func (suite *FileWatcherTestSuite) TestCallbackEvents() {
+	newWatcher := &FileWatcher{callback: func(client ThemeClient, event AssetEvent, err error) {
+		assert.Nil(suite.T(), err)
+		assert.Equal(suite.T(), AssetEvent{Asset: theme.Asset{Key: "templates/template.liquid", Value: ""}, Type: Update}, event)
+	}}
+	callbackEvents(newWatcher, map[string]fsnotify.Event{
+		watchFixturePath + "/templates/template.liquid": {Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
+	})
+
+	newWatcher = &FileWatcher{callback: func(client ThemeClient, event AssetEvent, err error) {
+		assert.NotNil(suite.T(), err)
+	}}
+	callbackEvents(newWatcher, map[string]fsnotify.Event{
+		"nope/template.liquid": {Name: "nope/template.liquid", Op: fsnotify.Write},
+	})
 }
 
 func (suite *FileWatcherTestSuite) TestStopWatching() {
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, AssetEvent, error) {})
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), true, watcher.IsWatching())
+	watcher.StopWatching()
+	time.Sleep(50 * time.Millisecond)
+	assert.Equal(suite.T(), false, watcher.IsWatching())
 }
 
 func (suite *FileWatcherTestSuite) TestHandleEvent() {
@@ -76,12 +146,10 @@ func (suite *FileWatcherTestSuite) TestfindDirectoriesToWatch() {
 		watchFixturePath + "/templates/customers",
 	}
 
-	files, err := findDirectoriesToWatch(watchFixturePath, true, func(string) bool { return false })
-	assert.Nil(suite.T(), err)
+	files := findDirectoriesToWatch(watchFixturePath, true, func(string) bool { return false })
 	assert.Equal(suite.T(), expected, files)
 
-	files, err = findDirectoriesToWatch(watchFixturePath, false, func(string) bool { return false })
-	assert.Nil(suite.T(), err)
+	files = findDirectoriesToWatch(watchFixturePath, false, func(string) bool { return false })
 	assert.Equal(suite.T(), []string{watchFixturePath}, files)
 }
 

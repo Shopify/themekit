@@ -59,11 +59,3 @@ func TestFillingAnAlreadyFullBucket(t *testing.T) {
 	assert.Equal(t, true, bucket.IsFull())
 	assert.Equal(t, 2, bucket.Available())
 }
-
-func BenchmarkBucket(b *testing.B) {
-	bucket := newLeakyBucket(2, 1, 1)
-	bucket.StartDripping()
-	for i := 0; i < b.N; i++ {
-		bucket.GetDrop()
-	}
-}

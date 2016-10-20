@@ -32,7 +32,7 @@ var (
 // FileWatcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
 type FileWatcher struct {
-	watching bool
+	done     chan bool
 	client   ThemeClient
 	watcher  *fsnotify.Watcher
 	filter   eventFilter
@@ -40,66 +40,68 @@ type FileWatcher struct {
 }
 
 func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilter, callback func(ThemeClient, AssetEvent, error)) (*FileWatcher, error) {
-	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.matchesFilter)
-	if err != nil {
-		return nil, err
-	}
-
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, path := range dirsToWatch {
+	for _, path := range findDirectoriesToWatch(dir, recur, filter.matchesFilter) {
 		if err := watcher.Add(path); err != nil {
 			return nil, fmt.Errorf("Could not watch directory %s: %s", path, err)
 		}
 	}
 
 	newWatcher := &FileWatcher{
+		done:     make(chan bool),
 		client:   client,
 		watcher:  watcher,
 		callback: callback,
 		filter:   filter,
 	}
 
-	go newWatcher.convertFsEvents()
+	go convertFsEvents(newWatcher)
 
 	return newWatcher, nil
 }
 
-func (watcher *FileWatcher) convertFsEvents() {
+func convertFsEvents(watcher *FileWatcher) {
 	var currentEvent fsnotify.Event
 	var more bool
-	watcher.watching = true
 	recordedEvents := map[string]fsnotify.Event{}
 	for {
 		select {
 		case currentEvent, more = <-watcher.watcher.Events:
 			if !more {
-				watcher.watching = false
+				callbackEvents(watcher, recordedEvents)
+				close(watcher.done)
 				return
 			}
-			if currentEvent.Op != fsnotify.Chmod {
-				recordedEvents[currentEvent.Name] = currentEvent
-			}
+			recordedEvents[currentEvent.Name] = currentEvent
 		case <-time.After(debounceTimeout):
-			for eventName, event := range recordedEvents {
-				if !watcher.filter.matchesFilter(eventName) {
-					event, err := handleEvent(event)
-					watcher.callback(watcher.client, event, err)
-				}
-			}
+			callbackEvents(watcher, recordedEvents)
 			recordedEvents = map[string]fsnotify.Event{}
-			break
+		}
+	}
+}
+
+func callbackEvents(watcher *FileWatcher, recordedEvents map[string]fsnotify.Event) {
+	for eventName, event := range recordedEvents {
+		if !watcher.filter.matchesFilter(eventName) {
+			event, err := handleEvent(event)
+			watcher.callback(watcher.client, event, err)
 		}
 	}
 }
 
 // IsWatching will return true if the watcher is currently watching for file changes.
 // it will return false if it has been stopped
-func (watcher *FileWatcher) IsWatching() {
-	watcher.watcher.Close()
+func (watcher *FileWatcher) IsWatching() bool {
+	select {
+	case _, ok := <-watcher.done:
+		return ok
+	default:
+		return true
+	}
 }
 
 // StopWatching will stop the Filewatcher from watching it's directories and clean
@@ -148,19 +150,18 @@ func extractAssetKey(filename string) string {
 	return ""
 }
 
-func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(string) bool) ([]string, error) {
+func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(string) bool) []string {
 	if !recursive {
-		return []string{start}, nil
+		return []string{start}
 	}
 
 	result := []string{}
-	err := filepath.Walk(start, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() || ignoreDirectory(path) {
-			return nil
+	filepath.Walk(start, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() && !ignoreDirectory(path) {
+			result = append(result, path)
 		}
-		result = append(result, path)
 		return nil
 	})
 
-	return result, err
+	return result
 }
