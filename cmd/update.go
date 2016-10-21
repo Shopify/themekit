@@ -36,18 +36,21 @@ download it and apply it.`,
 		if err := initializeConfig(cmd.Name(), true); err != nil {
 			return err
 		}
-
-		latestRelease, err := downloadReleaseForPlatform()
-		if err == nil {
-			if latestRelease.IsApplicable() {
-				kit.LogWarn("Updating from", kit.ThemeKitVersion, "to", latestRelease.Version)
-				releaseForPlatform := findAppropriateRelease(latestRelease)
-				return kit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
-			}
-			return fmt.Errorf("No applicable update available.")
-		}
-		return err
+		return update()
 	},
+}
+
+func update() error {
+	latestRelease, err := downloadReleaseForPlatform()
+	if err != nil {
+		return err
+	}
+	if latestRelease.IsApplicable() {
+		kit.LogWarn("Updating from", kit.ThemeKitVersion, "to", latestRelease.Version)
+		releaseForPlatform := findAppropriateRelease(latestRelease)
+		return kit.ApplyUpdate(releaseForPlatform.URL, releaseForPlatform.Digest)
+	}
+	return fmt.Errorf("No applicable update available.")
 }
 
 func (r release) IsApplicable() bool {

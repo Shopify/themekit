@@ -26,37 +26,40 @@ The most popular theme on Shopify. Bootstrap will also setup
 your config file and create a new theme id for you.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		setFlagConfig()
-
-		zipLocation, err := zipPathForVersion(bootstrapVersion)
-		if err != nil {
-			return err
-		}
-
-		themeName := bootstrapPrefix + "Timber-" + bootstrapVersion
-		kit.Printf(
-			"Attempting to create theme %s from %s",
-			kit.YellowText(themeName),
-			kit.YellowText(zipLocation),
-		)
-
-		client, theme, err := kit.CreateTheme(themeName, zipLocation)
-		if err != nil {
-			return err
-		}
-
-		if err := saveConfiguration(client.Config); err != nil {
-			return err
-		}
-
-		kit.Printf(
-			"Successfully created theme '%s' with id of %s on shop %s",
-			kit.BlueText(theme.Name),
-			kit.BlueText(theme.ID),
-			kit.YellowText(client.Config.Domain),
-		)
-
-		return download(client, []string{})
+		return bootstrap()
 	},
+}
+
+func bootstrap() error {
+	zipLocation, err := zipPathForVersion(bootstrapVersion)
+	if err != nil {
+		return err
+	}
+
+	themeName := bootstrapPrefix + "Timber-" + bootstrapVersion
+	kit.Printf(
+		"Attempting to create theme %s from %s",
+		kit.YellowText(themeName),
+		kit.YellowText(zipLocation),
+	)
+
+	client, theme, err := kit.CreateTheme(themeName, zipLocation)
+	if err != nil {
+		return err
+	}
+
+	if err := saveConfiguration(client.Config); err != nil {
+		return err
+	}
+
+	kit.Printf(
+		"Successfully created theme '%s' with id of %s on shop %s",
+		kit.BlueText(theme.Name),
+		kit.BlueText(theme.ID),
+		kit.YellowText(client.Config.Domain),
+	)
+
+	return download(client, []string{})
 }
 
 func zipPath(version string) string {

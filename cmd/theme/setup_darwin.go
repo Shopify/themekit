@@ -22,5 +22,4 @@ func init() {
 		kit.LogWarnf("%s\n", err)
 		kit.LogWarnf("Could not set file descriptor limits. Themekit will work, but you might encounter issues if your project holds many files. You can set the limits manually using ulimit -n 2048.\n")
 	}
-
 }

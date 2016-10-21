@@ -18,10 +18,8 @@ run 'theme watch' while you are editing and it will detect create, update and de
 		}
 
 		for _, client := range themeClients {
-			config := client.Config
-			kit.Printf("Watching for file changes for theme %v on host %s ", kit.GreenText(config.ThemeID), kit.YellowText(config.Domain))
-			_, err := client.NewFileWatcher(notifyFile, handleWatchEvent)
-			if err != nil {
+			kit.Printf("Watching for file changes for theme %v on host %s ", kit.GreenText(client.Config.ThemeID), kit.YellowText(client.Config.Domain))
+			if _, err := client.NewFileWatcher(notifyFile, handleWatchEvent); err != nil {
 				return err
 			}
 		}
