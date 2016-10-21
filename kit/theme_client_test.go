@@ -1,229 +1,243 @@
 package kit
 
-//import (
-//"bytes"
-//"encoding/json"
-//"fmt"
-//"image"
-//"image/png"
-//"io/ioutil"
-//"log"
-//"net/http"
-//"net/http/httptest"
-//"os"
-//"sort"
-//"testing"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"sort"
+	"strings"
+	"testing"
 
-//"github.com/stretchr/testify/assert"
-//"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+)
 
-//"github.com/Shopify/themekit/theme"
-//)
+type ThemeClientTestSuite struct {
+	suite.Suite
+	config Configuration
+	client ThemeClient
+}
 
-//var globalEventLog = make(chan ThemeEvent, 100)
+func (suite *ThemeClientTestSuite) SetupTest() {
+	suite.config, _ = NewConfiguration()
+	suite.config.Domain = "test.myshopify.com"
+	suite.config.ThemeID = "123"
+	suite.config.Password = "sharknado"
+	suite.config.Directory = "../fixtures/project"
+	suite.config.IgnoredFiles = []string{"fookeybee"}
+	suite.client, _ = NewThemeClient(suite.config)
+}
 
-//type TestEvent struct {
-//asset     theme.Asset
-//eventType EventType
-//}
+func (suite *ThemeClientTestSuite) TestNewThemeClient() {
+	client, err := NewThemeClient(suite.config)
+	assert.Nil(suite.T(), err)
+	assert.NotNil(suite.T(), client)
+	assert.NotNil(suite.T(), client.httpClient)
+	assert.NotNil(suite.T(), client.filter)
+	assert.Equal(suite.T(), suite.config, client.Config)
+}
 
-//func Fixture(name string) string {
-//return string(RawFixture(name))
-//}
+func (suite *ThemeClientTestSuite) TestNewThemeClientError() {
+	suite.config.Proxy = "://foo.com"
+	_, err := NewThemeClient(suite.config)
+	assert.NotNil(suite.T(), err)
 
-//func RawFixture(name string) []byte {
-//path := fmt.Sprintf("../fixtures/%s.json", name)
-//file, err := os.Open(path)
-//defer file.Close()
-//if err != nil {
-//log.Fatal(err)
-//}
-//bytes, err := ioutil.ReadAll(file)
-//if err != nil {
-//log.Fatal(err)
-//}
-//return bytes
-//}
+	suite.config.Proxy = ""
+	suite.config.Ignores = []string{"nope"}
+	_, err = NewThemeClient(suite.config)
+	assert.NotNil(suite.T(), err)
+}
 
-//func BinaryTestData() []byte {
-//img := image.NewRGBA(image.Rect(0, 0, 10, 10))
-//buff := bytes.NewBuffer([]byte{})
-//png.Encode(buff, img)
-//return buff.Bytes()
-//}
+func (suite *ThemeClientTestSuite) TestNewFileWatcher() {
+	watcher, err := suite.client.NewFileWatcher("", func(ThemeClient, Asset, EventType, error) {})
+	assert.Nil(suite.T(), err)
+	assert.NotNil(suite.T(), watcher)
+}
 
-//func (t TestEvent) Asset() theme.Asset {
-//return t.asset
-//}
+func (suite *ThemeClientTestSuite) TestAssetList() {
+	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "GET", r.Method)
+		assert.Equal(suite.T(), "fields=key,attachment,value", r.URL.RawQuery)
+		fmt.Fprintf(w, jsonFixture("responses/assets_raw"))
+	})
+	defer server.Close()
 
-//func (t TestEvent) Type() EventType {
-//return t.eventType
-//}
+	expected := map[string][]Asset{}
+	bytes := []byte(jsonFixture("responses/assets_filtered"))
+	json.Unmarshal(bytes, &expected)
+	sort.Sort(ByAsset(expected["assets"]))
 
-//func TestPerformWithUpdateAssetEvent(t *testing.T) {
-//ts := assertRequest(t, "PUT", "asset", map[string]string{"value": "Hello World", "key": "assets/hello.txt"})
-//defer ts.Close()
-//asset := TestEvent{asset: asset(), eventType: Update}
-//client := NewThemeClient(globalEventLog, conf(ts))
-//client.Perform(asset)
-//}
+	assets, err := suite.client.AssetList()
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), expected["assets"], assets)
+}
 
-//func TestPerformWithRemoveAssetEvent(t *testing.T) {
-//ts := assertRequest(t, "DELETE", "asset", map[string]string{"key": "assets/hello.txt"})
-//defer ts.Close()
-//asset := TestEvent{asset: asset(), eventType: Remove}
-//client := NewThemeClient(globalEventLog, conf(ts))
-//client.Perform(asset)
-//}
+func (suite *ThemeClientTestSuite) TestAsset() {
+	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "GET", r.Method)
+		assert.Equal(suite.T(), "fields=key,attachment,value&asset[key]=file.txt", r.URL.RawQuery)
+		fmt.Fprintf(w, jsonFixture("responses/asset"))
+	})
+	defer server.Close()
+	asset, err := suite.client.Asset("file.txt")
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), "assets/hello.txt", asset.Key)
+}
 
-//func TestPerformWithAssetEventThatDoesNotPassTheFilter(t *testing.T) {
-//ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//t.Log("The request should never have been sent")
-//t.Fail()
-//}))
-//defer ts.Close()
-//config := conf(ts)
-//config.IgnoredFiles = []string{"snickerdoodle.txt"}
-//config.Ignores = []string{}
+func (suite *ThemeClientTestSuite) TestLocalAssets() {
+	assets, err := suite.client.LocalAssets()
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), 8, len(assets))
 
-//asset := theme.Asset{Key: "snickerdoodle.txt", Value: "not important"}
-//event := TestEvent{asset: asset, eventType: Update}
+	suite.client.Config.Directory = "./nope"
+	assets, err = suite.client.LocalAssets()
+	assert.NotNil(suite.T(), err)
+}
 
-//client := NewThemeClient(globalEventLog, config)
-//client.Perform(event)
-//}
+func (suite *ThemeClientTestSuite) TestLocalAsset() {
+	asset, err := suite.client.LocalAsset("assets/application.js")
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), "assets/application.js", asset.Key)
 
-//func TestProcessingAnEventsChannel(t *testing.T) {
-//results := map[string]int{}
-//ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//results[r.Method]++
-//}))
+	_, err = suite.client.LocalAsset("snippets/npe.txt")
+	assert.NotNil(suite.T(), err)
+}
 
-//client := NewThemeClient(globalEventLog, conf(ts))
+func (suite *ThemeClientTestSuite) TestCreateTheme() {
+	responses := 0
+	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			fmt.Fprintf(w, jsonFixture("responses/theme"))
+		} else if r.Method == "POST" {
+			if responses < 3 {
+				fmt.Fprintf(w, jsonFixture("responses/theme_error"))
+			} else {
+				fmt.Fprintf(w, jsonFixture("responses/theme"))
+			}
+		}
+		responses++
+	})
+	defer server.Close()
 
-//done := make(chan bool)
-//stream := client.Process(done)
-//go func() {
-//stream <- TestEvent{asset: asset(), eventType: Update}
-//stream <- TestEvent{asset: asset(), eventType: Update}
-//stream <- TestEvent{asset: asset(), eventType: Remove}
-//close(stream)
-//}()
+	client, theme, err := CreateTheme("name", "source")
+	if assert.NotNil(suite.T(), err) {
+		assert.Equal(suite.T(), "Invalid options: missing domain,missing password", err.Error())
+	}
 
-//<-done
-//assert.Equal(t, 2, results["PUT"])
-//assert.Equal(t, 1, results["DELETE"])
-//}
+	suite.config.Ignores = []string{"nope"}
+	SetFlagConfig(suite.config)
+	client, theme, err = CreateTheme("name", "source")
+	if assert.NotNil(suite.T(), err) {
+		assert.Equal(suite.T(), "open nope: no such file or directory", err.Error())
+	}
 
-//func TestRetrievingAnAssetList(t *testing.T) {
-//ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//assert.Equal(t, "fields=key,attachment,value", r.URL.RawQuery)
-//fmt.Fprintf(w, Fixture("response_multi"))
-//}))
+	suite.config.Ignores = []string{}
+	suite.config.Domain = server.URL
 
-//client := NewThemeClient(globalEventLog, conf(ts))
-//assets := client.AssetList()
-//assert.Equal(t, 2, len(assets))
-//}
+	SetFlagConfig(suite.config)
+	client, theme, err = CreateTheme("name", "source")
+	if assert.NotNil(suite.T(), err) {
+		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "Cannot create a theme. Last error was"))
+	}
 
-//func TestRetrievingLocalAssets(t *testing.T) {
-//ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
-//client := NewThemeClient(globalEventLog, conf(ts))
+	client, theme, err = CreateTheme("name", "source")
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), "timberland", theme.Name)
+	assert.Equal(suite.T(), fmt.Sprintf("%d", theme.ID), client.Config.ThemeID)
+}
 
-//assets := client.LocalAssets("../fixtures/templates")
+func (suite *ThemeClientTestSuite) TestCreateAsset() {
+	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "PUT", r.Method)
 
-//assert.Equal(t, 1, len(assets))
-//}
+		decoder := json.NewDecoder(r.Body)
+		var t map[string]Asset
+		decoder.Decode(&t)
+		defer r.Body.Close()
 
-//func TestRetrievingLocalAssetsWithSubdirectories(t *testing.T) {
-//client := NewThemeClient(globalEventLog, Configuration{})
+		assert.Equal(suite.T(), Asset{Key: "createkey", Value: "value"}, t["asset"])
+		fmt.Fprintf(w, jsonFixture("responses/asset"))
+	})
+	defer server.Close()
 
-//assets := client.LocalAssets("../fixtures/local_assets")
+	suite.client.CreateAsset(Asset{Key: "createkey", Value: "value"})
+}
 
-//assert.Equal(t, 3, len(assets))
-//}
+func (suite *ThemeClientTestSuite) TestUpdateAsset() {
+	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "PUT", r.Method)
 
-//func TestRetrievingAnAssetListThatIncludesCompiledAssets(t *testing.T) {
-//ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//fmt.Fprintf(w, Fixture("assets_response_from_shopify"))
-//}))
+		decoder := json.NewDecoder(r.Body)
+		var t map[string]Asset
+		decoder.Decode(&t)
+		defer r.Body.Close()
 
-//var expected map[string][]theme.Asset
-//json.Unmarshal(RawFixture("expected_asset_list_output"), &expected)
-//sort.Sort(theme.ByAsset(expected["assets"]))
+		assert.Equal(suite.T(), Asset{Key: "updatekey", Value: "value"}, t["asset"])
+		fmt.Fprintf(w, jsonFixture("responses/asset"))
+	})
+	defer server.Close()
 
-//client := NewThemeClient(globalEventLog, conf(ts))
-//assetsChan := client.AssetList()
-//sort.Sort(theme.ByAsset(assetsChan))
+	suite.client.UpdateAsset(Asset{Key: "updatekey", Value: "value"})
+}
 
-//assert.Equal(t, len(expected["assets"]), len(assetsChan))
-//for index, expected := range expected["assets"] {
-//assert.Equal(t, expected, assetsChan[index])
-//}
-//}
+func (suite *ThemeClientTestSuite) TestDeleteAsset() {
+	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "DELETE", r.Method)
 
-//func TestRetrievingASingleAsset(t *testing.T) {
-//ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//assert.Equal(t, "fields=key,attachment,value&asset[key]=assets/foo.txt", r.URL.RawQuery)
-//fmt.Fprintf(w, Fixture("response_single"))
-//}))
+		decoder := json.NewDecoder(r.Body)
+		var t map[string]Asset
+		decoder.Decode(&t)
+		defer r.Body.Close()
 
-//client := NewThemeClient(globalEventLog, conf(ts))
-//asset, _ := client.Asset("assets/foo.txt")
-//assert.Equal(t, "hello world", asset.Value)
-//}
+		assert.Equal(suite.T(), Asset{Key: "deletekey", Value: "value"}, t["asset"])
+		fmt.Fprintf(w, jsonFixture("responses/asset"))
+	})
+	defer server.Close()
 
-//func TestIgnoringCompiledAssets(t *testing.T) {
-//input := []theme.Asset{
-//{Key: "assets/ajaxify.js"},
-//{Key: "assets/ajaxify.js.liquid"},
-//{Key: "assets/checkout.css"},
-//{Key: "assets/checkout.css.liquid"},
-//{Key: "templates/article.liquid"},
-//{Key: "templates/product.liquid"},
-//}
-//expected := []theme.Asset{
-//{Key: "assets/ajaxify.js.liquid"},
-//{Key: "assets/checkout.css.liquid"},
-//{Key: "templates/article.liquid"},
-//{Key: "templates/product.liquid"},
-//}
-//assert.Equal(t, expected, ignoreCompiledAssets(input))
-//}
+	suite.client.DeleteAsset(Asset{Key: "deletekey", Value: "value"})
+}
 
-//func asset() theme.Asset {
-//return theme.Asset{Key: "assets/hello.txt", Value: "Hello World"}
-//}
+func (suite *ThemeClientTestSuite) TestPerform() {
+	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "POST", r.Method)
 
-//func conf(server *httptest.Server) Configuration {
-//return Configuration{
-//URL:        server.URL,
-//Password:   "abra",
-//BucketSize: 100,
-//RefillRate: 100,
-//}
-//}
+		decoder := json.NewDecoder(r.Body)
+		var t map[string]Asset
+		decoder.Decode(&t)
+		defer r.Body.Close()
 
-//func drain(channel chan ThemeEvent) {
-//for {
-//_, more := <-channel
-//if !more {
-//return
-//}
-//}
-//}
+		assert.Equal(suite.T(), Asset{Key: "fookey", Value: "value"}, t["asset"])
+		fmt.Fprintf(w, jsonFixture("responses/asset"))
+	})
+	defer server.Close()
 
-//func assertRequest(t *testing.T, method string, root string, formValues map[string]string) *httptest.Server {
-//ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//assert.Equal(t, "abra", r.Header.Get("X-Shopify-Access-Token"))
-//assert.Equal(t, method, r.Method)
-//var results map[string]map[string]string
-//data, _ := ioutil.ReadAll(r.Body)
-//json.Unmarshal(data, &results)
-//values := results[root]
-//for key, value := range formValues {
-//assert.Equal(t, value, values[key])
-//}
-//}))
-//return ts
-//}
+	suite.client.Perform(Asset{Key: "fookey", Value: "value"}, Create)
+
+	_, err := suite.client.Perform(Asset{Key: "fookeybee", Value: "value"}, Create)
+	assert.NotNil(suite.T(), err)
+}
+
+func (suite *ThemeClientTestSuite) TestIgnoreCompiledAssets() {
+	raw := map[string][]Asset{}
+	bytes := []byte(jsonFixture("responses/assets_raw"))
+	json.Unmarshal(bytes, &raw)
+	sort.Sort(ByAsset(raw["assets"]))
+
+	expected := map[string][]Asset{}
+	bytes = []byte(jsonFixture("responses/assets_filtered"))
+	json.Unmarshal(bytes, &expected)
+	sort.Sort(ByAsset(expected["assets"]))
+
+	assert.Equal(suite.T(), expected["assets"], ignoreCompiledAssets(raw["assets"]))
+}
+
+func (suite *ThemeClientTestSuite) NewTestServer(handler http.HandlerFunc) *httptest.Server {
+	server := httptest.NewServer(handler)
+	suite.client.httpClient.config.Domain = server.URL
+	return server
+}
+
+func TestThemeClientTestSuite(t *testing.T) {
+	suite.Run(t, new(ThemeClientTestSuite))
+}

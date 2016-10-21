@@ -29,7 +29,7 @@ and write them to disk.`,
 
 func download(client kit.ThemeClient, filenames []string) error {
 	if len(filenames) <= 0 {
-		kit.Printf("Fetching assets from %s", kit.YellowText(client.GetConfiguration().Domain))
+		kit.Printf("Fetching assets from %s", kit.YellowText(client.Config.Domain))
 		assets, err := client.AssetList()
 		if err != nil {
 			return err
@@ -41,7 +41,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 		}
 	} else {
 		for _, filename := range filenames {
-			kit.Printf("Fetching %s from %s", filename, kit.YellowText(client.GetConfiguration().Domain))
+			kit.Printf("Fetching %s from %s", filename, kit.YellowText(client.Config.Domain))
 			asset, err := client.Asset(filename)
 			if err != nil {
 				return err
@@ -55,7 +55,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 }
 
 func writeToDisk(client kit.ThemeClient, asset kit.Asset) error {
-	dir := client.GetConfiguration().Directory
+	dir := client.Config.Directory
 	perms, err := os.Stat(dir)
 	if err != nil {
 		return err

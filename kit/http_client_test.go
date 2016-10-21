@@ -197,7 +197,6 @@ func (suite *HTTPClientTestSuite) TestSendRequest() {
 func (suite *HTTPClientTestSuite) NewTestServer(handler http.HandlerFunc) *httptest.Server {
 	server := httptest.NewServer(handler)
 	suite.client.config.Domain = server.URL
-	suite.client.insecure = true
 	return server
 }
 

@@ -2,7 +2,8 @@
   "theme": {
     "name": "timberland",
     "source": "https://githubz.com/shopify/timberlands",
-    "role": "unpublished"
+    "role": "unpublished",
+    "previewable": true
   }
 }
 

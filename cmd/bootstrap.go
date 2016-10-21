@@ -32,14 +32,28 @@ your config file and create a new theme id for you.`,
 			return err
 		}
 
-		client, err := kit.CreateTheme(bootstrapPrefix+"Timber-"+bootstrapVersion, zipLocation)
+		themeName := bootstrapPrefix + "Timber-" + bootstrapVersion
+		kit.Printf(
+			"Attempting to create theme %s from %s",
+			kit.YellowText(themeName),
+			kit.YellowText(zipLocation),
+		)
+
+		client, theme, err := kit.CreateTheme(themeName, zipLocation)
 		if err != nil {
 			return err
 		}
 
-		if err := saveConfiguration(client.GetConfiguration()); err != nil {
+		if err := saveConfiguration(client.Config); err != nil {
 			return err
 		}
+
+		kit.Printf(
+			"Successfully created theme '%s' with id of %s on shop %s",
+			kit.BlueText(theme.Name),
+			kit.BlueText(theme.ID),
+			kit.YellowText(client.Config.Domain),
+		)
 
 		return download(client, []string{})
 	},

@@ -58,6 +58,11 @@ func (assets ByAsset) Less(i, j int) bool {
 
 func findAllFiles(dir string) ([]string, error) {
 	var files []string
+
+	if fileInfo, err := os.Stat(dir); err != nil || !fileInfo.IsDir() {
+		return files, fmt.Errorf("Path is not a directory")
+	}
+
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil

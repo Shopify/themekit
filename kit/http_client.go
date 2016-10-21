@@ -10,15 +10,15 @@ import (
 	"net/url"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
 var apiLimit = newRateLimiter(time.Second / 2)
 
 type httpClient struct {
-	insecure bool
-	client   *http.Client
-	config   Configuration
+	client *http.Client
+	config Configuration
 }
 
 type requestType int
@@ -61,7 +61,7 @@ func (client *httpClient) AdminURL() string {
 	}
 	parsedURL, _ := url.Parse(adminURL)
 	parsedURL.Scheme = "https"
-	if client.insecure {
+	if strings.HasPrefix(client.config.Domain, "http") {
 		parsedURL.Scheme = "http"
 	}
 	return parsedURL.String()
@@ -105,12 +105,12 @@ func (client *httpClient) GetTheme(themeID int64) (*ShopifyResponse, Error) {
 }
 
 func (client *httpClient) AssetAction(event EventType, asset Asset) (*ShopifyResponse, Error) {
-	resp, _ := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
+	resp, err := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
 		"asset": asset,
 	})
 	// If there were any errors the asset is nil so lets set it and reformat errors
 	resp.Asset = asset
-	return resp, resp.Error()
+	return resp, err
 }
 
 func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, Error) {

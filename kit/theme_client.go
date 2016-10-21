@@ -13,7 +13,7 @@ const createThemeMaxRetries int = 3
 // ThemeClient is the interactor with the shopify server. All actions are processed
 // with the client.
 type ThemeClient struct {
-	config     Configuration
+	Config     Configuration
 	httpClient *httpClient
 	filter     eventFilter
 }
@@ -33,7 +33,7 @@ func NewThemeClient(config Configuration) (ThemeClient, error) {
 	}
 
 	newClient := ThemeClient{
-		config:     config,
+		Config:     config,
 		httpClient: httpClient,
 		filter:     filter,
 	}
@@ -41,15 +41,9 @@ func NewThemeClient(config Configuration) (ThemeClient, error) {
 	return newClient, nil
 }
 
-// GetConfiguration will return the clients built config. This is useful for grabbing
-// things like urls and domains.
-func (t ThemeClient) GetConfiguration() Configuration {
-	return t.config
-}
-
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
 func (t ThemeClient) NewFileWatcher(notifyFile string, callback FileEventCallback) (*FileWatcher, error) {
-	return newFileWatcher(t, t.config.Directory, true, t.filter, callback)
+	return newFileWatcher(t, t.Config.Directory, true, t.filter, callback)
 }
 
 // AssetList will return a slice of remote assets from the shopify servers. The
@@ -63,10 +57,19 @@ func (t ThemeClient) AssetList() ([]Asset, Error) {
 	return t.filter.filterAssets(ignoreCompiledAssets(resp.Assets)), err
 }
 
+// Asset will load up a single remote asset from the remote shopify servers.
+func (t ThemeClient) Asset(filename string) (Asset, Error) {
+	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{"asset[key]": filename})
+	if err != nil {
+		return Asset{}, err
+	}
+	return resp.Asset, nil
+}
+
 // LocalAssets will return a slice of assets from the local disk. The
 // assets are filtered based on your config.
 func (t ThemeClient) LocalAssets() ([]Asset, error) {
-	dir := fmt.Sprintf("%s%s", t.config.Directory, string(filepath.Separator))
+	dir := fmt.Sprintf("%s%s", t.Config.Directory, string(filepath.Separator))
 	assets, err := loadAssetsFromDirectory(dir, t.filter.matchesFilter)
 	if err != nil {
 		return assets, err
@@ -77,73 +80,48 @@ func (t ThemeClient) LocalAssets() ([]Asset, error) {
 // LocalAsset will load a single local asset on disk. It will return an error if there
 // is a problem loading the asset.
 func (t ThemeClient) LocalAsset(filename string) (Asset, error) {
-	return loadAsset(t.config.Directory, filename)
-}
-
-// Asset will load up a single remote asset from the remote shopify servers.
-func (t ThemeClient) Asset(filename string) (Asset, Error) {
-	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{"asset[key]": filename})
-	if err != nil {
-		return Asset{}, err
-	}
-	return resp.Asset, nil
+	return loadAsset(t.Config.Directory, filename)
 }
 
 // CreateTheme will create a unpublished new theme on your shopify store and then
 // return a new theme client with the configuration of the new client.
-func CreateTheme(name, zipLocation string) (ThemeClient, error) {
+func CreateTheme(name, zipLocation string) (ThemeClient, Theme, error) {
 	config, _ := NewConfiguration()
 	err := config.validateNoThemeID()
 	if err != nil {
-		return ThemeClient{}, fmt.Errorf("Invalid options: %v", err)
+		return ThemeClient{}, Theme{}, fmt.Errorf("Invalid options: %v", err)
 	}
 
 	client, err := NewThemeClient(config)
 	if err != nil {
-		return client, err
+		return client, Theme{}, err
 	}
 
 	var resp *ShopifyResponse
-	var respErr Error
+	var respErr error
 	retries := 0
 	for retries < createThemeMaxRetries {
 		resp, respErr = client.httpClient.NewTheme(name, zipLocation)
-		if respErr != nil {
-			if respErr.Fatal() {
-				return client, respErr
-			}
-		}
-
-		retries++
-
-		if resp.Successful() {
-			Printf(
-				"[%s]Successfully created theme '%s' with id of %s on shop %s",
-				GreenText(resp.Code),
-				BlueText(resp.Theme.Name),
-				BlueText(resp.Theme.ID),
-				YellowText(resp.Host),
-			)
+		if resp != nil && resp.Successful() {
 			break
 		}
 
+		retries++
 		if retries >= createThemeMaxRetries {
-			return client, kitError{fmt.Errorf("Cannot create a theme. Please check log for errors.")}
+			return client, Theme{}, kitError{fmt.Errorf("Cannot create a theme. Last error was: %s", respErr)}
 		}
 	}
 
-	for !client.isDoneProcessing(resp.Theme.ID) {
+	theme := resp.Theme
+	for !theme.Previewable {
+		resp, _ := client.httpClient.GetTheme(resp.Theme.ID)
+		theme = resp.Theme
 		time.Sleep(250 * time.Millisecond)
 	}
 
-	client.config.ThemeID = fmt.Sprintf("%d", resp.Theme.ID)
+	client.Config.ThemeID = fmt.Sprintf("%d", resp.Theme.ID)
 
-	return client, nil
-}
-
-func (t ThemeClient) isDoneProcessing(themeID int64) bool {
-	resp, err := t.httpClient.GetTheme(themeID)
-	return err == nil && resp.Theme.Previewable
+	return client, theme, nil
 }
 
 // CreateAsset will take an asset and will return  when the asset has been created.

@@ -24,10 +24,8 @@ type Configuration struct {
 	Timeout      time.Duration `yaml:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
 }
 
-const (
-	// DefaultTimeout is the default timeout to kill any stalled processes.
-	DefaultTimeout = 30 * time.Second
-)
+// DefaultTimeout is the default timeout to kill any stalled processes.
+const DefaultTimeout = 30 * time.Second
 
 var (
 	defaultConfig     = Configuration{}
@@ -98,7 +96,9 @@ func (conf Configuration) validateNoThemeID() error {
 
 	if len(conf.Domain) == 0 {
 		errors = append(errors, "missing domain")
-	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") && !strings.HasSuffix(conf.Domain, "myshopify.io") {
+	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") &&
+		!strings.HasSuffix(conf.Domain, "myshopify.io") &&
+		!strings.HasPrefix(conf.Domain, "http://127.0.0.1:") {
 		errors = append(errors, "invalid domain must end in '.myshopify.com'")
 	}
 
