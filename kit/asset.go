@@ -13,9 +13,11 @@ import (
 
 // Asset represents an asset from the shopify server.
 type Asset struct {
-	Key        string `json:"key"`
-	Value      string `json:"value,omitempty"`
-	Attachment string `json:"attachment,omitempty"`
+	Key         string `json:"key"`
+	Value       string `json:"value,omitempty"`
+	Attachment  string `json:"attachment,omitempty"`
+	ContentType string `json:"content_type,omitempty"`
+	ThemeID     int64  `json:"theme_id,omitempty"`
 }
 
 // String() will print out a formatted string representation of this asset.
@@ -68,9 +70,7 @@ func findAllFiles(dir string) ([]string, error) {
 	return files, err
 }
 
-// LoadAssetsFromDirectory will recursivley load all the local assets on disk into an
-// asset array. It will return an error if it cannot load any of the files.
-func LoadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset, error) {
+func loadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset, error) {
 	assets := []Asset{}
 	files, err := findAllFiles(dir)
 	if err != nil {
@@ -83,7 +83,7 @@ func LoadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset
 			return assets, err
 		}
 		if !ignore(assetKey) {
-			asset, err := LoadAsset(dir, assetKey)
+			asset, err := loadAsset(dir, assetKey)
 			if err == nil {
 				assets = append(assets, asset)
 			}
@@ -93,29 +93,27 @@ func LoadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset
 	return assets, nil
 }
 
-// LoadAsset will load a single local asset on disk. It will return an error if there
-// is a problem loading the asset.
-func LoadAsset(root, filename string) (asset Asset, err error) {
+func loadAsset(root, filename string) (asset Asset, err error) {
 	asset = Asset{}
 	path := toSlash(fmt.Sprintf("%s/%s", root, filename))
 	file, err := os.Open(path)
 	if err != nil {
-		return asset, fmt.Errorf("LoadAsset: %s", err)
+		return asset, fmt.Errorf("loadAsset: %s", err)
 	}
 	defer file.Close()
 
 	info, err := os.Stat(path)
 	if err != nil {
-		return asset, fmt.Errorf("LoadAsset: %s", err)
+		return asset, fmt.Errorf("loadAsset: %s", err)
 	}
 
 	if info.IsDir() {
-		return asset, errors.New("LoadAsset: File is a directory")
+		return asset, errors.New("loadAsset: File is a directory")
 	}
 
 	buffer, err := ioutil.ReadAll(file)
 	if err != nil {
-		return asset, fmt.Errorf("LoadAsset: %s", err)
+		return asset, fmt.Errorf("loadAsset: %s", err)
 	}
 
 	asset = Asset{Key: toSlash(filename)}

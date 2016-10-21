@@ -125,7 +125,7 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 
 	root := filepath.Dir(event.Name)
 	filename := filepath.Base(event.Name)
-	asset, err := LoadAsset(root, filename)
+	asset, err := loadAsset(root, filename)
 	if err == nil {
 		asset.Key = extractAssetKey(event.Name)
 		if asset.Key == "" {

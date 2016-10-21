@@ -67,7 +67,7 @@ func (t ThemeClient) AssetList() ([]Asset, Error) {
 // assets are filtered based on your config.
 func (t ThemeClient) LocalAssets() ([]Asset, error) {
 	dir := fmt.Sprintf("%s%s", t.config.Directory, string(filepath.Separator))
-	assets, err := LoadAssetsFromDirectory(dir, t.filter.matchesFilter)
+	assets, err := loadAssetsFromDirectory(dir, t.filter.matchesFilter)
 	if err != nil {
 		return assets, err
 	}
@@ -77,7 +77,7 @@ func (t ThemeClient) LocalAssets() ([]Asset, error) {
 // LocalAsset will load a single local asset on disk. It will return an error if there
 // is a problem loading the asset.
 func (t ThemeClient) LocalAsset(filename string) (Asset, error) {
-	return LoadAsset(t.config.Directory, filename)
+	return loadAsset(t.config.Directory, filename)
 }
 
 // Asset will load up a single remote asset from the remote shopify servers.

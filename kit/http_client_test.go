@@ -80,7 +80,7 @@ func (suite *HTTPClientTestSuite) TestAssetQuery() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
 		assert.Equal(suite.T(), "fields=key,attachment,value", r.URL.RawQuery)
-		fmt.Fprintf(w, jsonFixture("responses/multi_asset"))
+		fmt.Fprintf(w, jsonFixture("responses/assets"))
 	})
 	resp, err := suite.client.AssetQuery(Retrieve, map[string]string{})
 	assert.Nil(suite.T(), err)
@@ -91,7 +91,7 @@ func (suite *HTTPClientTestSuite) TestAssetQuery() {
 	server = suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
 		assert.Equal(suite.T(), "fields=key,attachment,value&asset[key]=file.txt", r.URL.RawQuery)
-		fmt.Fprintf(w, jsonFixture("responses/single_asset"))
+		fmt.Fprintf(w, jsonFixture("responses/asset"))
 	})
 	resp, err = suite.client.AssetQuery(Retrieve, map[string]string{"asset[key]": "file.txt"})
 	assert.Nil(suite.T(), err)
@@ -141,7 +141,7 @@ func (suite *HTTPClientTestSuite) TestAssetAction() {
 		defer r.Body.Close()
 
 		assert.Equal(suite.T(), Asset{Key: "key", Value: "value"}, t["asset"])
-		fmt.Fprintf(w, jsonFixture("responses/single_asset"))
+		fmt.Fprintf(w, jsonFixture("responses/asset"))
 	})
 	defer server.Close()
 	resp, err := suite.client.AssetAction(Update, Asset{Key: "key", Value: "value"})
@@ -205,14 +205,14 @@ func TestHttpClientTestSuite(t *testing.T) {
 	suite.Run(t, new(HTTPClientTestSuite))
 }
 
-func jsonFixture(name string) string {
+func fileFixture(name string) *os.File {
 	path := fmt.Sprintf("../fixtures/%s.json", name)
-	file, err := os.Open(path)
-	defer file.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-	bytes, err := ioutil.ReadAll(file)
+	file, _ := os.Open(path)
+	return file
+}
+
+func jsonFixture(name string) string {
+	bytes, err := ioutil.ReadAll(fileFixture(name))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -60,18 +60,6 @@ func (resp ShopifyResponse) Successful() bool {
 	return resp.Code >= 200 && resp.Code < 300 && !resp.Errors.Any()
 }
 
-func (resp ShopifyResponse) isThemeRequest() bool {
-	return resp.Type == themeRequest
-}
-
-func (resp ShopifyResponse) isAssetRequest() bool {
-	return resp.Type == assetRequest
-}
-
-func (resp ShopifyResponse) isListRequest() bool {
-	return resp.Type == listRequest
-}
-
 func (resp ShopifyResponse) String() string {
 	return fmt.Sprintf(`[%s] Performed %s at %s
 	Request: %s
@@ -92,14 +80,16 @@ func (resp ShopifyResponse) String() string {
 
 func (resp ShopifyResponse) Error() Error {
 	if !resp.Successful() {
-		if resp.isThemeRequest() {
+		switch resp.Type {
+		case themeRequest:
 			return themeError{resp}
-		} else if resp.isAssetRequest() {
+		case assetRequest:
 			return assetError{resp}
-		} else if resp.isListRequest() {
+		case listRequest:
 			return listError{resp}
+		default:
+			return kitError{resp.Errors}
 		}
-		return kitError{resp.Errors}
 	}
 	return nil
 }

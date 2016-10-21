@@ -40,7 +40,7 @@ func (s *LoadAssetSuite) TestWhenAFileIsEmpty() {
 		log.Fatal(err)
 	}
 
-	asset, err := LoadAsset(root, filename)
+	asset, err := loadAsset(root, filename)
 	assert.Nil(s.T(), err, "There should not be an error returned when the file is empty")
 	assert.False(s.T(), asset.IsValid(), "The returned asset should not be considered valid")
 }
@@ -49,7 +49,7 @@ func (s *LoadAssetSuite) TestWhenAFilenameUsesWindowsPaths() {
 	dir, _, _ := s.allocateDir()
 	root, filename, _ := s.allocateFileInDir(dir, "hello world")
 	windowsRoot := strings.Replace(root, "/", "\\", -1)
-	asset, _ := LoadAsset(windowsRoot, filename)
+	asset, _ := loadAsset(windowsRoot, filename)
 	assert.Equal(s.T(), filename, asset.Key)
 }
 
@@ -58,7 +58,7 @@ func (s *LoadAssetSuite) TestWhenTheFilenameIncludesAWindowsPath() {
 	root, filename, _ := s.allocateFileInDir(dir, "hello world")
 	windowsRoot := strings.Replace(root, "/", "\\", -1)
 	windowFilename := strings.Replace(filename, "/", "\\", -1)
-	asset, _ := LoadAsset(windowsRoot, windowFilename)
+	asset, _ := loadAsset(windowsRoot, windowFilename)
 	assert.Equal(s.T(), filename, asset.Key)
 }
 
@@ -68,7 +68,7 @@ func (s *LoadAssetSuite) TestWhenAFileContainsTextData() {
 		log.Fatal(err)
 	}
 
-	asset, err := LoadAsset(root, filename)
+	asset, err := loadAsset(root, filename)
 	assert.Nil(s.T(), err, "There should not be an error returned")
 	assert.True(s.T(), asset.IsValid(), "Files that contain data should be valid")
 	assert.Equal(s.T(), "hello world", asset.Value)
@@ -80,7 +80,7 @@ func (s *LoadAssetSuite) TestWhenAFileContainsBinaryData() {
 		log.Fatal(err)
 	}
 
-	asset, err := LoadAsset(root, filename)
+	asset, err := loadAsset(root, filename)
 	assert.Nil(s.T(), err, "There should not be an error returned")
 	assert.True(s.T(), asset.IsValid(), "Files that contain data should be valid")
 	assert.True(s.T(), len(asset.Attachment) > 0, "The attachment should not be blank")
@@ -92,9 +92,9 @@ func (s *LoadAssetSuite) TestWhenFileIsADirectory() {
 		log.Fatal(err)
 	}
 
-	asset, err := LoadAsset(root, filename)
-	assert.NotNil(s.T(), err, "The error should not be nil if a directory was given to LoadAsset")
-	assert.Equal(s.T(), "LoadAsset: File is a directory", err.Error())
+	asset, err := loadAsset(root, filename)
+	assert.NotNil(s.T(), err, "The error should not be nil if a directory was given to loadAsset")
+	assert.Equal(s.T(), "loadAsset: File is a directory", err.Error())
 	assert.False(s.T(), asset.IsValid(), "The asset returned should not be valid")
 }
 
@@ -140,7 +140,7 @@ func (s *LoadAssetSuite) noteAllocatedFile(name string) {
 }
 
 func TestLoadAssetSuite(t *testing.T) {
-	LoadAsset("foo", "bar")
+	loadAsset("foo", "bar")
 	suite.Run(t, new(LoadAssetSuite))
 }
 

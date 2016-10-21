@@ -93,11 +93,17 @@ type generalRequestError struct {
 }
 
 type requestError struct {
-	Errors []string `json:"asset"`
+	Syntax []string `json:"asset"`
+	Theme  []string `json:"src"`
+	Other  []string `json:"-"`
+}
+
+func (err requestError) all() []string {
+	return append(err.Syntax, append(err.Theme, err.Other...)...)
 }
 
 func (err requestError) Any() bool {
-	return len(err.Errors) > 0
+	return len(err.all()) > 0
 }
 
 func (err requestError) Error() string {
@@ -106,13 +112,13 @@ func (err requestError) Error() string {
 
 func (err requestError) String() string {
 	if err.Any() {
-		return strings.Join(err.Errors, "\n\t\t")
+		return strings.Join(err.all(), "\n\t\t")
 	}
 	return "none"
 }
 
 func (err *requestError) Add(other generalRequestError) {
 	if other.Error != "" {
-		err.Errors = append(err.Errors, other.Error)
+		err.Other = append(err.Other, other.Error)
 	}
 }
