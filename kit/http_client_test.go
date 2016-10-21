@@ -14,17 +14,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/Shopify/themekit/theme"
 )
 
-type HttpClientTestSuite struct {
+type HTTPClientTestSuite struct {
 	suite.Suite
 	config Configuration
 	client *httpClient
 }
 
-func (suite *HttpClientTestSuite) SetupTest() {
+func (suite *HTTPClientTestSuite) SetupTest() {
 	suite.config, _ = NewConfiguration()
 	suite.config.Domain = "test.myshopify.com"
 	suite.config.ThemeID = "123"
@@ -32,7 +30,7 @@ func (suite *HttpClientTestSuite) SetupTest() {
 	suite.client, _ = newHTTPClient(suite.config)
 }
 
-func (suite *HttpClientTestSuite) TestNewHttpClient() {
+func (suite *HTTPClientTestSuite) TestNewHttpClient() {
 	assert.Equal(suite.T(), suite.config, suite.client.config)
 	assert.Equal(suite.T(), suite.config.Timeout, suite.client.client.Timeout)
 
@@ -48,7 +46,7 @@ func (suite *HttpClientTestSuite) TestNewHttpClient() {
 	assert.NotNil(suite.T(), client.client.Transport)
 }
 
-func (suite *HttpClientTestSuite) TestAdminURL() {
+func (suite *HTTPClientTestSuite) TestAdminURL() {
 	assert.Equal(suite.T(),
 		fmt.Sprintf("https://%s/admin/themes/%v", suite.config.Domain, suite.config.ThemeID),
 		suite.client.AdminURL())
@@ -60,29 +58,29 @@ func (suite *HttpClientTestSuite) TestAdminURL() {
 		suite.client.AdminURL())
 }
 
-func (suite *HttpClientTestSuite) TestAssetPath() {
+func (suite *HTTPClientTestSuite) TestAssetPath() {
 	assert.Equal(suite.T(),
 		fmt.Sprintf("%s/assets.json", suite.client.AdminURL()),
 		suite.client.AssetPath())
 }
 
-func (suite *HttpClientTestSuite) TestThemesPath() {
+func (suite *HTTPClientTestSuite) TestThemesPath() {
 	assert.Equal(suite.T(),
 		fmt.Sprintf("%s/themes.json", suite.client.AdminURL()),
 		suite.client.ThemesPath())
 }
 
-func (suite *HttpClientTestSuite) TestThemePath() {
+func (suite *HTTPClientTestSuite) TestThemePath() {
 	assert.Equal(suite.T(),
 		fmt.Sprintf("%s/themes/456.json", suite.client.AdminURL()),
 		suite.client.ThemePath(456))
 }
 
-func (suite *HttpClientTestSuite) TestAssetQuery() {
+func (suite *HTTPClientTestSuite) TestAssetQuery() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
 		assert.Equal(suite.T(), "fields=key,attachment,value", r.URL.RawQuery)
-		fmt.Fprintf(w, jsonFixture("http_client/multi_asset"))
+		fmt.Fprintf(w, jsonFixture("responses/multi_asset"))
 	})
 	resp, err := suite.client.AssetQuery(Retrieve, map[string]string{})
 	assert.Nil(suite.T(), err)
@@ -93,7 +91,7 @@ func (suite *HttpClientTestSuite) TestAssetQuery() {
 	server = suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
 		assert.Equal(suite.T(), "fields=key,attachment,value&asset[key]=file.txt", r.URL.RawQuery)
-		fmt.Fprintf(w, jsonFixture("http_client/single_asset"))
+		fmt.Fprintf(w, jsonFixture("responses/single_asset"))
 	})
 	resp, err = suite.client.AssetQuery(Retrieve, map[string]string{"asset[key]": "file.txt"})
 	assert.Nil(suite.T(), err)
@@ -102,17 +100,17 @@ func (suite *HttpClientTestSuite) TestAssetQuery() {
 	server.Close()
 }
 
-func (suite *HttpClientTestSuite) TestNewTheme() {
+func (suite *HTTPClientTestSuite) TestNewTheme() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "POST", r.Method)
 
 		decoder := json.NewDecoder(r.Body)
-		var t map[string]theme.Theme
+		var t map[string]Theme
 		decoder.Decode(&t)
 		defer r.Body.Close()
 
-		assert.Equal(suite.T(), theme.Theme{Name: "name", Source: "source", Role: "unpublished"}, t["theme"])
-		fmt.Fprintf(w, jsonFixture("http_client/theme"))
+		assert.Equal(suite.T(), Theme{Name: "name", Source: "source", Role: "unpublished"}, t["theme"])
+		fmt.Fprintf(w, jsonFixture("responses/theme"))
 	})
 	defer server.Close()
 	resp, err := suite.client.NewTheme("name", "source")
@@ -121,10 +119,10 @@ func (suite *HttpClientTestSuite) TestNewTheme() {
 	assert.Equal(suite.T(), "timberland", resp.Theme.Name)
 }
 
-func (suite *HttpClientTestSuite) TestGetTheme() {
+func (suite *HTTPClientTestSuite) TestGetTheme() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
-		fmt.Fprintf(w, jsonFixture("http_client/theme"))
+		fmt.Fprintf(w, jsonFixture("responses/theme"))
 	})
 	resp, err := suite.client.GetTheme(123)
 	assert.Nil(suite.T(), err)
@@ -133,26 +131,26 @@ func (suite *HttpClientTestSuite) TestGetTheme() {
 	server.Close()
 }
 
-func (suite *HttpClientTestSuite) TestAssetAction() {
+func (suite *HTTPClientTestSuite) TestAssetAction() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "PUT", r.Method)
 
 		decoder := json.NewDecoder(r.Body)
-		var t map[string]theme.Asset
+		var t map[string]Asset
 		decoder.Decode(&t)
 		defer r.Body.Close()
 
-		assert.Equal(suite.T(), theme.Asset{Key: "key", Value: "value"}, t["asset"])
-		fmt.Fprintf(w, jsonFixture("http_client/single_asset"))
+		assert.Equal(suite.T(), Asset{Key: "key", Value: "value"}, t["asset"])
+		fmt.Fprintf(w, jsonFixture("responses/single_asset"))
 	})
 	defer server.Close()
-	resp, err := suite.client.AssetAction(Update, theme.Asset{Key: "key", Value: "value"})
+	resp, err := suite.client.AssetAction(Update, Asset{Key: "key", Value: "value"})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), assetRequest, resp.Type)
 	assert.Equal(suite.T(), "key", resp.Asset.Key)
 }
 
-func (suite *HttpClientTestSuite) TestNewRequest() {
+func (suite *HTTPClientTestSuite) TestNewRequest() {
 	req, err := suite.client.newRequest(Update, suite.config.Domain, nil)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), suite.config.Password, req.Header.Get("X-Shopify-Access-Token"))
@@ -164,7 +162,7 @@ func (suite *HttpClientTestSuite) TestNewRequest() {
 	assert.NotNil(suite.T(), err)
 }
 
-func (suite *HttpClientTestSuite) TestSendJSON() {
+func (suite *HTTPClientTestSuite) TestSendJSON() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "PUT", r.Method)
 
@@ -181,7 +179,7 @@ func (suite *HttpClientTestSuite) TestSendJSON() {
 	assert.Equal(suite.T(), assetRequest, resp.Type)
 }
 
-func (suite *HttpClientTestSuite) TestSendRequest() {
+func (suite *HTTPClientTestSuite) TestSendRequest() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "PUT", r.Method)
 
@@ -196,7 +194,7 @@ func (suite *HttpClientTestSuite) TestSendRequest() {
 	assert.Equal(suite.T(), assetRequest, resp.Type)
 }
 
-func (suite *HttpClientTestSuite) NewTestServer(handler http.HandlerFunc) *httptest.Server {
+func (suite *HTTPClientTestSuite) NewTestServer(handler http.HandlerFunc) *httptest.Server {
 	server := httptest.NewServer(handler)
 	suite.client.config.Domain = server.URL
 	suite.client.insecure = true
@@ -204,7 +202,7 @@ func (suite *HttpClientTestSuite) NewTestServer(handler http.HandlerFunc) *httpt
 }
 
 func TestHttpClientTestSuite(t *testing.T) {
-	suite.Run(t, new(HttpClientTestSuite))
+	suite.Run(t, new(HTTPClientTestSuite))
 }
 
 func jsonFixture(name string) string {

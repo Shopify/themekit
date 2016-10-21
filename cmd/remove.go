@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
-	"github.com/Shopify/themekit/theme"
 )
 
 var removeCmd = &cobra.Command{
@@ -32,7 +31,7 @@ var removeCmd = &cobra.Command{
 
 func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	for _, filename := range filenames {
-		asset := theme.Asset{Key: filename}
+		asset := kit.Asset{Key: filename}
 		resp, err := client.DeleteAsset(asset)
 		if err != nil {
 			kit.LogError(err)

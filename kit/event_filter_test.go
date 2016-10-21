@@ -6,13 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/Shopify/themekit/theme"
 )
 
 const (
 	rootDir           = "./root/dir/"
-	ignoreFixturePath = "../fixtures/event_filter/valid_patterns"
+	ignoreFixturePath = "../fixtures/project/valid_patterns"
 )
 
 type EventFilterTestSuite struct {
@@ -41,8 +39,8 @@ func (suite *EventFilterTestSuite) TestNewEventFilter() {
 func (suite *EventFilterTestSuite) TestFilterAssets() {
 	filter, err := newEventFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
 	if assert.Nil(suite.T(), err) {
-		inputAssets := []theme.Asset{{Key: "test/foo"}, {Key: "foo.txt"}, {Key: "test.bat"}, {Key: "zubat"}}
-		expectedAssets := []theme.Asset{{Key: "test/foo"}, {Key: "zubat"}}
+		inputAssets := []Asset{{Key: "test/foo"}, {Key: "foo.txt"}, {Key: "test.bat"}, {Key: "zubat"}}
+		expectedAssets := []Asset{{Key: "test/foo"}, {Key: "zubat"}}
 
 		assert.Equal(suite.T(), expectedAssets, filter.filterAssets(inputAssets))
 	}

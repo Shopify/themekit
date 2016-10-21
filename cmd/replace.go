@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
-	"github.com/Shopify/themekit/theme"
 )
 
 var replaceCmd = &cobra.Command{
@@ -32,7 +31,7 @@ exist on your local machine will be removed from shopify.`,
 }
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) error {
-	assetsActions := map[theme.Asset]kit.EventType{}
+	assetsActions := map[kit.Asset]kit.EventType{}
 	if len(filenames) == 0 {
 		assets, remoteErr := client.AssetList()
 		if remoteErr != nil {
@@ -70,7 +69,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 	return nil
 }
 
-func performReplace(client kit.ThemeClient, asset theme.Asset, event kit.EventType, wg *sync.WaitGroup) {
+func performReplace(client kit.ThemeClient, asset kit.Asset, event kit.EventType, wg *sync.WaitGroup) {
 	resp, err := client.Perform(asset, event)
 	if err != nil {
 		kit.LogError(err)

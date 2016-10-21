@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
-	"github.com/Shopify/themekit/theme"
 )
 
 var uploadCmd = &cobra.Command{
@@ -55,7 +54,7 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) erro
 	return nil
 }
 
-func performUpload(client kit.ThemeClient, asset theme.Asset, wg *sync.WaitGroup) {
+func performUpload(client kit.ThemeClient, asset kit.Asset, wg *sync.WaitGroup) {
 	resp, err := client.UpdateAsset(asset)
 	if err != nil {
 		kit.Print(err)

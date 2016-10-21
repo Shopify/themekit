@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-
-	"github.com/Shopify/themekit/theme"
 )
 
 // ShopifyResponse is a general response for all server requests. It will format
@@ -16,15 +14,15 @@ import (
 // then Theme will be defined. If you have mad an asset query then Assets will be
 // defined. If you did an action on a single asset then Asset will be defined.
 type ShopifyResponse struct {
-	Type      requestType   `json:"-"`
-	Host      string        `json:"host"`
-	URL       *url.URL      `json:"url"`
-	Code      int           `json:"status_code"`
-	Theme     theme.Theme   `json:"theme"`
-	Asset     theme.Asset   `json:"asset"`
-	Assets    []theme.Asset `json:"assets"`
-	EventType EventType     `json:"event_type"`
-	Errors    string        `json:"errors"`
+	Type      requestType  `json:"-"`
+	Host      string       `json:"host"`
+	URL       *url.URL     `json:"url"`
+	Code      int          `json:"status_code"`
+	Theme     Theme        `json:"theme"`
+	Asset     Asset        `json:"asset"`
+	Assets    []Asset      `json:"assets"`
+	EventType EventType    `json:"event_type"`
+	Errors    requestError `json:"errors"`
 }
 
 func newShopifyResponse(rtype requestType, event EventType, resp *http.Response, err error) (*ShopifyResponse, Error) {
@@ -46,7 +44,12 @@ func newShopifyResponse(rtype requestType, event EventType, resp *http.Response,
 		return nil, kitError{err}
 	}
 
-	json.Unmarshal(bytes, &newResponse)
+	err = json.Unmarshal(bytes, &newResponse)
+	if err != nil {
+		reqErr := generalRequestError{}
+		json.Unmarshal(bytes, &reqErr)
+		newResponse.Errors.Add(reqErr)
+	}
 
 	return newResponse, newResponse.Error()
 }
@@ -54,7 +57,7 @@ func newShopifyResponse(rtype requestType, event EventType, resp *http.Response,
 // Successful will return true if the response code >= 200 and < 300 and if no
 // errors were returned from the server.
 func (resp ShopifyResponse) Successful() bool {
-	return resp.Code >= 200 && resp.Code < 300 && len(resp.Errors) == 0
+	return resp.Code >= 200 && resp.Code < 300 && !resp.Errors.Any()
 }
 
 func (resp ShopifyResponse) isThemeRequest() bool {
@@ -96,7 +99,7 @@ func (resp ShopifyResponse) Error() Error {
 		} else if resp.isListRequest() {
 			return listError{resp}
 		}
-		return kitError{fmt.Errorf(resp.Errors)}
+		return kitError{resp.Errors}
 	}
 	return nil
 }

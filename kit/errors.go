@@ -3,6 +3,7 @@ package kit
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // Error is an error that can be determined if it is fatal to the applications
@@ -35,11 +36,12 @@ func (err themeError) Fatal() bool {
 func (err themeError) Error() string {
 	return fmt.Sprintf(`[%s]Theme request encountered status at host <%s>
 	Status text: %s
-	Errors: %s`,
+	Errors:
+		%s`,
 		RedText(err.resp.Code),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		err.resp.Errors,
+		YellowText(err.resp.Errors),
 	)
 }
 
@@ -54,13 +56,14 @@ func (err assetError) Fatal() bool {
 func (err assetError) Error() string {
 	return fmt.Sprintf(`[%s]Asset Perform %s to %s at host <%s>
 	Status text: %s
-	Errors: %s`,
+	Errors:
+		%s`,
 		RedText(err.resp.Code),
 		YellowText(err.resp.EventType),
 		BlueText(err.resp.Asset.Key),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		err.resp.Errors,
+		YellowText(err.resp.Errors),
 	)
 }
 
@@ -75,11 +78,41 @@ func (err listError) Fatal() bool {
 func (err listError) Error() string {
 	return fmt.Sprintf(`[%s]Assets Perform %s at host <%s>
 	Status text: %s
-	Errors: %s`,
+	Errors:
+		%s`,
 		RedText(err.resp.Code),
 		YellowText(err.resp.EventType),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		err.resp.Errors,
+		YellowText(err.resp.Errors),
 	)
+}
+
+type generalRequestError struct {
+	Error string `json:"errors"`
+}
+
+type requestError struct {
+	Errors []string `json:"asset"`
+}
+
+func (err requestError) Any() bool {
+	return len(err.Errors) > 0
+}
+
+func (err requestError) Error() string {
+	return err.String()
+}
+
+func (err requestError) String() string {
+	if err.Any() {
+		return strings.Join(err.Errors, "\n\t\t")
+	}
+	return "none"
+}
+
+func (err *requestError) Add(other generalRequestError) {
+	if other.Error != "" {
+		err.Errors = append(err.Errors, other.Error)
+	}
 }

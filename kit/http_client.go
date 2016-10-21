@@ -11,8 +11,6 @@ import (
 	"runtime"
 	"strconv"
 	"time"
-
-	"github.com/Shopify/themekit/theme"
 )
 
 var apiLimit = newRateLimiter(time.Second / 2)
@@ -98,7 +96,7 @@ func (client *httpClient) AssetQuery(event EventType, query map[string]string) (
 
 func (client *httpClient) NewTheme(name, source string) (*ShopifyResponse, Error) {
 	return client.sendJSON(themeRequest, Create, client.ThemesPath(), map[string]interface{}{
-		"theme": theme.Theme{Name: name, Source: source, Role: "unpublished"},
+		"theme": Theme{Name: name, Source: source, Role: "unpublished"},
 	})
 }
 
@@ -106,7 +104,7 @@ func (client *httpClient) GetTheme(themeID int64) (*ShopifyResponse, Error) {
 	return client.sendRequest(themeRequest, Retrieve, client.ThemePath(themeID), nil)
 }
 
-func (client *httpClient) AssetAction(event EventType, asset theme.Asset) (*ShopifyResponse, Error) {
+func (client *httpClient) AssetAction(event EventType, asset Asset) (*ShopifyResponse, Error) {
 	resp, _ := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
 		"asset": asset,
 	})

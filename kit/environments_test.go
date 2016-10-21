@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	goodEnvirontmentPath   = "../fixtures/environments/valid_config.yml"
-	badEnvirontmentPath    = "../fixtures/environments/bad_pattern_config.yml"
-	outputEnvirontmentPath = "../fixtures/environments/output.yml"
+	goodEnvirontmentPath   = "../fixtures/project/valid_config.yml"
+	badEnvirontmentPath    = "../fixtures/project/invalid_config.yml"
+	outputEnvirontmentPath = "../fixtures/project/output.yml"
 )
 
 type EnvironmentsTestSuite struct {

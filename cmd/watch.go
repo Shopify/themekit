@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
-	"github.com/Shopify/themekit/theme"
 )
 
 var watchCmd = &cobra.Command{
@@ -31,7 +30,7 @@ run 'theme watch' while you are editing and it will detect create, update and de
 	},
 }
 
-func handleWatchEvent(client kit.ThemeClient, asset theme.Asset, event kit.EventType, err error) {
+func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventType, err error) {
 	kit.Printf(
 		"Received %s event on %s",
 		kit.GreenText(event),

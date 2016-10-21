@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"github.com/ryanuber/go-glob"
-
-	"github.com/Shopify/themekit/theme"
 )
 
 var defaultRegexes = []*regexp.Regexp{
@@ -76,8 +74,8 @@ func newEventFilter(rootDir string, patterns []string, files []string) (eventFil
 	}, nil
 }
 
-func (e eventFilter) filterAssets(assets []theme.Asset) []theme.Asset {
-	filteredAssets := []theme.Asset{}
+func (e eventFilter) filterAssets(assets []Asset) []Asset {
+	filteredAssets := []Asset{}
 	for _, asset := range assets {
 		if !e.matchesFilter(asset.Key) {
 			filteredAssets = append(filteredAssets, asset)

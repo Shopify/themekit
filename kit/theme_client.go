@@ -6,8 +6,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/Shopify/themekit/theme"
 )
 
 const createThemeMaxRetries int = 3
@@ -56,20 +54,20 @@ func (t ThemeClient) NewFileWatcher(notifyFile string, callback FileEventCallbac
 
 // AssetList will return a slice of remote assets from the shopify servers. The
 // assets are sorted and any ignored files based on your config are filtered out.
-func (t ThemeClient) AssetList() ([]theme.Asset, Error) {
+func (t ThemeClient) AssetList() ([]Asset, Error) {
 	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{})
 	if err != nil && err.Fatal() {
-		return []theme.Asset{}, err
+		return []Asset{}, err
 	}
-	sort.Sort(theme.ByAsset(resp.Assets))
+	sort.Sort(ByAsset(resp.Assets))
 	return t.filter.filterAssets(ignoreCompiledAssets(resp.Assets)), err
 }
 
 // LocalAssets will return a slice of assets from the local disk. The
 // assets are filtered based on your config.
-func (t ThemeClient) LocalAssets() ([]theme.Asset, error) {
+func (t ThemeClient) LocalAssets() ([]Asset, error) {
 	dir := fmt.Sprintf("%s%s", t.config.Directory, string(filepath.Separator))
-	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.matchesFilter)
+	assets, err := LoadAssetsFromDirectory(dir, t.filter.matchesFilter)
 	if err != nil {
 		return assets, err
 	}
@@ -78,15 +76,15 @@ func (t ThemeClient) LocalAssets() ([]theme.Asset, error) {
 
 // LocalAsset will load a single local asset on disk. It will return an error if there
 // is a problem loading the asset.
-func (t ThemeClient) LocalAsset(filename string) (theme.Asset, error) {
-	return theme.LoadAsset(t.config.Directory, filename)
+func (t ThemeClient) LocalAsset(filename string) (Asset, error) {
+	return LoadAsset(t.config.Directory, filename)
 }
 
 // Asset will load up a single remote asset from the remote shopify servers.
-func (t ThemeClient) Asset(filename string) (theme.Asset, Error) {
+func (t ThemeClient) Asset(filename string) (Asset, Error) {
 	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{"asset[key]": filename})
 	if err != nil {
-		return theme.Asset{}, err
+		return Asset{}, err
 	}
 	return resp.Asset, nil
 }
@@ -151,21 +149,21 @@ func (t ThemeClient) isDoneProcessing(themeID int64) bool {
 // CreateAsset will take an asset and will return  when the asset has been created.
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
-func (t ThemeClient) CreateAsset(asset theme.Asset) (*ShopifyResponse, Error) {
+func (t ThemeClient) CreateAsset(asset Asset) (*ShopifyResponse, Error) {
 	return t.UpdateAsset(asset)
 }
 
 // UpdateAsset will take an asset and will return  when the asset has been updated.
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
-func (t ThemeClient) UpdateAsset(asset theme.Asset) (*ShopifyResponse, Error) {
+func (t ThemeClient) UpdateAsset(asset Asset) (*ShopifyResponse, Error) {
 	return t.Perform(asset, Update)
 }
 
 // DeleteAsset will take an asset and will return  when the asset has been deleted.
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
-func (t ThemeClient) DeleteAsset(asset theme.Asset) (*ShopifyResponse, Error) {
+func (t ThemeClient) DeleteAsset(asset Asset) (*ShopifyResponse, Error) {
 	return t.Perform(asset, Remove)
 }
 
@@ -173,17 +171,17 @@ func (t ThemeClient) DeleteAsset(asset theme.Asset) (*ShopifyResponse, Error) {
 // place
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
-func (t ThemeClient) Perform(asset theme.Asset, event EventType) (*ShopifyResponse, Error) {
+func (t ThemeClient) Perform(asset Asset, event EventType) (*ShopifyResponse, Error) {
 	if t.filter.matchesFilter(asset.Key) {
 		return &ShopifyResponse{}, kitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Key)))}
 	}
 	return t.httpClient.AssetAction(event, asset)
 }
 
-func ignoreCompiledAssets(assets []theme.Asset) []theme.Asset {
+func ignoreCompiledAssets(assets []Asset) []Asset {
 	newSize := 0
-	results := make([]theme.Asset, len(assets))
-	isCompiled := func(a theme.Asset, rest []theme.Asset) bool {
+	results := make([]Asset, len(assets))
+	isCompiled := func(a Asset, rest []Asset) bool {
 		for _, other := range rest {
 			if strings.Contains(other.Key, a.Key) {
 				return true

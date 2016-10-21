@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
-	"github.com/Shopify/themekit/theme"
 )
 
 var downloadCmd = &cobra.Command{
@@ -55,7 +54,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 	return nil
 }
 
-func writeToDisk(client kit.ThemeClient, asset theme.Asset) error {
+func writeToDisk(client kit.ThemeClient, asset kit.Asset) error {
 	dir := client.GetConfiguration().Directory
 	perms, err := os.Stat(dir)
 	if err != nil {

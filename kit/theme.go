@@ -1,4 +1,4 @@
-package theme
+package kit
 
 // Theme represents a shopify theme.
 type Theme struct {

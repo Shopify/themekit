@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"gopkg.in/fsnotify.v1"
-
-	"github.com/Shopify/themekit/theme"
 )
 
 const (
@@ -31,7 +29,7 @@ var (
 
 // FileEventCallback is the callback that is called when there is an event from
 // a file watcher.
-type FileEventCallback func(ThemeClient, theme.Asset, EventType, error)
+type FileEventCallback func(ThemeClient, Asset, EventType, error)
 
 // FileWatcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
@@ -127,7 +125,7 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 
 	root := filepath.Dir(event.Name)
 	filename := filepath.Base(event.Name)
-	asset, err := theme.LoadAsset(root, filename)
+	asset, err := LoadAsset(root, filename)
 	if err == nil {
 		asset.Key = extractAssetKey(event.Name)
 		if asset.Key == "" {
