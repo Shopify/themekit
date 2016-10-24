@@ -1,7 +1,7 @@
 .PHONY: all build clean zip help
 
 test: ## Run all tests
-	go test -race -cover $(shell glide novendor)
+	@go test -race -cover $(shell glide novendor)
 
 vet: ## Verify go code.
 	@go vet $(shell glide novendor)
