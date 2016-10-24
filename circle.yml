@@ -8,7 +8,7 @@ dependencies:
   override:
     - mkdir -p "$PROJECT_PATH"
     - rsync -azC --delete ./ "$PROJECT_PATH/"
-    - sudo add-apt-repository ppa:masterminds/glide
+    - sudo add-apt-repository ppa:masterminds/glide -y
     - sudo apt-get update
     - sudo apt-get install glide
     - go get -u github.com/golang/lint/golint
