@@ -15,7 +15,7 @@ var removeCmd = &cobra.Command{
 	Short: "Remove theme file(s) from shopify",
 	Long:  `Remove will delete all specified files from shopify servers.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := initializeConfig(cmd.Name(), true); err != nil {
+		if err := initializeConfig(); err != nil {
 			return err
 		}
 

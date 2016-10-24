@@ -68,6 +68,8 @@ var (
 	bootstrapVersion string
 	bootstrapPrefix  string
 	setThemeID       bool
+
+	updateVersion string
 )
 
 // ThemeCmd is the main entry point to the theme kit command line interface.
@@ -108,11 +110,13 @@ func init() {
 	bootstrapCmd.Flags().StringVar(&bootstrapVersion, "version", latestRelease, "version of Shopify Timber to use")
 	bootstrapCmd.Flags().StringVar(&bootstrapPrefix, "prefix", "", "prefix to the Timber theme being created")
 
+	updateCmd.Flags().StringVar(&updateVersion, "version", "latest", "version of themekit to install")
+
 	ThemeCmd.AddCommand(bootstrapCmd, removeCmd, replaceCmd, uploadCmd, watchCmd, downloadCmd, versionCmd, updateCmd, configureCmd)
 }
 
-func initializeConfig(cmdName string, timesout bool) error {
-	if cmdName != "update" && !noUpdateNotifier && isNewReleaseAvailable() {
+func initializeConfig() error {
+	if !noUpdateNotifier && kit.IsNewUpdateAvailable() {
 		kit.LogWarnf("%s\n%s\n%s", banner, updateAvailableMessage, banner)
 	}
 

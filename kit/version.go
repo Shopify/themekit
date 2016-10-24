@@ -3,29 +3,21 @@ package kit
 import (
 	"crypto"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"strconv"
-	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/inconshreveable/go-update"
 )
 
 var (
 	// ThemeKitVersion is the version build of the library
-	ThemeKitVersion = version{Major: 0, Minor: 5, Patch: 0}
+	ThemeKitVersion, _ = version.NewVersion("0.5.0")
 )
 
-type versionComparisonResult int
-
-const (
-	// VersionLessThan is a versionComparisonResult for a version that is less than
-	VersionLessThan versionComparisonResult = iota - 1
-	// VersionEqual is a versionComparisonResult for a version that is equal
-	VersionEqual
-	// VersionGreaterThan is a versionComparisonResult for a version that is greater than
-	VersionGreaterThan
-)
+const releasesURL string = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
 
 // LibraryInfo will return a string array with information about the library used
 // for logging.
@@ -40,56 +32,56 @@ func PrintInfo() {
 	LogNotify(LibraryInfo())
 }
 
-type version struct {
-	Major int
-	Minor int
-	Patch int
-}
-
-func (v version) String() string {
-	return fmt.Sprintf("v%d.%d.%d", v.Major, v.Minor, v.Patch)
-}
-
-func (v version) toArray() [3]int {
-	return [3]int{v.Major, v.Minor, v.Patch}
-}
-
-// Compare ... I often get confused by comparison, so comparison results are going
-// to be the same as what <=> would return in Ruby.
-// http://ruby-doc.org/core-1.9.3/Comparable.html
-func (v version) Compare(versionString string) versionComparisonResult {
-	o := parseVersionString(versionString)
-	vAry := v.toArray()
-	oAry := o.toArray()
-	for i := 0; i < len(vAry); i++ {
-		diff := vAry[i] - oAry[i]
-		if diff < 0 {
-			return VersionLessThan
-		} else if diff > 0 {
-			return VersionGreaterThan
-		}
+// IsNewUpdateAvailable will check if there is an update to the theme kit command
+// and if there is one it will return true. Otherwise it will return false.
+func IsNewUpdateAvailable() bool {
+	list, err := fetchReleases()
+	if err != nil {
+		return false
 	}
-	return VersionEqual
+	return list.Get("latest").IsApplicable()
 }
 
-func parseVersionString(ver string) version {
-	sanitizedVer := strings.Replace(ver, "v", "", 1)
-	expandedVersionString := strings.Split(sanitizedVer, ".")
-	major, _ := strconv.Atoi(expandedVersionString[0])
-	minor, _ := strconv.Atoi(expandedVersionString[1])
-	patch, _ := strconv.Atoi(expandedVersionString[2])
-	return version{Major: major, Minor: minor, Patch: patch}
+// InstallThemeKitVersion will take a semver string and parse it then check if that
+// update is available and install it. If the string is 'latest' it will install
+// the most current. If the string is latest and there is no update it will return an
+// error. An error will also be returned if the requested version does not exist.
+func InstallThemeKitVersion(ver string) error {
+	releases, err := fetchReleases()
+	if err != nil {
+		return err
+	}
+	requestedRelease := releases.Get(ver)
+	if !requestedRelease.IsValid() {
+		return fmt.Errorf("Version %s not found.", requestedRelease.Version)
+	} else if ver == "latest" && !requestedRelease.GetVersion().GreaterThan(ThemeKitVersion) {
+		return fmt.Errorf("No applicable update available.")
+	}
+	LogWarnf("Updating from %s to %s", ThemeKitVersion, requestedRelease.Version)
+	return applyUpdate(requestedRelease.ForCurrentPlatform())
 }
 
-// ApplyUpdate will take a url and digest and download the update specified, then
-// apply it to the current version.
-func ApplyUpdate(updateURL, digest string) error {
-	checksum, err := hex.DecodeString(digest)
+func fetchReleases() (releasesList, error) {
+	var releases releasesList
+	resp, err := http.Get(releasesURL)
+	if err != nil {
+		return releases, err
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err == nil {
+		err = json.Unmarshal(data, &releases)
+	}
+	return releases, err
+}
+
+func applyUpdate(platformRelease platform) error {
+	checksum, err := hex.DecodeString(platformRelease.Digest)
 	if err != nil {
 		return err
 	}
 
-	updateFile, err := http.Get(updateURL)
+	updateFile, err := http.Get(platformRelease.URL)
 	if err != nil {
 		return err
 	}
@@ -99,9 +91,10 @@ func ApplyUpdate(updateURL, digest string) error {
 		Hash:     crypto.MD5,
 		Checksum: checksum,
 	})
+
 	if err != nil {
 		if rerr := update.RollbackError(err); rerr != nil {
-			LogErrorf("Failed to rollback from bad update: %v", rerr)
+			err = fmt.Errorf("Failed to rollback from bad update: %v", rerr)
 		}
 	}
 	return err

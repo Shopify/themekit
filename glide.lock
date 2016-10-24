@@ -1,10 +1,12 @@
-hash: e3bd7f48a5213c8d015d9426065fdcaafb8d296a2fdd3856a63f6acaf8c7a727
-updated: 2016-10-18T16:08:52.317698643-04:00
+hash: 1c440d071664fdbbc98b5ceeb1ec1885bf689bb15cee7f979f5c662190055f0f
+updated: 2016-10-24T16:34:31.774856986-04:00
 imports:
 - name: github.com/caarlos0/env
   version: d0de832ed2fbc4e7bfaa30ab5cf0b3417d15f529
 - name: github.com/fatih/color
   version: dea9d3a26a087187530244679c1cfb3a42937794
+- name: github.com/hashicorp/go-version
+  version: deeb027c13a95d56c7585df3fe29207208c6706e
 - name: github.com/imdario/mergo
   version: 50d4dbd4eb0e84778abe37cefef140271d96fade
 - name: github.com/inconshreveable/go-update

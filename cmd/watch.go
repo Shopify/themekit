@@ -13,10 +13,9 @@ var watchCmd = &cobra.Command{
 
 run 'theme watch' while you are editing and it will detect create, update and delete events. `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := initializeConfig(cmd.Name(), false); err != nil {
+		if err := initializeConfig(); err != nil {
 			return err
 		}
-
 		for _, client := range themeClients {
 			kit.Printf("Watching for file changes for theme %v on host %s ", kit.GreenText(client.Config.ThemeID), kit.YellowText(client.Config.Domain))
 			if _, err := client.NewFileWatcher(notifyFile, handleWatchEvent); err != nil {

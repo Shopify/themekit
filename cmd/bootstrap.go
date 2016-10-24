@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"bytes"
-	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -111,13 +111,14 @@ func findReleaseWith(feed atom.Feed, version string) (atom.Entry, error) {
 }
 
 func buildInvalidVersionError(feed atom.Feed, version string) error {
-	buff := bytes.NewBuffer([]byte{})
-	buff.WriteString(kit.RedText("Invalid Timber Version: ", version))
-	buff.WriteString("\nAvailable Versions Are:")
-	buff.WriteString("\n  - master")
-	buff.WriteString("\n  - latest")
+	entries := []string{"master", "latest"}
+
 	for _, entry := range feed.Entries {
-		buff.WriteString("\n  - " + entry.Title)
+		entries = append(entries, entry.Title)
 	}
-	return errors.New(buff.String())
+
+	return fmt.Errorf(`Invalid Timber Version: %s
+Available Versions Are:
+- %s
+`, version, strings.Join(entries, "\n- "))
 }
