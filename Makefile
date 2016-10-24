@@ -1,4 +1,7 @@
-.PHONY: all build clean zip help
+.PHONY: build clean zip help
+
+install: # Build and install the theme binary
+	@go install github.com/Shopify/themekit/cmd/theme;
 
 test: ## Run all tests
 	@go test -race -cover $(shell glide novendor)
@@ -9,20 +12,13 @@ vet: ## Verify go code.
 lint: ## Lint all packages
 	@glide novendor | xargs -n 1 golint -set_exit_status
 
+check: lint vet test # lint, vet and test the code
+
 dist: lint vet test clean  ## Build binaries for all platforms, zip, and upload to S3
 	@$(MAKE) windows && $(MAKE) mac && $(MAKE) linux && $(MAKE) zip && $(MAKE) upload_to_s3;
 
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
-
-all:
-	@mkdir -p build/development && go build -ldflags="-s -w" -o build/development/theme github.com/Shopify/themekit/cmd/theme;
-
-build:
-	@mkdir -p build/dist/${GOOS}-${GOARCH} && go build -ldflags="-s -w" -o build/dist/${GOOS}-${GOARCH}/theme${EXT} github.com/Shopify/themekit/cmd/theme;
-
-install: # Build and install the theme binary
-	@go install github.com/Shopify/themekit/cmd/theme;
 
 build64:
 	@export GOARCH=amd64; $(MAKE) build;
