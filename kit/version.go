@@ -15,9 +15,8 @@ import (
 var (
 	// ThemeKitVersion is the version build of the library
 	ThemeKitVersion, _ = version.NewVersion("0.5.0")
+	releasesURL        = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
 )
-
-const releasesURL string = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
 
 // LibraryInfo will return a string array with information about the library used
 // for logging.
@@ -53,7 +52,7 @@ func InstallThemeKitVersion(ver string) error {
 	}
 	requestedRelease := releases.Get(ver)
 	if !requestedRelease.IsValid() {
-		return fmt.Errorf("Version %s not found.", requestedRelease.Version)
+		return fmt.Errorf("Version %s not found.", ver)
 	} else if ver == "latest" && !requestedRelease.GetVersion().GreaterThan(ThemeKitVersion) {
 		return fmt.Errorf("No applicable update available.")
 	}
@@ -88,8 +87,9 @@ func applyUpdate(platformRelease platform) error {
 	defer updateFile.Body.Close()
 
 	err = update.Apply(updateFile.Body, update.Options{
-		Hash:     crypto.MD5,
-		Checksum: checksum,
+		TargetPath: platformRelease.TargetPath, //used for testing
+		Hash:       crypto.MD5,
+		Checksum:   checksum,
 	})
 
 	if err != nil {

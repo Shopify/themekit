@@ -8,9 +8,10 @@ import (
 )
 
 type platform struct {
-	Name   string `json:"name"`
-	URL    string `json:"url"`
-	Digest string `json:"digest"`
+	Name       string `json:"name"`
+	URL        string `json:"url"`
+	Digest     string `json:"digest"`
+	TargetPath string `json:"TargetPath"` // used for testing updating
 }
 
 type release struct {

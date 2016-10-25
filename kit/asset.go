@@ -20,11 +20,6 @@ type Asset struct {
 	ThemeID     int64  `json:"theme_id,omitempty"`
 }
 
-// String() will print out a formatted string representation of this asset.
-func (a Asset) String() string {
-	return fmt.Sprintf("key: %s | value: %d bytes | attachment: %d bytes", a.Key, len([]byte(a.Value)), len([]byte(a.Attachment)))
-}
-
 // IsValid verifies that the Asset has a Key, and at least a Value or Attachment
 func (a Asset) IsValid() bool {
 	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)

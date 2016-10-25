@@ -12,9 +12,7 @@ var updateCmd = &cobra.Command{
 	Long: `Update will check for a new release, then
 if there is an applicable update it will
 download it and apply it.`,
-	RunE: doUpdate,
-}
-
-func doUpdate(cmd *cobra.Command, args []string) error {
-	return kit.InstallThemeKitVersion(updateVersion)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return kit.InstallThemeKitVersion(updateVersion)
+	},
 }

@@ -34,6 +34,13 @@ func (s *LoadAssetSuite) TearDownTest() {
 	}
 }
 
+func (s *LoadAssetSuite) TestSize() {
+	asset := Asset{Value: "one"}
+	assert.Equal(s.T(), 3, asset.Size())
+	asset = Asset{Attachment: "other"}
+	assert.Equal(s.T(), 5, asset.Size())
+}
+
 func (s *LoadAssetSuite) TestWhenAFileIsEmpty() {
 	root, filename, err := s.allocateFile("")
 	if err != nil {
@@ -51,6 +58,11 @@ func (s *LoadAssetSuite) TestWhenAFilenameUsesWindowsPaths() {
 	windowsRoot := strings.Replace(root, "/", "\\", -1)
 	asset, _ := loadAsset(windowsRoot, filename)
 	assert.Equal(s.T(), filename, asset.Key)
+}
+
+func (s *LoadAssetSuite) TestWhenFileDoesntExist() {
+	_, err := loadAsset("", "nope.txt")
+	assert.Equal(s.T(), "loadAsset: open /nope.txt: no such file or directory", err.Error())
 }
 
 func (s *LoadAssetSuite) TestWhenTheFilenameIncludesAWindowsPath() {

@@ -40,12 +40,6 @@ func (e Environments) GetConfiguration(environmentName string) (Configuration, e
 	return conf.compile()
 }
 
-// String will return a formatted string of the environment.
-func (e Environments) String() string {
-	bytes, _ := yaml.Marshal(e)
-	return string(bytes)
-}
-
 // Save will write out the environment to a file.
 func (e Environments) Save(location string) error {
 	file, err := os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
