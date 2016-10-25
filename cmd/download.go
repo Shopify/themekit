@@ -20,7 +20,8 @@ var downloadCmd = &cobra.Command{
 If no filenames are provided then download will download every file in the project
 and write them to disk.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := initializeConfig(); err != nil {
+		themeClients, err := generateThemeClients()
+		if err != nil {
 			return err
 		}
 		return download(themeClients[0], args)

@@ -50,7 +50,6 @@ func (fa *flagArray) Value() []string {
 
 var (
 	environments     kit.Environments
-	themeClients     []kit.ThemeClient
 	directory        string
 	configPath       string
 	environment      string
@@ -78,7 +77,7 @@ var ThemeCmd = &cobra.Command{
 	Short: "Theme Kit is a tool kit for manipulating shopify themes",
 	Long: `Theme Kit is a tool kit for manipulating shopify themes
 
-Theme Kit is a Fast and cross platform tool that enables you
+Theme Kit is a fast and cross platform tool that enables you
 to build shopify themes with ease.
 
 Complete documentation is available at http://themekit.cat`,
@@ -90,7 +89,6 @@ func init() {
 
 	ThemeCmd.PersistentFlags().StringVarP(&configPath, "config", "c", configPath, "path to config.yml")
 	ThemeCmd.PersistentFlags().StringVarP(&environment, "env", "e", kit.DefaultEnvironment, "envionment to run the command")
-
 	ThemeCmd.PersistentFlags().StringVarP(&directory, "dir", "d", "", "directory that command will take effect. (default current directory)")
 	ThemeCmd.PersistentFlags().StringVar(&password, "password", "", "theme password. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&themeid, "themeid", "", "theme id. This will override what is in your config.yml")
@@ -115,7 +113,9 @@ func init() {
 	ThemeCmd.AddCommand(bootstrapCmd, removeCmd, replaceCmd, uploadCmd, watchCmd, downloadCmd, versionCmd, updateCmd, configureCmd)
 }
 
-func initializeConfig() error {
+func generateThemeClients() ([]kit.ThemeClient, error) {
+	themeClients := []kit.ThemeClient{}
+
 	if !noUpdateNotifier && kit.IsNewUpdateAvailable() {
 		kit.LogWarnf("%s\n%s\n%s", banner, updateAvailableMessage, banner)
 	}
@@ -124,36 +124,30 @@ func initializeConfig() error {
 
 	var err error
 	if environments, err = kit.LoadEnvironments(configPath); err != nil {
-		return err
+		return themeClients, err
 	}
 
-	themeClients = []kit.ThemeClient{}
-
-	if allenvs {
-		for env := range environments {
-			config, err := environments.GetConfiguration(env)
-			if err != nil {
-				return err
-			}
-			client, err := kit.NewThemeClient(config)
-			if err != nil {
-				return err
-			}
-			themeClients = append(themeClients, client)
-		}
-	} else {
+	if !allenvs {
 		config, err := environments.GetConfiguration(environment)
 		if err != nil {
-			return err
+			return themeClients, err
+		}
+		environments = map[string]kit.Configuration{environment: config}
+	}
+
+	for env := range environments {
+		config, err := environments.GetConfiguration(env)
+		if err != nil {
+			return themeClients, err
 		}
 		client, err := kit.NewThemeClient(config)
 		if err != nil {
-			return err
+			return themeClients, err
 		}
-		themeClients = []kit.ThemeClient{client}
+		themeClients = append(themeClients, client)
 	}
 
-	return nil
+	return themeClients, nil
 }
 
 func setFlagConfig() {

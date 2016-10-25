@@ -15,7 +15,8 @@ var uploadCmd = &cobra.Command{
 If no filenames are provided then upload will upload every file in the project
 to shopify.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := initializeConfig(); err != nil {
+		themeClients, err := generateThemeClients()
+		if err != nil {
 			return err
 		}
 

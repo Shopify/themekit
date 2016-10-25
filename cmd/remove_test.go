@@ -1,0 +1,52 @@
+package cmd
+
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"sync"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/Shopify/themekit/kit"
+)
+
+type RemoveTestSuite struct {
+	suite.Suite
+}
+
+func (suite *RemoveTestSuite) TestRemove() {
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "DELETE", r.Method)
+
+		decoder := json.NewDecoder(r.Body)
+		var t map[string]kit.Asset
+		decoder.Decode(&t)
+		defer r.Body.Close()
+
+		assert.Equal(suite.T(), kit.Asset{Key: "templates/layout.liquid", Value: ""}, t["asset"])
+	})
+	defer server.Close()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go remove(client, []string{"templates/layout.liquid"}, &wg)
+	wg.Wait()
+}
+
+func TestRemoveTestSuite(t *testing.T) {
+	suite.Run(t, new(RemoveTestSuite))
+}
+
+func newClientAndTestServer(handler http.HandlerFunc) (kit.ThemeClient, *httptest.Server) {
+	server := httptest.NewServer(handler)
+	config, _ := kit.NewConfiguration()
+	config.Domain = server.URL
+	config.ThemeID = "123"
+	config.Password = "sharknado"
+	config.Directory = "../fixtures/project"
+	client, _ := kit.NewThemeClient(config)
+	return client, server
+}

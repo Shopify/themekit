@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -15,7 +15,8 @@ var removeCmd = &cobra.Command{
 	Short: "Remove theme file(s) from shopify",
 	Long:  `Remove will delete all specified files from shopify servers.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := initializeConfig(); err != nil {
+		themeClients, err := generateThemeClients()
+		if err != nil {
 			return err
 		}
 
@@ -30,25 +31,24 @@ var removeCmd = &cobra.Command{
 }
 
 func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	for _, filename := range filenames {
-		asset := kit.Asset{Key: filename}
-		resp, err := client.DeleteAsset(asset)
-		if err != nil {
-			kit.LogError(err)
-		} else {
-			kit.Printf(
-				"Successfully removed file %s from %s",
-				kit.BlueText(filename),
-				kit.YellowText(resp.Host),
-			)
-			removeFile(filename)
-		}
+		wg.Add(1)
+		go performRemove(client, kit.Asset{Key: filename}, wg)
 	}
-	wg.Done()
 }
 
-func removeFile(filename string) error {
-	dir, err := os.Getwd()
-	err = os.Remove(fmt.Sprintf("%s/%s", dir, filename))
-	return err
+func performRemove(client kit.ThemeClient, asset kit.Asset, wg *sync.WaitGroup) {
+	defer wg.Done()
+	resp, err := client.DeleteAsset(asset)
+	if err != nil {
+		kit.LogError(err)
+	} else {
+		kit.Printf(
+			"Successfully removed file %s from %s",
+			kit.BlueText(asset.Key),
+			kit.YellowText(resp.Host),
+		)
+		os.Remove(filepath.Join(directory, asset.Key))
+	}
 }

@@ -16,7 +16,8 @@ If replace is not provided with file names then it will replace all
 the files on shopify with your local files. Any files that do not
 exist on your local machine will be removed from shopify.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := initializeConfig(); err != nil {
+		themeClients, err := generateThemeClients()
+		if err != nil {
 			return err
 		}
 
@@ -30,12 +31,14 @@ exist on your local machine will be removed from shopify.`,
 	},
 }
 
-func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) error {
+func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	assetsActions := map[kit.Asset]kit.EventType{}
 	if len(filenames) == 0 {
 		assets, remoteErr := client.AssetList()
 		if remoteErr != nil {
-			return remoteErr
+			kit.LogError()
+			return
 		}
 
 		for _, asset := range assets {
@@ -44,7 +47,8 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 
 		localAssets, localErr := client.LocalAssets()
 		if localErr != nil {
-			return localErr
+			kit.LogError(localErr)
+			return
 		}
 
 		for _, asset := range localAssets {
@@ -54,7 +58,8 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 		for _, filename := range filenames {
 			asset, err := client.LocalAsset(filename)
 			if err != nil {
-				return err
+				kit.LogError(err)
+				return
 			}
 			assetsActions[asset] = kit.Update
 		}
@@ -64,9 +69,6 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) err
 		wg.Add(1)
 		go performReplace(client, asset, event, wg)
 	}
-
-	wg.Done()
-	return nil
 }
 
 func performReplace(client kit.ThemeClient, asset kit.Asset, event kit.EventType, wg *sync.WaitGroup) {
