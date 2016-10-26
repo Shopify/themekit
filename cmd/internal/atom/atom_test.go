@@ -8,7 +8,7 @@ import (
 )
 
 func loadFeedForTesting(t *testing.T) Feed {
-	stream, err := os.Open("releases.atom")
+	stream, err := os.Open("../../../fixtures/releases.atom")
 	assert.Nil(t, err, "Could not load 'releases.atom'")
 	feed, err := LoadFeed(stream)
 	assert.Nil(t, err, "Could not parse 'releases.atom'")

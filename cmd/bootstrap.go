@@ -62,10 +62,6 @@ func bootstrap() error {
 	return download(client, []string{})
 }
 
-func zipPath(version string) string {
-	return themeZipRoot + version + ".zip"
-}
-
 func zipPathForVersion(version string) (string, error) {
 	if version == masterBranch {
 		return zipPath(masterBranch), nil
@@ -82,6 +78,10 @@ func zipPathForVersion(version string) (string, error) {
 	}
 
 	return zipPath(entry.Title), nil
+}
+
+func zipPath(version string) string {
+	return themeZipRoot + version + ".zip"
 }
 
 func downloadAtomFeed() (atom.Feed, error) {

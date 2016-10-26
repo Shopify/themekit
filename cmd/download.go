@@ -36,7 +36,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 			return err
 		}
 		for _, asset := range assets {
-			if err := writeToDisk(client, asset); err != nil {
+			if err := writeToDisk(client.Config.Directory, asset); err != nil {
 				return err
 			}
 		}
@@ -47,7 +47,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 			if err != nil {
 				return err
 			}
-			if err := writeToDisk(client, asset); err != nil {
+			if err := writeToDisk(client.Config.Directory, asset); err != nil {
 				return err
 			}
 		}
@@ -55,13 +55,13 @@ func download(client kit.ThemeClient, filenames []string) error {
 	return nil
 }
 
-func writeToDisk(client kit.ThemeClient, asset kit.Asset) error {
-	perms, err := os.Stat(client.Config.Directory)
+func writeToDisk(directory string, asset kit.Asset) error {
+	perms, err := os.Stat(directory)
 	if err != nil {
 		return err
 	}
 
-	filename := filepath.Join(client.Config.Directory, asset.Key)
+	filename := filepath.Join(directory, asset.Key)
 	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
 	if err != nil {
 		return err
