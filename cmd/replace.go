@@ -15,20 +15,7 @@ var replaceCmd = &cobra.Command{
 If replace is not provided with file names then it will replace all
 the files on shopify with your local files. Any files that do not
 exist on your local machine will be removed from shopify.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		themeClients, err := generateThemeClients()
-		if err != nil {
-			return err
-		}
-
-		wg := sync.WaitGroup{}
-		for _, client := range themeClients {
-			wg.Add(1)
-			go replace(client, args, &wg)
-		}
-		wg.Wait()
-		return nil
-	},
+	RunE: forEachClient(replace),
 }
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
@@ -37,7 +24,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	if len(filenames) == 0 {
 		assets, remoteErr := client.AssetList()
 		if remoteErr != nil {
-			kit.LogError()
+			kit.LogError(remoteErr)
 			return
 		}
 

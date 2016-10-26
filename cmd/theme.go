@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -11,16 +12,16 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
-const (
-	banner                 string = "----------------------------------------"
-	updateAvailableMessage string = `
+const updateAvailableMessage string = `
+----------------------------------------
 | An update for Theme Kit is available |
 |                                      |
 | To apply the update simply type      |
 | the following command:               |
 |                                      |
-| theme update                         |`
-)
+| theme update                         |
+----------------------------------------
+`
 
 type flagArray struct {
 	values []string
@@ -117,7 +118,7 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 	themeClients := []kit.ThemeClient{}
 
 	if !noUpdateNotifier && kit.IsNewUpdateAvailable() {
-		kit.LogWarnf("%s\n%s\n%s", banner, updateAvailableMessage, banner)
+		kit.LogWarn(updateAvailableMessage)
 	}
 
 	setFlagConfig()
@@ -148,6 +149,25 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 	}
 
 	return themeClients, nil
+}
+
+type cobraCommandE func(*cobra.Command, []string) error
+type allEnvsCommand func(kit.ThemeClient, []string, *sync.WaitGroup)
+
+func forEachClient(handler allEnvsCommand) cobraCommandE {
+	return func(cmd *cobra.Command, args []string) error {
+		themeClients, err := generateThemeClients()
+		if err != nil {
+			return err
+		}
+		wg := sync.WaitGroup{}
+		for _, client := range themeClients {
+			wg.Add(1)
+			go handler(client, args, &wg)
+		}
+		wg.Wait()
+		return nil
+	}
 }
 
 func setFlagConfig() {

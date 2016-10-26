@@ -56,13 +56,12 @@ func download(client kit.ThemeClient, filenames []string) error {
 }
 
 func writeToDisk(client kit.ThemeClient, asset kit.Asset) error {
-	dir := client.Config.Directory
-	perms, err := os.Stat(dir)
+	perms, err := os.Stat(client.Config.Directory)
 	if err != nil {
 		return err
 	}
 
-	filename := fmt.Sprintf("%s/%s", dir, asset.Key)
+	filename := filepath.Join(client.Config.Directory, asset.Key)
 	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
 	if err != nil {
 		return err
@@ -72,32 +71,41 @@ func writeToDisk(client kit.ThemeClient, asset kit.Asset) error {
 	if err != nil {
 		return err
 	}
-	defer file.Sync()
 	defer file.Close()
 
-	var data []byte
-	switch {
-	case len(asset.Value) > 0:
-		data = []byte(asset.Value)
-	case len(asset.Attachment) > 0:
-		data, err = base64.StdEncoding.DecodeString(asset.Attachment)
-		if err != nil {
-			return fmt.Errorf("Could not decode %s. error: %s", asset.Key, err)
-		}
-	}
-
-	if len(data) > 0 {
-		_, err = prettyWrite(file, data)
-	}
-
+	contents, err := getAssetContents(asset)
 	if err != nil {
 		return err
 	}
+
+	if _, err = formatWrite(file, contents); err != nil {
+		return err
+	}
+
 	kit.LogNotifyf("Successfully wrote %s to disk", filename)
 	return nil
 }
 
-func prettyWrite(file *os.File, data []byte) (n int, err error) {
+func getAssetContents(asset kit.Asset) ([]byte, error) {
+	var data []byte
+	var err error
+	switch {
+	case len(asset.Value) > 0:
+		data = []byte(asset.Value)
+	case len(asset.Attachment) > 0:
+		if data, err = base64.StdEncoding.DecodeString(asset.Attachment); err != nil {
+			return data, fmt.Errorf("Could not decode %s. error: %s", asset.Key, err)
+		}
+	}
+	return data, nil
+}
+
+func formatWrite(file *os.File, data []byte) (n int, err error) {
+	if len(data) == 0 {
+		return 0, nil
+	}
+
+	defer file.Sync()
 	switch filepath.Ext(file.Name()) {
 	case ".json":
 		var out bytes.Buffer

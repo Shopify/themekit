@@ -115,10 +115,10 @@ func filesToPatterns(files []string) ([]string, error) {
 	patterns := []string{}
 	for _, name := range files {
 		file, err := os.Open(name)
-		defer file.Close()
 		if err != nil {
 			return patterns, err
 		}
+		defer file.Close()
 		var data []byte
 		if data, err = ioutil.ReadAll(file); err != nil {
 			return patterns, err

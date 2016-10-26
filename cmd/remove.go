@@ -14,20 +14,7 @@ var removeCmd = &cobra.Command{
 	Use:   "remove <filenames>",
 	Short: "Remove theme file(s) from shopify",
 	Long:  `Remove will delete all specified files from shopify servers.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		themeClients, err := generateThemeClients()
-		if err != nil {
-			return err
-		}
-
-		wg := sync.WaitGroup{}
-		for _, client := range themeClients {
-			wg.Add(1)
-			go remove(client, args, &wg)
-		}
-		wg.Wait()
-		return nil
-	},
+	RunE:  forEachClient(remove),
 }
 
 func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
@@ -49,6 +36,6 @@ func performRemove(client kit.ThemeClient, asset kit.Asset, wg *sync.WaitGroup) 
 			kit.BlueText(asset.Key),
 			kit.YellowText(resp.Host),
 		)
-		os.Remove(filepath.Join(directory, asset.Key))
+		os.Remove(filepath.Join(client.Config.Directory, asset.Key))
 	}
 }

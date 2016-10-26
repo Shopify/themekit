@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"sync"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -27,15 +29,38 @@ func (suite *ThemeTestSuite) TestGenerateThemeClients() {
 	environment = "nope"
 	clients, err = generateThemeClients()
 	assert.NotNil(suite.T(), err)
+	environment = "development"
 
 	allenvs = true
 	clients, err = generateThemeClients()
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 3, len(clients))
+	allenvs = false
 
 	configPath = badEnvirontmentPath
 	clients, err = generateThemeClients()
 	assert.NotNil(suite.T(), err)
+}
+
+func (suite *ThemeTestSuite) TestForEachClient() {
+	configPath = goodEnvirontmentPath
+	allenvs = true
+	runtimes := make(chan int, 100)
+	runner := forEachClient(func(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+		defer wg.Done()
+		runtimes <- 1
+	})
+	assert.NotNil(suite.T(), runner)
+
+	err := runner(&cobra.Command{}, []string{})
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), 3, len(runtimes))
+
+	configPath = badEnvirontmentPath
+	err = runner(&cobra.Command{}, []string{})
+	assert.NotNil(suite.T(), err)
+
+	allenvs = false
 }
 
 func (suite *ThemeTestSuite) TestSetFlagConfig() {

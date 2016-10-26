@@ -1,23 +1,24 @@
-development:
-  store: example.myshopify.com
+default:
   password: abracadabra
-  theme_id: 1
+  theme_id: "2"
+  store: example.myshopify.com
   ignore_files:
   - charmander
   - bulbasaur
   - squirtle
-default:
-  store: example.myshopify.com
+  timeout: 30s
+development:
   password: abracadabra
-  theme_id: 2
+  theme_id: "1"
+  store: example.myshopify.com
   ignore_files:
   - charmander
   - bulbasaur
   - squirtle
 production:
-  store: example.myshopify.com
   password: abracadabra
-  theme_id: 3
+  theme_id: "3"
+  store: example.myshopify.com
   ignore_files:
   - charmander
   - bulbasaur

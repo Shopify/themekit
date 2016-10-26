@@ -11,7 +11,8 @@ import (
 
 const minFileDescriptors float64 = 2048
 
-// MacOSX sets a very low default file descriptor limit per process. This function sets file descriptor limits to a more sane value.
+// MacOSX sets a very low default file descriptor limit per process.
+//This function sets file descriptor limits to a more sane value.
 func init() {
 	var rLimit syscall.Rlimit
 	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
