@@ -16,7 +16,7 @@ import (
 type Configuration struct {
 	Password     string        `yaml:"password,omitempty" env:"THEMEKIT_PASSWORD"`
 	ThemeID      string        `yaml:"theme_id,omitempty" env:"THEMEKIT_THEME_ID"`
-	Domain       string        `yaml:"store" env:"THEMEKIT_DOMAIN"`
+	Domain       string        `yaml:"store" env:"THEMEKIT_STORE"`
 	Directory    string        `yaml:"-" env:"THEMEKIT_DIRECTORY"`
 	IgnoredFiles []string      `yaml:"ignore_files,omitempty" env:"THEMEKIT_IGNORE_FILES" envSeparator:":"`
 	Proxy        string        `yaml:"proxy,omitempty" env:"THEMEKIT_PROXY"`

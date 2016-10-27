@@ -86,7 +86,7 @@ func init() {
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.Directory, "dir", "d", "", "directory that command will take effect. (default current directory)")
 	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Password, "password", "", "theme password. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&flagConfig.ThemeID, "themeid", "", "theme id. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Domain, "store", "", "your shopify domain. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Domain, "store", "s", "your shopify domain. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().DurationVarP(&flagConfig.Timeout, "timeout", "t", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")

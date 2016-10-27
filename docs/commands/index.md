@@ -10,6 +10,12 @@ command by running:
 theme [command] --help
 ```
 
+## General Global Flags
+
+- `--env`, -e : specify an environment to run your command.
+- `--config`, -c : specify a path for your config file.
+- `--no-update-notifier` : this will supress the update notifier.
+
 ## Bootstrap
 
 If you are starting a new theme and want to have some sane defaults, you can use
