@@ -41,9 +41,11 @@ access to the theme command. Run `theme` to make sure it is installed.
   - Include links to the Pull Requests that introduced these changes
   - Also upload the zipped binaries manually to Github so people can easily download them
 - Update the [themekit](http://themekit.cat) website
-  - `pushd nanoc`
-  - Do changes to markdown / stylesheet files within `nanoc`
-  - `nanoc compile && popd`
+  - `gem install jekyll`
+  - `cd docs`
+  - edit `_config.yml` and update the `themekitversion`
+  - `jekyll serve` and check the website.
+  - update any changes to the API
   - `git add . && git commit -m "Updating website"`
 
 # Authors
