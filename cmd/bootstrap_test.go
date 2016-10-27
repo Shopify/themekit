@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -15,6 +19,39 @@ type BootstrapTestSuite struct {
 }
 
 func (suite *BootstrapTestSuite) TestBootstrap() {
+	responses := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.URL.Path)
+		if r.URL.Path == "/feed" {
+			file, _ := os.Open("../fixtures/releases.atom")
+			bytes, _ := ioutil.ReadAll(file)
+			fmt.Fprintf(w, string(bytes))
+		} else if r.URL.Path == "/domain/admin/themes.json" {
+			fmt.Fprintf(w, jsonFixture("responses/theme"))
+		} else if r.URL.Path == "/domain/admin/themes/0.json" {
+			fmt.Fprintf(w, jsonFixture("responses/assets"))
+		}
+		responses++
+	}))
+	defer server.Close()
+	timberFeedPath = server.URL + "/feed"
+	themeZipRoot = server.URL + "/zip"
+
+	err := bootstrap()
+	assert.NotNil(suite.T(), err)
+
+	directory = "../fixtures/bootstrap"
+	password = "foo"
+	domain = server.URL + "/domain"
+	setFlagConfig()
+	err = bootstrap()
+	fmt.Println(err)
+	assert.Nil(suite.T(), err)
+
+	directory = ""
+	password = ""
+	domain = ""
+	setFlagConfig()
 }
 
 func (suite *BootstrapTestSuite) TestZipPath() {
@@ -22,9 +59,72 @@ func (suite *BootstrapTestSuite) TestZipPath() {
 }
 
 func (suite *BootstrapTestSuite) TestZipPathForVersion() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		file, _ := os.Open("../fixtures/releases.atom")
+		bytes, _ := ioutil.ReadAll(file)
+		fmt.Fprintf(w, string(bytes))
+	}))
+	timberFeedPath = server.URL
+
+	path, err := zipPathForVersion("master")
+	assert.Equal(suite.T(), themeZipRoot+"master.zip", path)
+	assert.Nil(suite.T(), err)
+
+	path, err = zipPathForVersion("v2.0.2")
+	assert.Equal(suite.T(), themeZipRoot+"v2.0.2.zip", path)
+	assert.Nil(suite.T(), err)
+
+	path, err = zipPathForVersion("vn.0.p")
+	assert.Equal(suite.T(), "", path)
+	assert.NotNil(suite.T(), err)
+
+	server.Close()
+
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+		fmt.Fprintf(w, "404")
+	}))
+	timberFeedPath = server.URL
+
+	path, err = zipPathForVersion("v2.0.2")
+	assert.Equal(suite.T(), "", path)
+	assert.NotNil(suite.T(), err)
+	server.Close()
 }
 
 func (suite *BootstrapTestSuite) TestDownloadAtomFeed() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		file, _ := os.Open("../fixtures/releases.atom")
+		bytes, _ := ioutil.ReadAll(file)
+		fmt.Fprintf(w, string(bytes))
+	}))
+	timberFeedPath = server.URL
+
+	feed, err := downloadAtomFeed()
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), 13, len(feed.Entries))
+	server.Close()
+
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "not atom")
+	}))
+	timberFeedPath = server.URL
+
+	feed, err = downloadAtomFeed()
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), 0, len(feed.Entries))
+	server.Close()
+
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+		fmt.Fprintf(w, "404")
+	}))
+	timberFeedPath = server.URL
+
+	feed, err = downloadAtomFeed()
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), 0, len(feed.Entries))
+	server.Close()
 }
 
 func (suite *BootstrapTestSuite) TestFindReleaseWith() {

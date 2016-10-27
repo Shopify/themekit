@@ -1,5 +1,5 @@
 default:
-  password: abracadabra
+  password: foo
   theme_id: "2"
   store: example.myshopify.com
   ignore_files:

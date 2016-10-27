@@ -41,7 +41,7 @@ func (suite *WatchTestSuite) TestHandleWatchEvent() {
 	})
 	defer server.Close()
 
-	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove, fmt.Errorf("nope"))
+	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove, fmt.Errorf("bad watch event"))
 
 	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove, nil)
 

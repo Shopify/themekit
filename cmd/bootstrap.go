@@ -12,8 +12,11 @@ import (
 )
 
 const (
-	masterBranch   = "master"
-	latestRelease  = "latest"
+	masterBranch  = "master"
+	latestRelease = "latest"
+)
+
+var (
 	themeZipRoot   = "https://github.com/Shopify/Timber/archive/"
 	timberFeedPath = "https://github.com/Shopify/Timber/releases.atom"
 )
