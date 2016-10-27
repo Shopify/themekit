@@ -1,0 +1,110 @@
+//==============================================================================
+// Article show
+//==============================================================================
+
+.article__title {
+  margin-bottom: em(20, 42);
+  padding-bottom: em(20, 42);
+  border-bottom: $border-grey;
+
+  @include shopify-breakpoint($tablet-up) {
+    margin-top: em($gutter / 2, 42);
+  }
+}
+
+.article__header {
+  @include clearfix;
+  margin-bottom: 20px;
+
+  .article__meta {
+    @include shopify-breakpoint($tablet-up) {
+      float: left;
+      line-height: em(25);
+    }
+  }
+}
+
+.article__header__heading {
+  float: left;
+}
+
+.article__image--featured {
+  margin-bottom: em($gutter);
+
+  @include shopify-breakpoint($mobile) {
+    margin-left: -$gutter;
+    margin-right: -$gutter;
+  }
+
+  > img {
+    width: 100%;
+  }
+}
+
+//==============================================================================
+// Article index
+//==============================================================================
+
+.article--index {
+  margin-bottom: em(38); // results in a total of 45px below index articles
+  overflow: hidden;
+  transform: translate3d(0, 0, 0); // Prevent flicker during transitions
+
+  > a {
+    display: inline-block;
+  }
+
+  .article__content {
+    display: none;
+  }
+}
+
+.article--index__image {
+  display: block;
+  margin-bottom: em(9);
+  position: relative;
+  overflow: hidden;
+
+  @include shopify-breakpoint($mobile) {
+    width: 100%;
+  }
+
+  img {
+    width: 100%;
+    transition: transform 0.35s;
+    transform-origin: 50% 50%;
+    backface-visibility: hidden;
+  }
+
+  &:hover,
+  &:focus {
+    img {
+      transform: scale(1.02);
+    }
+  }
+}
+
+.article--index__title {
+  margin-bottom: em(7, 24);
+
+  > a {
+    color: $color-slate;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+    }
+  }
+}
+
+.article--index__heading {
+  margin-bottom: $gutter;
+  padding-bottom: 20px;
+  border-bottom: $border-grey;
+
+  span {
+    display: block;
+    font-size: em(20, 42);
+    line-height: 1em;
+  }
+}

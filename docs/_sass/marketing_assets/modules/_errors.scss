@@ -1,0 +1,16 @@
+/*============================================================================
+  500, 404 pages
+==============================================================================*/
+main {
+  .page-width {
+    text-align: center;
+  }
+
+  .icon {
+    width: 10em;
+    height: 10em;
+    margin-bottom: 2em;
+
+    background: asset-svg-url(shopify, $color-grey-text--light) no-repeat;
+  }
+}

@@ -1,0 +1,9 @@
+.banner {
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+  border-bottom: $border-grey;
+}
+
+.banner--hidden {
+  @include visuallyhidden;
+}

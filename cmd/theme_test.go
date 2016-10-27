@@ -64,9 +64,9 @@ func (suite *ThemeTestSuite) TestForEachClient() {
 }
 
 func (suite *ThemeTestSuite) TestSetFlagConfig() {
-	password = "foo"
-	domain = "bar"
-	directory = "my/dir/now"
+	flagConfig.Password = "foo"
+	flagConfig.Domain = "bar"
+	flagConfig.Directory = "my/dir/now"
 	setFlagConfig()
 
 	config, _ := kit.NewConfiguration()

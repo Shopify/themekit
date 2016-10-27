@@ -1,0 +1,24 @@
+.mobile-nav-select {
+  display: inline-block;
+  margin-bottom: $gutter;
+
+  > select {
+    height: auto;
+    padding-left: em(100); // Space for 'Category:' label
+    padding-right: em(50);
+    color: $color-grey-body;
+    font-weight: $font-weight-regular;
+  }
+}
+
+.mobile-nav-select__title {
+  @include font-brandon-medium;
+  font-size: em(18);
+  height: $input-height - em(2); // em(2) == clear <select> border
+  padding: em($gutter / 2, 18);
+  position: absolute;
+  vertical-align: baseline;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}

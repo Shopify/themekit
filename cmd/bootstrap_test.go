@@ -40,18 +40,20 @@ func (suite *BootstrapTestSuite) TestBootstrap() {
 	err := bootstrap()
 	assert.NotNil(suite.T(), err)
 
-	directory = "../fixtures/bootstrap"
-	password = "foo"
-	domain = server.URL + "/domain"
+	flagConfig.Directory = "../fixtures/bootstrap"
+	flagConfig.Password = "foo"
+	flagConfig.Domain = server.URL + "/domain"
 	setFlagConfig()
 	err = bootstrap()
 	fmt.Println(err)
 	assert.Nil(suite.T(), err)
 
-	directory = ""
-	password = ""
-	domain = ""
+	flagConfig.Directory = ""
+	flagConfig.Password = ""
+	flagConfig.Domain = ""
 	setFlagConfig()
+
+	os.Remove("./config.yml")
 }
 
 func (suite *BootstrapTestSuite) TestZipPath() {

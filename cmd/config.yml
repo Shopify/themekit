@@ -1,5 +1,0 @@
-development:
-  password: foo
-  theme_id: "0"
-  store: http://127.0.0.1:65400/domain
-  timeout: 30s

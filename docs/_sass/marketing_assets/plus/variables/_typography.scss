@@ -1,0 +1,31 @@
+/*============================================================================
+  Typography defaults
+==============================================================================*/
+
+$h1-font-size:         em(54);
+$h1-font-size--tablet: em(44);
+$h1-font-size--mobile: em(42);
+$h1-font-weight:       $font-weight-thin;
+$h1-line-height:       em(70, 54);
+$h1-margin:            0 0 em(16) 0;
+
+$h2-font-size:         em(44);
+$h2-font-size--tablet: em(32);
+$h2-font-size--mobile: em(36);
+$h2-font-weight:       $font-weight-thin;
+$h2-line-height:       em(60, 44);
+$h2-margin:            0 0 em(6) 0;
+
+$h3-font-size:         em(15);
+$h3-font-size--tablet: em(14);
+$h3-font-size--mobile: em(12);
+$h3-font-weight:       $font-weight-bold;
+$h3-line-height:       inherit;
+$h3-margin:            0 0 em(16) 0;
+
+$h4-font-size:         em(22);
+$h4-font-size--tablet: em(22);
+$h4-font-size--mobile: em(22);
+$h4-font-weight:       $font-weight-light;
+$h4-line-height:       inherit;
+$h4-margin:            em(12) 0 em(6) 0;

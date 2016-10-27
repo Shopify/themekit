@@ -1,0 +1,111 @@
+$color-blog-body: #444;
+
+.marketing-markdown {
+  @extend p;
+  margin-top: 10px;
+  padding-bottom: 10px;
+  color: $color-blog-body;
+
+  h2 {
+    @extend .heading--3;
+    margin: em(30, 28) 0 em(22, 28);
+    font-size: em(28);
+    line-height: em(34, 28);
+    clear: both;
+  }
+
+  h3 {
+    @extend .heading--4;
+    margin-top: em(20);
+  }
+
+  h4 {
+    margin-top: em(20);
+  }
+
+  p,
+  ul,
+  ol {
+    margin-bottom: em(20);
+  }
+
+  a:not(.marketing-button) {
+    @extend .body-link;
+    padding-bottom: 0;
+  }
+
+  ul {
+    padding-left: em(20);
+    list-style: disc outside;
+
+    > li {
+      padding-left: 5px;
+    }
+  }
+
+  ol {
+    list-style-type: none;
+    counter-reset: ol-counter;
+
+    > li {
+      position: relative;
+      padding-left: em(35);
+
+      &:before {
+        @include font-brandon-bold;
+        position: absolute;
+        left: 0;
+        min-width: $gutter;
+        content: counter(ol-counter)'.';
+        counter-increment: ol-counter;
+        color: $color-slate;
+      }
+    }
+  }
+
+  li {
+    margin-bottom: 10px;
+  }
+
+  img,
+  iframe {
+    margin-top: em(10);
+    margin-bottom: em($gutter);
+  }
+
+  hr {
+    margin: $gutter 0;
+    height: 1px;
+    background: $color-grey-border-on--white;
+    border: 0;
+  }
+
+  blockquote {
+    @include font-brandon-black;
+    padding-left: $gutter;
+    color: $color-green;
+    border-left: 3px solid $color-green;
+    font-size: em(36);
+    line-height: em(44, 36);
+
+    &:before {
+      content: '\201C';
+    }
+
+    &:after {
+      content: '\201D';
+    }
+  }
+
+  .right-align {
+    float: right;
+    margin: 0 0 $gutter $gutter;
+    clear: right;
+  }
+
+  .left-align {
+    float: left;
+    margin: 0 $gutter $gutter 0;
+    clear: left;
+  }
+}

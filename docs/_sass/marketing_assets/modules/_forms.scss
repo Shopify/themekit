@@ -1,0 +1,416 @@
+/*============================================================================
+  Form elements
+==============================================================================*/
+.marketing-form--inline {
+  @include shopify-breakpoint($tablet-up) {
+    text-align: center;
+  }
+
+  .marketing-input-wrapper {
+    text-align: left;
+
+    @include shopify-breakpoint($tablet-up) {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.marketing-form--inline--with-labels {
+  @include shopify-breakpoint($tablet-up) {
+    .marketing-form__button {
+      margin-top: em(23); // Height of label plus margin
+    }
+  }
+}
+
+.marketing-form--inline__heading {
+  text-align: center;
+}
+
+.marketing-form--lowlight {
+  .marketing-label,
+  .marketing-radio-label,
+  .marketing-checkbox-label {
+    color: $color-white;
+  }
+}
+
+/*============================================================================
+  Form inputs
+==============================================================================*/
+.marketing-input-wrapper {
+  position: relative;
+  display: block;
+  margin-bottom: $gutter / 2;
+
+  .marketing-select-wrapper,
+  .marketing-input,
+  .marketing-textarea {
+    margin-bottom: 0;
+  }
+
+  &.js-is-hidden {
+    display: none;
+  }
+}
+
+.marketing-input,
+.marketing-textarea,
+.marketing-select-wrapper > select {
+  @include font-brandon-regular;
+  display: inline-block;
+  height: $input-height;
+  width: 100%;
+  margin: 0 0 ($gutter / 2);
+  padding: $input-padding;
+  color: $color-slate;
+  font-size: em(18);
+  border: 1px solid $color-input-border;
+  border-radius: $border-radius;
+  background-color: $color-white;
+  transition: border-color 0.1s;
+  appearance: none;
+
+  .marketing-block--lowlight &,
+  .marketing-form--lowlight &,
+  .page-block--lowlight & {
+    border-color: transparent;
+  }
+
+  &:focus,
+  &.focus {
+    color: $color-black;
+    // scss-lint:disable ImportantRule
+    // focus border should override all other border styles, no matter what.
+    border: 1px solid $color-input-focus !important;
+    // scss-lint:enable ImportantRule
+
+    // If a field is focused, we should show the field hint
+    // unless an error, or the .is-visible class is present.
+    + .marketing-form__messages .error + .suggest {
+      display: none;
+    }
+
+    + .marketing-form__messages .error + .is-visible {
+      display: block;
+    }
+  }
+
+  &[disabled] {
+    background-color: $color-grey-border-on--white;
+  }
+}
+
+.marketing-input,
+.marketing-textarea {
+  @include placeholder {
+    color: $color-grey-body;
+  }
+}
+
+.marketing-input--error {
+  &,
+  // ensure the `{lowlight} input` styles above are overridden
+  .marketing-block--lowlight &,
+  .marketing-form--lowlight &,
+  .page-block--lowlight & {
+    border: 2px solid $color-red;
+  }
+}
+
+.marketing-textarea {
+  height: auto;
+  min-height: $input-height;
+}
+
+.marketing-select-wrapper {
+  position: relative;
+  display: block;
+  margin-bottom: $gutter / 2;
+
+  > select {
+    margin: 0;
+    padding-right: em(32);
+
+    &::-ms-expand {
+      display: none;
+    }
+  }
+
+  &:before {
+    pointer-events: none;
+    content: '';
+    background-image: asset-svg-url(caret-down, $color-grey-text--light);
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+    background-position: center;
+    height: em(16);
+    width: em(16);
+    margin-bottom: em(-9);
+    display: block;
+    position: absolute;
+    bottom: 50%;
+    right: em(12);
+    z-index: 2;
+  }
+}
+
+:-moz-any(.marketing-select-wrapper):after {
+  position: absolute;
+  right: em(1);
+  top: em(1);
+  height: $input-height - em(2); // em(2) == to clear <select> top/bottom border
+  width: em(32);
+  background-color: $color-white;
+  font-size: em(18);
+  pointer-events: none;
+  z-index: 1;
+  content: '';
+  border-radius: $border-radius;
+}
+
+.marketing-label {
+  @include font-brandon-bold;
+  display: block;
+  margin-bottom: em(8, 13);
+  font-size: em(13);
+  text-transform: uppercase;
+}
+
+.marketing-form__button {
+  height: $input-height;
+}
+
+/*================ Off-screen labels with placeholder ================*/
+.marketing-label--hidden {
+  display: inline;  // reset margins and helps FF deal with the input on a SR
+
+  .no-placeholder & {
+    @include showvisuallyhidden;
+    position: absolute;
+    left: 0;
+    top: -20px;
+  }
+}
+
+// Input with inline button.
+.marketing-input-wrapper--inline-button {
+  position: relative;
+  margin-bottom: 0;
+
+  > .marketing-button {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+}
+
+/*============================================================================
+  Inline messaging and errors
+==============================================================================*/
+.marketing-form__messages {
+  font-size: em(13);
+  font-weight: 500;
+
+  .error,
+  .success,
+  .suggest {
+    display: block;
+    padding: em(8, 13) 0 0;
+    transition: opacity, 0.3s ease;
+  }
+
+  .error {
+    color: $color-red;
+
+    a {
+      color: $color-red;
+      border-bottom: 1px solid $color-red;
+    }
+  }
+
+  .success {
+    display: none;
+    color: $color-green;
+
+    a {
+      color: $color-green;
+      border-bottom: 1px solid $color-green;
+    }
+
+    &.is-visible,
+    .marketing-form--has-success & {
+      display: block;
+    }
+  }
+
+  .suggest {
+    display: none;
+    color: $color-grey-heading;
+
+    .marketing-block--lowlight &,
+    .marketing-form--lowlight &,
+    .page-block--lowlight & {
+      color: $color-white;
+    }
+
+    &.is-visible {
+      display: block;
+    }
+  }
+}
+
+.marketing-form__ajax-success {
+  display: none;
+
+  &.js-is-visible {
+    display: block;
+  }
+}
+
+/*============================================================================
+  Checkboxes and radio buttons
+==============================================================================*/
+$marketing-switch-diameter:       20px;
+$marketing-switch-diameter-large: 30px;
+
+%marketing-switch {
+  @include visuallyhidden;
+  margin-bottom: $gutter / 2;
+  float: left;
+
+  &:checked + label:after {
+    position: absolute;
+    left: 0;
+    top: 0;
+    content: '';
+  }
+
+  &:focus,
+  &:focus:checked {
+    + label:before {
+      outline: none;
+      border-color: $color-green;
+      box-shadow: 0 0 4px 0 $color-green;
+    }
+  }
+}
+
+%marketing-switch-label {
+  display: block;
+  text-align: left;
+  position: relative;
+  margin-bottom: $gutter / 2;
+  padding-left: $gutter;
+  line-height: $marketing-switch-diameter;
+  user-select: none;
+
+  &:hover {
+    &:before {
+      border-color: $color-green;
+    }
+  }
+
+  &:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: $marketing-switch-diameter;
+    width: $marketing-switch-diameter;
+    background-color: $color-white;
+    border-radius: $border-radius;
+    border: $border-grey;
+    box-shadow: inset 0 1px 3px rgba($color-black, 0.2);
+    transition: border-color 150ms ease;
+  }
+}
+
+%marketing-switch--large {
+  + label {
+    padding-left: $gutter + 10;
+    line-height: $marketing-switch-diameter-large;
+
+    &:before {
+      width: $marketing-switch-diameter-large;
+      height: $marketing-switch-diameter-large;
+    }
+  }
+}
+
+.marketing-checkbox {
+  @extend %marketing-switch;
+
+  &:checked {
+    + label:before {
+      background-color: $color-green;
+      border-color: $color-green;
+      box-shadow: none;
+    }
+
+    + label:after {
+      background-image: asset-svg-url(checked);
+      width: $marketing-switch-diameter;
+      height: $marketing-switch-diameter;
+    }
+  }
+}
+
+.marketing-checkbox-label {
+  @extend %marketing-switch-label;
+}
+
+.marketing-checkbox--large {
+  @extend %marketing-switch--large;
+
+  &:checked + label:after {
+    width: $marketing-switch-diameter-large;
+    height: $marketing-switch-diameter-large;
+  }
+}
+
+.marketing-radio {
+  @extend %marketing-switch;
+
+  &:checked {
+    + label:after {
+      left: $marketing-switch-diameter / 4;
+      top: $marketing-switch-diameter / 4;
+      width: $marketing-switch-diameter / 2;
+      height: $marketing-switch-diameter / 2;
+      border-radius: $marketing-switch-diameter / 2;
+      background-color: $color-green;
+    }
+
+    + label:before {
+      border-color: $color-green;
+    }
+  }
+}
+
+.marketing-radio-label {
+  @extend %marketing-switch-label;
+
+  &:before {
+    border-radius: $marketing-switch-diameter;
+  }
+}
+
+.marketing-radio--large {
+  @extend %marketing-switch--large;
+
+  &:checked + label:after {
+    top: 6px;
+    left: 6px;
+    width: 18px;
+    height: 18px;
+    border-radius: $marketing-switch-diameter-large / 2;
+  }
+}
+
+.marketing-checkbox-label--inline,
+.marketing-radio-label--inline {
+  margin-right: em($gutter / 2);
+  margin-bottom: 0;
+  display: inline-block;
+}

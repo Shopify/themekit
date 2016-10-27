@@ -1,0 +1,30 @@
+// box sizing for before and after elements
+*:before,
+*:after {
+  @include box-sizing(border-box);
+}
+
+.clearfix {
+  @include clearfix;
+}
+
+/*============================================================================
+  Animation Helpers
+  Force block on elements in transition, useful for transitions ending in display: none
+  Used with preparetransition.js
+==============================================================================*/
+
+.is-transitioning {
+  // scss-lint:disable ImportantRule
+  display: block !important;
+  visibility: visible !important;
+  // scss-lint:enable ImportantRule
+}
+
+/*============================================================================
+  Focus Helper
+  used only if using JS a11y-helpers to silently move focus on page
+==============================================================================*/
+.js-focus-hidden:focus {
+  outline: none;
+}

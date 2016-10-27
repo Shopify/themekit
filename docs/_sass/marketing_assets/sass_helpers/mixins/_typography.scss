@@ -1,0 +1,35 @@
+@mixin font-brandon-light {
+  font-family: $font-brandon-family;
+  font-weight: $font-weight-light;
+  -webkit-font-smoothing: auto;
+}
+
+@mixin font-brandon-regular {
+  font-family: $font-brandon-family;
+  font-weight: $font-weight-regular;
+  -webkit-font-smoothing: antialiased;
+}
+
+@mixin font-brandon-medium {
+  font-family: $font-brandon-family;
+  font-weight: $font-weight-medium;
+  -webkit-font-smoothing: antialiased;
+}
+
+@mixin font-brandon-bold {
+  font-family: $font-brandon-family;
+  font-weight: $font-weight-bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+@mixin font-brandon-black {
+  font-family: $font-brandon-family;
+  font-weight: $font-weight-black;
+  -webkit-font-smoothing: antialiased;
+}
+
+@mixin opentype-features-display {
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures, contextual, discretionary-ligatures;
+  font-feature-settings: 'kern', 'liga', 'clig', 'calt', 'dlig';
+}

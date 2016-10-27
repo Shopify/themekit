@@ -7,3 +7,8 @@ tags
 # for testing
 cmd/theme/config.yml
 cmd/theme/theme
+
+# for docs
+_site
+.sass-cache
+.jekyll-metadata

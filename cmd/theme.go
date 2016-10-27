@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -50,18 +49,12 @@ func (fa *flagArray) Value() []string {
 }
 
 var (
-	environments     kit.Environments
-	directory        string
 	configPath       string
-	environment      string
 	allenvs          bool
+	environment      string
 	notifyFile       string
-	password         string
-	themeid          string
-	domain           string
-	proxy            string
-	timeout          time.Duration
 	noUpdateNotifier bool
+	flagConfig       = kit.Configuration{}
 	ignoredFiles     flagArray
 	ignores          flagArray
 
@@ -90,12 +83,12 @@ func init() {
 
 	ThemeCmd.PersistentFlags().StringVarP(&configPath, "config", "c", configPath, "path to config.yml")
 	ThemeCmd.PersistentFlags().StringVarP(&environment, "env", "e", kit.DefaultEnvironment, "envionment to run the command")
-	ThemeCmd.PersistentFlags().StringVarP(&directory, "dir", "d", "", "directory that command will take effect. (default current directory)")
-	ThemeCmd.PersistentFlags().StringVar(&password, "password", "", "theme password. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().StringVar(&themeid, "themeid", "", "theme id. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().StringVar(&domain, "domain", "", "your shopify domain. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().StringVar(&proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
-	ThemeCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.Directory, "dir", "d", "", "directory that command will take effect. (default current directory)")
+	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Password, "password", "", "theme password. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().StringVar(&flagConfig.ThemeID, "themeid", "", "theme id. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Domain, "store", "", "your shopify domain. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().DurationVarP(&flagConfig.Timeout, "timeout", "t", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
 	ThemeCmd.PersistentFlags().Var(&ignoredFiles, "ignored-file", "A single file to ignore, use the flag multiple times to add multiple.")
 	ThemeCmd.PersistentFlags().Var(&ignores, "ignores", "A path to a file that contains ignore patterns.")
@@ -123,8 +116,8 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 
 	setFlagConfig()
 
-	var err error
-	if environments, err = kit.LoadEnvironments(configPath); err != nil {
+	environments, err := kit.LoadEnvironments(configPath)
+	if err != nil {
 		return themeClients, err
 	}
 
@@ -171,14 +164,7 @@ func forEachClient(handler allEnvsCommand) cobraCommandE {
 }
 
 func setFlagConfig() {
-	kit.SetFlagConfig(kit.Configuration{
-		Password:     password,
-		ThemeID:      themeid,
-		Domain:       domain,
-		Directory:    directory,
-		Proxy:        proxy,
-		IgnoredFiles: ignoredFiles.Value(),
-		Ignores:      ignores.Value(),
-		Timeout:      timeout,
-	})
+	flagConfig.IgnoredFiles = ignoredFiles.Value()
+	flagConfig.Ignores = ignores.Value()
+	kit.SetFlagConfig(flagConfig)
 }

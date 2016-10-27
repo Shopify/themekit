@@ -1,0 +1,222 @@
+//==============================================================================
+// Video guide index page
+//==============================================================================
+
+.guide--index__video {
+  position: relative;
+  display: block;
+  margin-bottom: em(15);
+
+  @include shopify-breakpoint($desktop-up) {
+    &:hover,
+    &:focus {
+      .guide--index__video__overlay {
+        opacity: 1;
+      }
+    }
+  }
+
+  > img {
+    width: 100%;
+  }
+
+  .icon-video-play {
+    width: 90px;
+    height: 90px;
+    background-image: asset-svg-url('video-play-solid', $color-white);
+  }
+}
+
+.guide--index__video__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  text-align: center;
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.guide--index__video__overlay {
+  background: rgba($color-slate--dark, 0.6);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  transition: opacity 300ms ease;
+
+  @include shopify-breakpoint($desktop-up) {
+    opacity: 0;
+  }
+}
+
+//==============================================================================
+// Guide show page
+//==============================================================================
+
+.guide-header {
+  margin-bottom: $gutter;
+  overflow: hidden;
+  min-height: 450px;
+  text-align: center;
+
+  @include shopify-breakpoint($desktop-up) {
+    padding-bottom: 0;
+  }
+
+  @include shopify-breakpoint($mobile) {
+    margin: {
+      left: -$gutter;
+      right: -$gutter;
+    };
+
+    padding: {
+      left: 0;
+      right: 0;
+    }
+  }
+
+  p {
+    margin: em(20) 0 em($gutter);
+  }
+}
+
+.guide-header__wrapper {
+  padding-top: 0;
+}
+
+.guide-header__image {
+  @include shopify-breakpoint($tablet-up) {
+    position: absolute;
+    bottom: 0;
+  }
+
+  img {
+    @include shopify-breakpoint($tablet-up) {
+      width: 100%;
+      max-width: 300px;
+    }
+
+    @include shopify-breakpoint($mobile) {
+      width: auto;
+      max-height: 200px;
+    }
+  }
+}
+
+.guide-header--video {
+  .guide-header__content {
+    @include shopify-breakpoint($desktop-up) {
+      min-height: 450px;
+      padding: em(60);
+      z-index: 2;
+    }
+  }
+}
+
+.guide-header--video__image {
+  @include shopify-breakpoint($desktop-up) {
+    img {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: auto;
+    }
+  }
+}
+
+.guide__download-pdf {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.guide__download-pdf__link {
+  @extend .body-link;
+  margin-left: 5px;
+  color: $color-white;
+}
+
+//==============================================================================
+// Guide chapter table
+//==============================================================================
+
+.guide-chapter {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  position: relative;
+  padding: em(20) em($gutter * 1.5) em(20) 0;
+  border-top: $border-grey;
+
+  &:after {
+    position: absolute;
+    right: $gutter / 2;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    content: '';
+    background: asset-svg-url(caret-right, $color-grey-text--light) no-repeat center center;
+    transform: translateX(-4px);
+    transition: transform 150ms ease;
+  }
+
+  &:hover,
+  &:focus,
+  &:active {
+    &:after {
+      transform: translateX(0);
+    }
+  }
+
+  &:last-child {
+    border-bottom: $border-grey;
+  }
+
+  &.guide-chapter--index {
+    border-bottom: 0;
+  }
+}
+
+.guide-chapter--list {
+  @include shopify-breakpoint($desktop-up) {
+    padding-left: em($gutter / 2);
+    transition: background-color 150ms ease;
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: $color-sky--light;
+    }
+  }
+}
+
+.guide-chapter__content {
+  display: table-cell;
+  vertical-align: middle;
+  width: 100%;
+}
+
+.guide-chapter__title {
+  display: inline;
+  margin: 0 5px 0 0;
+}
+
+.guide-chapter__description {
+  margin: 10px 0 0;
+}
+
+.guide-chapter--thumbnail {
+  height: em(90);
+
+  .guide-chapter__content {
+    padding-left: 105px;
+  }
+}
+
+.guide-chapter__thumbnail {
+  position: absolute;
+  top: em(20);
+  width: 90px;
+  left: 0;
+}

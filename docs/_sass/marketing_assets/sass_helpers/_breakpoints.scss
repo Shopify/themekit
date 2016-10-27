@@ -1,0 +1,31 @@
+/*============================================================================
+  Breakpoints - Set in em to cover browser font-size adjustments
+==============================================================================*/
+$desktop: 990px  !default;  // Includes left/right padding
+$tablet:  750px  !default;  // Includes left/right padding
+$wide:    1440px !default;  // This is a "wide" view for any design details present at wide screen, does not include padding
+
+// Used for phone only
+$mobile : new-breakpoint(max-width em($tablet - 1) 4);
+
+// Used for tablet only
+$tablet-only : new-breakpoint(min-width em($tablet) max-width em($desktop - 1) 8);
+
+// Combines tablet and mobile, typically for style alone, not layout
+$tablet-down: new-breakpoint(max-width em($desktop - 1) 8);
+
+// Combines tablet and desktop up
+$tablet-up: new-breakpoint(min-width em($tablet) 8);
+
+// The actual desktop size & up, 990
+$desktop-up: new-breakpoint(min-width em($desktop) 8);
+
+// Anything below the wide size of grid
+$desktop-down: new-breakpoint(max-width em($desktop) 8);
+
+// Will spit out the content of the rule, enclosed by the media query
+@mixin shopify-breakpoint($breakpoint) {
+  @include media($breakpoint) {
+    @content;
+  }
+}

@@ -1,0 +1,43 @@
+/*============================================================================
+ Mobile accordion
+==============================================================================*/
+@include shopify-breakpoint($mobile) {
+  .accordion-item--mobile {
+    &.js-is-active {
+      .accordion-link:after {
+        background-image: asset-svg-url(collapse);
+      }
+    }
+
+    .accordion-link {
+      position: relative;
+      cursor: pointer;
+      display: block;
+
+      width: 100%;
+      text-align: left;
+      min-height: em(20, 16);
+      padding-right: em(20, 16);
+
+      &:after {
+        background-image: asset-svg-url(expand);
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 1px;
+        width: em(20, 16);
+        height: em(20, 16);
+      }
+    }
+
+    .accordion-content {
+      display: none;
+    }
+  }
+}
+
+.accordion-item {
+  .accordion-content {
+    display: none;
+  }
+}

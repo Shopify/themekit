@@ -1,0 +1,12 @@
+$social-icons: (
+  social-facebook,
+  social-instagram,
+  social-linkedin,
+  social-pinterest,
+  social-twitter,
+  social-youtube,
+  social-plus
+);
+
+@include generate-icon-classes($social-icons);
+

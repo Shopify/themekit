@@ -1,0 +1,36 @@
+.page-header {
+  @extend .heading-container;
+  padding: em($gutter * 2) 0;
+
+  .page--has-transparent-nav--primary & {
+    @include shopify-breakpoint($desktop-up) {
+      padding-top: em($nav-height + $gutter);
+    }
+  }
+}
+
+.page-header--flush {
+  padding-bottom: 0;
+}
+
+.page-header--horizon {
+  padding-bottom: 0;
+  margin-bottom: em($gutter * 2);
+
+  img {
+    margin-bottom: em(-$gutter);
+
+    @include shopify-breakpoint($tablet-up) {
+      margin-bottom: em(-$gutter * 2);
+    }
+  }
+}
+
+.page-header__cta {
+  background: rgba($color-black, 0.25);
+}
+
+.page-header--video {
+  position: relative;
+  overflow: hidden;
+}

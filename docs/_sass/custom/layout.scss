@@ -1,0 +1,110 @@
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+main {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: none;
+  min-height: 100vh;
+}
+
+.docs-container {
+  padding: 0;
+
+  @include shopify-breakpoint($desktop-up) {
+    overflow: hidden;
+    min-height: 600px;
+  }
+}
+
+.docs-sidebar {
+  @include shopify-breakpoint($tablet-down) {
+    padding: 60px 30px 15px;
+  }
+
+  @include shopify-breakpoint($desktop-up) {
+    min-height: 100%;
+    width: 300px;
+    padding: 60px 40px 0;
+    position: fixed;
+  }
+}
+
+.docs-main {
+  padding: 0 30px;
+
+  @include shopify-breakpoint($desktop-up) {
+    float: left;
+    padding: 0 45px;
+    width: calc(100% - 300px);
+    margin-left: 300px;
+  }
+}
+
+.docs-shopify-logo {
+
+  img {
+    margin-bottom: 10px;
+    max-width: 100px;
+  }
+
+  @include shopify-breakpoint($tablet-down) {
+    background: #232323;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 8px 30px;
+
+    img {
+      margin-bottom: 0;
+      max-width: 80px;
+    }
+
+    p {
+      display: none;
+    }
+  }
+
+  @include shopify-breakpoint($desktop-up) {
+    position: fixed;
+    left: 40px;
+    bottom: 0;
+    width: 220px;
+    background: #30373b;
+    padding-top: 20px;
+    padding-bottom: 40px;
+  }
+
+  p {
+    margin-bottom: 0;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: underline;
+  }
+}
+
+.apidocs-container {
+  @include shopify-breakpoint($desktop-up) {
+    position: relative;
+  }
+}
+
+.apidocs__sidebar {
+  @include shopify-breakpoint($desktop-up) {
+    width: 200px;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+}
+
+.apidocs {
+  @include shopify-breakpoint($desktop-up) {
+    max-width: calc(100% - 200px);
+    padding-right: 30px;
+  }
+}
