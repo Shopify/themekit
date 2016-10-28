@@ -2,6 +2,7 @@ package kit
 
 import (
 	"encoding/json"
+	"fmt"
 	"runtime"
 	"testing"
 
@@ -24,6 +25,22 @@ func TestReleaseIsApplicable(t *testing.T) {
 	assert.Equal(t, false, r.IsApplicable())
 
 	r = release{Version: ThemeKitVersion.String()}
+	assert.Equal(t, false, r.IsApplicable())
+
+	ver := fmt.Sprintf("v%v.%v.%v", ThemeKitVersion.Segments())
+	r = release{Version: ver}
+	assert.Equal(t, false, r.IsApplicable())
+
+	segs := ThemeKitVersion.Segments()
+	ver = fmt.Sprintf("v%v.%v.%v", segs[0], segs[1], segs[2]+1)
+	println(ver)
+	r = release{Version: ver}
+	assert.Equal(t, true, r.IsApplicable())
+
+	r = release{Version: ver + "-beta"}
+	assert.Equal(t, false, r.IsApplicable())
+
+	r = release{Version: ver + "+prerelease"}
 	assert.Equal(t, false, r.IsApplicable())
 }
 

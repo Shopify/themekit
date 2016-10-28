@@ -28,7 +28,7 @@ func (r release) IsApplicable() bool {
 	if err != nil {
 		return false
 	}
-	return ThemeKitVersion.LessThan(version)
+	return ThemeKitVersion.LessThan(version) && version.Metadata() == "" && version.Prerelease() == ""
 }
 
 func (r release) GetVersion() *version.Version {
