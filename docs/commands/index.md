@@ -14,7 +14,8 @@ theme [command] --help
 
 - `--env`, -e : specify an environment to run your command.
 - `--config`, -c : specify a path for your config file.
-- `--no-update-notifier` : this will supress the update notifier.
+- `--no-update-notifier` : this will supress the update notifier that lets the
+  user know when there is an applicable update available.
 
 ## Bootstrap
 
@@ -103,6 +104,8 @@ some files names are provided to replace then only those files will be replaced.
 ## Update
 Update will update the themekit command to the newest version. Update can also be
 used to roll back to previous versions by providing it with a `--version` argument.
+If there is a beta or prerelease version available you may also specify it with
+the version flag, otherwise it will not be installed.
 
 ```bash
 theme update --version=v0.5.0
