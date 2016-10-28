@@ -43,9 +43,13 @@ zip: ## Create zip file with distributable binaries
 upload_to_s3: ## Upload zip file with binaries to S3
 	@echo "uploading to S3" && bundle exec ruby ./scripts/release && echo "upload complete";
 
+serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
+	@cd docs && jekyll serve
+
 tools: ## Installs tools required for developing theme kit
 	@curl https://glide.sh/get | sh
 	@go get -u github.com/golang/lint/golint
+	@gem install jekyll
 
 help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

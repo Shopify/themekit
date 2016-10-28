@@ -1,15 +1,20 @@
 # Contribution Guidelines
 
 - Open an issue to discuss the feature/bug
-- If feature/bug is deemed valid then fork repo
-- Implement patch to resolve issue, include tests to prevent regressions/validate patch/be super awesome
-- Submit pull request and mention maintainers
-  - Current Maintainers: @ilikeorangutans, @chrisbutcher, @tanema
+- If feature/bug is deemed valid then fork repo.
+- Implement patch to resolve issue.
+- Include tests to prevent regressions and validate the patch.
+- Update the docs for any API changes.
+- Submit pull request and mention maintainers. Current maintainers are @ilikeorangutans, @chrisbutcher, @tanema
 
 # Pre-Requisites
 
+Run `make tools` to install all the tools except go.
+
 - [Go 1.7 or higher](https://golang.org/dl)
 - [Glide](https://github.com/Masterminds/glide)
+- golint
+- jekyll
 
 # Getting the Source Code
 
@@ -31,6 +36,8 @@ access to the theme command. Run `theme` to make sure it is installed.
   To easily verify everything you can simply enter the following: `make check`
 - Merge changes into master, update the version number in kit/version.go, then
   create a tag named after the version. For example: `git tag 0.0.1 && git push origin --tags`
+  Any tags that are postfixed with `-beta` will not prompt users for update so if
+  you want to release to a small group please use this method.
 - Create a release using `make dist`
   - This will create binaries for all supported platforms and upload them to S3
   - It will also update the [manifest file](https://shopify-themekit.s3.amazonaws.com/releases/all.json)
