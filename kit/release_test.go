@@ -27,11 +27,12 @@ func TestReleaseIsApplicable(t *testing.T) {
 	r = release{Version: ThemeKitVersion.String()}
 	assert.Equal(t, false, r.IsApplicable())
 
-	ver := fmt.Sprintf("v%v.%v.%v", ThemeKitVersion.Segments())
+	segs := ThemeKitVersion.Segments()
+	ver := fmt.Sprintf("v%v.%v.%v", segs[0], segs[1], segs[2])
 	r = release{Version: ver}
 	assert.Equal(t, false, r.IsApplicable())
 
-	segs := ThemeKitVersion.Segments()
+	segs = ThemeKitVersion.Segments()
 	ver = fmt.Sprintf("v%v.%v.%v", segs[0], segs[1], segs[2]+1)
 	println(ver)
 	r = release{Version: ver}
