@@ -17,7 +17,7 @@ You can find installation instructions for each platform [shopify.github.io/them
 
 ## Usage and Docs
 
-Please find further usage instructions at [shopify.github.io/themekit/commands](https://shopify.github.io/themekit/commands/) and for developing using theme kit please see the [![GoDoc](https://godoc.org/github.com/Shopify/themekit?status.svg)](http://godoc.org/github.com/Shopify/themekit)
+Please find further usage instructions at [theme kit website](https://shopify.github.io/themekit/commands/) and for developing using theme kit please see the [![GoDoc](https://godoc.org/github.com/Shopify/themekit?status.svg)](http://godoc.org/github.com/Shopify/themekit)
 
 ## Downloads
 
