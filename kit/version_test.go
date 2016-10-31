@@ -17,9 +17,8 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-const updatePath = "../fixtures/updateme"
-
 var (
+	updatePath      = clean("../fixtures/updateme")
 	oldFile         = []byte{0xDE, 0xAD, 0xBE, 0xEF}
 	newFile         = []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	newFileChecksum = md5.Sum(newFile)

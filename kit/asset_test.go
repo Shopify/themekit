@@ -57,18 +57,18 @@ func (s *LoadAssetSuite) TestFindAllFiles() {
 	files, err = findAllFiles("../fixtures/project")
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), []string{
-		"../fixtures/project/assets/application.js",
-		"../fixtures/project/assets/pixel.png",
-		"../fixtures/project/config/settings.json",
-		"../fixtures/project/invalid_config.yml",
-		"../fixtures/project/layout/.gitkeep",
-		"../fixtures/project/locales/en.json",
-		"../fixtures/project/snippets/snippet.js",
-		"../fixtures/project/templates/customers/test.liquid",
-		"../fixtures/project/templates/template.liquid",
-		"../fixtures/project/valid_config.yml",
-		"../fixtures/project/valid_patterns",
-		"../fixtures/project/whatever.txt",
+		clean("../fixtures/project/assets/application.js"),
+		clean("../fixtures/project/assets/pixel.png"),
+		clean("../fixtures/project/config/settings.json"),
+		clean("../fixtures/project/invalid_config.yml"),
+		clean("../fixtures/project/layout/.gitkeep"),
+		clean("../fixtures/project/locales/en.json"),
+		clean("../fixtures/project/snippets/snippet.js"),
+		clean("../fixtures/project/templates/customers/test.liquid"),
+		clean("../fixtures/project/templates/template.liquid"),
+		clean("../fixtures/project/valid_config.yml"),
+		clean("../fixtures/project/valid_patterns"),
+		clean("../fixtures/project/whatever.txt"),
 	}, files)
 }
 
@@ -95,7 +95,6 @@ func (s *LoadAssetSuite) TestLoadAsset() {
 
 	asset, err = loadAsset("../fixtures/project", "nope.txt")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "loadAsset: open ../fixtures/project/nope.txt: no such file or directory", err.Error())
 
 	asset, err = loadAsset("../fixtures/project", "templates")
 	assert.NotNil(s.T(), err)

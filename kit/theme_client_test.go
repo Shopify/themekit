@@ -128,9 +128,7 @@ func (suite *ThemeClientTestSuite) TestCreateTheme() {
 	suite.config.Ignores = []string{"nope"}
 	SetFlagConfig(suite.config)
 	client, theme, err = CreateTheme("name", "source")
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "open nope: no such file or directory", err.Error())
-	}
+	assert.NotNil(suite.T(), err)
 
 	suite.config.Ignores = []string{}
 	suite.config.Domain = server.URL

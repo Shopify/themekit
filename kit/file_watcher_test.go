@@ -1,6 +1,7 @@
 package kit
 
 import (
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -148,14 +149,14 @@ func (suite *FileWatcherTestSuite) TestExtractAssetKey() {
 
 func (suite *FileWatcherTestSuite) TestfindDirectoriesToWatch() {
 	expected := []string{
-		watchFixturePath,
-		watchFixturePath + "/assets",
-		watchFixturePath + "/config",
-		watchFixturePath + "/layout",
-		watchFixturePath + "/locales",
-		watchFixturePath + "/snippets",
-		watchFixturePath + "/templates",
-		watchFixturePath + "/templates/customers",
+		clean(watchFixturePath),
+		clean(watchFixturePath + "/assets"),
+		clean(watchFixturePath + "/config"),
+		clean(watchFixturePath + "/layout"),
+		clean(watchFixturePath + "/locales"),
+		clean(watchFixturePath + "/snippets"),
+		clean(watchFixturePath + "/templates"),
+		clean(watchFixturePath + "/templates/customers"),
 	}
 
 	files := findDirectoriesToWatch(watchFixturePath, true, func(string) bool { return false })
@@ -167,4 +168,8 @@ func (suite *FileWatcherTestSuite) TestfindDirectoriesToWatch() {
 
 func TestFileWatcherTestSuite(t *testing.T) {
 	suite.Run(t, new(FileWatcherTestSuite))
+}
+
+func clean(path string) string {
+	return filepath.Clean(path)
 }
