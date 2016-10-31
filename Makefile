@@ -20,6 +20,9 @@ dist: lint vet test clean  ## Build binaries for all platforms, zip, and upload 
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
 
+build:
+	@mkdir -p build/dist/${GOOS}-${GOARCH} && go build -ldflags="-s -w" -o build/dist/${GOOS}-${GOARCH}/theme${EXT} github.com/Shopify/themekit/cmd/theme;
+
 build64:
 	@export GOARCH=amd64; $(MAKE) build;
 
