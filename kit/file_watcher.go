@@ -150,6 +150,8 @@ func extractAssetKey(filename string) string {
 }
 
 func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(string) bool) []string {
+	start = filepath.Clean(start)
+
 	if !recursive {
 		return []string{start}
 	}
