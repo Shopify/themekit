@@ -1,13 +1,6 @@
 package kit
 
 import (
-	"bytes"
-	"image"
-	"image/png"
-	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -21,17 +14,15 @@ type LoadAssetSuite struct {
 	allocatedFiles []string
 }
 
-func (s *LoadAssetSuite) SetupTest() {
-	s.allocatedFiles = []string{}
-}
-
-func (s *LoadAssetSuite) TearDownTest() {
-	for _, filename := range s.allocatedFiles {
-		err := os.Remove(filename)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+func (s *LoadAssetSuite) TestIsValid() {
+	asset := Asset{Key: "test.txt", Value: "one"}
+	assert.Equal(s.T(), true, asset.IsValid())
+	asset = Asset{Key: "test.txt", Attachment: "one"}
+	assert.Equal(s.T(), true, asset.IsValid())
+	asset = Asset{Value: "one"}
+	assert.Equal(s.T(), false, asset.IsValid())
+	asset = Asset{Key: "test.txt"}
+	assert.Equal(s.T(), false, asset.IsValid())
 }
 
 func (s *LoadAssetSuite) TestSize() {
@@ -41,122 +32,7 @@ func (s *LoadAssetSuite) TestSize() {
 	assert.Equal(s.T(), 5, asset.Size())
 }
 
-func (s *LoadAssetSuite) TestWhenAFileIsEmpty() {
-	root, filename, err := s.allocateFile("")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	asset, err := loadAsset(root, filename)
-	assert.Nil(s.T(), err, "There should not be an error returned when the file is empty")
-	assert.False(s.T(), asset.IsValid(), "The returned asset should not be considered valid")
-}
-
-func (s *LoadAssetSuite) TestWhenAFilenameUsesWindowsPaths() {
-	dir, _, _ := s.allocateDir()
-	root, filename, _ := s.allocateFileInDir(dir, "hello world")
-	windowsRoot := strings.Replace(root, "/", "\\", -1)
-	asset, _ := loadAsset(windowsRoot, filename)
-	assert.Equal(s.T(), filename, asset.Key)
-}
-
-func (s *LoadAssetSuite) TestWhenFileDoesntExist() {
-	_, err := loadAsset("", "nope.txt")
-	assert.Equal(s.T(), "loadAsset: open /nope.txt: no such file or directory", err.Error())
-}
-
-func (s *LoadAssetSuite) TestWhenTheFilenameIncludesAWindowsPath() {
-	dir, _, _ := s.allocateDir()
-	root, filename, _ := s.allocateFileInDir(dir, "hello world")
-	windowsRoot := strings.Replace(root, "/", "\\", -1)
-	windowFilename := strings.Replace(filename, "/", "\\", -1)
-	asset, _ := loadAsset(windowsRoot, windowFilename)
-	assert.Equal(s.T(), filename, asset.Key)
-}
-
-func (s *LoadAssetSuite) TestWhenAFileContainsTextData() {
-	root, filename, err := s.allocateFile("hello world")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	asset, err := loadAsset(root, filename)
-	assert.Nil(s.T(), err, "There should not be an error returned")
-	assert.True(s.T(), asset.IsValid(), "Files that contain data should be valid")
-	assert.Equal(s.T(), "hello world", asset.Value)
-}
-
-func (s *LoadAssetSuite) TestWhenAFileContainsBinaryData() {
-	root, filename, err := s.allocateFile(string(BinaryTestData()))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	asset, err := loadAsset(root, filename)
-	assert.Nil(s.T(), err, "There should not be an error returned")
-	assert.True(s.T(), asset.IsValid(), "Files that contain data should be valid")
-	assert.True(s.T(), len(asset.Attachment) > 0, "The attachment should not be blank")
-}
-
-func (s *LoadAssetSuite) TestWhenFileIsADirectory() {
-	root, filename, err := s.allocateDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	asset, err := loadAsset(root, filename)
-	assert.NotNil(s.T(), err, "The error should not be nil if a directory was given to loadAsset")
-	assert.Equal(s.T(), "loadAsset: File is a directory", err.Error())
-	assert.False(s.T(), asset.IsValid(), "The asset returned should not be valid")
-}
-
-func (s *LoadAssetSuite) allocateFile(content string) (root, filename string, err error) {
-	return s.allocateFileInDir("", content)
-}
-
-func (s *LoadAssetSuite) allocateFileInDir(directory, content string) (root, filename string, err error) {
-	file, err := ioutil.TempFile(directory, "load-asset-suite-test-file")
-	if err != nil {
-		return
-	}
-
-	if len(content) > 0 {
-		file.WriteString(content)
-		file.Sync()
-		file.Seek(0, 0)
-	}
-
-	s.noteAllocatedFile(file.Name())
-
-	root = filepath.Dir(file.Name())
-	filename = filepath.Base(root) + "/" + filepath.Base(file.Name())
-	root = filepath.Dir(root)
-	return
-}
-
-func (s *LoadAssetSuite) allocateDir() (root, filename string, err error) {
-	dir, err := ioutil.TempDir("", "load-asset-suite-test-dir")
-	if err != nil {
-		return
-	}
-
-	s.noteAllocatedFile(dir)
-
-	root = filepath.Dir(dir)
-	filename = filepath.Base(dir)
-	return
-}
-
-func (s *LoadAssetSuite) noteAllocatedFile(name string) {
-	s.allocatedFiles = append(s.allocatedFiles, name)
-}
-
-func TestLoadAssetSuite(t *testing.T) {
-	loadAsset("foo", "bar")
-	suite.Run(t, new(LoadAssetSuite))
-}
-
-func TestSortListOfAssets(t *testing.T) {
+func (s *LoadAssetSuite) TestAssetsSort() {
 	input := []Asset{
 		{Key: "assets/ajaxify.js.liquid"},
 		{Key: "assets/ajaxify.js"},
@@ -172,12 +48,65 @@ func TestSortListOfAssets(t *testing.T) {
 		{Key: "layouts/customers.liquid"},
 	}
 	sort.Sort(ByAsset(input))
-	assert.Equal(t, expected, input)
+	assert.Equal(s.T(), expected, input)
 }
 
-func BinaryTestData() []byte {
-	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
-	buff := bytes.NewBuffer([]byte{})
-	png.Encode(buff, img)
-	return buff.Bytes()
+func (s *LoadAssetSuite) TestFindAllFiles() {
+	files, err := findAllFiles("../fixtures/project/valid_patterns")
+	assert.Equal(s.T(), "Path is not a directory", err.Error())
+	files, err = findAllFiles("../fixtures/project")
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), []string{
+		"../fixtures/project/assets/application.js",
+		"../fixtures/project/assets/pixel.png",
+		"../fixtures/project/config/settings.json",
+		"../fixtures/project/invalid_config.yml",
+		"../fixtures/project/layout/.gitkeep",
+		"../fixtures/project/locales/en.json",
+		"../fixtures/project/snippets/snippet.js",
+		"../fixtures/project/templates/customers/test.liquid",
+		"../fixtures/project/templates/template.liquid",
+		"../fixtures/project/valid_config.yml",
+		"../fixtures/project/valid_patterns",
+		"../fixtures/project/whatever.txt",
+	}, files)
+}
+
+func (s *LoadAssetSuite) TestLoadAssetsFromDirectory() {
+	assets, err := loadAssetsFromDirectory("../fixtures/project/valid_patterns", func(path string) bool { return false })
+	assert.Equal(s.T(), "Path is not a directory", err.Error())
+	assets, err = loadAssetsFromDirectory("../fixtures/project", func(path string) bool {
+		return path != "whatever.txt"
+	})
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), []Asset{{
+		Key:   "whatever.txt",
+		Value: "whatever\n",
+	}}, assets)
+}
+
+func (s *LoadAssetSuite) TestLoadAsset() {
+	windowsRoot := strings.Replace("../fixtures/project", "/", "\\", -1)
+	asset, err := loadAsset(windowsRoot, "whatever.txt")
+	assert.Equal(s.T(), "whatever.txt", asset.Key)
+	assert.Equal(s.T(), true, asset.IsValid())
+	assert.Equal(s.T(), "whatever\n", asset.Value)
+	assert.Nil(s.T(), err)
+
+	asset, err = loadAsset("../fixtures/project", "nope.txt")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "loadAsset: open ../fixtures/project/nope.txt: no such file or directory", err.Error())
+
+	asset, err = loadAsset("../fixtures/project", "templates")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "loadAsset: File is a directory", err.Error())
+
+	asset, err = loadAsset("../fixtures/project", "assets/pixel.png")
+	assert.Nil(s.T(), err)
+	assert.True(s.T(), len(asset.Attachment) > 0)
+	assert.True(s.T(), asset.IsValid())
+}
+
+func TestLoadAssetSuite(t *testing.T) {
+	suite.Run(t, new(LoadAssetSuite))
 }
