@@ -39,7 +39,10 @@ func (suite *VersionTestSuite) SetupSuite() {
 }
 
 func (suite *VersionTestSuite) SetupTest() {
-	os.Create(updatePath)
+	file, err := os.Create(updatePath)
+	if err == nil {
+		file.Close()
+	}
 }
 
 func (suite *VersionTestSuite) TearDownTest() {
