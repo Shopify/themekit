@@ -22,9 +22,9 @@ func TestRateLimiterHalts(t *testing.T) {
 }
 
 func TestRateLimiterCanGoAfterTimeout(t *testing.T) {
-	limiter := newRateLimiter(time.Millisecond)
 	timeout := false
 	received := false
+	limiter := newRateLimiter(time.Millisecond)
 	select {
 	case <-limiter.nextChan:
 		received = true
