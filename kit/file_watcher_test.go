@@ -163,7 +163,7 @@ func (suite *FileWatcherTestSuite) TestfindDirectoriesToWatch() {
 	assert.Equal(suite.T(), expected, files)
 
 	files = findDirectoriesToWatch(watchFixturePath, false, func(string) bool { return false })
-	assert.Equal(suite.T(), []string{watchFixturePath}, files)
+	assert.Equal(suite.T(), []string{clean(watchFixturePath)}, files)
 }
 
 func TestFileWatcherTestSuite(t *testing.T) {
