@@ -115,6 +115,7 @@ func (watcher *FileWatcher) StopWatching() {
 
 func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 	var eventType EventType
+	var err error
 
 	switch event.Op {
 	case fsnotify.Chmod, fsnotify.Create, fsnotify.Write:
@@ -125,12 +126,15 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 
 	root := filepath.Dir(event.Name)
 	filename := filepath.Base(event.Name)
-	asset, err := loadAsset(root, filename)
-	if err == nil {
-		asset.Key = extractAssetKey(event.Name)
-		if asset.Key == "" {
-			err = fmt.Errorf("File not in project workspace.")
-		}
+	asset, loadErr := loadAsset(root, filename)
+	if loadErr != nil { // remove event wont load asset
+		asset = Asset{}
+	}
+
+	asset.Key = extractAssetKey(event.Name)
+	if asset.Key == "" {
+		err = fmt.Errorf("File not in project workspace.")
+		asset.Key = event.Name
 	}
 
 	watcher.callback(watcher.client, asset, eventType, err)

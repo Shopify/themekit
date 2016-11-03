@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	textFixturePath  = "../fixtures/project/whatever.txt"
+	textFixturePath  = "../fixtures/project/assets/application.js"
 	watchFixturePath = "../fixtures/project"
 )
 
@@ -108,22 +108,31 @@ func (suite *FileWatcherTestSuite) TestStopWatching() {
 }
 
 func (suite *FileWatcherTestSuite) TestHandleEvent() {
-	writes := []fsnotify.Op{
-		fsnotify.Create,
-		fsnotify.Write,
-		fsnotify.Remove,
+	writes := []struct {
+		Name  string
+		Event fsnotify.Op
+	}{
+		{Name: textFixturePath, Event: fsnotify.Create},
+		{Name: textFixturePath, Event: fsnotify.Write},
+		{Name: textFixturePath, Event: fsnotify.Remove},
+		{Name: "../fixtures/project/whatever.txt", Event: fsnotify.Write},
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(len(writes))
 
 	watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType, err error) {
-		assert.Equal(suite.T(), "File not in project workspace.", err.Error())
+		if err != nil {
+			assert.Equal(suite.T(), "File not in project workspace.", err.Error())
+			assert.Equal(suite.T(), "../fixtures/project/whatever.txt", asset.Key)
+		} else {
+			assert.Equal(suite.T(), extractAssetKey(textFixturePath), asset.Key)
+		}
 		wg.Done()
 	}}
 
-	for _, fsEvent := range writes {
-		handleEvent(watcher, fsnotify.Event{Name: textFixturePath, Op: fsEvent})
+	for _, write := range writes {
+		handleEvent(watcher, fsnotify.Event{Name: write.Name, Op: write.Event})
 	}
 
 	wg.Wait()
@@ -131,7 +140,6 @@ func (suite *FileWatcherTestSuite) TestHandleEvent() {
 
 func (suite *FileWatcherTestSuite) TestExtractAssetKey() {
 	tests := map[string]string{
-		textFixturePath:                                 "",
 		"/long/path/to/config.yml":                      "",
 		"/long/path/to/assets/logo.png":                 "assets/logo.png",
 		"/long/path/to/templates/customers/test.liquid": "templates/customers/test.liquid",
