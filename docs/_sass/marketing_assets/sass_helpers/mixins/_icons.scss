@@ -1,0 +1,15 @@
+@mixin generate-icon-classes($list, $colors: $icon-colors) {
+  @each $icon in $list {
+    @if length($icon) > 1 {
+      .icon-#{nth($icon, 1)}-#{nth($icon, 2)} {
+        background-image: asset-svg-url(nth($icon, 1), map-get($colors, nth($icon, 2)));
+        background-repeat: no-repeat;
+      }
+    } @else {
+      .icon-#{$icon} {
+        background-image: asset-svg-url($icon);
+        background-repeat: no-repeat;
+      }
+    }
+  }
+}

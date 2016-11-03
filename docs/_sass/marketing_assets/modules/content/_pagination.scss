@@ -1,0 +1,46 @@
+.pagination {
+  @include clearfix;
+  padding-top: $gutter / 2;
+  border-top: $border-grey;
+  text-align: center;
+
+  li {
+    display: inline-block;
+  }
+
+  a {
+    display: inline-block;
+    padding: 15px;
+    transition: color 300ms ease;
+
+    &:hover,
+    &:focus {
+      color: $color-black;
+    }
+  }
+}
+
+.pagination__numbered-links {
+  width: 75%;
+  margin: 0 auto;
+}
+
+.pagination__prev {
+  float: left;
+
+  > a {
+    padding-left: 0;
+  }
+}
+
+.pagination__next {
+  float: right;
+
+  > a {
+    padding-right: 0;
+  }
+}
+
+.pagination__current-page > a {
+  color: $color-black;
+}

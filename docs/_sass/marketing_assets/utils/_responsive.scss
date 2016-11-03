@@ -1,0 +1,41 @@
+/*============================================================================
+  Responsive Helpers
+==============================================================================*/
+/*================ Selectively show/hide content ================*/
+// scss-lint:disable ImportantRule
+.display--mobile,
+.display--tablet,
+.display--desktop {
+  display: none !important;
+}
+
+@include shopify-breakpoint($desktop) {
+  .display--desktop {
+    display: block !important;
+  }
+
+  .hide--desktop {
+    display: none !important;
+  }
+}
+
+@include shopify-breakpoint($tablet-only) {
+  .display--tablet {
+    display: block !important;
+  }
+
+  .hide--tablet {
+    display: none !important;
+  }
+}
+
+@include shopify-breakpoint($mobile) {
+  .display--mobile {
+    display: block !important;
+  }
+
+  .hide--mobile {
+    display: none !important;
+  }
+}
+// scss-lint:enable ImportantRule

@@ -1,0 +1,27 @@
+/*============================================================================
+  Grid Requirements:
+  * 8 column grid with 2 columns on either side as optional extended grid area
+    only visible on larger screens
+  * Configurable (ie through something similar to this file)
+  * Different grid per breakpoint, ideally defined in isolation inside the
+    breakpoint for minimal CSS undo-ing (ie. don't have to undo mobile styles
+    once on desktop, vice versa)
+  * Supports a mobile-first dev approach, with fallback for IE8
+  * Nestable
+  * Flexible for how containers react across breakpoints.
+    Same container may collapse in different ways on different pages
+==============================================================================*/
+
+/*============================================================================
+  Grid Measurements
+==============================================================================*/
+$column: 90px;
+$gutter: 30px;
+$gutter-half: $gutter / 2;
+
+$column--tablet: 60px !default;
+
+$grid-columns: 8 !default;
+
+// Extra $gutter * 0.5 to account for additional container padding to make 1440px
+$grid-extendor: $column * 2 + $gutter * 2.5 !default;

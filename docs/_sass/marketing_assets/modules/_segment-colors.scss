@@ -1,0 +1,86 @@
+// To distinguish our segments, headers, links and block quotes, are highlighted.
+// If a whole page belongs to a segment, a body class is applied
+// within the wrapper, add apply class="segment-<elem>" to that element
+// eg .segment-link inside .segment-pos will inherit the segment color.
+// Outside of segment pages, elements can be highlighted using
+// segment-<SEGMENT>-elem
+//
+// Styleguide Segment Colors.
+
+/*============================================================================
+  Segment Colors
+
+  Before adding another segment colour, please read and consider the thread
+  on this PR: https://github.com/Shopify/marketing_assets/pull/649
+==============================================================================*/
+$segments: (
+  online: $color-yellow,
+  everywhere: $color-green,
+  pos: $color-blue,
+  facebook: $color-blue-fb,
+  pinterest: $color-red-pinterest,
+  twitter: $color-blue-twitter
+);
+
+@each $segment, $color in $segments {
+  .segment-#{$segment}-heading {
+    color: $color;
+  }
+
+  .segment-#{$segment}-link {
+    color: $color;
+
+    &:hover {
+      color: darken($color, 6%);
+    }
+
+    &:active,
+    &:focus {
+      color: darken($color, 8%);
+    }
+  }
+
+  .segment-#{$segment}-button {
+    background-color: $color;
+
+    &:hover {
+      background-color: darken($color, 6%);
+    }
+
+    &:active,
+    &:focus {
+      background-color: darken($color, 8%);
+    }
+  }
+
+  // scss-lint:disable ImportantRule
+  .segment-#{$segment}-flair {
+    &:before {
+      background-color: $color !important;
+    }
+  }
+  // scss-lint:enable ImportantRule
+
+  .segment-#{$segment} {
+    .segment-quote {
+      border-color: $color;
+    }
+
+    .segment-heading {
+      @extend .segment-#{$segment}-heading;
+    }
+
+    .segment-link {
+      @extend .segment-#{$segment}-link;
+    }
+
+    .section-heading__flair:before,
+    .segment-block {
+      background-color: $color;
+    }
+
+    .segment-button {
+      @extend .segment-#{$segment}-button;
+    }
+  }
+}

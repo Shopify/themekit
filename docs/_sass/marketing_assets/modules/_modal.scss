@@ -1,0 +1,104 @@
+$backdrop-opacity: 0.85;
+$modal-max-width: $desktop;
+$modal-min-height: 500px;
+$modal-width: 80%;
+$distance-from-top: 130px;
+
+.js-modal-open {
+  // scss-lint:disable IdSelector SelectorFormat
+  #SiteNavContainer,
+  #PageContainer {
+    display: none;
+  }
+  // scss-lint:enable IdSelector SelectorFormat
+}
+
+.modal-container {
+  background: $color-slate--dark;
+  display: none;
+  min-height: 100vh;
+  left: 0;
+  opacity: 0;
+  overflow: scroll;
+  padding: 0 0 $distance-from-top / 2;
+  top: 0;
+  width: 100%;
+  text-align: center;
+  -webkit-overflow-scrolling: touch;
+  z-index: -1;
+  color: $color-white;
+  transition: opacity 0.2s;
+
+  @include shopify-breakpoint($mobile) {
+    padding: 0 0 $gutter;
+  }
+
+  &.is-transitioning {
+    z-index: 1000;
+    position: fixed;
+  }
+
+  &.js-is-active {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    z-index: 1000;
+  }
+
+  button:-moz-focusring,
+  a:-moz-focusring {
+    outline: solid $color-white 2px;
+  }
+}
+
+.modal__header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+.modal__controls {
+  text-align: right;
+}
+
+.modal__close {
+  margin: em(10) em(-10) 0 0;
+  padding: em(10);
+  opacity: 0.7;
+  transition: opacity 300ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  .icon-close-white {
+    height: 16px;
+    width: 16px;
+  }
+}
+
+.modal {
+  @include force-3d();
+  padding-top: $distance-from-top;
+  position: relative;
+  text-align: left;
+  transition: all 0.18s ease-out;
+  transform: scale(0.85);
+
+  @include shopify-breakpoint($mobile) {
+    padding: ($gutter * 2) $gutter 0;
+  }
+
+  .js-is-active & {
+    transform: scale(1);
+  }
+
+  &:focus {
+    outline: none; // the focus can be silently added, it's only relevent to be able to handle items inside
+  }
+}
+
+.modal__heading {
+  color: $color-white;
+}

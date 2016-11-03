@@ -1,0 +1,251 @@
+// scss-lint:disable ImportantRule
+$validated-form-input-height: $gutter * 2;
+
+.stateful-form {
+  .marketing-input-wrapper {
+    border: 1px solid $color-input-border;
+    border-radius: $border-radius;
+    background: $color-white;
+
+    &::before,
+    &::after {
+      opacity: 0;
+      right: em(20);
+      content: '';
+      position: absolute;
+      top: em($gutter);
+      z-index: 3;
+      background-size: cover;
+    }
+
+    // :before is used for the error X and success checkmark
+    &::before {
+      transition: opacity 0.4s;
+    }
+
+    // :after is used for the checking spinner
+    &::after {
+      @include spinner($color: $color-grey-body, $size: 18px);
+      left: auto;
+      animation-duration: 0.5s;
+      top: em($gutter);
+    }
+  }
+
+  // Edge shows an X at the right side of input to provide an option to clear
+  // the input. We should hide this to prevent overlap with our X.
+  .marketing-input::-ms-clear {
+    display: none;
+  }
+
+  .js-has-error {
+    border-color: $color-red !important;
+
+    &::before {
+      background-image: asset-svg-url(caution, $color-red);
+      opacity: 1;
+      width: 21px;
+      height: 18px;
+      margin-top: em(-8);
+    }
+
+    &::after {
+      opacity: 0;
+    }
+  }
+
+  .js-has-success {
+    border-color: $color-green !important;
+
+    &::before {
+      margin-top: em(-13);
+      background-image: asset-svg-url(checked, $color-green);
+      opacity: 1;
+      width: em(24, 14);
+      height: em(24, 14);
+      margin-right: em(-5);
+    }
+
+    &::after {
+      opacity: 0;
+    }
+  }
+
+  .js-has-suggestion {
+    border-color: $color-blue-dark !important;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  .js-is-pending {
+    border-color: $color-grey-body !important;
+
+    &::after {
+      @include transition(opacity 0.2s);
+      opacity: 1;
+    }
+
+    &::before {
+      opacity: 0;
+    }
+  }
+
+  .marketing-input {
+    position: relative;
+    height: $validated-form-input-height;
+    z-index: 2;
+    border: 0 !important;
+    padding: 24px em(16, 18) em(8, 18) 20px;
+
+    &:focus {
+      outline: 0;
+      border: 0;
+    }
+  }
+
+  .marketing-form__button {
+    height: $validated-form-input-height + 2; // 2px = total border height
+  }
+
+  .js-is-focused {
+    border-color: $color-input-focus;
+
+    .marketing-input {
+      outline: 0;
+    }
+  }
+
+  .js-is-hidden {
+    display: none;
+  }
+
+  .marketing-label {
+    @include force-3d();
+    @include font-brandon-regular;
+    backface-visibility: hidden;
+    position: absolute;
+    font-size: em(18, 16);
+    left: 20px;
+    top: 30px;
+    color: $color-grey-body;
+    text-transform: none;
+    z-index: 10;
+    cursor: text;
+    transform: translateY(-50%);
+
+    @include shopify-breakpoint($tablet-up) {
+      transition: all 200ms ease;
+    }
+  }
+
+  .js-is-focused,
+  .js-is-filled {
+    .marketing-label {
+      font-size: em(14, 18);
+      transform: translateY(-20px);
+    }
+  }
+
+  .error {
+    color: $color-red;
+  }
+
+  .marketing-form__messages {
+    font-size: em(16);
+    max-height: 0;
+    overflow: hidden;
+    display: block;
+
+    @include shopify-breakpoint($tablet-up) {
+      transition: all 0.3s;
+    }
+
+    .error,
+    .success {
+      display: block;
+      font-size: em(14);
+      padding: em(10, 14) em(10, 14) em(10, 14) em(20, 14);
+      border-radius: 0 0 $border-radius $border-radius;
+      position: relative;
+      min-height: em(37, 14);
+      background: lighten($color-red, 50%);
+
+      &.hide {
+        display: none;
+      }
+    }
+
+    .success {
+      background: $color-grey-border-on--white;
+      color: $color-slate;
+    }
+  }
+
+  // scss-lint:disable MergeableSelector SelectorDepth
+  .js-has-error,
+  .js-has-success {
+    .marketing-form__messages {
+      max-height: $gutter * 3; // for animating
+
+      @include shopify-breakpoint($tablet-up) {
+        transition: all 0.6s;
+      }
+
+      .error::before {
+        display: block;
+      }
+    }
+  }
+
+  .js-has-success:not(.js-has-error) {
+    .marketing-form__messages {
+      max-height: 37px;
+    }
+  }
+
+  .js-is-pending {
+    .marketing-form__messages {
+      max-height: 0;
+
+      @include shopify-breakpoint($tablet-up) {
+        transition: all 0.3s;
+      }
+    }
+  }
+}
+
+.input-mirror {
+  @include font-brandon-regular;
+  font-size: em(18);
+  top: 27px;
+  left: 22px;
+  position: absolute;
+  background: $color-white;
+  color: $color-grey-text--light;
+
+  &::after {
+    content: '.myshopify.com';
+    position: relative;
+    z-index: 101;
+    padding-left: 3px;
+    pointer-events: none;
+  }
+
+  &.hide::after {
+    display: none;
+  }
+}
+
+.subdomain {
+  overflow: hidden;
+
+  .suggest {
+    display: block;
+
+    &.hide {
+      display: none;
+    }
+  }
+}

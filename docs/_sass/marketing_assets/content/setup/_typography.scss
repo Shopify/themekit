@@ -1,0 +1,37 @@
+@import 'marketing_assets/sass-helpers';
+
+/*============================================================================
+  Typography defaults
+==============================================================================*/
+$h1-font-size:         em(42);
+$h1-font-size--tablet: em(36);
+$h1-font-size--mobile: em(26);
+$h1-margin-bottom:     em(10, 42);
+$h1-font-weight:       $font-weight-bold;
+$h1-line-height:       em(50, 42);
+
+$h2-font-size:         em(36);
+$h2-font-size--tablet: em(32);
+$h2-font-size--mobile: em(22);
+$h2-margin-bottom:     em(10, 36);
+$h2-font-weight:       $font-weight-regular;
+$h2-line-height:       em(42, 36);
+
+$h3-font-size:         em(24);
+$h3-font-size--tablet: em(22);
+$h3-font-size--mobile: em(20);
+$h3-margin-bottom:     em(10, 24);
+$h3-font-weight:       $font-weight-regular;
+$h3-line-height:       em(30, 24);
+
+$h4-font-size:         em(20);
+$h4-font-size--tablet: em(18);
+$h4-margin-bottom:     em(10, 20);
+$h4-font-weight:       $font-weight-regular;
+$h4-line-height:       em(25, 20);
+
+$h5-font-size:         em(14);
+$h5-margin-bottom:     em(6, 14);
+$h5-font-weight:       $font-weight-regular;
+$h5-line-height:       em(21, 14);
+$h5-letter-spacing:    0;

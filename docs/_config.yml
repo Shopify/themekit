@@ -1,0 +1,12 @@
+# Site settings
+title: Shopify Theme Kit
+email: themekit@shopify.com
+description: > # this means to ignore newlines until "baseurl:"
+baseurl: "/themekit"
+url: "https://shopify.github.io"
+sass:
+  cache: true
+themekitversion: "0.5.0"
+
+# Build settings
+markdown: kramdown

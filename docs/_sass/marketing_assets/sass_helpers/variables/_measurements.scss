@@ -1,0 +1,27 @@
+/*============================================================================
+  Global Components - vars that are handy across the site
+==============================================================================*/
+/*================ Z Index ================*/
+// TODO We should move this to a smarter mixin
+$z-nav-sub:    989;
+$z-nav-main:   999;
+$z-nav-drawer: 1000;
+$z-popover:    1001;
+
+/*================ Nav ================*/
+$nav-height:                   55px !default;
+$nav-top-padding:              12px !default;
+$nav-secondary-height:         $nav-height !default;
+$nav-secondary-item-opacity:   0.55 !default;
+
+/*================ Forms ================*/
+$input-height:  em(54, 18) !default;
+$input-padding: em(14, 18) em(16, 18) !default;
+
+/*================ Borders ================*/
+$border-grey:   1px solid $color-grey-border-on--white !default;
+$border-radius: 3px !default;
+
+/*================ Shopify logo ================*/
+$shopify-logo-width:  110px !default;
+$shopify-logo-height: 30px !default;

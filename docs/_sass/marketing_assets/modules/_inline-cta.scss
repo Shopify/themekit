@@ -1,0 +1,14 @@
+.inline-cta__heading {
+  font-weight: $font-weight-regular;
+  color: $color-grey-body;
+
+  @include shopify-breakpoint($tablet-up) {
+    display: inline-block;
+  }
+}
+
+.inline-cta__button {
+  @include shopify-breakpoint($tablet-up) {
+    margin-left: $gutter;
+  }
+}

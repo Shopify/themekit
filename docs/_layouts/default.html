@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+  {% include head.html %}
+
+  <body>
+    <main role="main" id="main">
+      <div class="docs-container">
+        <div class="docs-sidebar">
+          {% include sidebar.html %}
+        </div>
+        <div class="docs-main">
+          <div class="docs-content">
+            {% include header.html %}
+            <div class="marketing-markdown">
+              {{ content }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

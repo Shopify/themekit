@@ -1,0 +1,131 @@
+/*============================================================================
+  Global Mixins used within page-specific and application stylesheets
+==============================================================================*/
+
+$hover-darken: 6%;
+$active-darken: 10%;
+
+@mixin button-bg ($bg-color) {
+  background-color: $bg-color;
+
+  &:hover {
+    background-color: darken($bg-color, $hover-darken);
+  }
+
+  &:active,
+  &:focus {
+    background-color: darken($bg-color, $active-darken);
+  }
+}
+
+@mixin section-heading-dash($top: auto, $bottom: auto) {
+  position: relative;
+
+  &:before {
+    content: '';
+    position: absolute;
+    top: $top;
+    bottom: $bottom;
+    left: 50%;
+    height: 3px;
+    width: 30px;
+    margin-left: -15px;
+    display: block;
+    background-color: $color-green;
+  }
+}
+
+// Based on the mixin of the same name in Bourbon, but with the specified
+// `background-size` applied for both 2x _and_ 1x media, and defaults for
+// $retina-suffix and $asset-pipeline that suit our most common needs.
+//
+// https://github.com/thoughtbot/bourbon/blob/v4.0.2/app/assets/stylesheets/addons/_retina-image.scss
+@mixin retina-image($filename, $background-size, $extension: png, $retina-filename: null, $retina-suffix: -2x, $asset-pipeline: true) {
+  @if $asset-pipeline {
+    background-image: image-url("#{$filename}.#{$extension}");
+  } @else {
+    background-image: url("#{$filename}.#{$extension}");
+  }
+
+  @include hidpi {
+    @if $asset-pipeline {
+      @if $retina-filename {
+        background-image: image-url("#{$retina-filename}.#{$extension}");
+      } @else {
+        background-image: image-url("#{$filename}#{$retina-suffix}.#{$extension}");
+      }
+    } @else {
+      @if $retina-filename {
+        background-image: url("#{$retina-filename}.#{$extension}");
+      } @else {
+        background-image: url("#{$filename}#{$retina-suffix}.#{$extension}");
+      }
+    }
+  }
+
+  background-size: $background-size;
+}
+
+/*============================================================================
+-Background colours
+-==============================================================================*/
+
+@mixin marketing-bg-colors {
+  &--white {
+    background: $color-white;
+    color: $color-grey-body;
+  }
+
+  &--light {
+    background: $color-sky--light;
+    color: $color-grey-body;
+  }
+
+  &--lowlight {
+    background-color: $color-slate;
+    color: $color-grey-text--light;
+  }
+
+  &--sand {
+    background: $color-sand;
+    color: $color-grey-body;
+  }
+}
+
+/*============================================================================
+Borders
+==============================================================================*/
+
+@mixin marketing-borders {
+  &--border-top {
+    border-top-width: 1px;
+    border-top-style: solid;
+  }
+}
+
+@mixin spinner($size: 24px, $color: $color-white) {
+  @at-root {
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  }
+
+  content: '';
+  display: block;
+  width: $size;
+  height: $size;
+  position: absolute;
+  top: 50%;
+  margin-left: - $size / 2;
+  margin-top: - $size / 2;
+  border-radius: 50%;
+  border: 3px solid $color;
+  border-top-color: transparent;
+  animation: spin 1s infinite linear;
+}

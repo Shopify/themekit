@@ -1,0 +1,66 @@
+/*============================================================================
+  Colors
+==============================================================================*/
+
+// Product Colors
+$color-green:                 #7ab55c; // Everywhere highlight, copy link & bold
+$color-yellow:                #ebb129; // Online highlight
+$color-blue:                  #368aa9; // POS highlight
+
+$color-black:                 #000;    // Text hover/active for footer/nav links
+$color-white:                 #fff;    // Background form inputs, white page blocks
+
+/*================ Text ================*/
+$color-grey-body:             #767676; // Text on white & $color-sky--light, default text & link color
+$color-grey-text--light:      #a9a9a9; // Text on $color-slate, main nav & input borders.
+$color-grey-heading:          #949494; // Page subheadings & form suggestions on light backgrounds
+
+/*============================================================================
+  Backgrounds
+==============================================================================*/
+$color-sky:                   #ced3d3;  // Background body, never for text
+$color-sky--light:            #f9fafa;  // Background grey page blocks & footer, never for text
+$color-slate:                 #30373b;  // Background dark grey blocks & main nav bar, Text for form inputs
+$color-slate--dark:           #2a2c2e;  // Background active state against $color-slate, eg dark tabbed menu
+$color-sand:                  #f1f1e9;  // Background for sand blocks, useful for alternating between white blocks
+
+$color-grey-border-on--white: #e5e5e5;  // border on white background, blog sidebar text color on $slate
+
+$color-table-header:          #f8f8f8;  // <th> element backgrounds and els meant to be styled like them
+
+/*================ Forms ================*/
+$color-red:                   #c23628;  // Form error states
+$color-input-focus:           #00baff;  // Form field focus
+$color-input-border:          $color-grey-text--light; // Input border color
+$color-blue-dark:             #206882; // form suggestion text + border color
+
+/*================ Icon colours ================*/
+$color-blue-light:    #5fb6d5; // POS icon on slate
+$color-blue-fb:       #385a98; // Facebook icons
+$color-blue-twitter:  #55acee; // Twitter icons
+$color-blue-linkedin: #0976b4; // LinkedIn icons
+$color-red-pinterest: #cc2127; // Pinterest icons
+$color-blue-bab:      #32a0c8; // Build a business icons
+
+$icon-colors: (
+  'grey':           $color-grey-text--light,
+  'black':          $color-black,
+  'white':          $color-white,
+  'yellow':         $color-yellow,
+  'green':          $color-green,
+  'blue':           $color-blue,
+  'blue_light':     $color-blue-light,
+  'blue_fb':        $color-blue-fb,
+  'blue_twitter':   $color-blue-twitter,
+  'blue_linkedin':  $color-blue-linkedin,
+  'blue_bab':       $color-blue-bab,
+  'red_pinterest':  $color-red-pinterest
+);
+
+/*================ Nav colors ================*/
+
+$color-primary-nav-background:   $color-slate !default;
+$color-primary-nav-text:         $color-grey-text--light !default;
+$color-secondary-nav-background: $color-white !default;
+$color-secondary-nav-text:       $color-black !default;
+$color-nav-icon:                 $color-grey-text--light !default;

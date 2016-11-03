@@ -1,0 +1,248 @@
+@import 'variables';
+
+body {
+  font-family: $font-body-family;
+  color: $color-text;
+}
+
+/*============================================================================
+  Headers
+==============================================================================*/
+h1,
+.heading--1 {
+  font-size: $h1-font-size;
+  line-height: $h1-line-height;
+  font-weight: $h1-font-weight;
+  color: $color-white;
+  margin: $h1-margin;
+  -webkit-font-smoothing: antialiased;
+
+  @include shopify-breakpoint($tablet-only) {
+    font-size: $h1-font-size--tablet;
+  }
+
+  @include shopify-breakpoint($mobile) {
+    font-size: $h1-font-size--mobile;
+  }
+}
+
+/*================ Title ================*/
+h2,
+.heading--2 {
+  font-size: $h2-font-size;
+  line-height: $h2-line-height;
+  font-weight: $h2-font-weight;
+  color: $color-dark;
+  margin: $h2-margin;
+  -webkit-font-smoothing: antialiased;
+
+  @include shopify-breakpoint($tablet-only) {
+    font-size: $h2-font-size--tablet;
+  }
+
+  @include shopify-breakpoint($mobile) {
+    font-size: $h2-font-size--mobile;
+  }
+}
+
+/*================ Surtitle ================*/
+h3,
+.heading--3 {
+  font-size: $h3-font-size;
+  font-weight: $h3-font-weight;
+  color: $color-highlight;
+  text-transform: uppercase;
+  margin: $h3-margin;
+
+  @include shopify-breakpoint($tablet-only) {
+    font-size: $h3-font-size--tablet;
+  }
+
+  @include shopify-breakpoint($mobile) {
+    font-size: $h3-font-size--mobile;
+  }
+}
+
+/*================ Form Titles ================*/
+h4,
+.heading--4 {
+  font-size: $h4-font-size;
+  font-weight: $h4-font-weight;
+  margin: $h4-margin;
+
+  @include shopify-breakpoint($tablet-only) {
+    font-size: $h4-font-size--tablet;
+  }
+
+  @include shopify-breakpoint($mobile) {
+    font-size: $h4-font-size--mobile;
+  }
+}
+
+/*================ Centered Title================*/
+
+.heading--centered {
+  text-align: center;
+
+  @include shopify-breakpoint ($mobile) {
+    text-align: left;
+  }
+}
+
+/*================ Case Study Title ================*/
+
+.heading--case-study {
+  font-size: em(58);
+  line-height: em(69, 58);
+  font-weight: $h2-font-weight;
+  color: $color-dark;
+  margin: $h2-margin;
+  -webkit-font-smoothing: antialiased;
+
+  @include shopify-breakpoint($tablet-only) {
+    font-size: $h2-font-size--tablet;
+  }
+
+  @include shopify-breakpoint($mobile) {
+    font-size: $h2-font-size--mobile;
+  }
+}
+
+/*============================================================================
+  Body Copy
+==============================================================================*/
+
+/*================ Default copy ================*/
+p {
+  line-height: em(30, 16);
+  font-size: em(18);
+  font-weight: $font-weight-light;
+  color: $color-text;
+  margin-bottom: em(30);
+
+  @include shopify-breakpoint($tablet-only) {
+    font-size: em(14);
+  }
+
+  + ul {
+    margin-top: -(em(16));
+  }
+}
+
+/*================ Quotes ================*/
+blockquote {
+  margin: $vertical-unit 0 0;
+
+  p {
+    font-weight: $font-weight-light;
+    margin: 0 0 $vertical-unit / 4;
+    font-size: em(22);
+    line-height: 1.6em;
+    color: $color-dark;
+    -webkit-font-smoothing: antialiased;
+    quotes: '\201C''\201D''\2018''\2019';
+
+    @include shopify-breakpoint($tablet-only) {
+      font-size: em(16);
+    }
+
+    @include shopify-breakpoint($desktop-up) {
+      font-size: em(22);
+    }
+
+    &:before {
+      color: $color-light;
+      content: open-quote;
+      font-size: 2em;
+      font-family: "Helvetica Neue", Helvetica, arial, sans-serif;
+      line-height: 0.1em;
+      margin: 0 0.1em 0 -0.425em;
+      vertical-align: -0.3em;
+    }
+
+    &:after {
+      color: $color-light;
+      content: close-quote;
+      font-size: 2em;
+      font-family: "Helvetica Neue", Helvetica, arial, sans-serif;
+      line-height: 0.1em;
+      margin-left: 0.1em;
+      vertical-align: -0.3em;
+    }
+  }
+}
+
+/*================ Case Study Markdown Content ================*/
+.plus-case-study-markdown {
+
+  p {
+    font-size: em(20);
+    line-height: em(32, 20);
+    font-weight: $font-weight-light;
+
+    @include shopify-breakpoint ($mobile) {
+      font-size: em(16);
+    }
+  }
+
+  blockquote {
+    margin: $vertical-unit 0;
+
+    p {
+      font-size: em(22);
+
+      @include shopify-breakpoint($tablet-only) {
+        font-size: em(26);
+      }
+
+      @include shopify-breakpoint($desktop-up) {
+        font-size: em(36);
+      }
+    }
+  }
+}
+
+/*================ Author position/title ================*/
+.quote-attribution {
+  font-size: em(14);
+  font-weight: $font-weight-light;
+  font-style: normal;
+  line-height: 1.6;
+}
+
+.quote-attribution__author {
+  font-weight: $font-weight-bold;
+  display: block;
+  text-transform: uppercase;
+}
+
+.quote-attribution__brand-logo {
+  width: 100%;
+  min-height: 50px;
+}
+
+/*================ Bulleted lists ================*/
+ul {
+  list-style-type: disc;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+ul,
+ol {
+  font-size: em(18);
+  font-weight: $font-weight-light;
+  line-height: em(22, 12);
+  margin-left: em(22);
+  margin-bottom: em(30);
+
+  li {
+    margin-top: em(10);
+    margin-bottom: em(10);
+  }
+}
+
+
+

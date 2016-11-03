@@ -1,0 +1,39 @@
+@mixin force-3d() {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000;
+}
+
+@mixin visuallyhidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+@mixin showvisuallyhidden {
+  clip: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  position: static;
+  width: auto;
+}
+
+@mixin pretty-focus-styles() {
+  outline: thin dotted;
+  outline-offset: 3px;
+  outline-color: $color-grey-body;
+}
+
+// Vertically center content within a parent node
+// that has position: relative and a height.
+@mixin vertically-centered {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}

@@ -1,0 +1,8 @@
+.js-window-loading {
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+
+  .js-is-loaded & {
+    opacity: 1;
+  }
+}

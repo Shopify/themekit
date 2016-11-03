@@ -1,0 +1,34 @@
+.truncated-text {
+  max-height: 300px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: em($gutter * 1.5);
+
+  &:before {
+    background-image: linear-gradient(rgba($color-white, 0), $color-white 60%);
+    content: '';
+    width: 100%;
+    height: 150px;
+    position: absolute;
+    bottom: 0;
+  }
+
+  &.js-is-active {
+    max-height: none;
+
+    &:before {
+      display: none;
+    }
+  }
+}
+
+.truncated-text__toggle {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+
+  .js-is-active & {
+    display: none;
+  }
+}

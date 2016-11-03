@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Shopify Theme Kit</title>
+  <meta name="description" content="">
+
+  <link rel="stylesheet" href="https://cdn.shopify.com/shopify-marketing_assets/builds/13.0.2/marketing_assets_content.css" media="screen" title="no title" charset="utf-8">
+  <link rel="stylesheet" href="/themekit/css/prettify.min.css">
+  <link rel="stylesheet" href="/themekit/css/main.css">
+  <link rel="canonical" href="http://localhost:4000/themekit/">
+  <link rel="shortcut icon" type="image/x-icon" href="//cdn.shopify.com/shopify-marketing_assets/static/shopify-favicon.png" />
+
+  <script src="//code.jquery.com/jquery-2.2.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/clipboard.js/1.5.8/clipboard.min.js"></script>
+  <script src="/themekit/assets/scripts/docs.js"></script>
+
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new
+      Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-49178120-18', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+</head>
+
+
+  <body>
+    <main role="main" id="main">
+      <div class="docs-container">
+        <div class="docs-sidebar">
+          <div class="docs-title heading--1"><a class="site-title" href="/themekit/">Shopify Theme Kit</a></div>
+<ul class="docs-nav">
+  <li>
+    <a class="docs-nav__link active" href="/themekit/">Getting started</a>
+
+    <ul class="docs-sub-nav">
+      <li>
+        <a class="docs-nav__link" href="/themekit/#installation">Installation</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/#get-api-access">Get API Access</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/#use-a-new-theme">Use a new theme</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/#configure-an-existing-theme">Configure an existing theme</a>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <a class="docs-nav__link " href="/themekit/commands">Commands</a>
+    <ul class="docs-sub-nav">
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#general-global-flags">General Flags</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#bootstrap">Bootstrap</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#configure">Configure</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#download">Download</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#remove">Remove</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#replace">Replace</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#update">Update</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#upload">Upload</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#version">Version</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#watch">Watch</a>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <a class="docs-nav__link " href="/themekit/configuration">Configuration</a>
+    <ul class="docs-sub-nav">
+      <li>
+        <a class="docs-nav__link" href="/themekit/configuration/#config-file">Config File</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/configuration/#environment-variables">Environment Variables</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/configuration/#global-flags">Global Flags</a>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <a class="docs-nav__link " href="/themekit/ignores">Ignore Patterns</a>
+  </li>
+  <li>
+    <a class="docs-nav__link " href="/themekit/development">Development</a>
+  </li>
+</ul>
+<div class="docs-shopify-logo">
+  <a href="https://shopify.com">
+    <img src="/themekit/assets/images/shopify-logo-large.png" alt="Shopify" />
+  </a>
+  <p><a href="mailto:buybutton@shopify.com">Provide feedback</a></p>
+</div>
+
+        </div>
+        <div class="docs-main">
+          <div class="docs-content">
+            <header class="docs-header">
+  <ul>
+    <li>
+      <a href="https://github.com/Shopify/themekit">
+        <img class="github-logo" src="/themekit/assets/images/github-logo.png" alt="View on github" />
+        <span class="link-text">View on Github</span></a>
+    </li>
+  </ul>
+</header>
+
+            <div class="marketing-markdown">
+              <h1 id="shopify-theme-kit">Shopify Theme Kit</h1>
+
+<p>Theme Kit is a single binary that has no dependencies. Download the application
+and with a tiny bit of setup you’re off to the theme creation races.</p>
+
+<p>Using Theme Kit will enable you to</p>
+
+<ul>
+  <li>Upload Themes to Multiple Environments</li>
+  <li>Fast Uploads and Downloads</li>
+  <li>Watch for local changes and upload automatically to Shopify</li>
+  <li>Works on Windows, Linux and OS X</li>
+</ul>
+
+<h2 id="installation">Installation</h2>
+
+<h3 id="automatic-installation">Automatic Installation</h3>
+
+<p>If you are on Mac or Linux you can use the following installation script to automatically
+download and install Theme Kit for you. Please follow the directions outputted to your
+console to change your bash profile so that you will have access to the <code class="highlighter-rouge">theme</code> command</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | python
+</code></pre>
+</div>
+
+<p>An automated installer for Windows will be coming soon.</p>
+
+<h3 id="manual-installation">Manual Installation</h3>
+
+<p>Download and unzip the latest release.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">OS</th>
+      <th style="text-align: left">Architecture</th>
+      <th style="text-align: left"> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">OS X</td>
+      <td style="text-align: left">64-bit</td>
+      <td style="text-align: left"><a href="https://github.com/Shopify/themekit/releases/download/0.5.0/darwin-amd64.zip">download</a></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Windows</td>
+      <td style="text-align: left">64-bit</td>
+      <td style="text-align: left"><a href="https://github.com/Shopify/themekit/releases/download/0.5.0/windows-amd64.zip">download</a></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Windows</td>
+      <td style="text-align: left">32-bit</td>
+      <td style="text-align: left"><a href="https://github.com/Shopify/themekit/releases/download/0.5.0/windows-386.zip">download</a></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Linux</td>
+      <td style="text-align: left">64-bit</td>
+      <td style="text-align: left"><a href="https://github.com/Shopify/themekit/releases/download/0.5.0/linux-amd64.zip">download</a></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Linux</td>
+      <td style="text-align: left">32-bit</td>
+      <td style="text-align: left"><a href="https://github.com/Shopify/themekit/releases/download/0.5.0/linux-386.zip">download</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>For OSX or Linux run the following commands</strong></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>cp ~/Downloads/theme /usr/local/bin <span class="c">#install the command onto your path</span>
+theme <span class="c">#test output of theme and make sure it is working</span>
+</code></pre>
+</div>
+
+<h2 id="get-api-access">Get API Access</h2>
+
+<p>To develop themes with theme kit, you will need to authorize theme kit to access your store.
+Head to <code class="highlighter-rouge">https://[you-store-name].myshopify.com/admin/apps/private</code> it should look something
+like this:</p>
+
+<p><img src="/themekit/assets/images/private-apps.png" /></p>
+
+<p>Click on the <code class="highlighter-rouge">Create private apps</code> button. You will see this screen:</p>
+
+<p><img src="/themekit/assets/images/create-private-app.png" /></p>
+
+<p>Fill out the information at the top and set the permissions of <code class="highlighter-rouge">Theme templates and theme assets</code> to
+read and write access. Press save and you will be presented with the next screen. In it you will
+see your access credentials. Please make note of the password. You will need it later.</p>
+
+<p><img src="/themekit/assets/images/private-app-password.png" /></p>
+
+<h2 id="use-a-new-theme">Use a new theme.</h2>
+
+<p>If you are starting form scratch and want to get a quick start run the following:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>theme bootstrap --password<span class="o">=[</span>your-password] --store<span class="o">=[</span>you-store.myshopify.com]
+</code></pre>
+</div>
+
+<p>This will create a new theme for your online store from the <a href="https://shopify.github.io/Timber/">Timber</a> template. Then
+it will download all those assets from shopify and automatically create a config.yml file for you.</p>
+
+<h2 id="configure-an-existing-theme">Configure an existing theme.</h2>
+
+<p>If you already have a theme on shopify and want to start using it you will need to
+view it in your browser and grab the theme id from the url. It should look like the
+following:</p>
+
+<p><img src="/themekit/assets/images/theme-id.png" /></p>
+
+<p>Then once you have noted your theme id run the following commands</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># create configuration</span>
+theme configure --password<span class="o">=[</span>your-password] --store<span class="o">=[</span>you-store.myshopify.com] --themeid<span class="o">=[</span>your-theme-id]
+<span class="c"># download and setup project in the current directory</span>
+theme download
+</code></pre>
+</div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
