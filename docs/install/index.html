@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Theme Kit - Installation Guide</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Muli' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" href="/font-awesome.css">
+    <link rel="stylesheet" href="/simplegrid.css">
+    <link rel="stylesheet" href="/github.css">
+    <link rel="stylesheet" href="/stylesheet.css">
+
+    <script type="text/javascript" src="zepto.js"></script>
+  </head>
+  <body>
+    <header class="col-1-1">
+      <a class="header-link" href="/"><h1>Theme Kit</h1></a>
+
+      <ul class="col-1-1 inline">
+        <li>
+          <a class="install" href="/install">Installation</a>
+        </li>
+
+        <li>
+          <a class="docs" href="/docs">Documentation</a>
+        </li>
+
+        <li>
+          <a class="contrib" href="https://github.com/Shopify/themekit">Contribute</a>
+        </li>
+
+        <li>
+          <a class="report" href="https://github.com/Shopify/themekit/issues">Report Issue</a>
+        </li>
+      </div>
+    </header>
+
+
+    <div class="container">
+      
+<h1 id="automatic-installation">Automatic Installation</h1>
+
+<p>If you are on <strong>Mac or Linux</strong> you can use the following installation script to automatically download and install
+Theme Kit for you. You will need to make a small change to your shell initialization file
+(i.e. <code>.bash_profile</code>) before <code>theme</code> will show up in your console:</p>
+
+<p><code>curl https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | python</code></p>
+
+<p>An automated installer for Windows will be coming soon.</p>
+
+<h1 id="manual-installation-guide">Manual Installation Guide</h1>
+
+<p>Download and Unzip the <a href="https://github.com/Shopify/themekit/releases">latest release from Github</a></p>
+
+<p>If you are using <strong>Mac OS or Linux</strong> follow <a href="#unix-like">these instructions</a></p>
+
+<p>If you are using <strong>Windows</strong> follow <a href="#windows">these instructions</a></p>
+
+<p>If you want to <strong>install from source</strong> follow <a href="#install-from-source">these instructions</a></p>
+
+<hr />
+
+<p><a id="unix-like"></a></p>
+
+<h1 id="installing-on-mac-os-amp-linux">Installing on Mac OS &amp; Linux</h1>
+
+<ul>
+  <li>
+    <p>Create a directory called <code>Applications/bin</code>. You can enter the command in a terminal window to create it:</p>
+
+    <pre><code>mkdir -p ~/Applications/bin</code></pre>
+  </li>
+  <li>
+    <p>Open the <code>~Applications/bin</code> directory and move the downloaded <code>theme</code> program into it. On Mac OS you can enter the following command to open both teh the <code>bin</code> and <code>Download</code> directories.</p>
+
+    <pre><code>open ~/Applications/bin &amp;&amp; open ~/Downloads</code></pre>
+  </li>
+  <li>Open your configuration file for your terminal interface:
+    <ul>
+      <li>If you are using Bash your file will be called <code>.profile</code> or <code>.bash_profile</code></li>
+      <li>If you are using ZSH your file will be called <code>.zshrc</code></li>
+      <li>If you are using another shell you probably know how to do this already</li>
+    </ul>
+  </li>
+  <li>At the bottom of your file add the following:</li>
+</ul>
+<li class="nostyle">
+  <ul>
+    <li class="nostyle">
+      <pre><code class="language-bash"><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span>~/Applications/bin:<span class="nv">$PATH</span></code></pre>
+    </li>
+  </ul>
+</li>
+
+<ul>
+  <li>Or do this in a single command, using echo (substituting in your shell’s configuration file as above):</li>
+</ul>
+
+<li class="nostyle">
+  <ul>
+    <li class="nostyle">
+      <pre><code class="language-bash"><span class="nb">echo</span> <span class="s2">"export PATH=~/Applications/bin:$PATH"</span> &gt;&gt; ~/.bash_profile</code></pre>
+    </li>
+  </ul>
+</li>
+
+<ul>
+  <li>
+    <p>Reload your shell by closing your terminal window and opening a new one</p>
+  </li>
+  <li>
+    <p>Verify that Theme Kit has been installed by typing <code>theme --help</code> and <a href="#expected-command-output">you should see output similar to this.</a></p>
+  </li>
+</ul>
+
+<p><a id="windows"></a></p>
+
+<h1 id="installing-on-windows">Installing on Windows</h1>
+
+<ul>
+  <li>Create a folder inside <code>C:\Program Files\</code> called <code>Theme Kit</code></li>
+  <li>Copy the extracted program into <code>C:\Program Files\Theme Kit</code></li>
+  <li>If the program is missing <code>.exe</code> at the end, rename the file and add the <code>.exe</code> file extension</li>
+  <li>Navigate to <strong><code>Control Panel &gt; System and Security &gt; System</code></strong>
+    <ul>
+      <li>Another way to get there is to Right-Click on <code>My Computer</code> and choose the <code>properties</code> item</li>
+    </ul>
+  </li>
+  <li>Look for the button or link called <code>Environment Variables</code></li>
+  <li>In the second panel look for the item called <code>Path</code> and double-click on it. This should open a window with a text field that is overflowing with content.</li>
+  <li>Move your cursor all the way to the end and add the following: <code>;C:\Program Files\Theme Kit\</code></li>
+  <li>Click <strong>OK</strong> until all the windows are gone.</li>
+  <li>To verify that Theme Kit has been installed, open <code>cmd.exe</code> and type in <code>theme --help</code>. <a href="#expected-command-output">You should see output similar to this.</a></li>
+</ul>
+
+<h1 id="install-from-source">Install from Source</h1>
+
+<p>Before you can get started you will need to <a href="https://golang.org/dl/">install Go for your platform</a>. With
+go installed, also <a href="https://golang.org/doc/install#testing">verify go has been installed correctly</a>.</p>
+
+<p>You will also need to have <a href="https://git-scm.com/downloads">git installed</a> in order to properly download themekit and it’s dependencies.</p>
+
+<p>You will need to add the <code>bin</code> directory within your go installation to your PATH. On a unix-like system using Bash,
+you’d do something like this:</p>
+
+<li class="nostyle">
+  <ul>
+    <li class="nostyle">
+      <pre><code class="language-bash"><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span>PATH-TO-YOUR-GO-FOLDER/bin:<span class="nv">$PATH</span> &gt;&gt; ~/.bash_profile
+<span class="nb">source</span> ~/.bash_profile</code></pre>
+</li>
+</ul>
+</li>
+
+<p>Download themekit:</p>
+
+<pre><code>go get github.com/Shopify/themekit</code></pre>
+
+<p>Install themekit:</p>
+
+<pre><code>go install github.com/Shopify/themekit/cmd/theme</code></pre>
+
+<p>To verify that Theme Kit has been installed by typing <code>theme --help</code>. <a href="#expected-command-output">You should see output similar to this.</a></p>
+
+<p><a id="expected-command-output"></a></p>
+
+<h1 id="expected-output-when-running-theme---help">Expected output when running <code>theme --help</code></h1>
+
+<p>Below is what you should see when running the program with the <code>--help</code> flag.</p>
+
+<pre><code class="language-text">Usage of theme:
+  -command="download": An operation to be performed against the theme.
+  Valid commands are:
+    configure:
+        Create a configuration file
+    bootstrap:
+        Bootstrap a new theme using Shopify Timber
+    upload  [ ...]:
+        Add file(s) to theme
+    download [ ...]:
+        Download file(s) from theme [default]
+    remove  [ ...]:
+        Remove file(s) from theme
+    replace [ ...]:
+        Overwrite theme file(s)
+    watch:
+        Watch directory for changes and update remote theme</code></pre>
+
+<p><a id="install-from-source"></a></p>
+
+    </div>
+  </body>
+  <script type="text/javascript" src="platform-picker.js"></script>
+</html>
