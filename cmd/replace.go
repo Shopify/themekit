@@ -8,6 +8,11 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
+type assetAction struct {
+	asset kit.Asset
+	event kit.EventType
+}
+
 var replaceCmd = &cobra.Command{
 	Use:   "replace <filenames>",
 	Short: "Overwrite theme file(s)",
@@ -20,7 +25,8 @@ exist on your local machine will be removed from shopify.`,
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	assetsActions := map[kit.Asset]kit.EventType{}
+	assetsActions := map[string]assetAction{}
+
 	if len(filenames) == 0 {
 		assets, remoteErr := client.AssetList()
 		if remoteErr != nil {
@@ -29,7 +35,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		}
 
 		for _, asset := range assets {
-			assetsActions[asset] = kit.Remove
+			assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Remove}
 		}
 
 		localAssets, localErr := client.LocalAssets()
@@ -39,7 +45,7 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		}
 
 		for _, asset := range localAssets {
-			assetsActions[asset] = kit.Update
+			assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Update}
 		}
 	} else {
 		for _, filename := range filenames {
@@ -48,13 +54,13 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 				kit.LogError(err)
 				return
 			}
-			assetsActions[asset] = kit.Update
+			assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Update}
 		}
 	}
 
-	for asset, event := range assetsActions {
+	for _, action := range assetsActions {
 		wg.Add(1)
-		go performReplace(client, asset, event, wg)
+		go performReplace(client, action.asset, action.event, wg)
 	}
 }
 
