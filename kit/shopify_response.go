@@ -82,11 +82,11 @@ func (resp ShopifyResponse) Error() Error {
 	if !resp.Successful() {
 		switch resp.Type {
 		case themeRequest:
-			return themeError{resp}
+			return newThemeError(resp)
 		case assetRequest:
-			return assetError{resp}
+			return newAssetError(resp)
 		case listRequest:
-			return listError{resp}
+			return newListError(resp)
 		default:
 			return kitError{resp.Errors}
 		}

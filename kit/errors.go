@@ -26,7 +26,12 @@ func (err kitError) Error() string {
 }
 
 type themeError struct {
-	resp ShopifyResponse
+	resp       ShopifyResponse
+	requestErr requestError
+}
+
+func newThemeError(resp ShopifyResponse) themeError {
+	return themeError{resp: resp, requestErr: resp.Errors}
 }
 
 func (err themeError) Fatal() bool {
@@ -36,39 +41,58 @@ func (err themeError) Fatal() bool {
 func (err themeError) Error() string {
 	return fmt.Sprintf(`[%s]Theme request encountered status at host <%s>
 	Status text: %s
-	Errors:
-		%s`,
+	Errors: %s`,
 		RedText(err.resp.Code),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		YellowText(err.resp.Errors),
+		YellowText(err.requestErr),
 	)
 }
 
 type assetError struct {
-	resp ShopifyResponse
+	resp       ShopifyResponse
+	requestErr requestError
+}
+
+func newAssetError(resp ShopifyResponse) assetError {
+	err := assetError{resp: resp, requestErr: resp.Errors}
+	err.generateHints()
+	return err
 }
 
 func (err assetError) Fatal() bool {
 	return err.resp.Code != 404 && err.resp.Code >= 400
 }
 
+func (err *assetError) generateHints() {
+	if err.resp.EventType == Remove && err.resp.Code == 403 {
+		err.requestErr.AddS("This file is critical and removing it would cause your theme to become non-functional.")
+	}
+	if err.resp.EventType == Update && err.resp.Code == 404 {
+		err.requestErr.AddS("This file is not part of your theme.")
+	}
+}
+
 func (err assetError) Error() string {
 	return fmt.Sprintf(`[%s]Asset Perform %s to %s at host <%s>
 	Status text: %s
-	Errors:
-		%s`,
+	Errors: %s`,
 		RedText(err.resp.Code),
 		YellowText(err.resp.EventType),
 		BlueText(err.resp.Asset.Key),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		YellowText(err.resp.Errors),
+		YellowText(err.requestErr),
 	)
 }
 
 type listError struct {
-	resp ShopifyResponse
+	resp       ShopifyResponse
+	requestErr requestError
+}
+
+func newListError(resp ShopifyResponse) listError {
+	return listError{resp: resp, requestErr: resp.Errors}
 }
 
 func (err listError) Fatal() bool {
@@ -78,13 +102,12 @@ func (err listError) Fatal() bool {
 func (err listError) Error() string {
 	return fmt.Sprintf(`[%s]Assets Perform %s at host <%s>
 	Status text: %s
-	Errors:
-		%s`,
+	Errors: %s`,
 		RedText(err.resp.Code),
 		YellowText(err.resp.EventType),
 		YellowText(err.resp.Host),
 		RedText(http.StatusText(err.resp.Code)),
-		YellowText(err.resp.Errors),
+		YellowText(err.requestErr),
 	)
 }
 
@@ -120,5 +143,11 @@ func (err requestError) String() string {
 func (err *requestError) Add(other generalRequestError) {
 	if other.Error != "" {
 		err.Other = append(err.Other, other.Error)
+	}
+}
+
+func (err *requestError) AddS(other string) {
+	if other != "" {
+		err.Other = append(err.Other, other)
 	}
 }

@@ -93,13 +93,13 @@ func (suite *DownloadTestSuite) TestFormatWrite() {
 
 	n, err = formatWrite(file, []byte("{\"test\":\"one\"}"))
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 18, n)
+	assert.Equal(suite.T(), 19, n)
 	file.Close()
 
 	file, _ = os.Open(outputPath)
 	buffer, err := ioutil.ReadAll(file)
 	assert.Equal(suite.T(), `{
-	"test": "one"
+  "test": "one"
 }`, string(buffer))
 
 	os.Remove(outputPath)
