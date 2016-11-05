@@ -109,7 +109,7 @@ func formatWrite(file *os.File, data []byte) (n int, err error) {
 	switch filepath.Ext(file.Name()) {
 	case ".json":
 		var out bytes.Buffer
-		json.Indent(&out, data, "", "\t")
+		json.Indent(&out, data, "", "  ")
 		return file.Write(out.Bytes())
 	default:
 		return file.Write(data)
