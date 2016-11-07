@@ -38,7 +38,7 @@ func (suite *ThemeTestSuite) TestGenerateThemeClients() {
 	allenvs = false
 
 	configPath = badEnvirontmentPath
-	clients, err = generateThemeClients()
+	_, err = generateThemeClients()
 	assert.NotNil(suite.T(), err)
 }
 

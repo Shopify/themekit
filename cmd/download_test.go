@@ -101,6 +101,7 @@ func (suite *DownloadTestSuite) TestFormatWrite() {
 	assert.Equal(suite.T(), `{
   "test": "one"
 }`, string(buffer))
+	assert.Nil(suite.T(), err)
 
 	os.Remove(outputPath)
 }

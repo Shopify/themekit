@@ -45,7 +45,8 @@ func (e Environments) Save(location string) error {
 	file, err := os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	defer file.Close()
 	if err == nil {
-		bytes, err := yaml.Marshal(e)
+		var bytes []byte
+		bytes, err = yaml.Marshal(e)
 		if err == nil {
 			_, err = file.Write(bytes)
 		}

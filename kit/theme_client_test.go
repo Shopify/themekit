@@ -91,7 +91,7 @@ func (suite *ThemeClientTestSuite) TestLocalAssets() {
 	assert.Equal(suite.T(), 9, len(assets))
 
 	suite.client.Config.Directory = "./nope"
-	assets, err = suite.client.LocalAssets()
+	_, err = suite.client.LocalAssets()
 	assert.NotNil(suite.T(), err)
 }
 
