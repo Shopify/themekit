@@ -7,6 +7,7 @@ tags
 # for testing
 cmd/theme/config.yml
 cmd/theme/theme
+coverage.out
 
 # for docs
 _site
