@@ -129,7 +129,7 @@ func (suite *VersionTestSuite) TestFetchReleases() {
 		fmt.Fprintf(w, "404")
 	}))
 	releasesURL = server.URL
-	releases, err = fetchReleases()
+	_, err = fetchReleases()
 	assert.NotNil(suite.T(), err)
 	server.Close()
 }

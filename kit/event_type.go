@@ -1,6 +1,6 @@
 package kit
 
-// EventType is an enum of event types to compare agains event.Type()
+// EventType is an enum of event types to compare against event.Type()
 type EventType int
 
 const (
