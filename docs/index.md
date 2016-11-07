@@ -47,6 +47,17 @@ cp ~/Downloads/theme /usr/local/bin #install the command onto your path
 theme #test output of theme and make sure it is working
 ```
 
+**For installing on Windows run the following commands**
+
+- Create a folder inside `C:\Program Files\` called `Theme Kit`
+- Copy the extracted program into `C:\Program Files\Theme Kit`
+- Navigate to `Control Panel > System and Security > System`. Another way to get there is to Right-Click on `My Computer` and choose the `properties` item
+- Look for the button or link called `Environment Variables`
+- In the second panel look for the item called `Path` and double-click on it. This should open a window with a text field that is overflowing with content.
+- Move your cursor all the way to the end and add the following: `;C:\Program Files\Theme Kit\`
+- Click `OK` until all the windows are gone.
+- To verify that Theme Kit has been installed, open `cmd.exe` and type in `theme`.
+
 ## Get API Access
 
 To develop themes with theme kit, you will need to authorize theme kit to access your store.
