@@ -5,8 +5,8 @@
     <description></description>
     <link>http://localhost:4000/themekit/</link>
     <atom:link href="http://localhost:4000/themekit/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 03 Nov 2016 11:01:36 -0400</pubDate>
-    <lastBuildDate>Thu, 03 Nov 2016 11:01:36 -0400</lastBuildDate>
+    <pubDate>Mon, 07 Nov 2016 10:48:55 -0500</pubDate>
+    <lastBuildDate>Mon, 07 Nov 2016 10:48:55 -0500</lastBuildDate>
     <generator>Jekyll v3.3.0</generator>
     
   </channel>

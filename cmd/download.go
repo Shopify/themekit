@@ -18,7 +18,10 @@ var downloadCmd = &cobra.Command{
 	Short: "Download one or all of the theme files",
 	Long: `Download will download specific files from shopify servers if provided file names.
 If no filenames are provided then download will download every file in the project
-and write them to disk.`,
+and write them to disk.
+
+For more documentation please see http://shopify.github.io/themekit/commands/#download
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		themeClients, err := generateThemeClients()
 		if err != nil {

@@ -16,7 +16,10 @@ var watchCmd = &cobra.Command{
 	Short: "Watch directory for changes and update remote theme",
 	Long: `Watch is for running in the background while you are making changes to your project.
 
-run 'theme watch' while you are editing and it will detect create, update and delete events. `,
+run 'theme watch' while you are editing and it will detect create, update and delete events.
+
+For more documentation please see http://shopify.github.io/themekit/commands/#watch
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		themeClients, err := generateThemeClients()
 		if err != nil {

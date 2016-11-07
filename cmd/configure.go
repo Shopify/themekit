@@ -12,7 +12,10 @@ var configureCmd = &cobra.Command{
 	Use:   "configure",
 	Short: "Create a configuration file",
 	Long: `Configure will create a new configuration file to
-access shopify using the theme kit.`,
+access shopify using the theme kit.
+
+For more documentation please see http://shopify.github.io/themekit/commands/#configure
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		setFlagConfig()
 		config, err := kit.NewConfiguration()

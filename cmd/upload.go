@@ -13,7 +13,10 @@ var uploadCmd = &cobra.Command{
 	Short: "Upload theme file(s) to shopify",
 	Long: `Upload will upload specific files to shopify servers if provided file names.
 If no filenames are provided then upload will upload every file in the project
-to shopify.`,
+to shopify.
+
+For more documentation please see http://shopify.github.io/themekit/commands/#upload
+`,
 	RunE: forEachClient(upload),
 }
 
