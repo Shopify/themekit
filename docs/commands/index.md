@@ -45,14 +45,14 @@ Use this command to create or update configuration files. If you run the followi
 command:
 
 ```bash
-theme configure --password=[your-password] --store=[your-store.myshopify.com] --themeid=[your-theme-id]
+theme configure --password=[your-api-password] --store=[your-store.myshopify.com] --themeid=[your-theme-id]
 ```
 
 This will output a `config.yml` file in the current directory with the following contents
 
 ```yaml
 development:
-  password: [your-password]
+  password: [your-api-password]
   theme_id: "[your-theme-id]"
   store: [your-store].myshopify.com
   timeout: 30s
