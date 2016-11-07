@@ -1,0 +1,49 @@
+.marketing-bullet-list {
+  margin-bottom: em($gutter);
+  padding-top: em($gutter);
+
+  &:last-child {
+    margin-bottom: em(-$gutter); // offset the margin-bottom of child bullets
+  }
+}
+
+// Icon to the left with short floated next to it. Replalces `features-icon-list__item`.
+// Usually includes a heading with the bullet, provided via ui_module
+//
+// Default style                            - text top aligned with a heading
+// .marketing-bullet--without-heading       - center-aligns bullet with text if no heading
+// .marketing-bullet-list (optional parent) - for padding at top/bottom of list of bullets.
+// .icon & .bullet__content-wrapper         - only available children of marketing-bullet
+//
+// Styleguide Bullets
+
+.marketing-bullet {
+  @include clearfix;
+  list-style: none;
+  margin-bottom: em($gutter);
+  position: relative;
+
+  .icon {
+    display: block;
+    margin-bottom: 0;
+    float: left;
+    margin-right: $gutter / 2;
+  }
+}
+
+.marketing-bullet--without-heading {
+  .marketing-bullet__content {
+    @include font-brandon-light;
+    position: absolute;
+    left: em($gutter * 2.5, 18);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: em(18);
+    line-height: 1;
+  }
+}
+
+.marketing-bullet__content-wrapper {
+  overflow: hidden;
+  display: block;
+}

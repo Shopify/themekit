@@ -1,0 +1,267 @@
+/*
+  Media object (media element with text).
+  CSS classes to help with positioning text-image pairings.
+
+  This module handles positioning of the media and content inside of the media
+  object, while standard grid classes determine the layout of the objects.
+
+  .media__right                  - float object right, resets right margin (tablet-up)
+  .media__offset                 - adds top margin (tablet-up) to help with vertical centering
+  .media__last                   - adds top margin on mobile to help with vertical spacing
+  .media__image--wide-left       - floats image to the right, removes max-width on tablet
+  .media__image--wide-right      - floats image to the left, removes max-width on tablet
+  .media__image--bottom          - 3x negative bottom gutter, snug to page-block bottom tablet-up
+  .media__image--top             - 3x negative top margin, snug to page-block top tablet-up
+  .media__image--bottom--desktop - 3x negative bottom gutter, snug to page-block bottom desktop only
+  .media__image--top--desktop    - 3x negative top margin, snug to page-block top desktop only
+  .media__image--right-tight     - 8x negative left margin, allows right image to overlap content
+  .media__image--overflow        - allows image to overflow into content by removing max-width
+  .media--flex-centered          - uses flexbox to vertically center image and content
+  .media__center--mobile         - text-align: center; on mobile
+
+  Styleguide Media Object.
+*/
+
+/*================ Standard use case ================*/
+// The standard use case for a media object is to offset content to improve
+// vertical alignment with the image element, and add margins where necessary.
+//
+// .media__center--mobile - center aligns media content on mobile
+// .media__offset         - adds a 60px top margin on desktop, 15px on tablet
+// .media__last           - adds a top margin of 30px on mobile
+//
+// Styleguide Media standard use case.
+
+.media__center--mobile {
+  @include shopify-breakpoint($mobile) {
+    text-align: center;
+  }
+}
+
+.media__offset {
+  @include shopify-breakpoint($desktop-up) {
+    margin-top: em($gutter * 1.5);
+  }
+
+  @include shopify-breakpoint($tablet-only) {
+    margin-top: em($gutter / 2);
+  }
+}
+
+.media__image {
+  @include shopify-breakpoint($mobile) {
+    text-align: center;
+  }
+}
+
+.media__last {
+  @include shopify-breakpoint($mobile) {
+    margin-top: em($gutter);
+  }
+}
+
+/*================ .media--flex-centered ================*/
+// Center all elements in the media object using flexbox (note: browser support
+// is limited, so graceful fallback to base media styles should be tested)
+//
+//
+// Styleguide media--flex-centered.
+
+.media--flex-centered {
+  @include shopify-breakpoint($tablet-up) {
+    .flexbox & {
+      .media__offset {
+        margin-top: 0;
+      }
+    }
+  }
+
+  @include shopify-breakpoint($tablet-up) {
+    display: flex;
+    align-items: center;
+
+    .media__right {
+      order: 2;
+    }
+  }
+}
+
+/*================ .media__right ================*/
+// Media right floats the element to the right on tablet-up. The goal here is to
+// deal with reflow where you want to control the order of items when stacked
+// on mobile.
+//
+//
+// Styleguide media__right.
+
+.media__right {
+  @include shopify-breakpoint($tablet-up) {
+    float: right;
+    margin-right: 0;
+  }
+}
+
+
+
+/*================ .media__image--wide-left ================*/
+// Used in conjunction with a wide left grid, this helper aligns the image to the
+// right, ensuring that it is snug with the <code>.media__offset</code>.
+//
+//
+// Styleguide media__image--wide-left.
+
+.media__image--wide-left img,
+.media__image--wide-left .lazyload-image {
+  @include shopify-breakpoint($tablet-up) {
+    float: right;
+  }
+
+  @include shopify-breakpoint($tablet-only) {
+    max-width: none;
+  }
+}
+
+.media__image--wide-left--mobile img {
+  @include shopify-breakpoint($mobile) {
+    margin-left: -$gutter;
+  }
+}
+
+/*================ .media__image--wide-right ================*/
+// Used in conjunction with a wide right grid, this helper aligns the image to the
+// right, ensuring that it is snug with the <code>.media__offset</code>.
+//
+//
+// Styleguide media__image--wide-right.
+
+.media__image--wide-right img,
+.media__image--wide-right .lazyload-image {
+  @include shopify-breakpoint($tablet-up) {
+    float: left;
+  }
+
+  @include shopify-breakpoint($tablet-only) {
+    max-width: none;
+  }
+}
+
+.media__image--wide-left .lazyload-image,
+.media__image--wide-right .lazyload-image {
+  @include shopify-breakpoint($tablet-up) {
+    overflow: visible;
+  }
+}
+
+.media__image--wide-right--mobile {
+  @include shopify-breakpoint($mobile) {
+    text-align: right;
+
+    img {
+      margin-right: -$gutter;
+    }
+  }
+}
+
+/*================ .media__image--top and .media__image--bottom ================*/
+// Adds a negative top or bottom margin, respectively, to the image to make it
+// snug with the top edge of the wrapping <code>.page-block</code>.
+//
+//
+// Styleguide media__image--top and media__image--bottom.
+
+.media__image--bottom img,
+.media__image--bottom .lazyload-image {
+  @include shopify-breakpoint($tablet-up) {
+    margin-bottom: em(-$gutter * 3);
+  }
+}
+
+.media__image--bottom .lazyload-image img {
+  @include shopify-breakpoint($tablet-up) {
+    margin-bottom: 0;
+  }
+}
+
+.media__image--top img,
+.media__image--top .lazyload-image {
+  @include shopify-breakpoint($tablet-up) {
+    margin-top: em(-$gutter * 3);
+  }
+}
+
+.media__image--top .lazyload-image img {
+  @include shopify-breakpoint($tablet-up) {
+    margin-top: 0;
+  }
+}
+
+.media__image--top--desktop img,
+.media__image--top--desktop .lazyload-image {
+  @include shopify-breakpoint($desktop-up) {
+    margin-top: em(-$gutter * 3);
+  }
+}
+
+.media__image--top--desktop .lazyload-image img {
+  @include shopify-breakpoint($desktop-up) {
+    margin-top: 0;
+  }
+}
+
+.media__image--bottom--desktop img {
+  @include shopify-breakpoint($desktop-up) {
+    margin-bottom: em(-$gutter * 3);
+  }
+}
+
+.media__image--bottom--desktop img,
+.media__image--bottom--desktop .lazyload-image {
+  @include shopify-breakpoint($desktop-up) {
+    margin-bottom: em(-$gutter * 3);
+  }
+}
+
+.media__image--bottom--desktop .lazyload-image img {
+  @include shopify-breakpoint($desktop-up) {
+    margin-bottom: 0;
+  }
+}
+
+// Matches page-block bottom padding on mobile
+.media__image--bottom--mobile img,
+.media__image--bottom--mobile .lazyload-image {
+  @include shopify-breakpoint($mobile) {
+    margin-bottom: em(-$gutter * 2);
+  }
+}
+
+.media__image--bottom--mobile .lazyload-image img {
+  @include shopify-breakpoint($mobile) {
+    margin-bottom: 0;
+  }
+}
+
+/*================ .media__image--right-tight ================*/
+// Adds a negative $gutter * 8 (240px) left margin to an image. Allows it to
+// overlap content area.
+//
+// Styleguide media__image--right-tight.
+
+.media__image--right-tight {
+  @include shopify-breakpoint($tablet-up) {
+    margin-left: em(-$gutter * 8);
+  }
+}
+
+/*================ .media__image--overflow ================*/
+// Removes max-width on the image, allowing it to overflow into the content area
+// on desktop.
+//
+//
+// Styleguide media__image--overflow.
+
+.media__image--overflow img {
+  @include shopify-breakpoint($desktop-up) {
+    max-width: none;
+  }
+}

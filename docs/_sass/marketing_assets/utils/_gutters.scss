@@ -1,0 +1,25 @@
+.gutter-bottom {
+  margin-bottom: $gutter;
+}
+
+.gutter-bottom--reset {
+  //scss-lint:disable ImportantRule
+  margin-bottom: 0 !important;
+  //scss-lint:enable ImportantRule
+}
+
+.gutter-bottom--half {
+  margin-bottom: $gutter-half;
+}
+
+@include shopify-breakpoint($mobile) {
+  .gutter-bottom--reset--mobile {
+    //scss-lint:disable ImportantRule
+    margin-bottom: 0 !important;
+    //scss-lint:enable ImportantRule
+  }
+
+  .gutter-bottom--mobile {
+    margin-bottom: $gutter;
+  }
+}

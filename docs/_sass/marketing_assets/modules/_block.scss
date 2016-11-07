@@ -1,0 +1,60 @@
+/*
+Generic helper module for content.
+Text aligns to centre on mobile breakpoint.
+
+.marketing-block--centered       - Text-align center at all breakpoints
+.marketing-block--padded         - Adds $gutter width of padding to element. Can be used on parent or content element
+.marketing-block--bordered       - Adds 1px border
+.marketing-block--rounded        - Adds border-radius
+.marketing-block--<color>        - Adds background color, text color, and border as needed. Options: --light and --lowlight
+
+Styleguide Blocks.
+*/
+
+.marketing-block {
+  @include marketing-bg-colors;
+  display: block;
+  border-color: $color-grey-border-on--white;
+
+  @include shopify-breakpoint($mobile) {
+    margin-bottom: em($gutter * 1.5);
+    text-align: center;
+    width: 100%;
+  }
+
+  .icon {
+    margin-bottom: em(12);
+  }
+}
+
+.marketing-block--bordered {
+  border-width: 1px;
+  border-style: solid;
+}
+
+.marketing-block--centered {
+  text-align: center;
+}
+
+.marketing-block--light {
+  border-width: 1px;
+  border-style: solid;
+}
+
+.marketing-block--padded {
+  padding: em($gutter);
+}
+
+.marketing-block--rounded {
+  border-radius: $border-radius;
+}
+
+.marketing-block__content {
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.marketing-block__img img {
+  width: 100%;
+}

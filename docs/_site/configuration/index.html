@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Shopify Theme Kit</title>
+  <meta name="description" content="">
+
+  <link rel="stylesheet" href="https://cdn.shopify.com/shopify-marketing_assets/builds/13.0.2/marketing_assets_content.css" media="screen" title="no title" charset="utf-8">
+  <link rel="stylesheet" href="/themekit/css/prettify.min.css">
+  <link rel="stylesheet" href="/themekit/css/main.css">
+  <link rel="canonical" href="http://localhost:4000/themekit/configuration/">
+  <link rel="shortcut icon" type="image/x-icon" href="//cdn.shopify.com/shopify-marketing_assets/static/shopify-favicon.png" />
+
+  <script src="//code.jquery.com/jquery-2.2.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/clipboard.js/1.5.8/clipboard.min.js"></script>
+  <script src="/themekit/assets/scripts/docs.js"></script>
+
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new
+      Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-49178120-18', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+</head>
+
+
+  <body>
+    <main role="main" id="main">
+      <div class="docs-container">
+        <div class="docs-sidebar">
+          <div class="docs-title heading--1"><a class="site-title" href="/themekit/">Shopify Theme Kit</a></div>
+<ul class="docs-nav">
+  <li>
+    <a class="docs-nav__link " href="/themekit/">Getting started</a>
+
+    <ul class="docs-sub-nav">
+      <li>
+        <a class="docs-nav__link" href="/themekit/#installation">Installation</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/#get-api-access">Get API Access</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/#use-a-new-theme">Use a new theme</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/#configure-an-existing-theme">Configure an existing theme</a>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <a class="docs-nav__link " href="/themekit/commands">Commands</a>
+    <ul class="docs-sub-nav">
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#general-global-flags">General Flags</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#bootstrap">Bootstrap</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#configure">Configure</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#download">Download</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#remove">Remove</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#replace">Replace</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#update">Update</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#upload">Upload</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#version">Version</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/commands/#watch">Watch</a>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <a class="docs-nav__link active" href="/themekit/configuration">Configuration</a>
+    <ul class="docs-sub-nav">
+      <li>
+        <a class="docs-nav__link" href="/themekit/configuration/#config-file">Config File</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/configuration/#environment-variables">Environment Variables</a>
+      </li>
+      <li>
+        <a class="docs-nav__link" href="/themekit/configuration/#global-flags">Global Flags</a>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <a class="docs-nav__link " href="/themekit/ignores">Ignore Patterns</a>
+  </li>
+  <li>
+    <a class="docs-nav__link " href="/themekit/development">Development</a>
+  </li>
+</ul>
+<div class="docs-shopify-logo">
+  <a href="https://shopify.com">
+    <img src="/themekit/assets/images/shopify-logo-large.png" alt="Shopify" />
+  </a>
+  <p><a href="mailto:buybutton@shopify.com">Provide feedback</a></p>
+</div>
+
+        </div>
+        <div class="docs-main">
+          <div class="docs-content">
+            <header class="docs-header">
+  <ul>
+    <li>
+      <a href="https://github.com/Shopify/themekit">
+        <img class="github-logo" src="/themekit/assets/images/github-logo.png" alt="View on github" />
+        <span class="link-text">View on Github</span></a>
+    </li>
+  </ul>
+</header>
+
+            <div class="marketing-markdown">
+              <h1 id="theme-kit-configuration">Theme Kit Configuration</h1>
+
+<p>There are 3 ways to do configurations and they have precedence of order. The config
+file values can be overridden by environment variable and environment variables
+can be overridden by command line flags. Please keep this in mind while trying
+to debug your config.</p>
+
+<p>There are general values that you will be able to config for all of theme kit actions.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Attribute</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">password</td>
+      <td style="text-align: left">Your api password</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">theme_id</td>
+      <td style="text-align: left">The theme that you want the command to take effect on. If you want to make changes to the current live theme you may set this value to <code class="highlighter-rouge">'live'</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">store</td>
+      <td style="text-align: left">Your store’s shopify domain with the <code class="highlighter-rouge">.myshopify.com</code> postfix.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">directory</td>
+      <td style="text-align: left">The project root directory. This allows your to run the command from another directory.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ignore_files</td>
+      <td style="text-align: left">A list of patterns to ignore when executing commands. Please see the <a href="/themekit/ignores">Ignore Patterns</a>  documentation.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ignores</td>
+      <td style="text-align: left">A list of file paths to files that contain ignore patterns. Please see the <a href="/themekit/ignores">Ignore Patterns</a>  documentation.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">proxy</td>
+      <td style="text-align: left">A full URL to proxy your requests through.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">timeout</td>
+      <td style="text-align: left">Requests timeout. If you have larger files in your project that may take longer than the default 30s to upload, you may want to increase this value. You can set this value to 60s for seconds or 1m for one minute.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="config-file">Config File</h2>
+
+<p>Your configuration will be setup per environment. Here is an example config file
+for you to understand the usage of environments and config.</p>
+
+<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="s">development</span><span class="pi">:</span>
+  <span class="s">password</span><span class="pi">:</span> <span class="s">16ef663594568325d64408ebcdeef528</span>
+  <span class="s">theme_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">123"</span>
+  <span class="s">store</span><span class="pi">:</span> <span class="s">can-i-buy-a-feeling.myshopify.com</span>
+  <span class="s">proxy</span><span class="pi">:</span> <span class="s">http://localhost:3000</span>
+  <span class="s">ignore_files</span><span class="pi">:</span>
+    <span class="err">*</span><span class="s">.gif</span>
+    <span class="s">*.jpg</span>
+    <span class="s">config/settings_data.json</span>
+<span class="s">production</span><span class="pi">:</span>
+  <span class="s">password</span><span class="pi">:</span> <span class="s">16ef663594568325d64408ebcdeef528</span>
+  <span class="s">theme_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">456"</span>
+  <span class="s">store</span><span class="pi">:</span> <span class="s">can-i-buy-a-feeling.myshopify.com</span>
+  <span class="s">timeout</span><span class="pi">:</span> <span class="s">60s</span>
+<span class="s">test</span><span class="pi">:</span>
+  <span class="s">password</span><span class="pi">:</span> <span class="s">16ef663594568325d64408ebcdeef528</span>
+  <span class="s">theme_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">789"</span>
+  <span class="s">store</span><span class="pi">:</span> <span class="s">can-i-buy-a-feeling.myshopify.com</span>
+  <span class="s">ignores</span><span class="pi">:</span> <span class="s">ignore.txt</span>
+</code></pre>
+</div>
+
+<h2 id="environment-variables">Environment Variables</h2>
+
+<p>It is prudent to not store your private secrets in your repository so you can set
+these values in your environment.</p>
+
+<p>All of the theme kit environment variables are prefixed with <code class="highlighter-rouge">THEMEKIT_</code></p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Attribute</th>
+      <th style="text-align: left">Environment Variable</th>
+      <th style="text-align: left"> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">password</td>
+      <td style="text-align: left">THEMEKIT_PASSWORD</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">theme_id</td>
+      <td style="text-align: left">THEMEKIT_THEME_ID</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">store</td>
+      <td style="text-align: left">THEMEKIT_STORE</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">directory</td>
+      <td style="text-align: left">THEMEKIT_DIRECTORY</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ignore_files</td>
+      <td style="text-align: left">THEMEKIT_IGNORE_FILES</td>
+      <td style="text-align: left">Use a ‘:’ as a pattern separator.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ignores</td>
+      <td style="text-align: left">THEMEKIT_IGNORES</td>
+      <td style="text-align: left">Use a ‘:’ as a file path separator.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">proxy</td>
+      <td style="text-align: left">THEMEKIT_PROXY</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">timeout</td>
+      <td style="text-align: left">THEMEKIT_TIMEOUT</td>
+      <td style="text-align: left"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Note</strong> Any environment variable will take precedence over your config.yml values
+so please keep that in mind while debugging your config.</p>
+
+<h2 id="global-flags">Global Flags</h2>
+
+<p>You can enforce any setting manually using a command line flag. This is useful for
+debugging settings or scripting up calling theme kit from something like cron.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Attribute</th>
+      <th style="text-align: left">Flag</th>
+      <th style="text-align: left">Shortcut</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">password</td>
+      <td style="text-align: left"><code class="highlighter-rouge">--password</code></td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">theme_id</td>
+      <td style="text-align: left"><code class="highlighter-rouge">--themeid</code></td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">store</td>
+      <td style="text-align: left"><code class="highlighter-rouge">--store</code></td>
+      <td style="text-align: left">-s</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">directory</td>
+      <td style="text-align: left"><code class="highlighter-rouge">--directory</code></td>
+      <td style="text-align: left">-d</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ignore_files</td>
+      <td style="text-align: left"><code class="highlighter-rouge">--ignored-file</code></td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ignores</td>
+      <td style="text-align: left"><code class="highlighter-rouge">--ignores</code></td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">proxy</td>
+      <td style="text-align: left"><code class="highlighter-rouge">--proxy</code></td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">timeout</td>
+      <td style="text-align: left"><code class="highlighter-rouge">--timeout</code></td>
+      <td style="text-align: left"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Note</strong> Any flag will take precedence over your config.yml  and environment values
+so please keep that in mind while debugging your config.</p>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

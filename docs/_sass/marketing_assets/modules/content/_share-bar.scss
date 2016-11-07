@@ -1,0 +1,62 @@
+$share-bar-height: em(25);
+
+.share-bar {
+  position: fixed;
+  z-index: $z-nav-drawer - 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: $share-bar-height / 2;
+  background-color: $color-black;
+  transform: translateY(100%);
+  transition: transform 350ms ease-out;
+
+  .js-is-loaded & {
+    transform: translateY(0);
+  }
+}
+
+.share-bar__networks {
+  height: $share-bar-height;
+
+  // Using this technique to justify the icons evenly across the bar width:
+  // http://www.barrelny.com/blog/text-align-justify-and-rwd/
+  text-align: justify;
+
+  &:after {
+    content: '';
+    display: inline-block;
+    width: 100%;
+  }
+}
+
+.share-bar__network {
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.share-bar__icon {
+  width: $share-bar-height;
+  height: $share-bar-height;
+}
+
+.share-bar__icon--email {
+  background-image: asset-svg-url('email-reverse', $color-white);
+}
+
+.share-bar__icon--buffer {
+  background-image: asset-svg-url('buffer-fullbleed', $color-white);
+}
+
+.share-bar__icon--facebook {
+  background-image: asset-svg-url('facebook-fullbleed', $color-white);
+}
+
+.share-bar__icon--twitter {
+  background-image: asset-svg-url('twitter-fullbleed', $color-white);
+}
+
+.share-bar__icon--linkedin {
+  background-image: asset-svg-url('linkedin-fullbleed', $color-white);
+}

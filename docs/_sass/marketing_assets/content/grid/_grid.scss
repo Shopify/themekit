@@ -1,0 +1,53 @@
+/*============================================================================
+  Content marketing fluid grid
+==============================================================================*/
+
+// 10-column grid for content marketing projects.
+// Fluid at desktop and mobile, fixed on tablet
+//
+// Max-width         - 1230px
+// Desktop push      - Helper classes to offset columns at desktop
+// Fluid half        - Helper class for fluid half column
+//
+// Styleguide Content Grid Basics.
+
+@mixin generate-fluid-columns($prefix: 'grid-', $num: $num-columns) {
+  $i: $num;
+
+  @while $i > 0 {
+    .#{$prefix}#{$i} {
+      @include span-columns($i of $num-columns);
+    }
+
+    .#{$prefix}push-#{$i} {
+      @include shift($i of $num-columns);
+    }
+
+    $i: $i - 1;
+  }
+}
+
+@include shopify-breakpoint($tablet-up) {
+  .grid-item--fluid__half {
+    @include span-columns(4 of 8);
+  }
+}
+
+@include shopify-breakpoint($desktop-up) {
+  .grid--desktop-push-1 {
+    @include shift(1 of 10);
+  }
+
+  .grid--desktop-push-2 {
+    @include shift(2 of 10);
+  }
+}
+
+@include shopify-breakpoint($desktop-up) {
+  @include generate-fluid-columns();
+
+  .page-width {
+    width: 100%;
+    max-width: 1230px; // 10 column with gutters
+  }
+}

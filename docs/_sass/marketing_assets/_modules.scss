@@ -1,0 +1,41 @@
+/*================ Building Blocks ================*/
+@import 'modules/buttons';
+@import 'modules/forms';
+@import 'modules/icons';
+@import 'modules/picture';
+
+/*================ Site structure & Chrome ================*/
+@import 'modules/nav';
+@import 'modules/footer';
+@import 'modules/drawer';
+@import 'modules/signup';
+@import 'modules/stateful-form';
+
+/*================ Global Modules ================*/
+@import 'modules/page-blocks';
+@import 'modules/section-block';
+@import 'modules/segment-colors';
+@import 'modules/section-heading';
+@import 'modules/page-header';
+@import 'modules/block';
+@import 'modules/bullet';
+@import 'modules/media';
+@import 'modules/image';
+
+/*================ Good candidates for selective inclusion ================*/
+@import 'modules/video';
+@import 'modules/paginated-carousel';
+@import 'modules/padded-grid-box';
+@import 'modules/inline-cta';
+@import 'modules/marketing-input-button-pair';
+
+/*================ JS Modules ================*/
+@import 'modules/sticky-menu';
+@import 'modules/in-page-menu';
+@import 'modules/mobile-nav-select';
+@import 'modules/accordion';
+@import 'modules/slider';
+@import 'modules/modal';
+@import 'modules/popover';
+@import 'modules/window-loaded';
+@import 'modules/responsive-svg';

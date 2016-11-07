@@ -1,0 +1,279 @@
+@import 'marketing_assets/sass-helpers';
+@import 'marketing_assets/plus/variables';
+
+//Animation settings
+$animation-duration: 0.2s;
+$animation-delay: 0.3s;
+
+/*============================================================================
+  Desktop Nav
+==============================================================================*/
+.marketing-nav-wrapper {
+  height: $plus-nav-height;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  overflow: visible;
+  z-index: $z-nav-main;
+}
+
+.marketing-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: $z-nav-main;
+  width: 100%;
+  height: $plus-nav-height;
+  margin: 0 auto;
+  background-color: rgba($color-body-bg, 0.9);
+}
+
+.marketing-nav__items {
+  position: absolute;
+  top: 0;
+  right: $gutter;
+  list-style: none;
+
+  @include shopify-breakpoint($tablet-up) {
+    // scss-lint:disable ImportantRule
+    display: block !important;
+    // scss-lint:enable ImportantRule
+  }
+
+  > li {
+    margin: 0;
+    display: inline-block;
+  }
+}
+
+.marketing-nav__item {
+  display: inline-block;
+  color: $color-text;
+  font-weight: $font-weight-light;
+  font-size: em(16, 18);
+  margin-left: em(20);
+  padding-top: em(6);
+  line-height: em(50);
+  transition: all $animation-duration ease-in-out;
+
+  &:hover,
+  &:focus {
+    box-shadow: inset 0 6px 0 0 $color-highlight;
+  }
+
+  &:active {
+    transition: none;
+    box-shadow: inset 0 6px 0 0 $color-interactive;
+  }
+
+  &.active {
+    color: $color-highlight;
+
+    @include shopify-breakpoint($tablet-up) {
+      box-shadow: inset 0 6px 0 0 $color-highlight;
+    }
+  }
+}
+
+.marketing-nav__item--get-started {
+  color: $color-interactive;
+  font-weight: $font-weight-regular;
+}
+
+.plus-nav__logo:hover,
+.plus-nav__logo:focus {
+  background: asset-svg-url(plus-logo-blue) 0 0 no-repeat;
+}
+
+.plus-nav__logo,
+.plus-nav__logo:active {
+  display: block;
+  width: $plus-logo-width;
+  margin-top: em(20);
+  height: $plus-logo-height;
+  background: asset-svg-url(plus-logo) 0 0 no-repeat;
+  background-size: 100%;
+  float: left;
+  transition: none;
+}
+
+/*============================================================================
+  Mobile Nav
+==============================================================================*/
+.js-drawer-open {
+  overflow: hidden;
+}
+
+.drawer {
+  display: none;
+  opacity: 0;
+  position: fixed;
+  z-index: $z-nav-main + 1;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: rgba($color-dark, 0.9);
+  transition: opacity $animation-duration $animation-delay ease-in;
+
+  .js-drawer-open-left & {
+    transition-delay: 0;
+    display: block;
+    opacity: 1;
+  }
+
+  &:before {
+    display: block;
+    content: '';
+    background: asset-svg-url(plus-logo-white) 0 0 no-repeat;
+    width: $plus-logo-width;
+    top: em(20);
+    left: $gutter;
+    height: em(30);
+    position: fixed;
+  }
+}
+
+.drawer__items {
+  width: 100%;
+  margin-left: 0;
+  margin-top: $plus-nav-height;
+
+  > li {
+    margin: 0;
+    list-style: none;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.3s 0.1s ease-in-out;
+
+    &:nth-child(2) {
+      transition: all 0.4s 0.1s ease-in-out;
+    }
+
+    &:nth-child(3) {
+      transition: all 0.5s 0.1s ease-in-out;
+    }
+
+    &:nth-child(4) {
+      transition: all 0.6s 0.1s ease-in-out;
+    }
+
+    &:nth-child(5) {
+      transition: all 0.7s 0.1s ease-in-out;
+    }
+
+    .js-drawer-open-left & {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  a {
+    color: $color-white;
+    font-weight: $font-weight-thin;
+    padding: em(15) 0;
+    display: block;
+    text-align: center;
+    font-size: em(22);
+
+    &:hover,
+    &:focus {
+      color: $color-highlight;
+    }
+  }
+}
+
+/*================ Mobile nav button ================*/
+.marketing-nav__hamburger {
+  position: absolute;
+  top: 15px;
+  right: 25px;
+  width: 35px;
+  height: 30px;
+  background: none;
+  display: none;
+  border: 0;
+  text-indent: 100%;
+  z-index: $z-nav-main;
+  cursor: pointer;
+  box-sizing: content-box;
+
+  @include shopify-breakpoint($mobile) {
+    display: block;
+  }
+
+  &:before {
+    content: '';
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 25px;
+    height: 4px;
+    background: $color-interactive;
+    box-shadow: 0 8px 0 0 $color-interactive, 0 16px 0 0 $color-interactive;
+    transform: translateX(0);
+    transition: transform $animation-duration ease-in-out;
+  }
+
+  &:active:before,
+  &:focus:before {
+    background: $color-highlight;
+    box-shadow: 0 8px 0 0 $color-highlight, 0 16px 0 0 $color-highlight;
+  }
+
+  .js-drawer-open-left &:before {
+    transform: translateX(100px);
+  }
+}
+
+%icon-close-bars {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  content: '';
+  display: block;
+  width: 4px; //match height of hamburger menu bars
+  height: 25px;
+  background: $color-white;
+  cursor: pointer;
+}
+
+.icon-close {
+  position: fixed;
+  top: 17px; //place X in the middle of the button
+  right: $gutter;
+  width: 25px;
+  height: 25px;
+  border: 0;
+  background: none;
+  z-index: $z-nav-main;
+  transform: translateX(100px);
+  transition: transform $animation-duration ease-in-out;
+
+  &:before {
+    @extend %icon-close-bars;
+    transform: rotate(45deg);
+  }
+
+  &:after {
+    @extend %icon-close-bars;
+    transform: rotate(135deg);
+  }
+
+  &:focus,
+  &:active {
+    &:before,
+    &:after {
+      background: $color-highlight;
+    }
+  }
+
+  .js-drawer-open-left & {
+    transition-delay: $animation-duration;
+    transform: translateX(0);
+  }
+}
