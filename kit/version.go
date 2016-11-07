@@ -57,7 +57,18 @@ func InstallThemeKitVersion(ver string) error {
 		return fmt.Errorf("No applicable update available.")
 	}
 	LogWarnf("Updating from %s to %s", ThemeKitVersion, requestedRelease.Version)
-	return applyUpdate(requestedRelease.ForCurrentPlatform())
+	err = applyUpdate(requestedRelease.ForCurrentPlatform())
+	if err == nil {
+		Printf(`
+Successfully updated to theme kit version %v,
+If you have troubles with this release please
+report them to https://github.com/Shopify/themekit/issues
+If your troubles are preventing you from working
+you can roll back to the previous version using
+the command 'theme update --version=v%s'
+`, GreenText(requestedRelease.Version), YellowText(ThemeKitVersion))
+	}
+	return err
 }
 
 func fetchReleases() (releasesList, error) {
@@ -94,8 +105,10 @@ func applyUpdate(platformRelease platform) error {
 
 	if err != nil {
 		if rerr := update.RollbackError(err); rerr != nil {
-			err = fmt.Errorf("Failed to rollback from bad update: %v", rerr)
+			return fmt.Errorf("Failed to rollback from bad update: %v", rerr)
 		}
+		return fmt.Errorf("Could not update and had to roll back. %v", err)
 	}
-	return err
+
+	return nil
 }
