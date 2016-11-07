@@ -26,7 +26,10 @@ var bootstrapCmd = &cobra.Command{
 	Short: "Bootstrap a new theme using Shopify Timber",
 	Long: `Bootstrap will download the latest release of Timber,
 The most popular theme on Shopify. Bootstrap will also setup
-your config file and create a new theme id for you.`,
+your config file and create a new theme id for you.
+
+For more documentation please see http://shopify.github.io/themekit/commands/#bootstrap
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		setFlagConfig()
 		return bootstrap()

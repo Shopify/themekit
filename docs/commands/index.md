@@ -29,10 +29,12 @@ run the command like the following:
 theme bootstrap --password=[your-password] --store=[you-store.myshopify.com]
 ```
 **Required Flags**
+
 * `--password` : Password for access to your shopify account.
 * `--store` : Your store's domain for changes to take effect
 
 **Optional Flags**
+
 * `--version` : With the version flag you can specify the version of timber to use.
 * `--prefix` : You can add a prefix to the theme name on shopify. (i.e. `--prefix=mine`
   will create a theme called `mine-Timber-latest`)
@@ -57,6 +59,7 @@ development:
 ```
 
 **Required Flags**
+
 * `--password` : Password for access to your shopify account.
 * `--store` : Your store's domain for changes to take effect
 * `--themeid` : The ID of the theme that you want changes to take effect
@@ -86,6 +89,7 @@ theme remove templates/404.liquid templates/article.liquid
 are required to serve a valid theme.
 
 **Optional Flags**
+
 * `--allenvs` : Will run this command for each environment in your config file.
 
 ## Replace
@@ -99,6 +103,7 @@ Replace can be used without any filenames and it will replace the whole theme. I
 some files names are provided to replace then only those files will be replaced.
 
 **Optional Flags**
+
 * `--allenvs` : Will run this command for each environment in your config file.
 
 ## Update
@@ -112,6 +117,7 @@ theme update --version=v0.5.0
 ```
 
 **Optional Flags**
+
 * `--version` : Specifies what version theme kit should install.
 
 ## Upload
@@ -123,6 +129,7 @@ the whole project, otherwise you can upload individual files like this:
 theme upload templates/404.liquid templates/article.liquid
 ```
 **Optional Flags**
+
 * `--allenvs` : Will run this command for each environment in your config file.
 
 ## Version
@@ -144,5 +151,6 @@ theme watch --notify=/tmp/theme.update
 ```
 
 **Optional Flags**
+
 * `--allenvs` : Will run this command for each environment in your config file.
 * `--notify` :File path to a file that you want updated on idle.

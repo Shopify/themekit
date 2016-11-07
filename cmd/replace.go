@@ -19,7 +19,10 @@ var replaceCmd = &cobra.Command{
 	Long: `Replace will overwrite specific files if provided with file names.
 If replace is not provided with file names then it will replace all
 the files on shopify with your local files. Any files that do not
-exist on your local machine will be removed from shopify.`,
+exist on your local machine will be removed from shopify.
+
+For more documentation please see http://shopify.github.io/themekit/commands/#replace
+`,
 	RunE: forEachClient(replace),
 }
 

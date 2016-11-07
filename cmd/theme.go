@@ -74,7 +74,7 @@ var ThemeCmd = &cobra.Command{
 Theme Kit is a fast and cross platform tool that enables you
 to build shopify themes with ease.
 
-Complete documentation is available at http://themekit.cat`,
+Complete documentation is available at https://shopify.github.io/themekit/`,
 }
 
 func init() {

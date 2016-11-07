@@ -13,8 +13,11 @@ import (
 var removeCmd = &cobra.Command{
 	Use:   "remove <filenames>",
 	Short: "Remove theme file(s) from shopify",
-	Long:  `Remove will delete all specified files from shopify servers.`,
-	RunE:  forEachClient(remove),
+	Long: `Remove will delete all specified files from shopify servers.
+
+For more documentation please see http://shopify.github.io/themekit/commands/#remove
+	`,
+	RunE: forEachClient(remove),
 }
 
 func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
