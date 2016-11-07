@@ -120,7 +120,7 @@ func (suite *VersionTestSuite) TestFetchReleases() {
 		fmt.Fprintf(w, "this is not json")
 	}))
 	releasesURL = server.URL
-	releases, err = fetchReleases()
+	_, err = fetchReleases()
 	assert.NotNil(suite.T(), err)
 	server.Close()
 
