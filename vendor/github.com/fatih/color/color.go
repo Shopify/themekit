@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
-	"github.com/shiena/ansicolor"
 )
 
 // NoColor defines if the output is colorized or not. It's dynamically set to
@@ -53,6 +53,18 @@ const (
 	FgWhite
 )
 
+// Foreground Hi-Intensity text colors
+const (
+	FgHiBlack Attribute = iota + 90
+	FgHiRed
+	FgHiGreen
+	FgHiYellow
+	FgHiBlue
+	FgHiMagenta
+	FgHiCyan
+	FgHiWhite
+)
+
 // Background text colors
 const (
 	BgBlack Attribute = iota + 40
@@ -63,6 +75,18 @@ const (
 	BgMagenta
 	BgCyan
 	BgWhite
+)
+
+// Background Hi-Intensity text colors
+const (
+	BgHiBlack Attribute = iota + 100
+	BgHiRed
+	BgHiGreen
+	BgHiYellow
+	BgHiBlue
+	BgHiMagenta
+	BgHiCyan
+	BgHiWhite
 )
 
 // New returns a newly created color object.
@@ -123,7 +147,7 @@ func (c *Color) prepend(value Attribute) {
 
 // Output defines the standard output of the print functions. By default
 // os.Stdout is used.
-var Output = ansicolor.NewAnsiColorWriter(os.Stdout)
+var Output = colorable.NewColorableStdout()
 
 // Print formats using the default formats for its operands and writes to
 // standard output. Spaces are added between operands when neither is a
@@ -321,6 +345,11 @@ func Cyan(format string, a ...interface{}) { printColor(format, FgCyan, a...) }
 func White(format string, a ...interface{}) { printColor(format, FgWhite, a...) }
 
 func printColor(format string, p Attribute, a ...interface{}) {
+	if len(a) == 0 {
+		a = append(a, format)
+		format = "%s"
+	}
+
 	if !strings.HasSuffix(format, "\n") {
 		format += "\n"
 	}
@@ -329,50 +358,44 @@ func printColor(format string, p Attribute, a ...interface{}) {
 	c.Printf(format, a...)
 }
 
+func printString(format string, p Attribute, a ...interface{}) string {
+	if len(a) == 0 {
+		a = append(a, format)
+		format = "%s"
+	}
+	return New(p).SprintfFunc()(format, a...)
+}
+
 // BlackString is an convenient helper function to return a string with black
 // foreground.
-func BlackString(format string, a ...interface{}) string {
-	return New(FgBlack).SprintfFunc()(format, a...)
-}
+func BlackString(format string, a ...interface{}) string { return printString(format, FgBlack, a...) }
 
 // RedString is an convenient helper function to return a string with red
 // foreground.
-func RedString(format string, a ...interface{}) string {
-	return New(FgRed).SprintfFunc()(format, a...)
-}
+func RedString(format string, a ...interface{}) string { return printString(format, FgRed, a...) }
 
 // GreenString is an convenient helper function to return a string with green
 // foreground.
-func GreenString(format string, a ...interface{}) string {
-	return New(FgGreen).SprintfFunc()(format, a...)
-}
+func GreenString(format string, a ...interface{}) string { return printString(format, FgGreen, a...) }
 
 // YellowString is an convenient helper function to return a string with yellow
 // foreground.
-func YellowString(format string, a ...interface{}) string {
-	return New(FgYellow).SprintfFunc()(format, a...)
-}
+func YellowString(format string, a ...interface{}) string { return printString(format, FgYellow, a...) }
 
 // BlueString is an convenient helper function to return a string with blue
 // foreground.
-func BlueString(format string, a ...interface{}) string {
-	return New(FgBlue).SprintfFunc()(format, a...)
-}
+func BlueString(format string, a ...interface{}) string { return printString(format, FgBlue, a...) }
 
 // MagentaString is an convenient helper function to return a string with magenta
 // foreground.
 func MagentaString(format string, a ...interface{}) string {
-	return New(FgMagenta).SprintfFunc()(format, a...)
+	return printString(format, FgMagenta, a...)
 }
 
 // CyanString is an convenient helper function to return a string with cyan
 // foreground.
-func CyanString(format string, a ...interface{}) string {
-	return New(FgCyan).SprintfFunc()(format, a...)
-}
+func CyanString(format string, a ...interface{}) string { return printString(format, FgCyan, a...) }
 
 // WhiteString is an convenient helper function to return a string with white
 // foreground.
-func WhiteString(format string, a ...interface{}) string {
-	return New(FgWhite).SprintfFunc()(format, a...)
-}
+func WhiteString(format string, a ...interface{}) string { return printString(format, FgWhite, a...) }

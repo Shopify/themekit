@@ -1,0 +1,21 @@
+package: github.com/Shopify/themekit
+import:
+- package: github.com/fatih/color
+  version: ^1.0.0
+- package: github.com/inconshreveable/go-update
+- package: github.com/ryanuber/go-glob
+  version: ^0.1.0
+- package: github.com/spf13/cobra
+- package: gopkg.in/fsnotify.v1
+  version: ^1.4.1
+- package: gopkg.in/yaml.v1
+- package: github.com/spf13/viper
+- package: github.com/caarlos0/env
+  version: ^2.1.0
+- package: github.com/hashicorp/go-version
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert
+  - suite

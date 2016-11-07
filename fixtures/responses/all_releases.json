@@ -1,0 +1,6 @@
+[
+  {"version":"0.4.4","platforms":[{"name":"darwin-amd64","url":"","digest":""},{"name":"linux-386","url":"","digest":"01a260dcf956141db01f5e12def8ab50"},{"name":"linux-amd64","url":"","digest":""},{"name":"windows-386","url":"","digest":""},{"name":"windows-amd64","url":"","digest":""}]},
+  {"version":"0.4.7","platforms":[{"name":"darwin-amd64","url":"","digest":""},{"name":"linux-386","url":"","digest":"01a260dcf956141db01f5e12def8ab50"},{"name":"linux-amd64","url":"","digest":""},{"name":"windows-386","url":"","digest":""},{"name":"windows-amd64","url":"","digest":""}]},
+  {"version":"0.4.6","platforms":[{"name":"darwin-amd64","url":"","digest":""},{"name":"linux-386","url":"","digest":"01a260dcf956141db01f5e12def8ab50"},{"name":"linux-amd64","url":"","digest":""},{"name":"windows-386","url":"","digest":""},{"name":"windows-amd64","url":"","digest":""}]},
+  {"version":"0.4.5","platforms":[{"name":"darwin-amd64","url":"","digest":""},{"name":"linux-386","url":"","digest":"01a260dcf956141db01f5e12def8ab50"},{"name":"linux-amd64","url":"","digest":""},{"name":"windows-386","url":"","digest":""},{"name":"windows-amd64","url":"","digest":""}]}
+]

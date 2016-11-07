@@ -8,12 +8,10 @@ import (
 	"time"
 
 	"gopkg.in/fsnotify.v1"
-
-	"github.com/Shopify/themekit/theme"
 )
 
 const (
-	debounceTimeout = 1000 * time.Millisecond
+	debounceTimeout = 1 * time.Second
 )
 
 var (
@@ -29,103 +27,117 @@ var (
 	}
 )
 
-type (
-	fsAssetEvent struct {
-		asset     theme.Asset
-		eventType EventType
-	}
-	fileReader func(filename string) ([]byte, error)
-)
+// FileEventCallback is the callback that is called when there is an event from
+// a file watcher.
+type FileEventCallback func(ThemeClient, Asset, EventType, error)
 
-// Asset ... TODO
-func (f fsAssetEvent) Asset() theme.Asset {
-	return f.asset
+// FileWatcher is the object used to watch files for change and notify on any events,
+// these events can then be passed along to kit to be sent to shopify.
+type FileWatcher struct {
+	done     chan bool
+	client   ThemeClient
+	watcher  *fsnotify.Watcher
+	filter   eventFilter
+	callback FileEventCallback
 }
 
-// Type ... TODO
-func (f fsAssetEvent) Type() EventType {
-	return f.eventType
-}
-
-// IsValid ... TODO
-func (f fsAssetEvent) IsValid() bool {
-	return f.eventType == Remove || f.asset.IsValid()
-}
-
-func (f fsAssetEvent) String() string {
-	return fmt.Sprintf("%s|%s", f.asset.Key, f.eventType.String())
-}
-
-func newFileWatcher(dir string, recur bool, filter eventFilter) (chan AssetEvent, error) {
-	dirsToWatch, err := findDirectoriesToWatch(dir, recur, filter.MatchesFilter)
-	if err != nil {
-		return nil, err
-	}
-
+func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilter, callback FileEventCallback) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
-	// TODO: the watcher should be closed at the end!!
 	if err != nil {
 		return nil, err
 	}
 
-	for _, path := range dirsToWatch {
+	for _, path := range findDirectoriesToWatch(dir, recur, filter.matchesFilter) {
 		if err := watcher.Add(path); err != nil {
 			return nil, fmt.Errorf("Could not watch directory %s: %s", path, err)
 		}
 	}
 
-	return convertFsEvents(watcher.Events, filter), nil
+	newWatcher := &FileWatcher{
+		done:     make(chan bool),
+		client:   client,
+		watcher:  watcher,
+		callback: callback,
+		filter:   filter,
+	}
+
+	go convertFsEvents(newWatcher)
+
+	return newWatcher, nil
 }
 
-func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(string) bool) ([]string, error) {
-	var result []string
-	if !recursive {
-		result = append(result, start)
-		return result, nil
-	}
-
-	walkFunc := func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			return nil
+func convertFsEvents(watcher *FileWatcher) {
+	var currentEvent fsnotify.Event
+	var more bool
+	recordedEvents := map[string]fsnotify.Event{}
+	for {
+		select {
+		case currentEvent, more = <-watcher.watcher.Events:
+			if !more {
+				callbackEvents(watcher, recordedEvents)
+				close(watcher.done)
+				return
+			}
+			if currentEvent.Op != fsnotify.Chmod {
+				recordedEvents[currentEvent.Name] = currentEvent
+			}
+		case <-time.After(debounceTimeout):
+			callbackEvents(watcher, recordedEvents)
+			recordedEvents = map[string]fsnotify.Event{}
 		}
-		if ignoreDirectory(path) {
-			return nil
-		}
-		result = append(result, path)
-		return nil
 	}
-	if err := filepath.Walk(start, walkFunc); err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
-func fwLoadAsset(event fsnotify.Event) theme.Asset {
-	root := filepath.Dir(event.Name)
-	filename := filepath.Base(event.Name)
-
-	asset, err := theme.LoadAsset(root, filename)
-	if err != nil {
-		if os.IsExist(err) {
-			Fatal(err)
-		} else {
-			asset = theme.Asset{}
+func callbackEvents(watcher *FileWatcher, recordedEvents map[string]fsnotify.Event) {
+	for eventName, event := range recordedEvents {
+		if !watcher.filter.matchesFilter(eventName) {
+			go handleEvent(watcher, event)
 		}
 	}
-	asset.Key = extractAssetKey(event.Name)
-	return asset
 }
 
-func handleEvent(event fsnotify.Event) fsAssetEvent {
+// IsWatching will return true if the watcher is currently watching for file changes.
+// it will return false if it has been stopped
+func (watcher *FileWatcher) IsWatching() bool {
+	select {
+	case _, ok := <-watcher.done:
+		return ok
+	default:
+		return true
+	}
+}
+
+// StopWatching will stop the Filewatcher from watching it's directories and clean
+// up any go routines doing work.
+func (watcher *FileWatcher) StopWatching() {
+	watcher.watcher.Close()
+}
+
+func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 	var eventType EventType
-	asset := fwLoadAsset(event)
+	var err error
+
 	switch event.Op {
-	case fsnotify.Create:
+	case fsnotify.Chmod, fsnotify.Create, fsnotify.Write:
 		eventType = Update
 	case fsnotify.Remove:
 		eventType = Remove
 	}
-	return fsAssetEvent{asset: asset, eventType: eventType}
+
+	root := filepath.Dir(event.Name)
+	filename := filepath.Base(event.Name)
+	asset, loadErr := loadAsset(root, filename)
+	if loadErr != nil { // remove event wont load asset
+		asset = Asset{}
+	}
+
+	asset.Key = extractAssetKey(event.Name)
+	if asset.Key == "" {
+		err = fmt.Errorf("File not in project workspace.")
+		asset.Key = event.Name
+	}
+
+	watcher.callback(watcher.client, asset, eventType, err)
 }
 
 func extractAssetKey(filename string) string {
@@ -137,30 +149,24 @@ func extractAssetKey(filename string) string {
 			return fmt.Sprintf("%s%s", dir, split[len(split)-1])
 		}
 	}
+
 	return ""
 }
 
-func convertFsEvents(events chan fsnotify.Event, filter eventFilter) chan AssetEvent {
-	results := make(chan AssetEvent)
-	go func() {
-		var currentEvent fsnotify.Event
-		recordedEvents := map[string]fsnotify.Event{}
-		for {
-			select {
-			case currentEvent = <-events:
-				if currentEvent.Op != fsnotify.Chmod {
-					recordedEvents[currentEvent.Name] = currentEvent
-				}
-			case <-time.After(debounceTimeout):
-				for eventName, event := range recordedEvents {
-					if fsevent := handleEvent(event); !filter.MatchesFilter(eventName) && fsevent.IsValid() {
-						results <- fsevent
-					}
-				}
-				recordedEvents = map[string]fsnotify.Event{}
-				break
-			}
+func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(string) bool) []string {
+	start = filepath.Clean(start)
+
+	if !recursive {
+		return []string{start}
+	}
+
+	result := []string{}
+	filepath.Walk(start, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() && !ignoreDirectory(path) {
+			result = append(result, path)
 		}
-	}()
-	return results
+		return nil
+	})
+
+	return result
 }

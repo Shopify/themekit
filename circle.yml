@@ -3,13 +3,19 @@ machine:
     GOPATH: "/home/ubuntu/go_workspace"
     IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
     PROJECT_PATH: "$GOPATH/src/$IMPORT_PATH"
+    PATH: "$PATH:$GOPATH/bin"
 
 dependencies:
   override:
     - mkdir -p "$PROJECT_PATH"
     - rsync -azC --delete ./ "$PROJECT_PATH/"
+    - sudo add-apt-repository ppa:masterminds/glide -y
+    - sudo apt-get update
+    - sudo apt-get install glide
+    - go get -u github.com/golang/lint/golint
 test:
   pre:
     - cd $PROJECT_PATH && make vet
+    - cd $PROJECT_PATH && make lint
   override:
     - cd $PROJECT_PATH && make test

@@ -1,21 +1,11 @@
 package kit
 
 import (
-	"bytes"
-	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
 	"time"
-
-	"github.com/Shopify/themekit/theme"
 )
 
 const createThemeMaxRetries int = 3
@@ -23,341 +13,153 @@ const createThemeMaxRetries int = 3
 // ThemeClient is the interactor with the shopify server. All actions are processed
 // with the client.
 type ThemeClient struct {
-	eventLog   chan ThemeEvent
-	config     Configuration
-	httpClient *http.Client
+	Config     Configuration
+	httpClient *httpClient
 	filter     eventFilter
 }
-
-type apiResponse struct {
-	code int
-	body []byte
-	err  error
-}
-
-// EventType is an enum of event types to compare agains event.Type()
-type EventType int
-
-func (e EventType) String() string {
-	switch e {
-	case Update:
-		return "Update"
-	case Remove:
-		return "Remove"
-	default:
-		return "Unknown"
-	}
-}
-
-// NonFatalNetworkError is an error for describing an asset request that failed
-// but is not critical. For instance updating a file that does not exist.
-type NonFatalNetworkError struct {
-	Code    int
-	Verb    string
-	Message string
-}
-
-func (e NonFatalNetworkError) Error() string {
-	return fmt.Sprintf("%d %s %s", e.Code, e.Verb, e.Message)
-}
-
-const (
-	// Update specifies that an AssetEvent is an update event.
-	Update EventType = iota
-	// Remove specifies that an AssetEvent is an delete event.
-	Remove
-)
 
 // NewThemeClient will build a new theme client from a configuration and a theme event
 // channel. The channel is used for logging all events. The configuration specifies how
 // the client will behave.
-func NewThemeClient(eventLog chan ThemeEvent, config Configuration) ThemeClient {
-	return ThemeClient{
-		eventLog:   eventLog,
-		config:     config,
-		httpClient: newHTTPClient(config),
-		filter:     newEventFilterFromPatternsAndFiles(config.IgnoredFiles, config.Ignores),
+func NewThemeClient(config Configuration) (ThemeClient, error) {
+	httpClient, err := newHTTPClient(config)
+	if err != nil {
+		return ThemeClient{}, err
 	}
-}
 
-// GetConfiguration will return the clients built config. This is useful for grabbing
-// things like urls and domains.
-func (t ThemeClient) GetConfiguration() Configuration {
-	return t.config
+	filter, err := newEventFilter(config.Directory, config.IgnoredFiles, config.Ignores)
+	if err != nil {
+		return ThemeClient{}, err
+	}
+
+	newClient := ThemeClient{
+		Config:     config,
+		httpClient: httpClient,
+		filter:     filter,
+	}
+
+	return newClient, nil
 }
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
-func (t ThemeClient) NewFileWatcher(dir, notifyFile string) chan AssetEvent {
-	new_foreman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
-	if len(notifyFile) > 0 {
-		new_foreman.OnIdle = func() {
-			os.Create(notifyFile)
-			os.Chtimes(notifyFile, time.Now(), time.Now())
-		}
-	}
-	var err error
-	new_foreman.JobQueue, err = newFileWatcher(dir, true, t.filter)
-	if err != nil {
-		Fatal(err)
-	}
-	new_foreman.Restart()
-	return new_foreman.WorkerQueue
-}
-
-func (t ThemeClient) ErrorMessage(content string, args ...interface{}) {
-	go func() {
-		t.eventLog <- basicEvent{
-			Formatter: func(b basicEvent) string { return RedText(fmt.Sprintf(content, args...)) },
-			EventType: "message",
-			Title:     "Notice",
-			Etype:     "basicEvent",
-		}
-	}()
-}
-
-func (t ThemeClient) Message(content string, args ...interface{}) {
-	go func() {
-		t.eventLog <- basicEvent{
-			Formatter: func(b basicEvent) string { return fmt.Sprintf(content, args...) },
-			EventType: "message",
-			Title:     "Notice",
-			Etype:     "basicEvent",
-		}
-	}()
+func (t ThemeClient) NewFileWatcher(notifyFile string, callback FileEventCallback) (*FileWatcher, error) {
+	return newFileWatcher(t, t.Config.Directory, true, t.filter, callback)
 }
 
 // AssetList will return a slice of remote assets from the shopify servers. The
 // assets are sorted and any ignored files based on your config are filtered out.
-func (t ThemeClient) AssetList() []theme.Asset {
-	queryBuilder := func(path string) string {
-		return path
+func (t ThemeClient) AssetList() ([]Asset, Error) {
+	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{})
+	if err != nil && err.Fatal() {
+		return []Asset{}, err
 	}
+	sort.Sort(ByAsset(resp.Assets))
+	return t.filter.filterAssets(ignoreCompiledAssets(resp.Assets)), err
+}
 
-	resp := t.query(queryBuilder)
-	if resp.err != nil {
-		t.ErrorMessage(resp.err.Error())
-	}
-
-	if resp.code >= 400 && resp.code < 500 {
-		t.ErrorMessage("Server responded with HTTP %d; please check your credentials.", resp.code)
-		return []theme.Asset{}
-	}
-	if resp.code >= 500 {
-		t.ErrorMessage("Server responded with HTTP %d; try again in a few minutes.", resp.code)
-		return []theme.Asset{}
-	}
-
-	var assets map[string][]theme.Asset
-	err := json.Unmarshal(resp.body, &assets)
+// Asset will load up a single remote asset from the remote shopify servers.
+func (t ThemeClient) Asset(filename string) (Asset, Error) {
+	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{"asset[key]": filename})
 	if err != nil {
-		t.ErrorMessage(err.Error())
-		return []theme.Asset{}
+		return Asset{}, err
 	}
-
-	sort.Sort(theme.ByAsset(assets["assets"]))
-
-	return t.filter.FilterAssets(ignoreCompiledAssets(assets["assets"]))
+	return resp.Asset, nil
 }
 
 // LocalAssets will return a slice of assets from the local disk. The
 // assets are filtered based on your config.
-func (t ThemeClient) LocalAssets(dir string) []theme.Asset {
-	dir = fmt.Sprintf("%s%s", dir, string(filepath.Separator))
-
-	assets, err := theme.LoadAssetsFromDirectory(dir, t.filter.MatchesFilter)
+func (t ThemeClient) LocalAssets() ([]Asset, error) {
+	dir := fmt.Sprintf("%s%s", t.Config.Directory, string(filepath.Separator))
+	assets, err := loadAssetsFromDirectory(dir, t.filter.matchesFilter)
 	if err != nil {
-		Fatal(err)
+		return assets, err
 	}
-
-	return assets
+	return assets, nil
 }
 
-// Asset will load up a single remote asset from the remote shopify servers.
-func (t ThemeClient) Asset(filename string) (theme.Asset, error) {
-	queryBuilder := func(path string) string {
-		return fmt.Sprintf("%s&asset[key]=%s", path, filename)
-	}
-
-	resp := t.query(queryBuilder)
-	if resp.err != nil {
-		return theme.Asset{}, resp.err
-	}
-	if resp.code >= 400 {
-		return theme.Asset{}, NonFatalNetworkError{Code: resp.code, Verb: "GET", Message: "not found"}
-	}
-	var asset map[string]theme.Asset
-	err := json.Unmarshal(resp.body, &asset)
-	if err != nil {
-		return theme.Asset{}, err
-	}
-
-	return asset["asset"], nil
+// LocalAsset will load a single local asset on disk. It will return an error if there
+// is a problem loading the asset.
+func (t ThemeClient) LocalAsset(filename string) (Asset, error) {
+	return loadAsset(t.Config.Directory, filename)
 }
 
 // CreateTheme will create a unpublished new theme on your shopify store and then
 // return a new theme client with the configuration of the new client.
-func (t ThemeClient) CreateTheme(name, zipLocation string) ThemeClient {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	path := fmt.Sprintf("%s/themes.json", t.config.AdminURL())
-	contents := map[string]theme.Theme{
-		"theme": {Name: name, Source: zipLocation, Role: "unpublished"},
+func CreateTheme(name, zipLocation string) (ThemeClient, Theme, error) {
+	config, _ := NewConfiguration()
+	err := config.validateNoThemeID()
+	if err != nil {
+		return ThemeClient{}, Theme{}, fmt.Errorf("Invalid options: %v", err)
 	}
 
+	client, err := NewThemeClient(config)
+	if err != nil {
+		return client, Theme{}, err
+	}
+
+	var resp *ShopifyResponse
+	var respErr error
 	retries := 0
-	themeEvent := func() (themeEvent apiThemeEvent) {
-		ready := false
-		data, _ := json.Marshal(contents)
-		for retries < createThemeMaxRetries && !ready {
-			if themeEvent = t.sendData("POST", path, data); !themeEvent.Successful() {
-				retries++
-			} else {
-				ready = true
-			}
-			go func(client ThemeClient, event ThemeEvent) {
-				client.eventLog <- event
-			}(t, themeEvent)
+	for retries < createThemeMaxRetries {
+		resp, respErr = client.httpClient.NewTheme(name, zipLocation)
+		if resp != nil && resp.Successful() {
+			break
 		}
+
+		retries++
 		if retries >= createThemeMaxRetries {
-			err := fmt.Errorf(fmt.Sprintf("'%s' cannot be retrieved from Github.", zipLocation))
-			Fatal(err)
+			return client, Theme{}, kitError{fmt.Errorf("Cannot create a theme. Last error was: %s", respErr)}
 		}
-		return
-	}()
-
-	go func() {
-		for !t.isDoneProcessing(themeEvent.ThemeID) {
-			time.Sleep(250 * time.Millisecond)
-		}
-		wg.Done()
-	}()
-
-	wg.Wait()
-	config := t.GetConfiguration() // Shouldn't this configuration already be loaded and initialized?
-	config.ThemeID = fmt.Sprintf("%d", themeEvent.ThemeID)
-	config, err := config.Initialize()
-	if err != nil {
-		Fatal(err)
 	}
-	return NewThemeClient(t.eventLog, config)
+
+	theme := resp.Theme
+	for !theme.Previewable {
+		resp, _ := client.httpClient.GetTheme(resp.Theme.ID)
+		theme = resp.Theme
+		time.Sleep(250 * time.Millisecond)
+	}
+
+	client.Config.ThemeID = fmt.Sprintf("%d", resp.Theme.ID)
+
+	return client, theme, nil
 }
 
-// Process will create a new throttler and return the jobqueue. You can then send
-// asset events to the channel and they will be performed. If you close the job
-// queue, then the worker queue will be closed when it is finished, then the done
-// channel will be closed. This is a good way of knowing when your jobs are done
-// processing.
-func (t ThemeClient) Process(done chan bool) chan AssetEvent {
-	new_foreman := newForeman(newLeakyBucket(t.config.BucketSize, t.config.RefillRate, 1))
-	go func() {
-		for {
-			job, more := <-new_foreman.WorkerQueue
-			if more {
-				t.Perform(job)
-			} else {
-				done <- true
-				return
-			}
-		}
-	}()
-	return new_foreman.JobQueue
+// CreateAsset will take an asset and will return  when the asset has been created.
+// If there was an error, in the request then error will be defined otherwise the
+//response will have the appropropriate data for usage.
+func (t ThemeClient) CreateAsset(asset Asset) (*ShopifyResponse, Error) {
+	return t.UpdateAsset(asset)
 }
 
-// Perform will send an http request to the shopify servers based on the asset event.
-// if it is an update it will post to the server and if it is a remove it will DELETE
-// to the server. Any errors will be outputted to the event log.
-func (t ThemeClient) Perform(asset AssetEvent) {
-	if t.filter.MatchesFilter(asset.Asset().Key) {
-		return
-	}
-
-	var event string
-	switch asset.Type() {
-	case Update:
-		event = "PUT"
-	case Remove:
-		event = "DELETE"
-	}
-
-	resp, err := t.request(asset, event)
-	t.eventLog <- newAPIAssetEvent(resp, asset, err)
+// UpdateAsset will take an asset and will return  when the asset has been updated.
+// If there was an error, in the request then error will be defined otherwise the
+//response will have the appropropriate data for usage.
+func (t ThemeClient) UpdateAsset(asset Asset) (*ShopifyResponse, Error) {
+	return t.Perform(asset, Update)
 }
 
-func (t ThemeClient) query(queryBuilder func(path string) string) apiResponse {
-	path := fmt.Sprintf("%s?fields=key,attachment,value", t.config.AssetPath())
-	path = queryBuilder(path)
-
-	req, err := http.NewRequest("GET", path, nil)
-	if err != nil {
-		return apiResponse{err: err}
-	}
-
-	t.config.AddHeaders(req)
-	resp, err := t.httpClient.Do(req)
-	if err != nil {
-		return apiResponse{err: err}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return apiResponse{code: resp.StatusCode, body: body, err: err}
+// DeleteAsset will take an asset and will return  when the asset has been deleted.
+// If there was an error, in the request then error will be defined otherwise the
+//response will have the appropropriate data for usage.
+func (t ThemeClient) DeleteAsset(asset Asset) (*ShopifyResponse, Error) {
+	return t.Perform(asset, Remove)
 }
 
-func (t ThemeClient) sendData(method, path string, body []byte) (result apiThemeEvent) {
-	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
-	if err != nil {
-		Fatal(err)
+// Perform will take in any asset and event type, and return after the request has taken
+// place
+// If there was an error, in the request then error will be defined otherwise the
+//response will have the appropropriate data for usage.
+func (t ThemeClient) Perform(asset Asset, event EventType) (*ShopifyResponse, Error) {
+	if t.filter.matchesFilter(asset.Key) {
+		return &ShopifyResponse{}, kitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Key)))}
 	}
-	t.config.AddHeaders(req)
-	resp, err := t.httpClient.Do(req)
-	if result = newAPIThemeEvent(resp, err); result.Successful() {
-		defer resp.Body.Close()
-	}
-	return result
+	return t.httpClient.AssetAction(event, asset)
 }
 
-func (t ThemeClient) request(event AssetEvent, method string) (*http.Response, error) {
-	path := t.config.AssetPath()
-	data := map[string]theme.Asset{"asset": event.Asset()}
-
-	encoded, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(method, path, bytes.NewBuffer(encoded))
-
-	if err != nil {
-		return nil, err
-	}
-
-	t.config.AddHeaders(req)
-	return t.httpClient.Do(req)
-}
-
-func (t ThemeClient) isDoneProcessing(themeID int64) bool {
-	path := fmt.Sprintf("%s/themes/%d.json", t.config.AdminURL(), themeID)
-	themeEvent := t.sendData("GET", path, []byte{})
-	return themeEvent.Previewable
-}
-
-func newHTTPClient(config Configuration) (client *http.Client) {
-	client = &http.Client{}
-	if len(config.Proxy) > 0 {
-		fmt.Println("Proxy URL detected from Configuration:", config.Proxy)
-		fmt.Println("SSL Certificate Validation will be disabled!")
-		proxyURL, err := url.Parse(config.Proxy)
-		if err != nil {
-			fmt.Println("Proxy configuration invalid:", err)
-		}
-		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-	}
-	return
-}
-
-func ignoreCompiledAssets(assets []theme.Asset) []theme.Asset {
+func ignoreCompiledAssets(assets []Asset) []Asset {
 	newSize := 0
-	results := make([]theme.Asset, len(assets))
-	isCompiled := func(a theme.Asset, rest []theme.Asset) bool {
+	results := make([]Asset, len(assets))
+	isCompiled := func(a Asset, rest []Asset) bool {
 		for _, other := range rest {
 			if strings.Contains(other.Key, a.Key) {
 				return true

@@ -1,80 +1,183 @@
 package kit
 
 import (
-	"encoding/base64"
-	"io/ioutil"
-	"net/http"
-	"strings"
+	"path/filepath"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/fsnotify.v1"
-
-	"github.com/Shopify/themekit/theme"
 )
 
-type FileWatcherSuite struct {
+const (
+	textFixturePath  = "../fixtures/project/assets/application.js"
+	watchFixturePath = "../fixtures/project"
+)
+
+type FileWatcherTestSuite struct {
 	suite.Suite
+	watcher *FileWatcher
 }
 
-func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsTheAssetKey() {
-	var tests = []struct {
-		input    fsnotify.Event
-		expected theme.Asset
+func (suite *FileWatcherTestSuite) TestNewFileReader() {
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, Asset, EventType, error) {})
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), true, watcher.IsWatching())
+	watcher.StopWatching()
+}
+
+func (suite *FileWatcherTestSuite) TestConvertFsEvents() {
+	assetChan := make(chan Asset, 4)
+	eventChan := make(chan fsnotify.Event)
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	newWatcher := &FileWatcher{
+		done:    make(chan bool),
+		watcher: &fsnotify.Watcher{Events: eventChan},
+	}
+
+	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType, err error) {
+		assert.Nil(suite.T(), err)
+		assert.Equal(suite.T(), Update, event)
+		assetChan <- asset
+		wg.Done()
+	}
+
+	go convertFsEvents(newWatcher)
+
+	go func() {
+		writes := []fsnotify.Event{
+			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
+			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
+			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
+			{Name: watchFixturePath + "/templates/customers/test.liquid", Op: fsnotify.Write},
+		}
+		for _, fsEvent := range writes {
+			eventChan <- fsEvent
+		}
+		close(eventChan)
+	}()
+
+	wg.Wait()
+	// test that the events are debounced
+	assert.Equal(suite.T(), 2, len(assetChan))
+}
+
+func (suite *FileWatcherTestSuite) TestCallbackEvents() {
+	events := map[string]fsnotify.Event{
+		watchFixturePath + "/templates/template.liquid": {Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(events))
+
+	newWatcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType, err error) {
+		assert.Nil(suite.T(), err)
+		assert.Equal(suite.T(), Asset{Key: "templates/template.liquid", Value: ""}, asset)
+		assert.Equal(suite.T(), Update, event)
+		wg.Done()
+	}}
+
+	callbackEvents(newWatcher, events)
+
+	newWatcher = &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType, err error) {
+		assert.NotNil(suite.T(), err)
+		wg.Done()
+	}}
+
+	events = map[string]fsnotify.Event{
+		"nope/template.liquid": {Name: "nope/template.liquid", Op: fsnotify.Write},
+	}
+	wg.Add(len(events))
+
+	callbackEvents(newWatcher, events)
+
+	wg.Wait()
+}
+
+func (suite *FileWatcherTestSuite) TestStopWatching() {
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, Asset, EventType, error) {})
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), true, watcher.IsWatching())
+	watcher.StopWatching()
+	time.Sleep(50 * time.Millisecond)
+	assert.Equal(suite.T(), false, watcher.IsWatching())
+}
+
+func (suite *FileWatcherTestSuite) TestHandleEvent() {
+	writes := []struct {
+		Name  string
+		Event fsnotify.Op
 	}{
-		{fsnotify.Event{Name: "../fixtures/layout/theme.liquid"}, theme.Asset{Key: "layout/theme.liquid", Value: "Liquid Theme\n"}},
-		{fsnotify.Event{Name: "../fixtures/templates/customers/account.liquid"}, theme.Asset{Key: "templates/customers/account.liquid", Value: "Account Page\n"}},
-		{fsnotify.Event{Name: "../fixtures/snippets/layout-something.liquid"}, theme.Asset{Key: "snippets/layout-something.liquid", Value: "Something Liquid\n"}},
+		{Name: textFixturePath, Event: fsnotify.Create},
+		{Name: textFixturePath, Event: fsnotify.Write},
+		{Name: textFixturePath, Event: fsnotify.Remove},
+		{Name: "../fixtures/project/whatever.txt", Event: fsnotify.Write},
 	}
-	for _, test := range tests {
-		actual := fwLoadAsset(test.input)
-		assert.Equal(s.T(), test.expected.Key, actual.Key)
-		assert.Equal(s.T(), test.expected.Value, actual.Value)
+
+	var wg sync.WaitGroup
+	wg.Add(len(writes))
+
+	watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType, err error) {
+		if err != nil {
+			assert.Equal(suite.T(), "File not in project workspace.", err.Error())
+			assert.Equal(suite.T(), "../fixtures/project/whatever.txt", asset.Key)
+		} else {
+			assert.Equal(suite.T(), extractAssetKey(textFixturePath), asset.Key)
+		}
+		wg.Done()
+	}}
+
+	for _, write := range writes {
+		handleEvent(watcher, fsnotify.Event{Name: write.Name, Op: write.Event})
+	}
+
+	wg.Wait()
+}
+
+func (suite *FileWatcherTestSuite) TestExtractAssetKey() {
+	tests := map[string]string{
+		"/long/path/to/config.yml":                      "",
+		"/long/path/to/assets/logo.png":                 "assets/logo.png",
+		"/long/path/to/templates/customers/test.liquid": "templates/customers/test.liquid",
+		"/long/path/to/config/test.liquid":              "config/test.liquid",
+		"/long/path/to/layout/test.liquid":              "layout/test.liquid",
+		"/long/path/to/snippets/test.liquid":            "snippets/test.liquid",
+		"/long/path/to/templates/test.liquid":           "templates/test.liquid",
+		"/long/path/to/locales/test.liquid":             "locales/test.liquid",
+		"/long/path/to/sections/test.liquid":            "sections/test.liquid",
+	}
+	for input, expected := range tests {
+		assert.Equal(suite.T(), expected, extractAssetKey(input))
 	}
 }
 
-func (s *FileWatcherSuite) TestDeterminingContentTypesOfFiles() {
-	image, _ := ioutil.ReadFile("../fixtures/image.png")
-	assert.Equal(s.T(), "binary", contentTypeFor(image))
-	assert.Equal(s.T(), "text", contentTypeFor([]byte("Hello World")))
-	assert.Equal(s.T(), "text", contentTypeFor([]byte("<!DOCTYPE html><html><head></head><body></body></html>")))
-}
-
-func (s *FileWatcherSuite) TestThatLoadAssetProperlyExtractsAttachmentDataForBinaryFiles() {
-	imageData, _ := ioutil.ReadFile("../fixtures/image.png")
-	encodedImageData := encode64(imageData)
-	event := fsnotify.Event{Name: "../fixtures/image.png", Op: fsnotify.Chmod}
-	assetEvent := handleEvent(event)
-	assert.Equal(s.T(), "", assetEvent.Asset().Value)
-	assert.Equal(s.T(), encodedImageData, assetEvent.Asset().Attachment)
-}
-
-func (s *FileWatcherSuite) TestHandleEventConvertsFSNotifyEventsIntoAssetEvents() {
-	writes := map[fsnotify.Op]EventType{
-		fsnotify.Chmod:  Update,
-		fsnotify.Create: Update,
-		fsnotify.Remove: Remove,
+func (suite *FileWatcherTestSuite) TestfindDirectoriesToWatch() {
+	expected := []string{
+		clean(watchFixturePath),
+		clean(watchFixturePath + "/assets"),
+		clean(watchFixturePath + "/config"),
+		clean(watchFixturePath + "/layout"),
+		clean(watchFixturePath + "/locales"),
+		clean(watchFixturePath + "/snippets"),
+		clean(watchFixturePath + "/templates"),
+		clean(watchFixturePath + "/templates/customers"),
 	}
-	for fsEvent, themekitEvent := range writes {
-		event := fsnotify.Event{Name: "../fixtures/whatever.txt", Op: fsEvent}
-		assetEvent := handleEvent(event)
-		assert.Equal(s.T(), themekitEvent, assetEvent.Type())
-	}
+
+	files := findDirectoriesToWatch(watchFixturePath, true, func(string) bool { return false })
+	assert.Equal(suite.T(), expected, files)
+
+	files = findDirectoriesToWatch(watchFixturePath, false, func(string) bool { return false })
+	assert.Equal(suite.T(), []string{clean(watchFixturePath)}, files)
 }
 
-func TestFileWatcherSuite(t *testing.T) {
-	suite.Run(t, new(FileWatcherSuite))
+func TestFileWatcherTestSuite(t *testing.T) {
+	suite.Run(t, new(FileWatcherTestSuite))
 }
 
-func contentTypeFor(data []byte) string {
-	contentType := http.DetectContentType(data)
-	if strings.Contains(contentType, "text") {
-		return "text"
-	}
-	return "binary"
-}
-
-func encode64(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data)
+func clean(path string) string {
+	return filepath.Clean(path)
 }

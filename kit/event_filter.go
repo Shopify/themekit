@@ -3,112 +3,88 @@ package kit
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
-	re "regexp"
-	syn "regexp/syntax"
+	"regexp"
 	"strings"
 
 	"github.com/ryanuber/go-glob"
-
-	"github.com/Shopify/themekit/theme"
 )
 
-const configurationFilename = "config\\.yml"
-
-var defaultRegexes = []*re.Regexp{
-	re.MustCompile(`\.git/*`),
-	re.MustCompile(`\.DS_Store`),
+var defaultRegexes = []*regexp.Regexp{
+	regexp.MustCompile(`\.git/*`),
+	regexp.MustCompile(`\.DS_Store`),
+	regexp.MustCompile(`config.yml`),
 }
 
 var defaultGlobs = []string{}
 
 type eventFilter struct {
-	filters []*re.Regexp
+	rootDir string
+	filters []*regexp.Regexp
 	globs   []string
 }
 
-func newEventFilter(rawPatterns []string) eventFilter {
+func newEventFilter(rootDir string, patterns []string, files []string) (eventFilter, error) {
+	filePatterns, err := filesToPatterns(files)
+	if err != nil {
+		return eventFilter{}, err
+	}
+
+	patterns = append(patterns, filePatterns...)
+
+	if !strings.HasSuffix(rootDir, "/") {
+		rootDir += "/"
+	}
+
 	filters := defaultRegexes
 	globs := defaultGlobs
-	for _, pat := range rawPatterns {
-		if len(pat) <= 0 {
+	for _, pattern := range patterns {
+		pattern = strings.TrimSpace(pattern)
+
+		// blank lines or comments
+		if len(pattern) <= 0 || strings.HasPrefix(pattern, "#") {
 			continue
 		}
-		regex, err := syn.Parse(pat, syn.POSIX)
-		if err != nil {
-			globs = append(globs, pat)
-		} else {
-			filters = append(filters, re.MustCompile(regex.String()))
+
+		//full regex
+		if strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
+			filters = append(filters, regexp.MustCompile(pattern[1:len(pattern)-1]))
+			continue
 		}
-	}
-	filters = append(filters, re.MustCompile(configurationFilename))
-	return eventFilter{filters: filters, globs: globs}
-}
 
-func newEventFilterFromReaders(readers []io.Reader) eventFilter {
-	patterns := []string{}
-	for _, reader := range readers {
-		data, err := ioutil.ReadAll(reader)
-		if err != nil {
-			Fatal(err)
+		// if specifying a directory match everything below it
+		if strings.HasSuffix(pattern, "/") {
+			pattern += "*"
 		}
-		otherPatterns := strings.Split(string(data), "\n")
-		patterns = append(patterns, otherPatterns...)
+
+		// The pattern will be scoped to root directory so it should match anything
+		// within that space
+		if !strings.HasPrefix(pattern, "*") {
+			pattern = "*" + pattern
+		}
+
+		globs = append(globs, rootDir+pattern)
 	}
-	return newEventFilter(patterns)
+
+	return eventFilter{
+		rootDir: rootDir,
+		filters: filters,
+		globs:   globs,
+	}, nil
 }
 
-func newEventFilterFromIgnoreFiles(ignores []string) eventFilter {
-	files := filenamesToReaders(ignores)
-	return newEventFilterFromReaders(files)
-}
-
-func newEventFilterFromPatternsAndFiles(patterns []string, files []string) eventFilter {
-	readers := filenamesToReaders(files)
-	allReaders := make([]io.Reader, len(readers)+len(patterns))
-	pos := 0
-	for i := 0; i < len(readers); i++ {
-		allReaders[pos] = readers[i]
-		pos++
-	}
-	for i := 0; i < len(patterns); i++ {
-		allReaders[pos] = strings.NewReader(patterns[i])
-		pos++
-	}
-	return newEventFilterFromReaders(allReaders)
-}
-
-func (e eventFilter) FilterAssets(assets []theme.Asset) []theme.Asset {
-	filteredAssets := []theme.Asset{}
+func (e eventFilter) filterAssets(assets []Asset) []Asset {
+	filteredAssets := []Asset{}
 	for _, asset := range assets {
-		if !e.MatchesFilter(asset.Key) {
+		if !e.matchesFilter(asset.Key) {
 			filteredAssets = append(filteredAssets, asset)
 		}
 	}
 	return filteredAssets
 }
 
-// Filter ... TODO
-func (e eventFilter) Filter(events chan string) chan string {
-	filtered := make(chan string)
-	go func() {
-		for {
-			event, more := <-events
-			if !more {
-				return
-			}
-			if len(event) > 0 && !e.MatchesFilter(event) {
-				filtered <- event
-			}
-		}
-	}()
-	return filtered
-}
-
-// MatchesFilter ... TODO
-func (e eventFilter) MatchesFilter(event string) bool {
+func (e eventFilter) matchesFilter(event string) bool {
 	if len(event) == 0 {
 		return false
 	}
@@ -117,8 +93,8 @@ func (e eventFilter) MatchesFilter(event string) bool {
 			return true
 		}
 	}
-	for _, g := range e.globs {
-		if glob.Glob(g, event) {
+	for _, pattern := range e.globs {
+		if glob.Glob(pattern, event) || glob.Glob(pattern, e.rootDir+event) {
 			return true
 		}
 	}
@@ -135,15 +111,19 @@ func (e eventFilter) String() string {
 	return buffer.String()
 }
 
-func filenamesToReaders(ignores []string) []io.Reader {
-	files := make([]io.Reader, len(ignores))
-	for i, name := range ignores {
+func filesToPatterns(files []string) ([]string, error) {
+	patterns := []string{}
+	for _, name := range files {
 		file, err := os.Open(name)
-		defer file.Close()
 		if err != nil {
-			Fatal(err)
+			return patterns, err
 		}
-		files[i] = file
+		defer file.Close()
+		var data []byte
+		if data, err = ioutil.ReadAll(file); err != nil {
+			return patterns, err
+		}
+		patterns = append(patterns, strings.Split(string(data), "\n")...)
 	}
-	return files
+	return patterns, nil
 }
