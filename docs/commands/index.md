@@ -26,7 +26,7 @@ need to provide your api password and your store domain to the command. You can
 run the command like the following:
 
 ```bash
-theme bootstrap --password=[your-password] --store=[you-store.myshopify.com]
+theme bootstrap --password=[your-api-password] --store=[you-store.myshopify.com]
 ```
 **Required Flags**
 
