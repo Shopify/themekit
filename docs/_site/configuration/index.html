@@ -117,7 +117,7 @@
   <a href="https://shopify.com">
     <img src="/themekit/assets/images/shopify-logo-large.png" alt="Shopify" />
   </a>
-  <p><a href="mailto:buybutton@shopify.com">Provide feedback</a></p>
+  <!--<p><a href="mailto:themekit@shopify.com">Provide feedback</a></p>-->
 </div>
 
         </div>
@@ -191,14 +191,14 @@ to debug your config.</p>
 <p>Your configuration will be setup per environment. Here is an example config file
 for you to understand the usage of environments and config.</p>
 
-<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="s">development</span><span class="pi">:</span>
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="s">development</span><span class="pi">:</span>
   <span class="s">password</span><span class="pi">:</span> <span class="s">16ef663594568325d64408ebcdeef528</span>
   <span class="s">theme_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">123"</span>
   <span class="s">store</span><span class="pi">:</span> <span class="s">can-i-buy-a-feeling.myshopify.com</span>
   <span class="s">proxy</span><span class="pi">:</span> <span class="s">http://localhost:3000</span>
   <span class="s">ignore_files</span><span class="pi">:</span>
-    <span class="err">*</span><span class="s">.gif</span>
-    <span class="s">*.jpg</span>
+    <span class="s2">"</span><span class="s">*.gif"</span>
+    <span class="s2">"</span><span class="s">*.jpg"</span>
     <span class="s">config/settings_data.json</span>
 <span class="s">production</span><span class="pi">:</span>
   <span class="s">password</span><span class="pi">:</span> <span class="s">16ef663594568325d64408ebcdeef528</span>

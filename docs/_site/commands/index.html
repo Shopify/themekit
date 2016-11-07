@@ -117,7 +117,7 @@
   <a href="https://shopify.com">
     <img src="/themekit/assets/images/shopify-logo-large.png" alt="Shopify" />
   </a>
-  <p><a href="mailto:buybutton@shopify.com">Provide feedback</a></p>
+  <!--<p><a href="mailto:themekit@shopify.com">Provide feedback</a></p>-->
 </div>
 
         </div>
@@ -139,7 +139,7 @@
 <p>If you want this information while you are working you can get more help on each
 command by running:</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>theme <span class="o">[</span><span class="nb">command</span><span class="o">]</span> --help
+<div class="highlighter-rouge"><pre class="highlight"><code>theme <span class="o">[</span><span class="nb">command</span><span class="o">]</span> --help
 </code></pre>
 </div>
 
@@ -160,7 +160,7 @@ configuration file for that theme and download it to your computer. You will
 need to provide your api password and your store domain to the command. You can
 run the command like the following:</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>theme bootstrap --password<span class="o">=[</span>your-password] --store<span class="o">=[</span>you-store.myshopify.com]
+<div class="highlighter-rouge"><pre class="highlight"><code>theme bootstrap --password<span class="o">=[</span>your-api-password] --store<span class="o">=[</span>you-store.myshopify.com]
 </code></pre>
 </div>
 <p><strong>Required Flags</strong></p>
@@ -183,14 +183,14 @@ will create a theme called <code class="highlighter-rouge">mine-Timber-latest</c
 <p>Use this command to create or update configuration files. If you run the following
 command:</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>theme configure --password<span class="o">=[</span>your-password] --store<span class="o">=[</span>your-store.myshopify.com] --themeid<span class="o">=[</span>your-theme-id]
+<div class="highlighter-rouge"><pre class="highlight"><code>theme configure --password<span class="o">=[</span>your-api-password] --store<span class="o">=[</span>your-store.myshopify.com] --themeid<span class="o">=[</span>your-theme-id]
 </code></pre>
 </div>
 
 <p>This will output a <code class="highlighter-rouge">config.yml</code> file in the current directory with the following contents</p>
 
-<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="s">development</span><span class="pi">:</span>
-  <span class="s">password</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">your-password</span><span class="pi">]</span>
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="s">development</span><span class="pi">:</span>
+  <span class="s">password</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">your-api-password</span><span class="pi">]</span>
   <span class="s">theme_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">[your-theme-id]"</span>
   <span class="s">store</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">your-store</span><span class="pi">]</span><span class="s">.myshopify.com</span>
   <span class="s">timeout</span><span class="pi">:</span> <span class="s">30s</span>
@@ -211,7 +211,7 @@ you specify the files you want to download, then only those files will be retrie
 For example if you wanted to download the 404 and article liquid templates you
 could enter the following command:</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>theme download templates/404.liquid templates/article.liquid
+<div class="highlighter-rouge"><pre class="highlight"><code>theme download templates/404.liquid templates/article.liquid
 </code></pre>
 </div>
 
@@ -221,7 +221,7 @@ operation commands, this command requires filenames. This is done so that you ca
 accidentally delete your entire theme. For example if you wanted to delete the 404
 and article liquid templates you could enter the following command:</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>theme remove templates/404.liquid templates/article.liquid
+<div class="highlighter-rouge"><pre class="highlight"><code>theme remove templates/404.liquid templates/article.liquid
 </code></pre>
 </div>
 
@@ -256,7 +256,7 @@ used to roll back to previous versions by providing it with a <code class="highl
 If there is a beta or prerelease version available you may also specify it with
 the version flag, otherwise it will not be installed.</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>theme update --version<span class="o">=</span>v0.5.0
+<div class="highlighter-rouge"><pre class="highlight"><code>theme update --version<span class="o">=</span>v0.5.0
 </code></pre>
 </div>
 
@@ -271,7 +271,7 @@ the version flag, otherwise it will not be installed.</p>
 on shopify’s server. If upload is not provided with filename arguments it will do
 the whole project, otherwise you can upload individual files like this:</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>theme upload templates/404.liquid templates/article.liquid
+<div class="highlighter-rouge"><pre class="highlight"><code>theme upload templates/404.liquid templates/article.liquid
 </code></pre>
 </div>
 <p><strong>Optional Flags</strong></p>
