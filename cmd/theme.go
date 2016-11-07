@@ -116,6 +116,7 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 
 	setFlagConfig()
 
+	configPath, _ = filepath.Abs(configPath)
 	environments, err := kit.LoadEnvironments(configPath)
 	if err != nil {
 		return themeClients, err
