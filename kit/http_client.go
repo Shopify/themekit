@@ -105,21 +105,18 @@ func (client *httpClient) GetTheme(themeID int64) (*ShopifyResponse, Error) {
 }
 
 func (client *httpClient) AssetAction(event EventType, asset Asset) (*ShopifyResponse, Error) {
-	resp, err := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
+	resp, _ := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
 		"asset": asset,
 	})
-	if resp == nil {
-		return resp, err
-	}
 	// If there were any errors the asset is nil so lets set it and reformat errors
 	resp.Asset = asset
 	return resp, resp.Error()
 }
 
-func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, Error) {
+func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(event.toMethod(), urlStr, body)
 	if err != nil {
-		return nil, kitError{err}
+		return nil, err
 	}
 
 	req.Header.Add("X-Shopify-Access-Token", client.config.Password)
@@ -133,7 +130,7 @@ func (client *httpClient) newRequest(event EventType, urlStr string, body io.Rea
 func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr string, body map[string]interface{}) (*ShopifyResponse, Error) {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return nil, kitError{err}
+		return newShopifyResponse(rtype, event, nil, err)
 	}
 	return client.sendRequest(rtype, event, urlStr, bytes.NewBuffer(data))
 }
@@ -141,7 +138,7 @@ func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr st
 func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr string, body io.Reader) (*ShopifyResponse, Error) {
 	req, err := client.newRequest(event, urlStr, body)
 	if err != nil {
-		return nil, kitError{err}
+		return newShopifyResponse(rtype, event, nil, err)
 	}
 	apiLimit.Wait()
 	resp, respErr := client.client.Do(req)
