@@ -67,31 +67,22 @@ func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilt
 }
 
 func convertFsEvents(watcher *FileWatcher) {
-	var currentEvent fsnotify.Event
-	var more bool
 	recordedEvents := map[string]fsnotify.Event{}
 	for {
-		select {
-		case currentEvent, more = <-watcher.watcher.Events:
-			if !more {
-				callbackEvents(watcher, recordedEvents)
-				close(watcher.done)
-				return
-			}
-			if currentEvent.Op != fsnotify.Chmod {
-				recordedEvents[currentEvent.Name] = currentEvent
-			}
-		case <-time.After(debounceTimeout):
-			callbackEvents(watcher, recordedEvents)
-			recordedEvents = map[string]fsnotify.Event{}
+		currentEvent, more := <-watcher.watcher.Events
+		if !more {
+			close(watcher.done)
+			return
 		}
-	}
-}
-
-func callbackEvents(watcher *FileWatcher, recordedEvents map[string]fsnotify.Event) {
-	for eventName, event := range recordedEvents {
-		if !watcher.filter.matchesFilter(eventName) {
-			go handleEvent(watcher, event)
+		if currentEvent.Op != fsnotify.Chmod && !watcher.filter.matchesFilter(currentEvent.Name) {
+			if _, ok := recordedEvents[currentEvent.Name]; !ok {
+				go func() {
+					<-time.After(debounceTimeout)
+					go handleEvent(watcher, currentEvent)
+					delete(recordedEvents, currentEvent.Name)
+				}()
+			}
+			recordedEvents[currentEvent.Name] = currentEvent
 		}
 	}
 }
