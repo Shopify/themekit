@@ -68,29 +68,41 @@ func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilt
 }
 
 func convertFsEvents(watcher *FileWatcher) {
-	recordedEvents := map[string]fsnotify.Event{}
 	var eventLock sync.Mutex
+	recordedEvents := map[string]chan fsnotify.Event{}
 
 	for {
 		currentEvent, more := <-watcher.watcher.Events
 		if !more {
 			close(watcher.done)
-			return
+			break
 		}
-		if currentEvent.Op != fsnotify.Chmod && !watcher.filter.matchesFilter(currentEvent.Name) {
-			eventLock.Lock()
-			if _, ok := recordedEvents[currentEvent.Name]; !ok {
-				go func() {
-					<-time.After(debounceTimeout)
-					eventLock.Lock()
-					go handleEvent(watcher, recordedEvents[currentEvent.Name])
-					delete(recordedEvents, currentEvent.Name)
-					eventLock.Unlock()
-				}()
-			}
-			recordedEvents[currentEvent.Name] = currentEvent
-			eventLock.Unlock()
+
+		if currentEvent.Op == fsnotify.Chmod || watcher.filter.matchesFilter(currentEvent.Name) {
+			continue
 		}
+
+		eventLock.Lock()
+		if _, ok := recordedEvents[currentEvent.Name]; !ok {
+			recordedEvents[currentEvent.Name] = make(chan fsnotify.Event)
+
+			go func(eventChan chan fsnotify.Event, eventName string) {
+				var event fsnotify.Event
+				for {
+					select {
+					case event = <-eventChan:
+					case <-time.After(debounceTimeout):
+						go handleEvent(watcher, event)
+						eventLock.Lock()
+						delete(recordedEvents, eventName)
+						eventLock.Unlock()
+						return
+					}
+				}
+			}(recordedEvents[currentEvent.Name], currentEvent.Name)
+		}
+		recordedEvents[currentEvent.Name] <- currentEvent
+		eventLock.Unlock()
 	}
 }
 
