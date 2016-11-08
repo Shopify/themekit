@@ -10,6 +10,6 @@ cmd/theme/theme
 coverage.out
 
 # for docs
-_site
-.sass-cache
-.jekyll-metadata
+docs/_site/
+docs/.sass-cache/
+docs/.jekyll-metadata
