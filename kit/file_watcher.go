@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/fsnotify.v1"
@@ -68,6 +69,8 @@ func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilt
 
 func convertFsEvents(watcher *FileWatcher) {
 	recordedEvents := map[string]fsnotify.Event{}
+	var eventLock sync.Mutex
+
 	for {
 		currentEvent, more := <-watcher.watcher.Events
 		if !more {
@@ -75,14 +78,18 @@ func convertFsEvents(watcher *FileWatcher) {
 			return
 		}
 		if currentEvent.Op != fsnotify.Chmod && !watcher.filter.matchesFilter(currentEvent.Name) {
+			eventLock.Lock()
 			if _, ok := recordedEvents[currentEvent.Name]; !ok {
 				go func() {
 					<-time.After(debounceTimeout)
-					go handleEvent(watcher, currentEvent)
+					eventLock.Lock()
+					go handleEvent(watcher, recordedEvents[currentEvent.Name])
 					delete(recordedEvents, currentEvent.Name)
+					eventLock.Unlock()
 				}()
 			}
 			recordedEvents[currentEvent.Name] = currentEvent
+			eventLock.Unlock()
 		}
 	}
 }
