@@ -105,9 +105,12 @@ func (client *httpClient) GetTheme(themeID int64) (*ShopifyResponse, Error) {
 }
 
 func (client *httpClient) AssetAction(event EventType, asset Asset) (*ShopifyResponse, Error) {
-	resp, _ := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
+	resp, err := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
 		"asset": asset,
 	})
+	if resp == nil {
+		return resp, err
+	}
 	// If there were any errors the asset is nil so lets set it and reformat errors
 	resp.Asset = asset
 	return resp, resp.Error()
