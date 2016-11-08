@@ -9,7 +9,10 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
-var signalChan = make(chan os.Signal)
+var (
+	signalChan  = make(chan os.Signal)
+	isReloading = false
+)
 
 var watchCmd = &cobra.Command{
 	Use:   "watch",
@@ -20,13 +23,22 @@ run 'theme watch' while you are editing and it will detect create, update and de
 
 For more documentation please see http://shopify.github.io/themekit/commands/#watch
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		themeClients, err := generateThemeClients()
-		if err != nil {
-			return err
-		}
-		return watch(themeClients)
-	},
+	RunE: reloadableWatch,
+}
+
+func reloadableWatch(cmd *cobra.Command, args []string) error {
+	themeClients, err := generateThemeClients()
+	if err != nil {
+		return err
+	}
+	err = watch(themeClients)
+	if err != nil {
+		return err
+	} else if isReloading {
+		isReloading = false
+		return reloadableWatch(cmd, args)
+	}
+	return nil
 }
 
 func watch(themeClients []kit.ThemeClient) error {
@@ -54,8 +66,17 @@ func watch(themeClients []kit.ThemeClient) error {
 }
 
 func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventType, err error) {
-	if err != nil {
+	if err != nil && asset.Key != configPath {
 		kit.LogError(err)
+		return
+	}
+
+	if asset.Key == configPath {
+		if !isReloading {
+			isReloading = true
+			kit.LogWarnf("Config.yml was changed, reloading environment.")
+			signalChan <- os.Interrupt
+		}
 		return
 	}
 

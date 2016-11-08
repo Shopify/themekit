@@ -92,7 +92,7 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 	if assert.Nil(suite.T(), err) {
 		check(
 			filter,
-			[]string{".git/HEAD", ".DS_Store", "templates/.DS_Store", "config.yml", "templates/products.liquid"},
+			[]string{".git/HEAD", ".DS_Store", "templates/.DS_Store", "templates/products.liquid"},
 			[]string{"templates/products.liquid"},
 		)
 	}

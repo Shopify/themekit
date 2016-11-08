@@ -14,7 +14,6 @@ import (
 var defaultRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`\.git/*`),
 	regexp.MustCompile(`\.DS_Store`),
-	regexp.MustCompile(`config.yml`),
 }
 
 var defaultGlobs = []string{}

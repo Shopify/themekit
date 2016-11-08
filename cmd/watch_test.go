@@ -17,6 +17,9 @@ type WatchTestSuite struct {
 	suite.Suite
 }
 
+func (suite *WatchTestSuite) TestReloadableWatch() {
+}
+
 func (suite *WatchTestSuite) TestWatch() {
 	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {})
 	defer server.Close()
@@ -44,6 +47,16 @@ func (suite *WatchTestSuite) TestHandleWatchEvent() {
 	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove, fmt.Errorf("bad watch event"))
 
 	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove, nil)
+
+	configPath = "/this/is/config/path.yml"
+	signalChan = make(chan os.Signal, 100)
+
+	handleWatchEvent(client, kit.Asset{Key: configPath}, kit.Update, fmt.Errorf("not in project"))
+	assert.Equal(suite.T(), true, isReloading)
+	assert.Equal(suite.T(), 1, len(signalChan))
+
+	configPath = ""
+	signalChan = make(chan os.Signal)
 
 	assert.Equal(suite.T(), 1, len(requests))
 }
