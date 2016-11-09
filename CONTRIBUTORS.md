@@ -13,8 +13,8 @@ Run `make tools` to install all the tools except go.
 
 - [Go 1.7 or higher](https://golang.org/dl)
 - [Glide](https://github.com/Masterminds/glide)
-- golint
-- jekyll
+- [golint](https://github.com/golang/lint)
+- [jekyll](https://jekyllrb.com/docs/installation/)
 
 # Getting the Source Code
 
@@ -31,29 +31,28 @@ access to the theme command. Run `theme` to make sure it is installed.
 
 # Creating Releases
 
-- Using [SemVer](http://semver.org/) update the version number in [version.go](version.go)
-- Before continuing, verify that all tests are passing and binaries build cleanly.
-  To easily verify everything you can simply enter the following: `make check`
-- Merge changes into master, update the version number in kit/version.go, then
-  create a tag named after the version. For example: `git tag 0.0.1 && git push origin --tags`
-  Any tags that are postfixed with `-beta` will not prompt users for update so if
-  you want to release to a small group please use this method.
-- Create a release using `make dist`
-  - This will create binaries for all supported platforms and upload them to S3
-  - It will also update the [manifest file](https://shopify-themekit.s3.amazonaws.com/releases/all.json)
-    as well as the [latest release file](https://shopify-themekit.s3.amazonaws.com/releases/latest.json)
-- Verify that both the manifest file and latest release file have been correctly updated
+- run `make check`
+- update version using [SemVer](http://semver.org/) prefixed with a v. (e.g. 'v0.5.0')
+  - update ThemeKitVersion in `kit/version.go`
+  - update themekitversion `docs/_config.yml`
+  - run `git tag <version> && git push origin --tags`
+    Any tags that are postfixed with `-beta` will not prompt users for update so if
+    you want to release to a small group please use this method.
+- Create a release using `make dist` this will:
+  - Create binaries for all supported platforms
+  - Upload to S3
+  - Update the [manifest file](https://shopify-themekit.s3.amazonaws.com/releases/all.json)
+  - Update the [latest release file](https://shopify-themekit.s3.amazonaws.com/releases/latest.json)
 - On Github create a new release for the tag and take note of any relevant changes
   - Include a brief summary of all the changes
   - Include links to the Pull Requests that introduced these changes
-  - Also upload the zipped binaries manually to Github so people can easily download them
-- Update the [themekit](http://themekit.cat) website
-  - `gem install jekyll`
-  - `cd docs`
-  - edit `_config.yml` and update the `themekitversion`
-  - `jekyll serve` and check the website.
+  - Also upload the zipped binaries from `build/dist/` manually to Github so people can easily download them
+- Update the [documentation website](https://shopify.github.io/themekit/)
+  - run `gem install jekyll`
+  - run `make serve_docs`
   - update any changes to the API
-  - `git add . && git commit -m "Updating website"`
+  - commit any changes
+- Update `themekit.rb` formula for homebrew on https://github.com/Shopify/homebrew-shopify
 
 # Authors
 
