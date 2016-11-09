@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	debounceTimeout = 1 * time.Second
+	debounceTimeout = 1100 * time.Millisecond
 )
 
 var (
@@ -143,7 +143,7 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 
 	asset.Key = extractAssetKey(event.Name)
 	if asset.Key == "" {
-		err = fmt.Errorf("File not in project workspace.")
+		err = fmt.Errorf("File %s is not in project workspace.", event.Name)
 		asset.Key = event.Name
 	}
 
