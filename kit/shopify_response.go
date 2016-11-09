@@ -27,7 +27,10 @@ type ShopifyResponse struct {
 
 func newShopifyResponse(rtype requestType, event EventType, resp *http.Response, err error) (*ShopifyResponse, Error) {
 	if resp == nil || err != nil {
-		return nil, kitError{err}
+		return &ShopifyResponse{
+			Type:      rtype,
+			EventType: event,
+		}, kitError{err}
 	}
 	defer resp.Body.Close()
 
@@ -41,7 +44,7 @@ func newShopifyResponse(rtype requestType, event EventType, resp *http.Response,
 
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, kitError{err}
+		return newResponse, kitError{err}
 	}
 
 	err = json.Unmarshal(bytes, &newResponse)

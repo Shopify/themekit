@@ -18,7 +18,7 @@ func (suite *ShopifyResponseTestSuite) TestRequestError() {
 	errorMessage := "something went wrong"
 	badErr := fmt.Errorf(errorMessage)
 	resp, err := newShopifyResponse(themeRequest, Create, &http.Response{}, badErr)
-	assert.Nil(suite.T(), resp)
+	assert.NotNil(suite.T(), resp)
 	if assert.NotNil(suite.T(), err) {
 		assert.Equal(suite.T(), errorMessage, err.Error())
 	}
@@ -31,7 +31,7 @@ func (suite *ShopifyResponseTestSuite) TestNoBody() {
 	}
 	mock.Body.Close()
 	resp, err := newShopifyResponse(themeRequest, Create, mock, nil)
-	assert.Nil(suite.T(), resp)
+	assert.NotNil(suite.T(), resp)
 	assert.NotNil(suite.T(), err)
 }
 
