@@ -91,7 +91,7 @@ func (suite *FileWatcherTestSuite) TestHandleEvent() {
 
 	watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType, err error) {
 		if err != nil {
-			assert.Equal(suite.T(), "File not in project workspace.", err.Error())
+			assert.Equal(suite.T(), "File ../fixtures/project/whatever.txt is not in project workspace.", err.Error())
 			assert.Equal(suite.T(), "../fixtures/project/whatever.txt", asset.Key)
 		} else {
 			assert.Equal(suite.T(), extractAssetKey(textFixturePath), asset.Key)
