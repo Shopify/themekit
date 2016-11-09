@@ -5,13 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/fsnotify.v1"
 )
 
 const (
-	debounceTimeout = 1 * time.Second
+	debounceTimeout = 1100 * time.Millisecond
 )
 
 var (
@@ -67,32 +68,41 @@ func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilt
 }
 
 func convertFsEvents(watcher *FileWatcher) {
-	var currentEvent fsnotify.Event
-	var more bool
-	recordedEvents := map[string]fsnotify.Event{}
-	for {
-		select {
-		case currentEvent, more = <-watcher.watcher.Events:
-			if !more {
-				callbackEvents(watcher, recordedEvents)
-				close(watcher.done)
-				return
-			}
-			if currentEvent.Op != fsnotify.Chmod {
-				recordedEvents[currentEvent.Name] = currentEvent
-			}
-		case <-time.After(debounceTimeout):
-			callbackEvents(watcher, recordedEvents)
-			recordedEvents = map[string]fsnotify.Event{}
-		}
-	}
-}
+	var eventLock sync.Mutex
+	recordedEvents := map[string]chan fsnotify.Event{}
 
-func callbackEvents(watcher *FileWatcher, recordedEvents map[string]fsnotify.Event) {
-	for eventName, event := range recordedEvents {
-		if !watcher.filter.matchesFilter(eventName) {
-			go handleEvent(watcher, event)
+	for {
+		currentEvent, more := <-watcher.watcher.Events
+		if !more {
+			close(watcher.done)
+			break
 		}
+
+		if currentEvent.Op == fsnotify.Chmod || watcher.filter.matchesFilter(currentEvent.Name) {
+			continue
+		}
+
+		eventLock.Lock()
+		if _, ok := recordedEvents[currentEvent.Name]; !ok {
+			recordedEvents[currentEvent.Name] = make(chan fsnotify.Event)
+
+			go func(eventChan chan fsnotify.Event, eventName string) {
+				var event fsnotify.Event
+				for {
+					select {
+					case event = <-eventChan:
+					case <-time.After(debounceTimeout):
+						go handleEvent(watcher, event)
+						eventLock.Lock()
+						delete(recordedEvents, eventName)
+						eventLock.Unlock()
+						return
+					}
+				}
+			}(recordedEvents[currentEvent.Name], currentEvent.Name)
+		}
+		recordedEvents[currentEvent.Name] <- currentEvent
+		eventLock.Unlock()
 	}
 }
 
@@ -133,7 +143,7 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 
 	asset.Key = extractAssetKey(event.Name)
 	if asset.Key == "" {
-		err = fmt.Errorf("File not in project workspace.")
+		err = fmt.Errorf("File %s is not in project workspace.", event.Name)
 		asset.Key = event.Name
 	}
 
