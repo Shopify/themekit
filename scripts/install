@@ -64,7 +64,7 @@ class Releases(object):
         return HTTPSClient.get(Releases.FEED_HOST, Releases.FEED_PATH)
 
 class Installer(object):
-    def __init__(self, ziplocation, installlocation="~/.themekit"):
+    def __init__(self, ziplocation, installlocation="/usr/local/bin"):
         self.host, self.path, self.root = ziplocation
         self.root = self.root.replace('.zip', '')
         self.zipfile = os.path.basename(self.path)
@@ -109,19 +109,8 @@ class Installer(object):
         os.chmod(filename, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
 
     def __pathinstall(self):
-        setpathvar = "PATH=%s:$PATH" % self.installlocation
-        print("themekit has been installed at %s" % self.installlocation)
-        print("Add the following to the rc file for your shell (bash, zsh, etc.):")
-        print("")
-        print("\t%s" % setpathvar)
-        print("")
-        print("For example to add themekit to your .bashrc:")
-        print("")
-        print('''\techo 'PATH="%s:$PATH"' >> ~/.bashrc''' % self.installlocation)
-        print('\tsource ~/.bashrc')
-        print("")
-        print('To verify themekit is working simply type "theme -h"')
-
+        print("Theme Kit has been installed at %s/theme" % self.installlocation)
+        print('To verify themekit is working simply type "theme"')
 
 def systemCommand(command):
     pipe = os.popen(command)
