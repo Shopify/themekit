@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -ex
+
+APP="themekit"
+VERSION=$(eval git describe --tags --abbrev=0)
+
+target="deb/usr/local/${APP}"
+mkdir -p ${target}
+
+cp ${APP} ${target}
+
+bundle exec fpm -s dir -t deb -n ${APP} -v "$VERSION" -C deb .
+package_cloud push --url https://packages.shopify.io shopify/${APP}/ubuntu/trusty "${APP}_${VERSION}_amd64.deb"
+package_cloud push --url https://packages.shopify.io shopify/${APP}/ubuntu/precise "${APP}_${VERSION}_amd64.deb"
+
+#set -ex
+#VERSION=$(eval git describe --tags --abbrev=0)
+#sed -i 's/$VERSION/$1/g' ./kit/version.go
+#sed -i 's/$VERSION/$1/g' ./docs/_config.yml
+#git tag $1 && git push origin --tags
