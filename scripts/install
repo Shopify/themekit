@@ -57,8 +57,8 @@ class Releases(object):
             return
         doc = ET.XML(self.__getfeed())
         entries = doc.findall(ns+"entry")
-        versions = map(lambda e: os.path.basename(e.find(ns+"link").get('href')), entries)
-        self.releases = map(lambda v: (Releases.FEED_HOST, "/Shopify/themekit/releases/download/%s/%s" % (v, self.sys.zip), self.sys.zip), versions)
+        versions = [os.path.basename(e.find(ns+"link").get('href')) for e in entries]
+        self.releases = [(Releases.FEED_HOST, "/Shopify/themekit/releases/download/%s/%s" % (v, self.sys.zip), self.sys.zip) for v in versions]
 
     def __getfeed(self):
         return HTTPSClient.get(Releases.FEED_HOST, Releases.FEED_PATH)
@@ -72,13 +72,13 @@ class Installer(object):
 
     def install(self):
         self.__createdir()
-        print "Downloading themekit from %s/%s" % (self.host, self.path)
+        print("Downloading themekit from %s/%s" % (self.host, self.path))
         self.__download()
-        print "Installing themekit to %s" % self.installlocation
+        print("Installing themekit to %s" % self.installlocation)
         self.__unzip()
-        print "Removing temporary files from disk"
+        print("Removing temporary files from disk")
         self.__clean()
-        print
+        print("")
         self.__pathinstall()
 
     def __createdir(self):
@@ -110,17 +110,17 @@ class Installer(object):
 
     def __pathinstall(self):
         setpathvar = "PATH=%s:$PATH" % self.installlocation
-        print "themekit has been installed at %s" % self.installlocation
-        print "Add the following to the rc file for your shell (bash, zsh, etc.):"
-        print
-        print "\t%s" % setpathvar
-        print
-        print "For example to add themekit to your .bashrc:"
-        print
-        print '''\techo 'PATH="%s:$PATH"' >> ~/.bashrc''' % self.installlocation
-        print '\tsource ~/.bashrc'
-        print
-        print 'To verify themekit is working simply type "theme -h"'
+        print("themekit has been installed at %s" % self.installlocation)
+        print("Add the following to the rc file for your shell (bash, zsh, etc.):")
+        print("")
+        print("\t%s" % setpathvar)
+        print("")
+        print("For example to add themekit to your .bashrc:")
+        print("")
+        print('''\techo 'PATH="%s:$PATH"' >> ~/.bashrc''' % self.installlocation)
+        print('\tsource ~/.bashrc')
+        print("")
+        print('To verify themekit is working simply type "theme -h"')
 
 
 def systemCommand(command):
