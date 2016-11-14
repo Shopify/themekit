@@ -26,20 +26,18 @@ type ShopifyResponse struct {
 }
 
 func newShopifyResponse(rtype requestType, event EventType, requestURL string, resp *http.Response, err error) (*ShopifyResponse, Error) {
-	parsedUrl, _ := url.Parse(requestURL)
+	parsedURL, _ := url.Parse(requestURL)
 
 	newResponse := &ShopifyResponse{
 		Type:      rtype,
 		EventType: event,
-		Host:      parsedUrl.Host,
-		URL:       parsedUrl,
+		Host:      parsedURL.Host,
+		URL:       parsedURL,
 	}
 	newResponse.Errors.AddE(err)
 
 	if resp != nil {
 		defer resp.Body.Close()
-		newResponse.Host = resp.Request.URL.Host
-		newResponse.URL = resp.Request.URL
 		newResponse.Code = resp.StatusCode
 
 		bytes, err := ioutil.ReadAll(resp.Body)
