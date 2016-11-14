@@ -25,33 +25,34 @@ type ShopifyResponse struct {
 	Errors    requestError `json:"errors"`
 }
 
-func newShopifyResponse(rtype requestType, event EventType, resp *http.Response, err error) (*ShopifyResponse, Error) {
-	if resp == nil || err != nil {
-		return &ShopifyResponse{
-			Type:      rtype,
-			EventType: event,
-		}, kitError{err}
-	}
-	defer resp.Body.Close()
+func newShopifyResponse(rtype requestType, event EventType, requestURL string, resp *http.Response, err error) (*ShopifyResponse, Error) {
+	parsedUrl, _ := url.Parse(requestURL)
 
 	newResponse := &ShopifyResponse{
 		Type:      rtype,
-		Host:      resp.Request.URL.Host,
-		URL:       resp.Request.URL,
-		Code:      resp.StatusCode,
 		EventType: event,
+		Host:      parsedUrl.Host,
+		URL:       parsedUrl,
 	}
+	newResponse.Errors.AddE(err)
 
-	bytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return newResponse, kitError{err}
-	}
+	if resp != nil {
+		defer resp.Body.Close()
+		newResponse.Host = resp.Request.URL.Host
+		newResponse.URL = resp.Request.URL
+		newResponse.Code = resp.StatusCode
 
-	err = json.Unmarshal(bytes, &newResponse)
-	if err != nil {
-		reqErr := generalRequestError{}
-		json.Unmarshal(bytes, &reqErr)
-		newResponse.Errors.Add(reqErr)
+		bytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			newResponse.Errors.AddE(err)
+		} else {
+			err = json.Unmarshal(bytes, &newResponse)
+			if err != nil {
+				reqErr := generalRequestError{}
+				json.Unmarshal(bytes, &reqErr)
+				newResponse.Errors.Add(reqErr)
+			}
+		}
 	}
 
 	return newResponse, newResponse.Error()
