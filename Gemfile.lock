@@ -1,9 +1,18 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    archive-tar-minitar (0.5.2)
+    arr-pm (0.0.10)
+      cabin (> 0)
+    backports (3.6.8)
     builder (3.2.2)
+    cabin (0.9.0)
+    childprocess (0.5.9)
+      ffi (~> 1.0, >= 1.0.11)
+    clamp (1.0.1)
     dotenv (2.0.2)
     excon (0.45.4)
+    ffi (1.9.14)
     fog-aws (0.7.6)
       fog-core (~> 1.27)
       fog-json (~> 1.0)
@@ -23,16 +32,42 @@ GEM
       fog-core
       nokogiri (~> 1.5, >= 1.5.11)
     formatador (0.2.5)
+    fpm (1.6.3)
+      archive-tar-minitar
+      arr-pm (~> 0.0.10)
+      backports (>= 2.6.2)
+      cabin (>= 0.6.0)
+      childprocess
+      clamp (~> 1.0.0)
+      ffi
+      json (>= 1.7.7, < 2.0)
+      pleaserun (~> 0.0.24)
+      ruby-xz
     git (1.2.9.1)
+    insist (1.0.0)
+    io-like (0.3.0)
     ipaddress (0.8.0)
+    json (1.8.1)
     mime-types (2.6.1)
     mini_portile (0.6.2)
     multi_json (1.11.2)
+    mustache (0.99.8)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (2.9.2)
     nokogiri (1.6.6.2)
       mini_portile (~> 0.6.0)
+    pleaserun (0.0.27)
+      cabin (> 0)
+      clamp
+      dotenv
+      insist
+      mustache (= 0.99.8)
+      stud
+    ruby-xz (0.2.3)
+      ffi (~> 1.9)
+      io-like (~> 0.3)
+    stud (0.0.22)
 
 PLATFORMS
   ruby
@@ -40,7 +75,11 @@ PLATFORMS
 DEPENDENCIES
   dotenv
   fog-aws
+  fpm
   git
 
+RUBY VERSION
+   ruby 2.2.3p172
+
 BUNDLED WITH
-   1.10.5
+   1.13.6

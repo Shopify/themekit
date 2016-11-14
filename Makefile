@@ -39,6 +39,7 @@ mac: ## Build binaries for Mac OS X (64 bit)
 linux: ## Build binaries for Linux (32 and 64 bit)
 	@echo "building linux-64" && export GOOS=linux; $(MAKE) build64 && echo "linux-64 build complete";
 	@echo "building linux-32" && export GOOS=linux; $(MAKE) build32 && echo "linux-32 build complete";
+	@echo "building deb" && ./scripts/build_deb && echo "deb build complete";
 
 zip: ## Create zip file with distributable binaries
 	@echo "compressing releases" && ./scripts/compress && echo "finished compressing";
