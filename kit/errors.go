@@ -151,3 +151,9 @@ func (err *requestError) AddS(other string) {
 		err.Other = append(err.Other, other)
 	}
 }
+
+func (err *requestError) AddE(other error) {
+	if other != nil {
+		err.Other = append(err.Other, other.Error())
+	}
+}
