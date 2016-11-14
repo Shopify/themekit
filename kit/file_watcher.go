@@ -124,13 +124,8 @@ func (watcher *FileWatcher) StopWatching() {
 }
 
 func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
-	var eventType EventType
-	var err error
-
-	switch event.Op {
-	case fsnotify.Chmod, fsnotify.Create, fsnotify.Write:
-		eventType = Update
-	case fsnotify.Remove:
+	eventType := Update
+	if event.Op&fsnotify.Remove == fsnotify.Remove {
 		eventType = Remove
 	}
 
@@ -141,6 +136,7 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 		asset = Asset{}
 	}
 
+	var err error
 	asset.Key = extractAssetKey(event.Name)
 	if asset.Key == "" {
 		err = fmt.Errorf("File %s is not in project workspace.", event.Name)
