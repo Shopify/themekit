@@ -139,7 +139,7 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 	var err error
 	asset.Key = extractAssetKey(event.Name)
 	if asset.Key == "" {
-		err = fmt.Errorf("File %s is not in project workspace.", event.Name)
+		err = fmt.Errorf("file %s is not in project workspace", event.Name)
 		asset.Key = event.Name
 	}
 

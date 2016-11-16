@@ -123,8 +123,7 @@ func buildInvalidVersionError(feed atom.Feed, version string) error {
 		entries = append(entries, entry.Title)
 	}
 
-	return fmt.Errorf(`Invalid Timber Version: %s
+	return fmt.Errorf(`invalid Timber Version: %s
 Available Versions Are:
-- %s
-`, version, strings.Join(entries, "\n- "))
+- %s`, version, strings.Join(entries, "\n- "))
 }

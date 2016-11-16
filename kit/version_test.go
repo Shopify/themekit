@@ -94,11 +94,11 @@ func (suite *VersionTestSuite) TestInstallThemeKitVersion() {
 
 	ThemeKitVersion, _ = version.NewVersion("0.4.7")
 	err := InstallThemeKitVersion("latest")
-	assert.Equal(suite.T(), "No applicable update available.", err.Error())
+	assert.Equal(suite.T(), "no applicable update available", err.Error())
 
 	ThemeKitVersion, _ = version.NewVersion("0.4.4")
 	err = InstallThemeKitVersion("0.0.0")
-	assert.Equal(suite.T(), "Version 0.0.0 not found.", err.Error())
+	assert.Equal(suite.T(), "version 0.0.0 not found", err.Error())
 
 	ThemeKitVersion, _ = version.NewVersion("0.4.4")
 	err = InstallThemeKitVersion("latest")

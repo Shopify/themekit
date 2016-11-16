@@ -52,9 +52,9 @@ func InstallThemeKitVersion(ver string) error {
 	}
 	requestedRelease := releases.Get(ver)
 	if !requestedRelease.IsValid() {
-		return fmt.Errorf("Version %s not found.", ver)
+		return fmt.Errorf("version %s not found", ver)
 	} else if ver == "latest" && !requestedRelease.IsApplicable() {
-		return fmt.Errorf("No applicable update available.")
+		return fmt.Errorf("no applicable update available")
 	}
 	LogWarnf("Updating from %s to %s", ThemeKitVersion, requestedRelease.Version)
 	err = applyUpdate(requestedRelease.ForCurrentPlatform())

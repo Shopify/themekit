@@ -147,7 +147,7 @@ func (suite *BootstrapTestSuite) TestFindReleaseWith() {
 func (suite *BootstrapTestSuite) TestBuildInvalidVersionError() {
 	feed := loadAtom()
 	err := buildInvalidVersionError(feed, "nope")
-	assert.Equal(suite.T(), "Invalid Timber Version: nope\nAvailable Versions Are:\n- master\n- latest\n- v2.0.2\n- v2.0.1\n- v2.0.0\n- v1.3.2\n- v1.3.1\n- v1.3.0\n- v1.2.1\n- v1.2.0\n- v1.1.3\n- v1.1.2\n- v1.1.1\n- v1.1.0\n- v1.0.0\n", err.Error())
+	assert.Equal(suite.T(), "invalid Timber Version: nope\nAvailable Versions Are:\n- master\n- latest\n- v2.0.2\n- v2.0.1\n- v2.0.0\n- v1.3.2\n- v1.3.1\n- v1.3.0\n- v1.2.1\n- v1.2.0\n- v1.1.3\n- v1.1.2\n- v1.1.1\n- v1.1.0\n- v1.0.0", err.Error())
 }
 
 func TestBootstrapTestSuite(t *testing.T) {
