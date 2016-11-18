@@ -26,7 +26,7 @@ For more documentation please see http://shopify.github.io/themekit/commands/#co
 	},
 }
 
-func saveConfiguration(config kit.Configuration) error {
+func saveConfiguration(config *kit.Configuration) error {
 	env, err := kit.LoadEnvironments(configPath)
 	if err != nil && !os.IsNotExist(err) {
 		return err

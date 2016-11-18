@@ -15,7 +15,7 @@ import (
 
 type ThemeClientTestSuite struct {
 	suite.Suite
-	config Configuration
+	config *Configuration
 	client ThemeClient
 }
 
@@ -122,18 +122,18 @@ func (suite *ThemeClientTestSuite) TestCreateTheme() {
 
 	client, theme, err := CreateTheme("name", "source")
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Invalid options: missing domain,missing password", err.Error())
+		assert.Equal(suite.T(), "Invalid options: missing store domain,missing password", err.Error())
 	}
 
 	suite.config.Ignores = []string{"nope"}
-	SetFlagConfig(suite.config)
+	SetFlagConfig(*suite.config)
 	client, theme, err = CreateTheme("name", "source")
 	assert.NotNil(suite.T(), err)
 
 	suite.config.Ignores = []string{}
 	suite.config.Domain = server.URL
 
-	SetFlagConfig(suite.config)
+	SetFlagConfig(*suite.config)
 	client, theme, err = CreateTheme("name", "source")
 	if assert.NotNil(suite.T(), err) {
 		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "Cannot create a theme. Last error was"))

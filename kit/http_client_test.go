@@ -18,7 +18,7 @@ import (
 
 type HTTPClientTestSuite struct {
 	suite.Suite
-	config Configuration
+	config *Configuration
 	client *httpClient
 }
 
