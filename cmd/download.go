@@ -33,7 +33,9 @@ For more documentation please see http://shopify.github.io/themekit/commands/#do
 
 func download(client kit.ThemeClient, filenames []string) error {
 	if len(filenames) <= 0 {
-		kit.Printf("Fetching assets from %s", kit.YellowText(client.Config.Domain))
+		kit.Printf("[%s] Fetching assets from %s",
+			kit.GreenText(client.Config.Environment),
+			kit.YellowText(client.Config.Domain))
 		assets, err := client.AssetList()
 		if err != nil {
 			return err
@@ -45,7 +47,10 @@ func download(client kit.ThemeClient, filenames []string) error {
 		}
 	} else {
 		for _, filename := range filenames {
-			kit.Printf("Fetching %s from %s", filename, kit.YellowText(client.Config.Domain))
+			kit.Printf("[%s] Fetching %s from %s",
+				kit.GreenText(client.Config.Environment),
+				filename,
+				kit.YellowText(client.Config.Domain))
 			asset, err := client.Asset(filename)
 			if err != nil {
 				return err

@@ -37,6 +37,7 @@ func (e Environments) GetConfiguration(environmentName string) (Configuration, e
 	if !exists {
 		return conf, fmt.Errorf("%s does not exist in this environments list", environmentName)
 	}
+	conf.Environment = environmentName
 	return conf.compile()
 }
 

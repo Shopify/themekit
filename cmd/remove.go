@@ -32,10 +32,11 @@ func performRemove(client kit.ThemeClient, asset kit.Asset, wg *sync.WaitGroup) 
 	defer wg.Done()
 	resp, err := client.DeleteAsset(asset)
 	if err != nil {
-		kit.LogError(err)
+		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
 	} else {
 		kit.Printf(
-			"Successfully removed file %s from %s",
+			"[%s] Successfully removed file %s from %s",
+			kit.GreenText(client.Config.Environment),
 			kit.BlueText(asset.Key),
 			kit.YellowText(resp.Host),
 		)

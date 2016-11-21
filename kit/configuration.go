@@ -14,6 +14,7 @@ import (
 // Configuration is the structure of a configuration for an environment. This will
 // get loaded into a theme client to dictate it's actions.
 type Configuration struct {
+	Environment  string        `yaml:"-"`
 	Password     string        `yaml:"password,omitempty" env:"THEMEKIT_PASSWORD"`
 	ThemeID      string        `yaml:"theme_id,omitempty" env:"THEMEKIT_THEME_ID"`
 	Domain       string        `yaml:"store" env:"THEMEKIT_STORE"`

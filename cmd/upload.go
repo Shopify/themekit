@@ -49,10 +49,11 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 func performUpload(client kit.ThemeClient, asset kit.Asset, wg *sync.WaitGroup) {
 	resp, err := client.UpdateAsset(asset)
 	if err != nil {
-		kit.Print(err)
+		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
 	} else {
 		kit.Printf(
-			"Successfully performed Update on file %s from %s",
+			"[%s] Successfully performed Update on file %s from %s",
+			kit.GreenText(client.Config.Environment),
 			kit.GreenText(asset.Key),
 			kit.YellowText(resp.Host),
 		)

@@ -61,24 +61,24 @@ func LogWarn(args ...interface{}) {
 
 // LogErrorf will output a formatted red message to the output log (default stdout)
 func LogErrorf(content string, args ...interface{}) {
-	log.Println(RedText(fmt.Sprintf(content, args...)))
+	log.Println(fmt.Sprintf(content, args...))
 }
 
 // LogError will output a red message to the output log (default stdout)
 func LogError(args ...interface{}) {
-	log.Println(RedText(fmt.Sprint(args...)))
+	log.Println(fmt.Sprint(args...))
 }
 
 // LogFatalf will output a formatted red message to the output log along with the
 // library information. Then it will quit the application.
 func LogFatalf(content string, args ...interface{}) {
 	log.Println(RedText(LibraryInfo()))
-	log.Fatal(RedText(fmt.Sprintf(content, args...)))
+	log.Fatal(fmt.Sprintf(content, args...))
 }
 
 // LogFatal will output a red message to the output log along with the
 // library information. Then it will quit the application.
 func LogFatal(args ...interface{}) {
 	log.Println(RedText(LibraryInfo()))
-	log.Fatal(RedText(fmt.Sprint(args...)))
+	log.Fatal(fmt.Sprint(args...))
 }

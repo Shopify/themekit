@@ -39,7 +39,7 @@ func watch(themeClients []kit.ThemeClient) error {
 	}()
 
 	for _, client := range themeClients {
-		kit.Printf("Watching for file changes for theme %v on host %s ", kit.GreenText(client.Config.ThemeID), kit.YellowText(client.Config.Domain))
+		kit.Printf("[%s] Watching for file changes on host %s ", kit.GreenText(client.Config.Environment), kit.YellowText(client.Config.Domain))
 		watcher, err := client.NewFileWatcher(notifyFile, handleWatchEvent)
 		if err != nil {
 			return err
@@ -55,21 +55,23 @@ func watch(themeClients []kit.ThemeClient) error {
 
 func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventType, err error) {
 	if err != nil {
-		kit.LogError(err)
+		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
 		return
 	}
 
 	kit.Printf(
-		"Received %s event on %s",
+		"[%s] Received %s event on %s",
+		kit.GreenText(client.Config.Environment),
 		kit.GreenText(event),
 		kit.BlueText(asset.Key),
 	)
 	resp, err := client.Perform(asset, event)
 	if err != nil {
-		kit.LogError(err)
+		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
 	} else {
 		kit.Printf(
-			"Successfully performed %s operation for file %s to %s",
+			"[%s] Successfully performed %s operation for file %s to %s",
+			kit.GreenText(client.Config.Environment),
 			kit.GreenText(resp.EventType),
 			kit.BlueText(resp.Asset.Key),
 			kit.YellowText(resp.Host),
