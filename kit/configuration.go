@@ -56,16 +56,16 @@ func SetFlagConfig(config Configuration) {
 // flags. Then it will validate that config. It will return the
 // formatted configuration along with any validation errors. The config precedence
 // is flags, environment variables, then the config file.
-func NewConfiguration() (Configuration, error) {
-	return Configuration{}.compile()
+func NewConfiguration() (*Configuration, error) {
+	return (&Configuration{}).compile()
 }
 
-func (conf Configuration) compile() (Configuration, error) {
-	newConfig := Configuration{}
-	mergo.Merge(&newConfig, &flagConfig)
-	mergo.Merge(&newConfig, &environmentConfig)
-	mergo.Merge(&newConfig, &conf)
-	mergo.Merge(&newConfig, &defaultConfig)
+func (conf *Configuration) compile() (*Configuration, error) {
+	newConfig := &Configuration{}
+	mergo.Merge(newConfig, &flagConfig)
+	mergo.Merge(newConfig, &environmentConfig)
+	mergo.Merge(newConfig, conf)
+	mergo.Merge(newConfig, &defaultConfig)
 	return newConfig, newConfig.Validate()
 }
 
@@ -96,11 +96,11 @@ func (conf Configuration) validateNoThemeID() error {
 	errors := []string{}
 
 	if len(conf.Domain) == 0 {
-		errors = append(errors, "missing domain")
+		errors = append(errors, "missing store domain")
 	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") &&
 		!strings.HasSuffix(conf.Domain, "myshopify.io") &&
 		!strings.HasPrefix(conf.Domain, "http://127.0.0.1:") {
-		errors = append(errors, "invalid domain must end in '.myshopify.com'")
+		errors = append(errors, "invalid store domain must end in '.myshopify.com'")
 	}
 
 	if len(conf.Password) == 0 {

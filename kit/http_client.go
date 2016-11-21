@@ -18,7 +18,7 @@ var apiLimit = newRateLimiter(time.Second / 2)
 
 type httpClient struct {
 	client *http.Client
-	config Configuration
+	config *Configuration
 }
 
 type requestType int
@@ -29,7 +29,7 @@ const (
 	listRequest
 )
 
-func newHTTPClient(config Configuration) (*httpClient, error) {
+func newHTTPClient(config *Configuration) (*httpClient, error) {
 	client := &httpClient{
 		client: &http.Client{Timeout: config.Timeout},
 		config: config,

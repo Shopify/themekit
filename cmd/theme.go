@@ -126,7 +126,7 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 		if err != nil {
 			return themeClients, err
 		}
-		environments = map[string]kit.Configuration{environment: config}
+		environments = map[string]*kit.Configuration{environment: config}
 	}
 
 	for env := range environments {

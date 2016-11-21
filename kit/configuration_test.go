@@ -20,7 +20,7 @@ func (suite *ConfigurationTestSuite) TearDownTest() {
 
 func (suite *ConfigurationTestSuite) TestSetFlagConfig() {
 	config, _ := NewConfiguration()
-	assert.Equal(suite.T(), defaultConfig, config)
+	assert.Equal(suite.T(), defaultConfig, *config)
 
 	flagConfig := Configuration{
 		Directory: "my/dir/now",
@@ -29,12 +29,12 @@ func (suite *ConfigurationTestSuite) TestSetFlagConfig() {
 	SetFlagConfig(flagConfig)
 
 	config, _ = NewConfiguration()
-	assert.Equal(suite.T(), flagConfig, config)
+	assert.Equal(suite.T(), flagConfig, *config)
 }
 
 func (suite *ConfigurationTestSuite) TestEnvConfig() {
 	config, _ := NewConfiguration()
-	assert.Equal(suite.T(), defaultConfig, config)
+	assert.Equal(suite.T(), defaultConfig, *config)
 
 	environmentConfig = Configuration{
 		Password:     "password",
@@ -48,11 +48,11 @@ func (suite *ConfigurationTestSuite) TestEnvConfig() {
 	}
 
 	config, _ = NewConfiguration()
-	assert.Equal(suite.T(), environmentConfig, config)
+	assert.Equal(suite.T(), environmentConfig, *config)
 }
 
 func (suite *ConfigurationTestSuite) TestConfigPrecedence() {
-	config := Configuration{Password: "file"}
+	config := &Configuration{Password: "file"}
 	config, _ = config.compile()
 	assert.Equal(suite.T(), "file", config.Password)
 
@@ -81,13 +81,13 @@ func (suite *ConfigurationTestSuite) TestValidate() {
 	config = Configuration{Password: "test", ThemeID: "123", Domain: "test.nope.com"}
 	err = config.Validate()
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "invalid domain"))
+		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "invalid store domain"))
 	}
 
 	config = Configuration{Password: "test", ThemeID: "123"}
 	err = config.Validate()
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "missing domain"))
+		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "missing store domain"))
 	}
 
 	config = Configuration{Password: "file", Domain: "test.myshopify.com"}

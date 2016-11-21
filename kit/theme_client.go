@@ -13,7 +13,7 @@ const createThemeMaxRetries int = 3
 // ThemeClient is the interactor with the shopify server. All actions are processed
 // with the client.
 type ThemeClient struct {
-	Config     Configuration
+	Config     *Configuration
 	httpClient *httpClient
 	filter     eventFilter
 }
@@ -21,7 +21,7 @@ type ThemeClient struct {
 // NewThemeClient will build a new theme client from a configuration and a theme event
 // channel. The channel is used for logging all events. The configuration specifies how
 // the client will behave.
-func NewThemeClient(config Configuration) (ThemeClient, error) {
+func NewThemeClient(config *Configuration) (ThemeClient, error) {
 	httpClient, err := newHTTPClient(config)
 	if err != nil {
 		return ThemeClient{}, err
@@ -121,7 +121,7 @@ func CreateTheme(name, zipLocation string) (ThemeClient, Theme, error) {
 
 	client.Config.ThemeID = fmt.Sprintf("%d", resp.Theme.ID)
 
-	return client, theme, nil
+	return client, theme, err
 }
 
 // CreateAsset will take an asset and will return  when the asset has been created.
