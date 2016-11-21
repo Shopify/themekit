@@ -46,7 +46,7 @@ func (suite *FileWatcherTestSuite) TestConvertFsEvents() {
 		wg.Done()
 	}
 
-	go convertFsEvents(newWatcher)
+	go newWatcher.convertFsEvents()
 
 	go func() {
 		writes := []fsnotify.Event{
@@ -121,25 +121,6 @@ func (suite *FileWatcherTestSuite) TestExtractAssetKey() {
 	for input, expected := range tests {
 		assert.Equal(suite.T(), expected, extractAssetKey(input))
 	}
-}
-
-func (suite *FileWatcherTestSuite) TestfindDirectoriesToWatch() {
-	expected := []string{
-		clean(watchFixturePath),
-		clean(watchFixturePath + "/assets"),
-		clean(watchFixturePath + "/config"),
-		clean(watchFixturePath + "/layout"),
-		clean(watchFixturePath + "/locales"),
-		clean(watchFixturePath + "/snippets"),
-		clean(watchFixturePath + "/templates"),
-		clean(watchFixturePath + "/templates/customers"),
-	}
-
-	files := findDirectoriesToWatch(watchFixturePath, true, func(string) bool { return false })
-	assert.Equal(suite.T(), expected, files)
-
-	files = findDirectoriesToWatch(watchFixturePath, false, func(string) bool { return false })
-	assert.Equal(suite.T(), []string{clean(watchFixturePath)}, files)
 }
 
 func TestFileWatcherTestSuite(t *testing.T) {

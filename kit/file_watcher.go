@@ -48,12 +48,6 @@ func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilt
 		return nil, err
 	}
 
-	for _, path := range findDirectoriesToWatch(dir, recur, filter.matchesFilter) {
-		if err := watcher.Add(path); err != nil {
-			return nil, fmt.Errorf("Could not watch directory %s: %s", path, err)
-		}
-	}
-
 	newWatcher := &FileWatcher{
 		done:     make(chan bool),
 		client:   client,
@@ -62,12 +56,28 @@ func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilt
 		filter:   filter,
 	}
 
-	go convertFsEvents(newWatcher)
+	go newWatcher.convertFsEvents()
 
-	return newWatcher, nil
+	return newWatcher, newWatcher.watchDirectory(dir)
 }
 
-func convertFsEvents(watcher *FileWatcher) {
+func (watcher *FileWatcher) watchDirectory(dir string) error {
+	dir = filepath.Clean(dir)
+	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != dir {
+			for _, dir := range assetLocations {
+				if strings.Contains(path+"/", dir) {
+					if err := watcher.watcher.Add(path); err != nil {
+						return fmt.Errorf("Could not watch directory %s: %s", path, err)
+					}
+				}
+			}
+		}
+		return nil
+	})
+}
+
+func (watcher *FileWatcher) convertFsEvents() {
 	var eventLock sync.Mutex
 	recordedEvents := map[string]chan fsnotify.Event{}
 
@@ -157,22 +167,4 @@ func extractAssetKey(filename string) string {
 	}
 
 	return ""
-}
-
-func findDirectoriesToWatch(start string, recursive bool, ignoreDirectory func(string) bool) []string {
-	start = filepath.Clean(start)
-
-	if !recursive {
-		return []string{start}
-	}
-
-	result := []string{}
-	filepath.Walk(start, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && !ignoreDirectory(path) {
-			result = append(result, path)
-		}
-		return nil
-	})
-
-	return result
 }
