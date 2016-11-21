@@ -25,13 +25,13 @@ func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		client.Config.ThemeID)
 
 	kit.Printf("[%s] opening %s",
-		kit.GreenText(environment),
+		kit.GreenText(client.Config.Environment),
 		kit.GreenText(previewURL))
 
 	err := open.Run(previewURL)
 	if err != nil {
 		kit.LogErrorf("[%s] %s",
-			kit.GreenText(environment),
+			kit.GreenText(client.Config.Environment),
 			kit.RedText(err))
 	}
 }
