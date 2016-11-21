@@ -39,11 +39,11 @@ func (err themeError) Fatal() bool {
 }
 
 func (err themeError) Error() string {
-	return fmt.Sprintf(`[%s]Theme request encountered status at host <%s>
-	Status text: %s
+	return fmt.Sprintf(`Theme request encountered status at host %s
+	Status: %s %s
 	Errors: %s`,
-		RedText(err.resp.Code),
 		YellowText(err.resp.Host),
+		RedText(err.resp.Code),
 		RedText(http.StatusText(err.resp.Code)),
 		YellowText(err.requestErr),
 	)
@@ -74,13 +74,13 @@ func (err *assetError) generateHints() {
 }
 
 func (err assetError) Error() string {
-	return fmt.Sprintf(`[%s]Asset Perform %s to %s at host <%s>
-	Status text: %s
+	return fmt.Sprintf(`Asset Perform %s to %s at host %s
+	Status: %s %s
 	Errors: %s`,
-		RedText(err.resp.Code),
 		YellowText(err.resp.EventType),
 		BlueText(err.resp.Asset.Key),
 		YellowText(err.resp.Host),
+		RedText(err.resp.Code),
 		RedText(http.StatusText(err.resp.Code)),
 		YellowText(err.requestErr),
 	)
@@ -100,12 +100,12 @@ func (err listError) Fatal() bool {
 }
 
 func (err listError) Error() string {
-	return fmt.Sprintf(`[%s]Assets Perform %s at host <%s>
-	Status text: %s
+	return fmt.Sprintf(`Assets Perform %s at host <%s>
+	Status: %s %s
 	Errors: %s`,
-		RedText(err.resp.Code),
 		YellowText(err.resp.EventType),
 		YellowText(err.resp.Host),
+		RedText(err.resp.Code),
 		RedText(http.StatusText(err.resp.Code)),
 		YellowText(err.requestErr),
 	)

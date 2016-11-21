@@ -70,10 +70,11 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 func performReplace(client kit.ThemeClient, asset kit.Asset, event kit.EventType, wg *sync.WaitGroup) {
 	resp, err := client.Perform(asset, event)
 	if err != nil {
-		kit.LogError(err)
+		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
 	} else {
 		kit.Printf(
-			"Successfully performed %s on file %s from %s",
+			"[%s] Successfully performed %s on file %s from %s",
+			kit.GreenText(client.Config.Environment),
 			kit.GreenText(resp.EventType),
 			kit.GreenText(resp.Asset.Key),
 			kit.YellowText(resp.Host),
