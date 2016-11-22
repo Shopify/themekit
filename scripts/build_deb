@@ -1,15 +1,62 @@
-#!/bin/bash
+#!/bin/bash -ex
+email=timanema@gmail.com
+name="Tim Anema"
+version=0.5
+subversion=3
+distpath=./build/dist/linux-amd64
+now=`date`
+DEBFOLDERNAME=$distpath/themekit-$version_$subversion
 
-set -ex
+# Create your scripts source dir
+mkdir $DEBFOLDERNAME
 
-APP="themekit"
-VERSION=$(eval git describe --tags --abbrev=0)
+# Copy your script to the source dir
+cp $distpath/theme $DEBFOLDERNAME
+cd $DEBFOLDERNAME
 
-target="deb/usr/local/${APP}"
-mkdir -p ${target}
+# Create the packaging skeleton (debian/*)
+yes | dh_make -s --native  --email $email
 
-cp ./build/dist/linux-amd64/theme ${target}
+cat <<EOF > debian/changelog
+themekit-${version} (${subversiom}) precise; urgency=low
 
-bundle exec fpm -s dir -t deb -n ${APP} -v "$VERSION" -C deb -p build/dist/themekit.deb .
+  * Version Release.
 
-rm -rf deb
+ -- ${name} <${email}>  ${now}
+EOF
+
+cat <<EOF > debian/control
+Source: themekit-${version}
+Section: utils
+Priority: extra
+Maintainer: ${name} <${email}>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: https://shopify.github.io/themekit/
+#Vcs-Git: git://git.debian.org/collab-maint/themekit-0.5.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/themekit-0.5.git;a=summary
+
+Package: themekit-0.5
+Architecture: any
+Depends: \${shlibs:Depends}, \${misc:Depends}
+Description: 
+ Theme Kit is a command line tool to interact with shopify themes
+EOF
+
+# Remove make calls
+grep -v makefile debian/rules > debian/rules.new
+mv debian/rules.new debian/rules
+
+# debian/install must contain the list of scripts to install
+# as well as the target directory
+echo theme usr/bin > debian/install
+
+# Remove the example files
+rm debian/*.ex
+
+# Build the package.
+debuild -S
+
+cd ..
+
+dput ppa:timanema/themekit
