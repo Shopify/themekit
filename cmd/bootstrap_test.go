@@ -45,7 +45,6 @@ func (suite *BootstrapTestSuite) TestBootstrap() {
 	flagConfig.Domain = server.URL + "/domain"
 	setFlagConfig()
 	err = bootstrap()
-	fmt.Println(err)
 	assert.Nil(suite.T(), err)
 
 	flagConfig.Directory = ""

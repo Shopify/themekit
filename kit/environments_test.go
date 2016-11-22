@@ -39,6 +39,20 @@ func (suite *EnvironmentsTestSuite) TestLoadEnvironments() {
 	assert.NotNil(suite.T(), err)
 }
 
+func (suite *EnvironmentsTestSuite) TestSearchConfigPath() {
+	_, ext, err := searchConfigPath(goodEnvirontmentPath)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), "yml", ext)
+
+	_, ext, err = searchConfigPath("../fixtures/project/config.json")
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), "json", ext)
+
+	_, ext, err = searchConfigPath("./not/there.yml")
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), os.ErrNotExist, err)
+}
+
 func (suite *EnvironmentsTestSuite) TestSetConfiguration() {
 	newConfig, _ := NewConfiguration()
 	suite.environments.SetConfiguration("test", newConfig)

@@ -60,6 +60,7 @@ func (s *LoadAssetSuite) TestFindAllFiles() {
 		clean("../fixtures/project/assets/application.js"),
 		clean("../fixtures/project/assets/pixel.png"),
 		clean("../fixtures/project/config/settings.json"),
+		clean("../fixtures/project/config.json"),
 		clean("../fixtures/project/invalid_config.yml"),
 		clean("../fixtures/project/layout/.gitkeep"),
 		clean("../fixtures/project/locales/en.json"),
