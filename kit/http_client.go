@@ -61,7 +61,8 @@ func (client *httpClient) AdminURL() string {
 	}
 	parsedURL, _ := url.Parse(adminURL)
 	parsedURL.Scheme = "https"
-	if strings.HasPrefix(client.config.Domain, "http") {
+	// for testing, because otherwise the domain should not be localhost or http
+	if strings.HasPrefix(client.config.Domain, "http://127.0.0.1:") {
 		parsedURL.Scheme = "http"
 	}
 	return parsedURL.String()

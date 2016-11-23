@@ -99,7 +99,7 @@ func (conf Configuration) validateNoThemeID() error {
 		errors = append(errors, "missing store domain")
 	} else if !strings.HasSuffix(conf.Domain, "myshopify.com") &&
 		!strings.HasSuffix(conf.Domain, "myshopify.io") &&
-		!strings.HasPrefix(conf.Domain, "http://127.0.0.1:") {
+		!strings.HasPrefix(conf.Domain, "http://127.0.0.1:") { // for testing
 		errors = append(errors, "invalid store domain must end in '.myshopify.com'")
 	}
 
