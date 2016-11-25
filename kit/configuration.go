@@ -14,15 +14,15 @@ import (
 // Configuration is the structure of a configuration for an environment. This will
 // get loaded into a theme client to dictate it's actions.
 type Configuration struct {
-	Environment  string        `yaml:"-"`
-	Password     string        `yaml:"password,omitempty" env:"THEMEKIT_PASSWORD"`
-	ThemeID      string        `yaml:"theme_id,omitempty" env:"THEMEKIT_THEME_ID"`
-	Domain       string        `yaml:"store" env:"THEMEKIT_STORE"`
-	Directory    string        `yaml:"-" env:"THEMEKIT_DIRECTORY"`
-	IgnoredFiles []string      `yaml:"ignore_files,omitempty" env:"THEMEKIT_IGNORE_FILES" envSeparator:":"`
-	Proxy        string        `yaml:"proxy,omitempty" env:"THEMEKIT_PROXY"`
-	Ignores      []string      `yaml:"ignores,omitempty" env:"THEMEKIT_IGNORES" envSeparator:":"`
-	Timeout      time.Duration `yaml:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
+	Environment  string        `yaml:"-" json:"-" env:"-"`
+	Password     string        `yaml:"password,omitempty" json:"password,omitempty" env:"THEMEKIT_PASSWORD"`
+	ThemeID      string        `yaml:"theme_id,omitempty" json:"theme_id,omitempty" env:"THEMEKIT_THEME_ID"`
+	Domain       string        `yaml:"store" json:"store" env:"THEMEKIT_STORE"`
+	Directory    string        `yaml:"-" json:"-" env:"THEMEKIT_DIRECTORY"`
+	IgnoredFiles []string      `yaml:"ignore_files,omitempty" json:"ignore_files,omitempty" env:"THEMEKIT_IGNORE_FILES" envSeparator:":"`
+	Proxy        string        `yaml:"proxy,omitempty" json:"proxy,omitempty" env:"THEMEKIT_PROXY"`
+	Ignores      []string      `yaml:"ignores,omitempty" json:"ignores,omitempty" env:"THEMEKIT_IGNORES" envSeparator:":"`
+	Timeout      time.Duration `yaml:"timeout,omitempty" json:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
 }
 
 // DefaultTimeout is the default timeout to kill any stalled processes.
