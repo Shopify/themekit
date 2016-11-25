@@ -12,8 +12,17 @@ import (
 )
 
 var defaultRegexes = []*regexp.Regexp{
-	regexp.MustCompile(`\.git/*`),
+	regexp.MustCompile(`\.git`),
+	regexp.MustCompile(`\.hg`),
+	regexp.MustCompile(`\.bzr`),
+	regexp.MustCompile(`\.svn`),
+	regexp.MustCompile(`_darcs`),
+	regexp.MustCompile(`CVS`),
+	regexp.MustCompile(`\.sublime-(project|workspace)`),
 	regexp.MustCompile(`\.DS_Store`),
+	regexp.MustCompile(`\.sass-cache`),
+	regexp.MustCompile(`Thumbs\.db`),
+	regexp.MustCompile(`desktop\.ini`),
 	regexp.MustCompile(`config.yml`),
 }
 
