@@ -1,7 +1,6 @@
 package kit
 
 import (
-	"os"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -65,30 +64,6 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 	wg.Wait()
 	// test that the events are debounced
 	assert.Equal(suite.T(), 2, len(assetChan))
-}
-
-func (suite *FileWatcherTestSuite) TestNotifyFile() {
-	eventChan := make(chan fsnotify.Event)
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	newWatcher := &FileWatcher{
-		done:    make(chan bool),
-		watcher: &fsnotify.Watcher{Events: eventChan},
-	}
-
-	notePath := watchFixturePath + "/note"
-
-	go newWatcher.watchFsEvents(notePath)
-
-	time.Sleep(2 * time.Second)
-
-	close(eventChan)
-
-	_, err := os.Stat(notePath)
-	assert.Nil(suite.T(), err)
-	err = os.Remove(notePath)
-	assert.Nil(suite.T(), err)
 }
 
 func (suite *FileWatcherTestSuite) TestStopWatching() {

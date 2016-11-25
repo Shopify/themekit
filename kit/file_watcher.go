@@ -80,6 +80,7 @@ func (watcher *FileWatcher) watchDirectory(dir string) error {
 
 func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 	var eventLock sync.Mutex
+	notifyProcessed := false
 	recordedEvents := map[string]chan fsnotify.Event{}
 
 	for {
@@ -114,13 +115,14 @@ func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 				}(recordedEvents[currentEvent.Name], currentEvent.Name)
 			}
 			recordedEvents[currentEvent.Name] <- currentEvent
+			notifyProcessed = true
 			eventLock.Unlock()
 		case <-time.Tick(1 * time.Second):
 			eventLock.Lock()
-			println(len(recordedEvents) == 0, notifyFile != "")
-			if len(recordedEvents) == 0 && notifyFile != "" {
+			if notifyProcessed && len(recordedEvents) == 0 && notifyFile != "" {
 				os.Create(notifyFile)
 				os.Chtimes(notifyFile, time.Now(), time.Now())
+				notifyProcessed = false
 			}
 			eventLock.Unlock()
 		}
