@@ -1,6 +1,7 @@
 package kit
 
 import (
+	"os"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -22,13 +23,13 @@ type FileWatcherTestSuite struct {
 }
 
 func (suite *FileWatcherTestSuite) TestNewFileReader() {
-	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, Asset, EventType, error) {})
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, "", true, eventFilter{}, func(ThemeClient, Asset, EventType, error) {})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, watcher.IsWatching())
 	watcher.StopWatching()
 }
 
-func (suite *FileWatcherTestSuite) TestConvertFsEvents() {
+func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 	assetChan := make(chan Asset, 4)
 	eventChan := make(chan fsnotify.Event)
 	var wg sync.WaitGroup
@@ -46,7 +47,7 @@ func (suite *FileWatcherTestSuite) TestConvertFsEvents() {
 		wg.Done()
 	}
 
-	go newWatcher.convertFsEvents()
+	go newWatcher.watchFsEvents("")
 
 	go func() {
 		writes := []fsnotify.Event{
@@ -66,8 +67,32 @@ func (suite *FileWatcherTestSuite) TestConvertFsEvents() {
 	assert.Equal(suite.T(), 2, len(assetChan))
 }
 
+func (suite *FileWatcherTestSuite) TestNotifyFile() {
+	eventChan := make(chan fsnotify.Event)
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	newWatcher := &FileWatcher{
+		done:    make(chan bool),
+		watcher: &fsnotify.Watcher{Events: eventChan},
+	}
+
+	notePath := watchFixturePath + "/note"
+
+	go newWatcher.watchFsEvents(notePath)
+
+	time.Sleep(2 * time.Second)
+
+	close(eventChan)
+
+	_, err := os.Stat(notePath)
+	assert.Nil(suite.T(), err)
+	err = os.Remove(notePath)
+	assert.Nil(suite.T(), err)
+}
+
 func (suite *FileWatcherTestSuite) TestStopWatching() {
-	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, true, eventFilter{}, func(ThemeClient, Asset, EventType, error) {})
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, "", true, eventFilter{}, func(ThemeClient, Asset, EventType, error) {})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, watcher.IsWatching())
 	watcher.StopWatching()

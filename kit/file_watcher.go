@@ -40,9 +40,10 @@ type FileWatcher struct {
 	watcher  *fsnotify.Watcher
 	filter   eventFilter
 	callback FileEventCallback
+	notify   string
 }
 
-func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilter, callback FileEventCallback) (*FileWatcher, error) {
+func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filter eventFilter, callback FileEventCallback) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -56,7 +57,7 @@ func newFileWatcher(client ThemeClient, dir string, recur bool, filter eventFilt
 		filter:   filter,
 	}
 
-	go newWatcher.convertFsEvents()
+	go newWatcher.watchFsEvents(notifyFile)
 
 	return newWatcher, newWatcher.watchDirectory(dir)
 }
@@ -77,42 +78,52 @@ func (watcher *FileWatcher) watchDirectory(dir string) error {
 	})
 }
 
-func (watcher *FileWatcher) convertFsEvents() {
+func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 	var eventLock sync.Mutex
 	recordedEvents := map[string]chan fsnotify.Event{}
 
 	for {
-		currentEvent, more := <-watcher.watcher.Events
-		if !more {
-			close(watcher.done)
-			break
-		}
+		select {
+		case currentEvent, more := <-watcher.watcher.Events:
+			if !more {
+				close(watcher.done)
+				return
+			}
 
-		if currentEvent.Op == fsnotify.Chmod || watcher.filter.matchesFilter(currentEvent.Name) {
-			continue
-		}
+			if currentEvent.Op == fsnotify.Chmod || watcher.filter.matchesFilter(currentEvent.Name) {
+				break
+			}
 
-		eventLock.Lock()
-		if _, ok := recordedEvents[currentEvent.Name]; !ok {
-			recordedEvents[currentEvent.Name] = make(chan fsnotify.Event)
+			eventLock.Lock()
+			if _, ok := recordedEvents[currentEvent.Name]; !ok {
+				recordedEvents[currentEvent.Name] = make(chan fsnotify.Event)
 
-			go func(eventChan chan fsnotify.Event, eventName string) {
-				var event fsnotify.Event
-				for {
-					select {
-					case event = <-eventChan:
-					case <-time.After(debounceTimeout):
-						go handleEvent(watcher, event)
-						eventLock.Lock()
-						delete(recordedEvents, eventName)
-						eventLock.Unlock()
-						return
+				go func(eventChan chan fsnotify.Event, eventName string) {
+					var event fsnotify.Event
+					for {
+						select {
+						case event = <-eventChan:
+						case <-time.After(debounceTimeout):
+							go handleEvent(watcher, event)
+							eventLock.Lock()
+							delete(recordedEvents, eventName)
+							eventLock.Unlock()
+							return
+						}
 					}
-				}
-			}(recordedEvents[currentEvent.Name], currentEvent.Name)
+				}(recordedEvents[currentEvent.Name], currentEvent.Name)
+			}
+			recordedEvents[currentEvent.Name] <- currentEvent
+			eventLock.Unlock()
+		case <-time.Tick(1 * time.Second):
+			eventLock.Lock()
+			println(len(recordedEvents) == 0, notifyFile != "")
+			if len(recordedEvents) == 0 && notifyFile != "" {
+				os.Create(notifyFile)
+				os.Chtimes(notifyFile, time.Now(), time.Now())
+			}
+			eventLock.Unlock()
 		}
-		recordedEvents[currentEvent.Name] <- currentEvent
-		eventLock.Unlock()
 	}
 }
 
