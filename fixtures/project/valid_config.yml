@@ -6,7 +6,6 @@ default:
   - charmander
   - bulbasaur
   - squirtle
-  timeout: 30s
 development:
   password: abracadabra
   theme_id: "1"
