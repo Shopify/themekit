@@ -23,7 +23,7 @@ exist on your local machine will be removed from shopify.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#replace
 `,
-	RunE: forEachClient(replace),
+	RunE: forEachClient(replace, uploadSettingsData),
 }
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
@@ -61,7 +61,10 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		}
 	}
 
-	for _, action := range assetsActions {
+	for key, action := range assetsActions {
+		if key == settingsDataKey {
+			continue
+		}
 		wg.Add(1)
 		go performReplace(client, action.asset, action.event, wg)
 	}

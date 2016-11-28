@@ -54,10 +54,28 @@ func (suite *UploadTestSuite) TestUploadAll() {
 	wg.Wait()
 
 	assets, _ := client.LocalAssets()
-	assert.Equal(suite.T(), len(assets), len(requests))
+	assert.Equal(suite.T(), len(assets)-1, len(requests))
 	for _, asset := range assets {
+		if asset.Key == settingsDataKey {
+			continue
+		}
 		assert.Equal(suite.T(), "PUT", requests[asset.Key])
 	}
+}
+
+func (suite *UploadTestSuite) TestUploadSettingsData() {
+	requests := make(chan int, 100)
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		requests <- 1
+	})
+	defer server.Close()
+
+	var wg sync.WaitGroup
+	uploadSettingsData(client, []string{}, &wg)
+	uploadSettingsData(client, []string{"templates/template.liquid"}, &wg)
+	uploadSettingsData(client, []string{"templates/template.liquid", "config/settings_data.json"}, &wg)
+	wg.Wait()
+	assert.Equal(suite.T(), 2, len(requests))
 }
 
 func TestUploadTestSuite(t *testing.T) {

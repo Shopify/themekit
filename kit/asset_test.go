@@ -59,7 +59,7 @@ func (s *LoadAssetSuite) TestFindAllFiles() {
 	assert.Equal(s.T(), []string{
 		clean("../fixtures/project/assets/application.js"),
 		clean("../fixtures/project/assets/pixel.png"),
-		clean("../fixtures/project/config/settings.json"),
+		clean("../fixtures/project/config/settings_data.json"),
 		clean("../fixtures/project/config.json"),
 		clean("../fixtures/project/invalid_config.yml"),
 		clean("../fixtures/project/layout/.gitkeep"),
