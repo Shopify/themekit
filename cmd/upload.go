@@ -8,6 +8,8 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
+const settingsDataKey = "config/settings_data.json"
+
 var uploadCmd = &cobra.Command{
 	Use:   "upload <filenames>",
 	Short: "Upload theme file(s) to shopify",
@@ -17,21 +19,19 @@ to shopify.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#upload
 `,
-	RunE: forEachClient(upload),
+	RunE: forEachClient(upload, uploadSettingsData),
 }
 
 func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	defer wg.Done()
+	var err error
+	localAssets := []kit.Asset{}
+
 	if len(filenames) == 0 {
-		localAssets, err := client.LocalAssets()
+		localAssets, err = client.LocalAssets()
 		if err != nil {
 			kit.LogError(err)
 			return
-		}
-
-		for _, asset := range localAssets {
-			wg.Add(1)
-			go performUpload(client, asset, wg)
 		}
 	} else {
 		for _, filename := range filenames {
@@ -40,9 +40,16 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 				kit.LogError(err)
 				return
 			}
-			wg.Add(1)
-			go performUpload(client, asset, wg)
+			localAssets = append(localAssets, asset)
 		}
+	}
+
+	for _, asset := range localAssets {
+		if asset.Key == settingsDataKey {
+			continue
+		}
+		wg.Add(1)
+		go performUpload(client, asset, wg)
 	}
 }
 
@@ -59,4 +66,26 @@ func performUpload(client kit.ThemeClient, asset kit.Asset, wg *sync.WaitGroup) 
 		)
 	}
 	wg.Done()
+}
+
+func uploadSettingsData(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+	doupload := func() {
+		asset, err := client.LocalAsset(settingsDataKey)
+		if err != nil {
+			kit.LogError(err)
+			return
+		}
+		wg.Add(1)
+		go performUpload(client, asset, wg)
+	}
+
+	if len(filenames) == 0 {
+		doupload()
+	} else {
+		for _, filename := range filenames {
+			if filename == settingsDataKey {
+				doupload()
+			}
+		}
+	}
 }

@@ -148,7 +148,7 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 type cobraCommandE func(*cobra.Command, []string) error
 type allEnvsCommand func(kit.ThemeClient, []string, *sync.WaitGroup)
 
-func forEachClient(handler allEnvsCommand) cobraCommandE {
+func forEachClient(handler allEnvsCommand, callbacks ...allEnvsCommand) cobraCommandE {
 	return func(cmd *cobra.Command, args []string) error {
 		themeClients, err := generateThemeClients()
 		if err != nil {
@@ -160,6 +160,14 @@ func forEachClient(handler allEnvsCommand) cobraCommandE {
 			go handler(client, args, &wg)
 		}
 		wg.Wait()
+
+		for _, client := range themeClients {
+			for _, callback := range callbacks {
+				callback(client, args, &wg)
+			}
+		}
+		wg.Wait()
+
 		return nil
 	}
 }
