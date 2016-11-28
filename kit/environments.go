@@ -74,10 +74,18 @@ func (e Environments) Save(location string) error {
 	defer file.Close()
 	if err == nil {
 		var bytes []byte
-		bytes, err = yaml.Marshal(e)
+		bytes, err = yaml.Marshal(e.asYAML())
 		if err == nil {
 			_, err = file.Write(bytes)
 		}
 	}
 	return err
+}
+
+func (e Environments) asYAML() Environments {
+	out := map[string]*Configuration{}
+	for name, config := range e {
+		out[name] = config.asYAML()
+	}
+	return out
 }
