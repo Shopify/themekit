@@ -85,6 +85,7 @@ func uploadSettingsData(client kit.ThemeClient, filenames []string, wg *sync.Wai
 		for _, filename := range filenames {
 			if filename == settingsDataKey {
 				doupload()
+				return
 			}
 		}
 	}

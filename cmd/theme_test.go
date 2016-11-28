@@ -46,15 +46,19 @@ func (suite *ThemeTestSuite) TestForEachClient() {
 	configPath = goodEnvirontmentPath
 	allenvs = true
 	runtimes := make(chan int, 100)
+	callbacks := make(chan int, 100)
 	runner := forEachClient(func(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		defer wg.Done()
 		runtimes <- 1
+	}, func(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+		callbacks <- 1
 	})
 	assert.NotNil(suite.T(), runner)
 
 	err := runner(&cobra.Command{}, []string{})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 3, len(runtimes))
+	assert.Equal(suite.T(), 3, len(callbacks))
 
 	configPath = badEnvirontmentPath
 	err = runner(&cobra.Command{}, []string{})

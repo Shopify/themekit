@@ -70,6 +70,9 @@ func (suite *ReplaceTestSuite) TestReplaceAll() {
 
 	assert.Equal(suite.T(), "DELETE", requests["templates/nope.liquid"])
 	for _, asset := range assets {
+		if asset.Key == settingsDataKey {
+			continue
+		}
 		assert.Equal(suite.T(), "PUT", requests[asset.Key])
 	}
 }
