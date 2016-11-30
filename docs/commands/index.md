@@ -76,7 +76,7 @@ theme download templates/404.liquid templates/article.liquid
 
 
 ## Remove
-Remove will deletes theme files both locally and on Shopify. Unlike the other file
+Remove will delete theme files both locally and on Shopify. Unlike the other file
 operation commands, this command requires filenames. This is done so that you cannot
 accidentally delete your entire theme. For example if you wanted to delete the 404
 and article liquid templates you could enter the following command:
@@ -121,7 +121,7 @@ theme update --version=v0.5.0
 * `--version` : Specifies what version theme kit should install.
 
 ## Upload
-Upload will upldate all file states to shopify and create any files that are not
+Upload will update all file states to shopify and create any files that are not
 on shopify's server. If upload is not provided with filename arguments it will do
 the whole project, otherwise you can upload individual files like this:
 
