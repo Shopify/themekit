@@ -74,6 +74,13 @@ could enter the following command:
 theme download templates/404.liquid templates/article.liquid
 ```
 
+## Open
+Open will open the preview page for your theme in your browser as well as print
+out url for your reference.
+
+```bash
+theme open --env=production # will open http://your-store.myshopify.com?preview_theme_id=<your-theme-id>
+```
 
 ## Remove
 Remove will delete theme files both locally and on Shopify. Unlike the other file
