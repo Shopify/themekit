@@ -88,7 +88,7 @@ func (e eventFilter) filterAssets(assets []Asset) []Asset {
 	filteredAssets := []Asset{}
 	sort.Sort(ByAsset(assets))
 	for index, asset := range assets {
-		if !e.matchesFilter(asset.Key) && !assetIsCompiled(asset, assets[index+1:]) {
+		if !assetIsCompiled(asset, assets[index+1:]) && !e.matchesFilter(asset.Key) {
 			filteredAssets = append(filteredAssets, asset)
 		}
 	}
