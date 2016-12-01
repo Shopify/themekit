@@ -216,20 +216,6 @@ func (suite *ThemeClientTestSuite) TestPerform() {
 	assert.NotNil(suite.T(), err)
 }
 
-func (suite *ThemeClientTestSuite) TestIgnoreCompiledAssets() {
-	raw := map[string][]Asset{}
-	bytes := []byte(jsonFixture("responses/assets_raw"))
-	json.Unmarshal(bytes, &raw)
-	sort.Sort(ByAsset(raw["assets"]))
-
-	expected := map[string][]Asset{}
-	bytes = []byte(jsonFixture("responses/assets_filtered"))
-	json.Unmarshal(bytes, &expected)
-	sort.Sort(ByAsset(expected["assets"]))
-
-	assert.Equal(suite.T(), expected["assets"], ignoreCompiledAssets(raw["assets"]))
-}
-
 func (suite *ThemeClientTestSuite) NewTestServer(handler http.HandlerFunc) *httptest.Server {
 	server := httptest.NewServer(handler)
 	suite.client.httpClient.config.Domain = server.URL
