@@ -112,7 +112,7 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 	themeClients := []kit.ThemeClient{}
 
 	if !noUpdateNotifier && kit.IsNewUpdateAvailable() {
-		kit.LogWarn(updateAvailableMessage)
+		kit.Print(kit.YellowText(updateAvailableMessage))
 	}
 
 	setFlagConfig()
