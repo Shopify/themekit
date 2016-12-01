@@ -90,7 +90,7 @@ func writeToDisk(directory string, asset kit.Asset) error {
 		return err
 	}
 
-	kit.LogNotifyf("Successfully wrote %s to disk", filename)
+	kit.Print(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
 	return nil
 }
 

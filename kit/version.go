@@ -28,7 +28,7 @@ func LibraryInfo() string {
 
 // PrintInfo will output the version banner for the themekit library.
 func PrintInfo() {
-	LogNotify(LibraryInfo())
+	Print(GreenText(LibraryInfo()))
 }
 
 // IsNewUpdateAvailable will check if there is an update to the theme kit command
@@ -56,7 +56,7 @@ func InstallThemeKitVersion(ver string) error {
 	} else if ver == "latest" && !requestedRelease.IsApplicable() {
 		return fmt.Errorf("no applicable update available")
 	}
-	LogWarnf("Updating from %s to %s", ThemeKitVersion, requestedRelease.Version)
+	Printf("Updating from %s to %s", YellowText(ThemeKitVersion), YellowText(requestedRelease.Version))
 	err = applyUpdate(requestedRelease.ForCurrentPlatform())
 	if err == nil {
 		Printf(`

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -24,61 +25,51 @@ var BlueText = color.New(color.FgBlue).SprintFunc()
 // green when printed out.
 var GreenText = color.New(color.FgGreen).SprintFunc()
 
+// CyanText is a func that wraps a string in cyan color tags and it will be
+// cyan when printed out.
+var CyanText = color.New(color.FgCyan).SprintFunc()
+
+const timestampFormat = "15:04:05"
+
 func init() {
 	log.SetFlags(0)
 	log.SetOutput(os.Stderr)
 }
 
+func timestamp() string {
+	return CyanText(time.Now().Format(timestampFormat)) + " "
+}
+
 // Printf will output a formatted message to the output log (default stdout)
 func Printf(content string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(content, args...))
+	fmt.Println(timestamp() + fmt.Sprintf(content, args...))
 }
 
 // Print will output a message to the output log (default stdout)
 func Print(args ...interface{}) {
-	fmt.Println(args...)
-}
-
-// LogNotifyf will output a formatted green message to the output log (default stdout)
-func LogNotifyf(content string, args ...interface{}) {
-	fmt.Println(GreenText(fmt.Sprintf(content, args...)))
-}
-
-// LogNotify will output a green message to the output log (default stdout)
-func LogNotify(args ...interface{}) {
-	log.Println(GreenText(fmt.Sprint(args...)))
-}
-
-// LogWarnf will output a formatted yellow message to the output log (default stdout)
-func LogWarnf(content string, args ...interface{}) {
-	log.Println(YellowText(fmt.Sprintf(content, args...)))
-}
-
-// LogWarn will output a yellow message to the output log (default stdout)
-func LogWarn(args ...interface{}) {
-	log.Println(YellowText(fmt.Sprint(args...)))
+	fmt.Println(timestamp() + fmt.Sprint(args...))
 }
 
 // LogErrorf will output a formatted red message to the output log (default stdout)
 func LogErrorf(content string, args ...interface{}) {
-	log.Println(fmt.Sprintf(content, args...))
+	log.Println(timestamp() + fmt.Sprintf(content, args...))
 }
 
 // LogError will output a red message to the output log (default stdout)
 func LogError(args ...interface{}) {
-	log.Println(fmt.Sprint(args...))
+	log.Println(timestamp() + fmt.Sprint(args...))
 }
 
 // LogFatalf will output a formatted red message to the output log along with the
 // library information. Then it will quit the application.
 func LogFatalf(content string, args ...interface{}) {
 	log.Println(RedText(LibraryInfo()))
-	log.Fatal(fmt.Sprintf(content, args...))
+	log.Fatal(timestamp() + fmt.Sprintf(content, args...))
 }
 
 // LogFatal will output a red message to the output log along with the
 // library information. Then it will quit the application.
 func LogFatal(args ...interface{}) {
 	log.Println(RedText(LibraryInfo()))
-	log.Fatal(fmt.Sprint(args...))
+	log.Fatal(timestamp() + fmt.Sprint(args...))
 }
