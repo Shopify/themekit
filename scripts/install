@@ -106,7 +106,7 @@ class Installer(object):
         dest.write(theme.read())
         dest.flush()
         dest.close()
-        os.chmod(filename, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
+        os.chmod(filename, 0755)
 
     def __pathinstall(self):
         print("Theme Kit has been installed at %s/theme" % self.installlocation)

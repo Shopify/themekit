@@ -22,7 +22,7 @@ download and install Theme Kit for you. Please follow the directions outputted t
 console to change your bash profile so that you will have access to the `theme` command
 
 ```bash
-curl https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | python
+curl https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | sudo -E python
 ```
 
 ### Homebrew
