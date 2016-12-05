@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/ryanuber/go-glob"
@@ -85,8 +86,9 @@ func newEventFilter(rootDir string, patterns []string, files []string) (eventFil
 
 func (e eventFilter) filterAssets(assets []Asset) []Asset {
 	filteredAssets := []Asset{}
-	for _, asset := range assets {
-		if !e.matchesFilter(asset.Key) {
+	sort.Sort(ByAsset(assets))
+	for index, asset := range assets {
+		if !assetIsCompiled(asset, assets[index+1:]) && !e.matchesFilter(asset.Key) {
 			filteredAssets = append(filteredAssets, asset)
 		}
 	}
@@ -135,4 +137,13 @@ func filesToPatterns(files []string) ([]string, error) {
 		patterns = append(patterns, strings.Split(string(data), "\n")...)
 	}
 	return patterns, nil
+}
+
+func assetIsCompiled(a Asset, rest []Asset) bool {
+	for _, other := range rest {
+		if strings.Contains(other.Key, a.Key) {
+			return true
+		}
+	}
+	return false
 }

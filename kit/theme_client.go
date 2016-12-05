@@ -3,8 +3,6 @@ package kit
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
-	"strings"
 	"time"
 )
 
@@ -53,8 +51,7 @@ func (t ThemeClient) AssetList() ([]Asset, Error) {
 	if err != nil && err.Fatal() {
 		return []Asset{}, err
 	}
-	sort.Sort(ByAsset(resp.Assets))
-	return t.filter.filterAssets(ignoreCompiledAssets(resp.Assets)), nil
+	return t.filter.filterAssets(resp.Assets), nil
 }
 
 // Asset will load up a single remote asset from the remote shopify servers.
@@ -74,8 +71,7 @@ func (t ThemeClient) LocalAssets() ([]Asset, error) {
 	if err != nil {
 		return []Asset{}, err
 	}
-	sort.Sort(ByAsset(assets))
-	return t.filter.filterAssets(ignoreCompiledAssets(assets)), nil
+	return t.filter.filterAssets(assets), nil
 }
 
 // LocalAsset will load a single local asset on disk. It will return an error if there
@@ -155,24 +151,4 @@ func (t ThemeClient) Perform(asset Asset, event EventType) (*ShopifyResponse, Er
 		return &ShopifyResponse{}, kitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Key)))}
 	}
 	return t.httpClient.AssetAction(event, asset)
-}
-
-func ignoreCompiledAssets(assets []Asset) []Asset {
-	newSize := 0
-	results := make([]Asset, len(assets))
-	isCompiled := func(a Asset, rest []Asset) bool {
-		for _, other := range rest {
-			if strings.Contains(other.Key, a.Key) {
-				return true
-			}
-		}
-		return false
-	}
-	for index, asset := range assets {
-		if !isCompiled(asset, assets[index+1:]) {
-			results[newSize] = asset
-			newSize++
-		}
-	}
-	return results[:newSize]
 }

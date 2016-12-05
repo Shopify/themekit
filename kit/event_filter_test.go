@@ -39,8 +39,8 @@ func (suite *EventFilterTestSuite) TestNewEventFilter() {
 func (suite *EventFilterTestSuite) TestFilterAssets() {
 	filter, err := newEventFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
 	if assert.Nil(suite.T(), err) {
-		inputAssets := []Asset{{Key: "test/foo"}, {Key: "foo.txt"}, {Key: "test.bat"}, {Key: "zubat"}}
-		expectedAssets := []Asset{{Key: "test/foo"}, {Key: "zubat"}}
+		inputAssets := []Asset{{Key: "test/foo.json.liquid"}, {Key: "test/foo.json"}, {Key: "foo.txt"}, {Key: "test.bat"}, {Key: "zubat"}}
+		expectedAssets := []Asset{{Key: "test/foo.json.liquid"}, {Key: "zubat"}}
 
 		assert.Equal(suite.T(), expectedAssets, filter.filterAssets(inputAssets))
 	}
