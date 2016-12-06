@@ -4,7 +4,7 @@ layout: default
 # Theme Kit Ignore Patterns
 
 Theme kit has a couple of ways to ignore files from your commands. You can provide
-a list of ignore patterns to your `ingore_files` value or provide a list of file
+a list of ignore patterns to your `ignore_files` value or provide a list of file
 paths to your `ignores` value.
 
 ## Ignore Files
@@ -30,7 +30,7 @@ There are a few rules to for the specifications of ignore patters.
   regular expression and will match the whole path. An example pattern would be
   `/\.(txt|gif|bat)$/` that would match any file with the txt, gif or bat extentions.
 
-## Ingores in config.yml example
+## Ignores in config.yml example
 
 ```yaml
 development:
@@ -40,10 +40,10 @@ development:
   - "*.png" #patterns that start with * need to be quoted to have vaild yaml
   - /\.(txt|gif|bat)$/
   ignores:
-  - themekit_ingores #file to load ignore patterns, check out the ignore file example
+  - themekit_ignores #file to load ignore patterns, check out the ignore file example
 ```
 
-## Ingore File example
+## Ignore File example
 
 ```
 # $PROJECT_DIR/themekit_ignores
