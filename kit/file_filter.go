@@ -82,11 +82,18 @@ func newFileFilter(rootDir string, patterns []string, files []string) (fileFilte
 	}, nil
 }
 
+// filterAssets will filter out compiled assets as well as filter any files that
+// match filter patterns.
+// It will filter compiled assets by sorting the assets alphabetically and then
+// checking that the file after each file does not contain an extra liquid extension.
+// For instance if you have the file `app.js` then the file `app.js.liquid`, it
+// will filter the first asset (`app.js`) from the slice.
 func (e fileFilter) filterAssets(assets []Asset) []Asset {
 	filteredAssets := []Asset{}
 	sort.Sort(ByAsset(assets))
 	for index, asset := range assets {
-		if !e.matchesFilter(asset.Key) && !e.assetIsCompiled(asset, assets[index+1:]) {
+		if !e.matchesFilter(asset.Key) &&
+			(index == len(assets)-1 || assets[index+1].Key != asset.Key+".liquid") {
 			filteredAssets = append(filteredAssets, asset)
 		}
 	}
@@ -125,13 +132,4 @@ func filesToPatterns(files []string) ([]string, error) {
 		patterns = append(patterns, strings.Split(string(data), "\n")...)
 	}
 	return patterns, nil
-}
-
-func (e fileFilter) assetIsCompiled(a Asset, rest []Asset) bool {
-	for _, other := range rest {
-		if !e.matchesFilter(other.Key) && strings.Contains(other.Key, a.Key) {
-			return true
-		}
-	}
-	return false
 }
