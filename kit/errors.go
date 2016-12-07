@@ -96,7 +96,7 @@ func newListError(resp ShopifyResponse) listError {
 }
 
 func (err listError) Fatal() bool {
-	return err.resp.Code >= 400
+	return err.resp.Code >= 200 && err.resp.Code < 400
 }
 
 func (err listError) Error() string {
