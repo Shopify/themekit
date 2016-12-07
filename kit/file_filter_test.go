@@ -19,17 +19,17 @@ type EventFilterTestSuite struct {
 
 func (suite *EventFilterTestSuite) TestNewEventFilter() {
 	// loads files
-	filter, err := newEventFilter(rootDir, []string{}, []string{ignoreFixturePath})
+	filter, err := newFileFilter(rootDir, []string{}, []string{ignoreFixturePath})
 	if assert.Nil(suite.T(), err) {
 		assert.Equal(suite.T(), append(defaultRegexes, regexp.MustCompile(`\.(txt|gif|bat)$`)), filter.filters)
 		assert.Equal(suite.T(), []string{"./root/dir/*config/settings.json", "./root/dir/*.png"}, filter.globs)
 	}
 
 	// loads files
-	_, err = newEventFilter(rootDir, []string{}, []string{"bad path"})
+	_, err = newFileFilter(rootDir, []string{}, []string{"bad path"})
 	assert.NotNil(suite.T(), err)
 
-	filter, err = newEventFilter(rootDir, []string{"config/settings.json", "*.png", "/\\.(txt|gif|bat)$/"}, []string{})
+	filter, err = newFileFilter(rootDir, []string{"config/settings.json", "*.png", "/\\.(txt|gif|bat)$/"}, []string{})
 	if assert.Nil(suite.T(), err) {
 		assert.Equal(suite.T(), append(defaultRegexes, regexp.MustCompile(`\.(txt|gif|bat)$`)), filter.filters)
 		assert.Equal(suite.T(), []string{"./root/dir/*config/settings.json", "./root/dir/*.png"}, filter.globs)
@@ -37,7 +37,7 @@ func (suite *EventFilterTestSuite) TestNewEventFilter() {
 }
 
 func (suite *EventFilterTestSuite) TestFilterAssets() {
-	filter, err := newEventFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
+	filter, err := newFileFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
 	if assert.Nil(suite.T(), err) {
 		inputAssets := []Asset{{Key: "test/foo.json.liquid"}, {Key: "test/foo.json"}, {Key: "foo.txt"}, {Key: "test.bat"}, {Key: "zubat"}}
 		expectedAssets := []Asset{{Key: "test/foo.json.liquid"}, {Key: "zubat"}}
@@ -47,7 +47,7 @@ func (suite *EventFilterTestSuite) TestFilterAssets() {
 }
 
 func (suite *EventFilterTestSuite) TestMatchesFilter() {
-	check := func(filter eventFilter, input []string, shouldOutput []string) {
+	check := func(filter fileFilter, input []string, shouldOutput []string) {
 		output := []string{}
 		for _, path := range input {
 			if !filter.matchesFilter(path) {
@@ -58,7 +58,7 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 	}
 
 	// it filters plain filenames
-	filter, err := newEventFilter(rootDir, []string{"build/", "test.txt"}, []string{})
+	filter, err := newFileFilter(rootDir, []string{"build/", "test.txt"}, []string{})
 	if assert.Nil(suite.T(), err) {
 		check(
 			filter,
@@ -68,7 +68,7 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 	}
 
 	// it filters globs
-	filter, err = newEventFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
+	filter, err = newFileFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
 	if assert.Nil(suite.T(), err) {
 		check(
 			filter,
@@ -78,7 +78,7 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 	}
 
 	// filters proper regex
-	filter, err = newEventFilter(rootDir, []string{`/\.(txt|gif|bat|json|ini)$/`}, []string{})
+	filter, err = newFileFilter(rootDir, []string{`/\.(txt|gif|bat|json|ini)$/`}, []string{})
 	if assert.Nil(suite.T(), err) {
 		check(
 			filter,
@@ -88,7 +88,7 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 	}
 
 	//check default filters
-	filter, err = newEventFilter(rootDir, []string{}, []string{})
+	filter, err = newFileFilter(rootDir, []string{}, []string{})
 	if assert.Nil(suite.T(), err) {
 		check(
 			filter,
@@ -97,7 +97,7 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 		)
 	}
 
-	filter, err = newEventFilter(rootDir, []string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"}, []string{})
+	filter, err = newFileFilter(rootDir, []string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"}, []string{})
 	if assert.Nil(suite.T(), err) {
 		assert.Equal(suite.T(), false, filter.matchesFilter(""))
 	}
