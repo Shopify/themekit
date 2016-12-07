@@ -33,9 +33,9 @@ development:
   store: can-i-buy-a-feeling.myshopify.com
   proxy: http://localhost:3000
   ignore_files:
-    "*.gif"
-    "*.jpg"
-    config/settings_data.json
+    - "*.gif"
+    - "*.jpg"
+    - config/settings_data.json
 production:
   password: 16ef663594568325d64408ebcdeef528
   theme_id: "456"

@@ -12,7 +12,7 @@ theme [command] --help
 
 ## General Global Flags
 
-- `--env`, -e : specify an environment to run your command.
+- `--env`, -e : specify an environment to run your command. The default environment is `development`.
 - `--config`, -c : specify a path for your config file.
 - `--no-update-notifier` : this will supress the update notifier that lets the
   user know when there is an applicable update available.
