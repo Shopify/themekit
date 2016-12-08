@@ -13,7 +13,7 @@ const createThemeMaxRetries int = 3
 type ThemeClient struct {
 	Config     *Configuration
 	httpClient *httpClient
-	filter     eventFilter
+	filter     fileFilter
 }
 
 // NewThemeClient will build a new theme client from a configuration and a theme event
@@ -25,7 +25,7 @@ func NewThemeClient(config *Configuration) (ThemeClient, error) {
 		return ThemeClient{}, err
 	}
 
-	filter, err := newEventFilter(config.Directory, config.IgnoredFiles, config.Ignores)
+	filter, err := newFileFilter(config.Directory, config.IgnoredFiles, config.Ignores)
 	if err != nil {
 		return ThemeClient{}, err
 	}

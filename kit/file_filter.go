@@ -1,8 +1,6 @@
 package kit
 
 import (
-	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -29,16 +27,16 @@ var defaultRegexes = []*regexp.Regexp{
 
 var defaultGlobs = []string{}
 
-type eventFilter struct {
+type fileFilter struct {
 	rootDir string
 	filters []*regexp.Regexp
 	globs   []string
 }
 
-func newEventFilter(rootDir string, patterns []string, files []string) (eventFilter, error) {
+func newFileFilter(rootDir string, patterns []string, files []string) (fileFilter, error) {
 	filePatterns, err := filesToPatterns(files)
 	if err != nil {
-		return eventFilter{}, err
+		return fileFilter{}, err
 	}
 
 	patterns = append(patterns, filePatterns...)
@@ -77,25 +75,32 @@ func newEventFilter(rootDir string, patterns []string, files []string) (eventFil
 		globs = append(globs, rootDir+pattern)
 	}
 
-	return eventFilter{
+	return fileFilter{
 		rootDir: rootDir,
 		filters: filters,
 		globs:   globs,
 	}, nil
 }
 
-func (e eventFilter) filterAssets(assets []Asset) []Asset {
+// filterAssets will filter out compiled assets as well as filter any files that
+// match filter patterns.
+// It will filter compiled assets by sorting the assets alphabetically and then
+// checking that the file after each file does not contain an extra liquid extension.
+// For instance if you have the file `app.js` then the file `app.js.liquid`, it
+// will filter the first asset (`app.js`) from the slice.
+func (e fileFilter) filterAssets(assets []Asset) []Asset {
 	filteredAssets := []Asset{}
 	sort.Sort(ByAsset(assets))
 	for index, asset := range assets {
-		if !assetIsCompiled(asset, assets[index+1:]) && !e.matchesFilter(asset.Key) {
+		if !e.matchesFilter(asset.Key) &&
+			(index == len(assets)-1 || assets[index+1].Key != asset.Key+".liquid") {
 			filteredAssets = append(filteredAssets, asset)
 		}
 	}
 	return filteredAssets
 }
 
-func (e eventFilter) matchesFilter(event string) bool {
+func (e fileFilter) matchesFilter(event string) bool {
 	if len(event) == 0 {
 		return false
 	}
@@ -110,16 +115,6 @@ func (e eventFilter) matchesFilter(event string) bool {
 		}
 	}
 	return false
-}
-
-func (e eventFilter) String() string {
-	buffer := bytes.NewBufferString(strings.Join(e.globs, "\n"))
-	buffer.WriteString("--- endglobs ---\n")
-	for _, rxp := range e.filters {
-		buffer.WriteString(fmt.Sprintf("%s\n", rxp))
-	}
-	buffer.WriteString("-- done --")
-	return buffer.String()
 }
 
 func filesToPatterns(files []string) ([]string, error) {
@@ -137,13 +132,4 @@ func filesToPatterns(files []string) ([]string, error) {
 		patterns = append(patterns, strings.Split(string(data), "\n")...)
 	}
 	return patterns, nil
-}
-
-func assetIsCompiled(a Asset, rest []Asset) bool {
-	for _, other := range rest {
-		if strings.Contains(other.Key, a.Key) {
-			return true
-		}
-	}
-	return false
 }

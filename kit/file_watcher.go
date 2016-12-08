@@ -38,12 +38,12 @@ type FileWatcher struct {
 	done     chan bool
 	client   ThemeClient
 	watcher  *fsnotify.Watcher
-	filter   eventFilter
+	filter   fileFilter
 	callback FileEventCallback
 	notify   string
 }
 
-func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filter eventFilter, callback FileEventCallback) (*FileWatcher, error) {
+func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filter fileFilter, callback FileEventCallback) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
