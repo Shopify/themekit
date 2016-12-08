@@ -22,11 +22,17 @@ download and install Theme Kit for you. Please follow the directions outputted t
 console to change your bash profile so that you will have access to the `theme` command
 
 ```bash
-curl https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | python
+curl -s https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | sudo python
 ```
 
-An automated installer for Windows will be coming soon.
+### Homebrew
 
+If you have [homebrew](http://brew.sh/) installed you can install theme kit by running the following commands.
+
+```bash
+brew tap shopify/shopify
+brew install themekit
+```
 
 ### Manual Installation
 

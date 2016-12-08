@@ -42,5 +42,8 @@ DEPENDENCIES
   fog-aws
   git
 
+RUBY VERSION
+   ruby 2.2.3p172
+
 BUNDLED WITH
-   1.10.5
+   1.13.6
