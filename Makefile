@@ -46,6 +46,9 @@ zip: ## Create zip file with distributable binaries
 upload_to_s3: ## Upload zip file with binaries to S3
 	@echo "uploading to S3" && bundle exec ruby ./scripts/release && echo "upload complete";
 
+gen_sha: ## Generate sha256 for a darwin build for usage with homebrew
+	@shasum -a 256 ./build/dist/darwin-amd64/theme
+
 serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
 	@cd docs && jekyll serve
 
