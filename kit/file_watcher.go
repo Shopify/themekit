@@ -62,15 +62,16 @@ func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filt
 	return newWatcher, newWatcher.watchDirectory(dir)
 }
 
-func (watcher *FileWatcher) watchDirectory(dir string) error {
-	dir = filepath.Clean(dir)
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != dir {
+func (watcher *FileWatcher) watchDirectory(root string) error {
+	root = filepath.Clean(root)
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != root {
 			for _, dir := range assetLocations {
-				if strings.HasPrefix(path, dir) {
+				if strings.HasPrefix(path, filepath.Join(root, dir, string(filepath.Separator))) {
 					if err := watcher.watcher.Add(path); err != nil {
 						return fmt.Errorf("Could not watch directory %s: %s", path, err)
 					}
+					break
 				}
 			}
 		}
