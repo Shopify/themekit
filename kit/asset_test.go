@@ -2,7 +2,6 @@ package kit
 
 import (
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -87,7 +86,8 @@ func (s *LoadAssetSuite) TestLoadAssetsFromDirectory() {
 }
 
 func (s *LoadAssetSuite) TestLoadAsset() {
-	windowsRoot := strings.Replace("../fixtures/project", "/", "\\", -1)
+	windowsRoot := "..\\fixtures\\project"
+	println(windowsRoot)
 	asset, err := loadAsset(windowsRoot, "whatever.txt")
 	assert.Equal(s.T(), "whatever.txt", asset.Key)
 	assert.Equal(s.T(), true, asset.IsValid())

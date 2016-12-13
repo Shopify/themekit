@@ -17,14 +17,14 @@ const (
 
 var (
 	assetLocations = []string{
-		"templates/customers/",
-		"assets/",
-		"config/",
-		"layout/",
-		"snippets/",
-		"templates/",
-		"locales/",
-		"sections/",
+		filepath.FromSlash("templates/customers"),
+		"assets",
+		"config",
+		"layout",
+		"snippets",
+		"templates",
+		"locales",
+		"sections",
 	}
 )
 
@@ -67,7 +67,7 @@ func (watcher *FileWatcher) watchDirectory(dir string) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != dir {
 			for _, dir := range assetLocations {
-				if strings.Contains(path+"/", dir) {
+				if strings.HasPrefix(path, dir) {
 					if err := watcher.watcher.Add(path); err != nil {
 						return fmt.Errorf("Could not watch directory %s: %s", path, err)
 					}
@@ -173,9 +173,9 @@ func extractAssetKey(filename string) string {
 	filename = filepath.ToSlash(filename)
 
 	for _, dir := range assetLocations {
-		split := strings.SplitAfterN(filename, dir, 2)
+		split := strings.SplitAfterN(filename, dir+string(filepath.Separator), 2)
 		if len(split) > 1 {
-			return fmt.Sprintf("%s%s", dir, split[len(split)-1])
+			return filepath.Join(dir, split[len(split)-1])
 		}
 	}
 
