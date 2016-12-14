@@ -3,11 +3,11 @@ layout: default
 ---
 # Theme Kit Development
 
-Theme Kit is open source and you can help contribute on github. [Github](https://github.com/Shopify/themekit)
+Theme Kit is open source and you can help contribute on [GitHub](https://github.com/Shopify/themekit).
 
 ## Issues
 
-Please log all issues on the github bug tracker. [Github Issues](https://github.com/Shopify/themekit/issues)
+Please log all issues on the [GitHub issue tracker](https://github.com/Shopify/themekit/issues)
 
 ## Go Development
 
