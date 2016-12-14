@@ -67,7 +67,7 @@ theme # test output of theme and make sure it is working
 ## Get API Access
 
 To develop themes with Theme Kit, you will need to authorize Theme Kit to access your store.
-Head to `https://[you-store-name].myshopify.com/admin/apps/private` it should look something
+Head to `https://[your-store-name].myshopify.com/admin/apps/private` it should look something
 like this:
 
 <img src="{{ "/assets/images/private-apps.png" | prepend: site.baseurl }}" />
