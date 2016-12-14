@@ -65,6 +65,10 @@ func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filt
 func (watcher *FileWatcher) watchDirectory(root string) error {
 	root = filepath.Clean(root)
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
 		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != root {
 			for _, dir := range assetLocations {
 				if strings.HasPrefix(path, filepath.Join(root, dir, string(filepath.Separator))) {
