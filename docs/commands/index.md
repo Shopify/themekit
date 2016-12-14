@@ -22,21 +22,21 @@ theme [command] --help
 If you are starting a new theme and want to have some sane defaults, you can use
 the bootstrap command. It will create a new theme based on Timber, update your
 configuration file for that theme and download it to your computer. You will
-need to provide your api password and your store domain to the command. You can
+need to provide your API password and your store domain to the command. You can
 run the command like the following:
 
 ```bash
-theme bootstrap --password=[your-api-password] --store=[you-store.myshopify.com]
+theme bootstrap --password=[your-api-password] --store=[your-store.myshopify.com]
 ```
 **Required Flags**
 
-* `--password` : Password for access to your shopify account.
+* `--password` : Password for access to your Shopify account.
 * `--store` : Your store's domain for changes to take effect
 
 **Optional Flags**
 
-* `--version` : With the version flag you can specify the version of timber to use.
-* `--prefix` : You can add a prefix to the theme name on shopify. (i.e. `--prefix=mine`
+* `--version` : With the version flag you can specify the version of Timber to use.
+* `--prefix` : You can add a prefix to the theme name on Shopify. (i.e. `--prefix=mine`
   will create a theme called `mine-Timber-latest`)
 
 ## Configure
@@ -60,7 +60,7 @@ development:
 
 **Required Flags**
 
-* `--password` : Password for access to your shopify account.
+* `--password` : Password for access to your Shopify account.
 * `--store` : Your store's domain for changes to take effect
 * `--themeid` : The ID of the theme that you want changes to take effect
 
@@ -76,7 +76,7 @@ theme download templates/404.liquid templates/article.liquid
 
 ## Open
 Open will open the preview page for your theme in your browser as well as print
-out url for your reference.
+out the URL for your reference.
 
 ```bash
 theme open --env=production # will open http://your-store.myshopify.com?preview_theme_id=<your-theme-id>
@@ -92,7 +92,7 @@ and article liquid templates you could enter the following command:
 theme remove templates/404.liquid templates/article.liquid
 ```
 
-**Please note** you may not be able to remove some files from shopify because they
+**Please note** you may not be able to remove some files from Shopify because they
 are required to serve a valid theme.
 
 **Optional Flags**
@@ -100,21 +100,21 @@ are required to serve a valid theme.
 * `--allenvs` : Will run this command for each environment in your config file.
 
 ## Replace
-Replace will completely replace what is on shopify with what is in your current
-project directory. This means that any files that are on shopify but are not on
-your local disk will be removed from shopify. Any files that are both on your local
-disk and shopify will be updated. Lastly any files that are only on your local
-disk will be upload to shopify.
+Replace will completely replace what is on Shopify with what is in your current
+project directory. This means that any files that are on Shopify but are not on
+your local disk will be removed from Shopify. Any files that are both on your local
+disk and Shopify will be updated. Lastly any files that are only on your local
+disk will be upload to Shopify.
 
 Replace can be used without any filenames and it will replace the whole theme. If
-some files names are provided to replace then only those files will be replaced.
+some filenames are provided to replace then only those files will be replaced.
 
 **Optional Flags**
 
 * `--allenvs` : Will run this command for each environment in your config file.
 
 ## Update
-Update will update the themekit command to the newest version. Update can also be
+Update will update the Theme Kit command to the newest version. Update can also be
 used to roll back to previous versions by providing it with a `--version` argument.
 If there is a beta or prerelease version available you may also specify it with
 the version flag, otherwise it will not be installed.
@@ -125,11 +125,11 @@ theme update --version=v0.5.0
 
 **Optional Flags**
 
-* `--version` : Specifies what version theme kit should install.
+* `--version` : Specifies what version Theme Kit should install.
 
 ## Upload
-Upload will update all file states to shopify and create any files that are not
-on shopify's server. If upload is not provided with filename arguments it will do
+Upload will update all file states to Shopify and create any files that are not
+on Shopify's servers. If upload is not provided with filename arguments it will do
 the whole project, otherwise you can upload individual files like this:
 
 ```bash
@@ -144,7 +144,7 @@ Version will print out the current version of the library.
 
 ## Watch
 Watch will start a process that will watch your directory for changes and
-upload them to shopify. Any changes will be logged to the terminal and the status
+upload them to Shopify. Any changes will be logged to the terminal and the status
 of the upload will be logged as well. The program can be stopped by simply typing
 ctrl+C.
 
@@ -160,4 +160,4 @@ theme watch --notify=/tmp/theme.update
 **Optional Flags**
 
 * `--allenvs` : Will run this command for each environment in your config file.
-* `--notify` :File path to a file that you want updated on idle.
+* `--notify` : File path to a file that you want updated on idle.

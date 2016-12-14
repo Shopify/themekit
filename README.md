@@ -7,7 +7,7 @@ Theme Kit is a cross-platform tool for building Shopify Themes. Theme Kit is a s
 - Upload Themes to Multiple Environments
 - Fast Uploads and Downloads
 - Watch for local changes and upload automatically to Shopify
-- Works on Windows, Linux and OS X
+- Works on Windows, Linux and macOS
 
 [Read more about it on the website](https://shopify.github.io/themekit/)
 

@@ -5,7 +5,7 @@ layout: default
 
 ## How do I remove Theme Kit?
 
-You can easily remove theme kit from your command line by running the following
+You can easily remove Theme Kit from your command line by running the following
 command:
 
 ```bash
@@ -19,13 +19,13 @@ patterns and see the [documentation on ignore patterns]({{ '/ignores' | prepend:
 
 ## I am getting the error: 'TLS handshake timeout'
 
-This usually has to do with a file descriptor limit over using theme kit for a
+This usually has to do with a file descriptor limit over using Theme Kit for a
 while. You can usually fix this by restarting your terminal, however to fix it
 in the long term please see the next question.
 
 ## I am getting the error: 'Could not watch directory, too many open files'
 
-You are probably using OSX and OSX has an unusually low limit on file descriptors.
+You are probably using macOS and macOS has an unusually low limit on file descriptors.
 You need to raise this limit manually. You can do this by running the following
 commands.
 

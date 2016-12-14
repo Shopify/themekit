@@ -8,18 +8,18 @@ file values can be overridden by environment variable and environment variables
 can be overridden by command line flags. Please keep this in mind while trying
 to debug your config.
 
-There are general values that you will be able to config for all of theme kit actions.
+There are general values that you will be able to config for all of Theme Kit actions.
 
 | Attribute    | Description
 |:-------------|:---------------------
-| password	   | Your api password
+| password	   | Your API password
 | theme_id	   | The theme that you want the command to take effect on. If you want to make changes to the current live theme you may set this value to `'live'`
-| store	       | Your store's shopify domain with the `.myshopify.com` postfix.
-| directory	   | The project root directory. This allows your to run the command from another directory.
+| store	       | Your store's Shopify domain with the `.myshopify.com` postfix.
+| directory	   | The project root directory. This allows you to run the command from another directory.
 | ignore_files | A list of patterns to ignore when executing commands. Please see the [Ignore Patterns]({{ '/ignores' | prepend: site.baseurl }})  documentation.
 | ignores	     | A list of file paths to files that contain ignore patterns. Please see the [Ignore Patterns]({{ '/ignores' | prepend: site.baseurl }})  documentation.
 | proxy	       | A full URL to proxy your requests through.
-| timeout	     | Requests timeout. If you have larger files in your project that may take longer than the default 30s to upload, you may want to increase this value. You can set this value to 60s for seconds or 1m for one minute.
+| timeout	     | Request timeout. If you have larger files in your project that may take longer than the default 30s to upload, you may want to increase this value. You can set this value to 60s for seconds or 1m for one minute.
 
 ## Config File
 
@@ -53,7 +53,7 @@ test:
 It is prudent to not store your private secrets in your repository so you can set
 these values in your environment.
 
-All of the theme kit environment variables are prefixed with `THEMEKIT_`
+All of the Theme Kit environment variables are prefixed with `THEMEKIT_`
 
 | Attribute    | Environment Variable |
 |:-------------|:---------------------|:------------------|
@@ -66,13 +66,13 @@ All of the theme kit environment variables are prefixed with `THEMEKIT_`
 | proxy	       | THEMEKIT_PROXY       |                   |
 | timeout	     | THEMEKIT_TIMEOUT     |                   |
 
-**Note** Any environment variable will take precedence over your config.yml values
+**Note** Any environment variable will take precedence over your `config.yml` values
 so please keep that in mind while debugging your config.
 
 ## Global Flags
 
 You can enforce any setting manually using a command line flag. This is useful for
-debugging settings or scripting up calling theme kit from something like cron.
+debugging settings or scripting calls to Theme Kit from something like `cron`.
 
 | Attribute    | Flag            | Shortcut
 |:-------------|:----------------|:--------|
@@ -85,5 +85,5 @@ debugging settings or scripting up calling theme kit from something like cron.
 | proxy	       | `--proxy`       |         |
 | timeout	     | `--timeout`     |         |
 
-**Note** Any flag will take precedence over your config.yml  and environment values
+**Note** Any flag will take precedence over your `config.yml` and environment values
 so please keep that in mind while debugging your config.

@@ -3,7 +3,7 @@ layout: default
 ---
 # Theme Kit Ignore Patterns
 
-Theme kit has a couple of ways to ignore files from your commands. You can provide
+Theme Kit has a couple of ways to ignore files from your commands. You can provide
 a list of ignore patterns to your `ignore_files` value or provide a list of file
 paths to your `ignores` value.
 
@@ -14,7 +14,7 @@ it is valid to have blank lines for comment lines prefixed with a `#` value.
 
 ## Patterns
 
-There are a few rules to for the specifications of ignore patters.
+There are a few rules for the specifications of ignore patterns.
 
 - Patterns will be trimmed of whitespace at the beginning and end of the pattern
 - Any plain file name (without a `*` character in it) will be matched within the
@@ -26,28 +26,28 @@ There are a few rules to for the specifications of ignore patters.
   with the pattern `*.gif` this will be matched as `$PROJECT_DIR/*.gif`
 - Any glob pattern that does not start with a glob, will be matched with a prefixed
   glob. So a pattern like `build/*` will be matched as `$PROJECT_DIR/*build/*`
-- Any patter that starts with a **/** and ends with a **/** will be considered a
+- Any pattern that starts with a **/** and ends with a **/** will be considered a
   regular expression and will match the whole path. An example pattern would be
-  `/\.(txt|gif|bat)$/` that would match any file with the txt, gif or bat extentions.
+  `/\.(txt|gif|bat)$/` that would match any file with the `txt`, `gif` or `bat` extentions.
 
 ## Ignores in config.yml example
 
 ```yaml
 development:
-  ... #other content
+  ... # other content
   ignore_files:
   - config/settings_data.json
-  - "*.png" #patterns that start with * need to be quoted to have vaild yaml
+  - "*.png" # patterns that start with * need to be quoted to have vaild yaml
   - /\.(txt|gif|bat)$/
   ignores:
-  - themekit_ignores #file to load ignore patterns, check out the ignore file example
+  - themekit_ignores # file to load ignore patterns, check out the ignore file example
 ```
 
 ## Ignore File example
 
 ```
 # $PROJECT_DIR/themekit_ignores
-#plain file names
+# plain file names
 config/settings_data.json
 
 # globs
