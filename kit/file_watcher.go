@@ -175,14 +175,11 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 }
 
 func extractAssetKey(filename string) string {
-	filename = filepath.ToSlash(filename)
-
 	for _, dir := range assetLocations {
 		split := strings.SplitAfterN(filename, dir+string(filepath.Separator), 2)
 		if len(split) > 1 {
-			return filepath.Join(dir, split[len(split)-1])
+			return filepath.ToSlash(filepath.Join(dir, split[len(split)-1]))
 		}
 	}
-
 	return ""
 }
