@@ -28,6 +28,12 @@ For more documentation please see http://shopify.github.io/themekit/commands/#re
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	defer wg.Done()
+
+	if client.Config.ReadOnly {
+		kit.LogErrorf("[%s]environment is reaonly", kit.GreenText(client.Config.Environment))
+		return
+	}
+
 	assetsActions := map[string]assetAction{}
 
 	if len(filenames) == 0 {

@@ -89,6 +89,7 @@ func init() {
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.Domain, "store", "s", "", "your shopify domain. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().DurationVar(&flagConfig.Timeout, "timeout", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().BoolVarP(&flagConfig.ReadOnly, "readonly", "", false, "make all actions readonly")
 	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
 	ThemeCmd.PersistentFlags().Var(&ignoredFiles, "ignored-file", "A single file to ignore, use the flag multiple times to add multiple.")
 	ThemeCmd.PersistentFlags().Var(&ignores, "ignores", "A path to a file that contains ignore patterns.")
