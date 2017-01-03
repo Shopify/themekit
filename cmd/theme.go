@@ -60,6 +60,8 @@ var (
 
 	bootstrapVersion string
 	bootstrapPrefix  string
+	bootstrapURL     string
+	bootstrapName    string
 	setThemeID       bool
 
 	updateVersion string
@@ -102,6 +104,8 @@ func init() {
 
 	bootstrapCmd.Flags().StringVar(&bootstrapVersion, "version", latestRelease, "version of Shopify Timber to use")
 	bootstrapCmd.Flags().StringVar(&bootstrapPrefix, "prefix", "", "prefix to the Timber theme being created")
+	bootstrapCmd.Flags().StringVar(&bootstrapURL, "url", "", "a url to pull a project theme zip file from.")
+	bootstrapCmd.Flags().StringVar(&bootstrapName, "name", "", "a name to define your theme on your shopify admin")
 
 	updateCmd.Flags().StringVar(&updateVersion, "version", "latest", "version of themekit to install")
 
