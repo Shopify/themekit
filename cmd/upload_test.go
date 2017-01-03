@@ -63,6 +63,22 @@ func (suite *UploadTestSuite) TestUploadAll() {
 	}
 }
 
+func (suite *UploadTestSuite) TestReadOnlyUpload() {
+	requested := false
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		requested = true
+	})
+	defer server.Close()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	client.Config.ReadOnly = true
+	go upload(client, []string{}, &wg)
+	wg.Wait()
+
+	assert.Equal(suite.T(), false, requested)
+}
+
 func (suite *UploadTestSuite) TestUploadSettingsData() {
 	requests := make(chan int, 100)
 	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {

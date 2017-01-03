@@ -36,6 +36,22 @@ func (suite *RemoveTestSuite) TestRemove() {
 	wg.Wait()
 }
 
+func (suite *RemoveTestSuite) TestReadOnlyRemove() {
+	requested := false
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		requested = true
+	})
+	defer server.Close()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	client.Config.ReadOnly = true
+	go remove(client, []string{"templates/layout.liquid"}, &wg)
+	wg.Wait()
+
+	assert.Equal(suite.T(), false, requested)
+}
+
 func TestRemoveTestSuite(t *testing.T) {
 	suite.Run(t, new(RemoveTestSuite))
 }

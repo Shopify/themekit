@@ -42,6 +42,7 @@ func (suite *DownloadTestSuite) TestDownloadWithFileNames() {
 	err := download(client, []string{"assets/hello.txt"})
 	assert.Nil(suite.T(), err)
 
+	client.Config.ReadOnly = true
 	err = download(client, []string{"output/nope.txt"})
 	assert.NotNil(suite.T(), err)
 }
