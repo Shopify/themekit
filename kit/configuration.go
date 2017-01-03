@@ -23,7 +23,7 @@ type Configuration struct {
 	Proxy        string        `yaml:"proxy,omitempty" json:"proxy,omitempty" env:"THEMEKIT_PROXY"`
 	Ignores      []string      `yaml:"ignores,omitempty" json:"ignores,omitempty" env:"THEMEKIT_IGNORES" envSeparator:":"`
 	Timeout      time.Duration `yaml:"timeout,omitempty" json:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
-	ReadOnly     bool          `yaml:"readonly,omitempty" json:"readonly,omitempty" env:"THEMEKIT_READONLY"`
+	ReadOnly     bool          `yaml:"readonly,omitempty" json:"readonly,omitempty" env:"-"`
 }
 
 // DefaultTimeout is the default timeout to kill any stalled processes.
