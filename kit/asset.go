@@ -95,7 +95,8 @@ func loadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset
 
 func loadAsset(root, filename string) (asset Asset, err error) {
 	asset = Asset{}
-	path := toSlash(root, filename)
+	path := filepath.ToSlash(filepath.Join(root, filename))
+	path = strings.Replace(path, "\\", "/", -1)
 	file, err := os.Open(path)
 	if err != nil {
 		return asset, fmt.Errorf("loadAsset: %s", err)
@@ -116,21 +117,13 @@ func loadAsset(root, filename string) (asset Asset, err error) {
 		return asset, fmt.Errorf("loadAsset: %s", err)
 	}
 
-	asset = Asset{Key: toSlash(filename)}
+	asset = Asset{Key: filepath.ToSlash(filename)}
 	if contentTypeFor(buffer) == "text" {
 		asset.Value = string(buffer)
 	} else {
 		asset.Attachment = base64.StdEncoding.EncodeToString(buffer)
 	}
 	return asset, nil
-}
-
-func toSlash(path ...string) string {
-	newpath := filepath.ToSlash(filepath.Join(path...))
-	if strings.Index(newpath, "\\") >= 0 {
-		newpath = strings.Replace(newpath, "\\", "/", -1)
-	}
-	return newpath
 }
 
 func contentTypeFor(data []byte) string {

@@ -17,14 +17,14 @@ const (
 
 var (
 	assetLocations = []string{
-		"templates/customers/",
-		"assets/",
-		"config/",
-		"layout/",
-		"snippets/",
-		"templates/",
-		"locales/",
-		"sections/",
+		filepath.FromSlash("templates/customers"),
+		"assets",
+		"config",
+		"layout",
+		"snippets",
+		"templates",
+		"locales",
+		"sections",
 	}
 )
 
@@ -62,15 +62,20 @@ func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filt
 	return newWatcher, newWatcher.watchDirectory(dir)
 }
 
-func (watcher *FileWatcher) watchDirectory(dir string) error {
-	dir = filepath.Clean(dir)
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != dir {
+func (watcher *FileWatcher) watchDirectory(root string) error {
+	root = filepath.Clean(root)
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != root {
 			for _, dir := range assetLocations {
-				if strings.Contains(path+"/", dir) {
+				if strings.HasPrefix(path, filepath.Join(root, dir, string(filepath.Separator))) {
 					if err := watcher.watcher.Add(path); err != nil {
 						return fmt.Errorf("Could not watch directory %s: %s", path, err)
 					}
+					break
 				}
 			}
 		}
@@ -170,14 +175,11 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 }
 
 func extractAssetKey(filename string) string {
-	filename = filepath.ToSlash(filename)
-
 	for _, dir := range assetLocations {
-		split := strings.SplitAfterN(filename, dir, 2)
+		split := strings.SplitAfterN(filename, dir+string(filepath.Separator), 2)
 		if len(split) > 1 {
-			return fmt.Sprintf("%s%s", dir, split[len(split)-1])
+			return filepath.ToSlash(filepath.Join(dir, split[len(split)-1]))
 		}
 	}
-
 	return ""
 }
