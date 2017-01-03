@@ -100,20 +100,22 @@ func (e fileFilter) filterAssets(assets []Asset) []Asset {
 	return filteredAssets
 }
 
-func (e fileFilter) matchesFilter(event string) bool {
-	if len(event) == 0 {
-		return false
+func (e fileFilter) matchesFilter(filename string) bool {
+	if len(filename) == 0 || !assetInProject(filename) {
+		return true
 	}
+
 	for _, regexp := range e.filters {
-		if regexp.MatchString(event) {
+		if regexp.MatchString(filename) {
 			return true
 		}
 	}
 	for _, pattern := range e.globs {
-		if glob.Glob(pattern, event) || glob.Glob(pattern, e.rootDir+event) {
+		if glob.Glob(pattern, filename) || glob.Glob(pattern, e.rootDir+filename) {
 			return true
 		}
 	}
+
 	return false
 }
 

@@ -123,6 +123,25 @@ func (suite *FileWatcherTestSuite) TestExtractAssetKey() {
 	}
 }
 
+func (suite *FileWatcherTestSuite) TestAssetInProject() {
+	tests := map[string]bool{
+		"": false,
+		"/long/path/to/config.yml":                      false,
+		"/long/path/to/misc/other.html":                 false,
+		"/long/path/to/assets/logo.png":                 true,
+		"/long/path/to/templates/customers/test.liquid": true,
+		"/long/path/to/config/test.liquid":              true,
+		"/long/path/to/layout/test.liquid":              true,
+		"/long/path/to/snippets/test.liquid":            true,
+		"/long/path/to/templates/test.liquid":           true,
+		"/long/path/to/locales/test.liquid":             true,
+		"/long/path/to/sections/test.liquid":            true,
+	}
+	for input, expected := range tests {
+		assert.Equal(suite.T(), expected, assetInProject(input))
+	}
+}
+
 func TestFileWatcherTestSuite(t *testing.T) {
 	suite.Run(t, new(FileWatcherTestSuite))
 }

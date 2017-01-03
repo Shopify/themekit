@@ -183,3 +183,13 @@ func extractAssetKey(filename string) string {
 	}
 	return ""
 }
+
+func assetInProject(filename string) bool {
+	for _, dir := range assetLocations {
+		split := strings.SplitAfterN(filename, dir+string(filepath.Separator), 2)
+		if len(split) > 1 {
+			return true
+		}
+	}
+	return false
+}
