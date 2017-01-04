@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-const (
+var (
 	rootDir           = "./root/dir/"
 	ignoreFixturePath = "../fixtures/project/valid_patterns"
 )

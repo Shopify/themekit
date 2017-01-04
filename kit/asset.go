@@ -117,7 +117,7 @@ func loadAsset(root, filename string) (asset Asset, err error) {
 		return asset, fmt.Errorf("loadAsset: %s", err)
 	}
 
-	asset = Asset{Key: filepath.ToSlash(filename)}
+	asset = Asset{Key: pathToProject(path)}
 	if contentTypeFor(buffer) == "text" {
 		asset.Value = string(buffer)
 	} else {

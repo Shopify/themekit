@@ -101,7 +101,7 @@ func (e fileFilter) filterAssets(assets []Asset) []Asset {
 }
 
 func (e fileFilter) matchesFilter(filename string) bool {
-	if len(filename) == 0 || !assetInProject(e.rootDir, filename) {
+	if len(filename) == 0 || !pathInProject(filename) {
 		return true
 	}
 
