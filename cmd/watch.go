@@ -32,13 +32,20 @@ For more documentation please see http://shopify.github.io/themekit/commands/#wa
 func watch(themeClients []kit.ThemeClient) error {
 	watchers := []*kit.FileWatcher{}
 	defer func() {
-		kit.Print("Cleaning up watchers")
-		for _, watcher := range watchers {
-			watcher.StopWatching()
+		if len(watchers) > 0 {
+			kit.Print("Cleaning up watchers")
+			for _, watcher := range watchers {
+				watcher.StopWatching()
+			}
 		}
 	}()
 
 	for _, client := range themeClients {
+		if client.Config.ReadOnly {
+			kit.LogErrorf("[%s]environment is reaonly", kit.GreenText(client.Config.Environment))
+			continue
+		}
+
 		kit.Printf("[%s] Watching for file changes on host %s ", kit.GreenText(client.Config.Environment), kit.YellowText(client.Config.Domain))
 		watcher, err := client.NewFileWatcher(notifyFile, handleWatchEvent)
 		if err != nil {
@@ -47,8 +54,10 @@ func watch(themeClients []kit.ThemeClient) error {
 		watchers = append(watchers, watcher)
 	}
 
-	signal.Notify(signalChan, os.Interrupt)
-	<-signalChan
+	if len(watchers) > 0 {
+		signal.Notify(signalChan, os.Interrupt)
+		<-signalChan
+	}
 
 	return nil
 }

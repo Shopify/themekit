@@ -22,6 +22,12 @@ For more documentation please see http://shopify.github.io/themekit/commands/#re
 
 func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	defer wg.Done()
+
+	if client.Config.ReadOnly {
+		kit.LogErrorf("[%s]environment is reaonly", kit.GreenText(client.Config.Environment))
+		return
+	}
+
 	for _, filename := range filenames {
 		wg.Add(1)
 		go performRemove(client, kit.Asset{Key: filename}, wg)

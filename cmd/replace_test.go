@@ -77,6 +77,22 @@ func (suite *ReplaceTestSuite) TestReplaceAll() {
 	}
 }
 
+func (suite *ReplaceTestSuite) TestReadOnlyReplace() {
+	requested := false
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		requested = true
+	})
+	defer server.Close()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	client.Config.ReadOnly = true
+	go replace(client, []string{}, &wg)
+	wg.Wait()
+
+	assert.Equal(suite.T(), false, requested)
+}
+
 func TestReplaceTestSuite(t *testing.T) {
 	suite.Run(t, new(ReplaceTestSuite))
 }

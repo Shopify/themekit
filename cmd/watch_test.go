@@ -26,6 +26,17 @@ func (suite *WatchTestSuite) TestWatch() {
 	watch([]kit.ThemeClient{client})
 }
 
+func (suite *WatchTestSuite) TestReadOnlyWatch() {
+	requested := false
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		requested = true
+	})
+	defer server.Close()
+	client.Config.ReadOnly = true
+	watch([]kit.ThemeClient{client})
+	assert.Equal(suite.T(), false, requested)
+}
+
 func (suite *WatchTestSuite) TestHandleWatchEvent() {
 	requests := make(chan int, 1000)
 	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {

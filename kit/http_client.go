@@ -137,11 +137,17 @@ func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr st
 }
 
 func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr string, body io.Reader) (*ShopifyResponse, Error) {
+	if client.config.ReadOnly && event != Retrieve {
+		return newShopifyResponse(rtype, event, urlStr, nil, fmt.Errorf("Theme is read only"))
+	}
+
 	req, err := client.newRequest(event, urlStr, body)
 	if err != nil {
 		return newShopifyResponse(rtype, event, urlStr, nil, err)
 	}
+
 	apiLimit.Wait()
+
 	resp, respErr := client.client.Do(req)
 	return newShopifyResponse(rtype, event, urlStr, resp, respErr)
 }

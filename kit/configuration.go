@@ -23,6 +23,7 @@ type Configuration struct {
 	Proxy        string        `yaml:"proxy,omitempty" json:"proxy,omitempty" env:"THEMEKIT_PROXY"`
 	Ignores      []string      `yaml:"ignores,omitempty" json:"ignores,omitempty" env:"THEMEKIT_IGNORES" envSeparator:":"`
 	Timeout      time.Duration `yaml:"timeout,omitempty" json:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
+	ReadOnly     bool          `yaml:"readonly,omitempty" json:"readonly,omitempty" env:"-"`
 }
 
 // DefaultTimeout is the default timeout to kill any stalled processes.
@@ -129,6 +130,7 @@ IgnoredFiles %v
 Proxy        %v
 Ignores      %v
 Timeout      %v
+ReadOnly     %v
 	`,
 		conf.Password,
 		conf.ThemeID,
@@ -137,7 +139,9 @@ Timeout      %v
 		conf.IgnoredFiles,
 		conf.Proxy,
 		conf.Ignores,
-		conf.Timeout)
+		conf.Timeout,
+		conf.ReadOnly,
+	)
 }
 
 func (conf Configuration) asYAML() *Configuration {

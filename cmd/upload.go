@@ -24,6 +24,12 @@ For more documentation please see http://shopify.github.io/themekit/commands/#up
 
 func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	defer wg.Done()
+
+	if client.Config.ReadOnly {
+		kit.LogErrorf("[%s]environment is reaonly", kit.GreenText(client.Config.Environment))
+		return
+	}
+
 	var err error
 	localAssets := []kit.Asset{}
 
@@ -69,6 +75,10 @@ func performUpload(client kit.ThemeClient, asset kit.Asset, wg *sync.WaitGroup) 
 }
 
 func uploadSettingsData(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+	if client.Config.ReadOnly {
+		return
+	}
+
 	doupload := func() {
 		asset, err := client.LocalAsset(settingsDataKey)
 		if err != nil {
