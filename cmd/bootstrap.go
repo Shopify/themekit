@@ -37,12 +37,12 @@ For more documentation please see http://shopify.github.io/themekit/commands/#bo
 }
 
 func bootstrap() error {
-	zipLocation, err := zipPathForVersion(bootstrapVersion)
+	zipLocation, err := getZipPath()
 	if err != nil {
 		return err
 	}
 
-	themeName := bootstrapPrefix + "Timber-" + bootstrapVersion
+	themeName := getThemeName()
 	kit.Printf(
 		"Attempting to create theme %s from %s",
 		kit.YellowText(themeName),
@@ -66,6 +66,26 @@ func bootstrap() error {
 	)
 
 	return download(client, []string{})
+}
+
+func getZipPath() (string, error) {
+	if bootstrapURL != "" {
+		return bootstrapURL, nil
+	}
+	return zipPathForVersion(bootstrapVersion)
+}
+
+func getThemeName() string {
+	if bootstrapName != "" {
+		return bootstrapName
+	}
+
+	if bootstrapURL != "" {
+		parts := strings.Split(bootstrapURL, "/")
+		return bootstrapPrefix + strings.Replace(parts[len(parts)-1], ".zip", "", 1)
+	}
+
+	return bootstrapPrefix + "Timber-" + bootstrapVersion
 }
 
 func zipPathForVersion(version string) (string, error) {

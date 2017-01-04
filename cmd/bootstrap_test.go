@@ -55,6 +55,45 @@ func (suite *BootstrapTestSuite) TestBootstrap() {
 	os.Remove("./config.yml")
 }
 
+func (suite *BootstrapTestSuite) TestGetZipPath() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		file, _ := os.Open("../fixtures/releases.atom")
+		bytes, _ := ioutil.ReadAll(file)
+		fmt.Fprintf(w, string(bytes))
+	}))
+	timberFeedPath = server.URL
+
+	bootstrapVersion = "master"
+	path, err := getZipPath()
+	assert.Equal(suite.T(), themeZipRoot+"master.zip", path)
+	assert.Nil(suite.T(), err)
+
+	bootstrapURL = "http://github.com/shopify/theme.zip"
+	path, err = getZipPath()
+	assert.Equal(suite.T(), bootstrapURL, path)
+	assert.Nil(suite.T(), err)
+
+	bootstrapURL = ""
+	bootstrapVersion = ""
+}
+
+func (suite *BootstrapTestSuite) TestGetThemeName() {
+	bootstrapPrefix = "prEfix"
+	bootstrapVersion = "4.2.0"
+	assert.Equal(suite.T(), "prEfixTimber-4.2.0", getThemeName())
+
+	bootstrapURL = "http://github.com/shopify/theme.zip"
+	assert.Equal(suite.T(), "prEfixtheme", getThemeName())
+
+	bootstrapName = "bootStrapNaeme"
+	assert.Equal(suite.T(), "bootStrapNaeme", getThemeName())
+
+	bootstrapPrefix = ""
+	bootstrapVersion = ""
+	bootstrapURL = ""
+	bootstrapName = ""
+}
+
 func (suite *BootstrapTestSuite) TestZipPath() {
 	assert.Equal(suite.T(), themeZipRoot+"foo.zip", zipPath("foo"))
 }
