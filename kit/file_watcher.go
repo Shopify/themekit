@@ -183,3 +183,15 @@ func extractAssetKey(filename string) string {
 	}
 	return ""
 }
+
+func assetInProject(root, filename string) bool {
+	isAbs := strings.Contains(filename, root)
+	filename += string(filepath.Separator)
+	for _, dir := range assetLocations {
+		path := filepath.Join(root, dir) + string(filepath.Separator)
+		if (isAbs && strings.HasPrefix(filename, path)) || strings.HasPrefix(filename, dir+string(filepath.Separator)) {
+			return true
+		}
+	}
+	return false
+}

@@ -34,8 +34,11 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
+	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
+
 	newWatcher := &FileWatcher{
 		done:    make(chan bool),
+		filter:  filter,
 		watcher: &fsnotify.Watcher{Events: eventChan},
 	}
 
@@ -120,6 +123,34 @@ func (suite *FileWatcherTestSuite) TestExtractAssetKey() {
 	}
 	for input, expected := range tests {
 		assert.Equal(suite.T(), expected, extractAssetKey(input))
+	}
+}
+
+func (suite *FileWatcherTestSuite) TestAssetInProject() {
+	tests := map[string]bool{
+		"": false,
+		"/long/path/to/config.yml":                      false,
+		"/long/path/to/misc":                            false,
+		"/long/path/to/misc/other.html":                 false,
+		"/long/path/to/assets":                          true,
+		"/long/path/to/assets/logo.png":                 true,
+		"/long/path/to/templates/customers":             true,
+		"/long/path/to/templates/customers/test.liquid": true,
+		"/long/path/to/config":                          true,
+		"/long/path/to/config/test.liquid":              true,
+		"/long/path/to/layout/test.liquid":              true,
+		"/long/path/to/layout":                          true,
+		"/long/path/to/snippets/test.liquid":            true,
+		"/long/path/to/snippets":                        true,
+		"/long/path/to/templates/test.liquid":           true,
+		"/long/path/to/templates":                       true,
+		"/long/path/to/locales/test.liquid":             true,
+		"/long/path/to/locales":                         true,
+		"/long/path/to/sections/test.liquid":            true,
+		"/long/path/to/sections":                        true,
+	}
+	for input, expected := range tests {
+		assert.Equal(suite.T(), expected, assetInProject("/long/path/to", input), input)
 	}
 }
 

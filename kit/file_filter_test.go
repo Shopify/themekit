@@ -39,8 +39,8 @@ func (suite *EventFilterTestSuite) TestNewEventFilter() {
 func (suite *EventFilterTestSuite) TestFilterAssets() {
 	filter, err := newFileFilter(rootDir, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
 	if assert.Nil(suite.T(), err) {
-		inputAssets := []Asset{{Key: "test/foo.json.liquid"}, {Key: "test/foo.json"}, {Key: "foo.txt"}, {Key: "test.bat"}, {Key: "zubat"}}
-		expectedAssets := []Asset{{Key: "test/foo.json.liquid"}, {Key: "zubat"}}
+		inputAssets := []Asset{{Key: "templates/foo.json.liquid"}, {Key: "templates/foo.json"}, {Key: "templates/foo.txt"}, {Key: "test.bat"}, {Key: "templates/zubat"}}
+		expectedAssets := []Asset{{Key: "templates/foo.json.liquid"}, {Key: "templates/zubat"}}
 
 		assert.Equal(suite.T(), expectedAssets, filter.filterAssets(inputAssets))
 	}
@@ -62,8 +62,8 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 	if assert.Nil(suite.T(), err) {
 		check(
 			filter,
-			[]string{rootDir + "/foo/test.txt", "test.txt", "test/test.txt", "build/hello/world", "build/world", "test/build/world", "zubat"},
-			[]string{"zubat"},
+			[]string{rootDir + "/foo/test.txt", "test.txt", "templates/test.txt", "build/hello/world", "build/world", "templates/world", "config/zubat"},
+			[]string{"templates/world", "config/zubat"},
 		)
 	}
 
@@ -72,8 +72,8 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 	if assert.Nil(suite.T(), err) {
 		check(
 			filter,
-			[]string{rootDir + "config/settings.json", "hello.bat", "build/hello/world.gif", "build/world.txt", "whatever", "foo.ini", "zubat"},
-			[]string{"whatever", "zubat"},
+			[]string{rootDir + "config/settings.json", "hello.bat", "build/hello/world.gif", "build/world.txt", "templates/whatever", "foo.ini", "templates/zubat"},
+			[]string{"templates/whatever", "templates/zubat"},
 		)
 	}
 
@@ -82,8 +82,8 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 	if assert.Nil(suite.T(), err) {
 		check(
 			filter,
-			[]string{rootDir + "config/settings.json", "hello.bat", "build/hello/world.gif", "build/world.txt", "whatever", "foo.ini", "zubat"},
-			[]string{"whatever", "zubat"},
+			[]string{rootDir + "config/settings.json", "", "hello.bat", "build/hello/world.gif", "build/world.txt", "templates/whatever", "foo.ini", "templates/zubat"},
+			[]string{"templates/whatever", "templates/zubat"},
 		)
 	}
 
@@ -99,7 +99,7 @@ func (suite *EventFilterTestSuite) TestMatchesFilter() {
 
 	filter, err = newFileFilter(rootDir, []string{"config/settings_schema.json", "config/settings_data.json", "*.jpg", "*.png"}, []string{})
 	if assert.Nil(suite.T(), err) {
-		assert.Equal(suite.T(), false, filter.matchesFilter(""))
+		assert.Equal(suite.T(), true, filter.matchesFilter(""))
 	}
 }
 
