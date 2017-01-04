@@ -14,7 +14,7 @@ import (
 
 var (
 	// ThemeKitVersion is the version build of the library
-	ThemeKitVersion, _ = version.NewVersion("0.6.2")
+	ThemeKitVersion, _ = version.NewVersion("0.6.3")
 	releasesURL        = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
 )
 
