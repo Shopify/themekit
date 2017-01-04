@@ -73,35 +73,33 @@ func (s *LoadAssetSuite) TestFindAllFiles() {
 }
 
 func (s *LoadAssetSuite) TestLoadAssetsFromDirectory() {
-	assets, err := loadAssetsFromDirectory("../fixtures/project/valid_patterns", func(path string) bool { return false })
+	assets, err := loadAssetsFromDirectory(clean("../fixtures/project/valid_patterns"), func(path string) bool { return false })
 	assert.Equal(s.T(), "Path is not a directory", err.Error())
-	assets, err = loadAssetsFromDirectory("../fixtures/project", func(path string) bool {
-		return path != "whatever.txt"
+	assets, err = loadAssetsFromDirectory(clean("../fixtures/project"), func(path string) bool {
+		return path != "assets/application.js"
 	})
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), []Asset{{
-		Key:   "whatever.txt",
-		Value: "whatever\n",
+		Key:   "assets/application.js",
+		Value: "//this is js\n",
 	}}, assets)
 }
 
 func (s *LoadAssetSuite) TestLoadAsset() {
-	windowsRoot := "..\\fixtures\\project"
-	println(windowsRoot)
-	asset, err := loadAsset(windowsRoot, "whatever.txt")
-	assert.Equal(s.T(), "whatever.txt", asset.Key)
+	asset, err := loadAsset(clean("../fixtures/project"), clean("assets/application.js"))
+	assert.Equal(s.T(), "assets/application.js", asset.Key)
 	assert.Equal(s.T(), true, asset.IsValid())
-	assert.Equal(s.T(), "whatever\n", asset.Value)
+	assert.Equal(s.T(), "//this is js\n", asset.Value)
 	assert.Nil(s.T(), err)
 
-	asset, err = loadAsset("../fixtures/project", "nope.txt")
+	asset, err = loadAsset(clean("../fixtures/project"), "nope.txt")
 	assert.NotNil(s.T(), err)
 
-	asset, err = loadAsset("../fixtures/project", "templates")
+	asset, err = loadAsset(clean("../fixtures/project"), "templates")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "loadAsset: File is a directory", err.Error())
 
-	asset, err = loadAsset("../fixtures/project", "assets/pixel.png")
+	asset, err = loadAsset(clean("../fixtures/project"), "assets/pixel.png")
 	assert.Nil(s.T(), err)
 	assert.True(s.T(), len(asset.Attachment) > 0)
 	assert.True(s.T(), asset.IsValid())

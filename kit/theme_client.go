@@ -2,7 +2,6 @@ package kit
 
 import (
 	"fmt"
-	"path/filepath"
 	"time"
 )
 
@@ -66,8 +65,7 @@ func (t ThemeClient) Asset(filename string) (Asset, Error) {
 // LocalAssets will return a slice of assets from the local disk. The
 // assets are filtered based on your config.
 func (t ThemeClient) LocalAssets() ([]Asset, error) {
-	dir := fmt.Sprintf("%s%s", t.Config.Directory, string(filepath.Separator))
-	assets, err := loadAssetsFromDirectory(dir, t.filter.matchesFilter)
+	assets, err := loadAssetsFromDirectory(t.Config.Directory, t.filter.matchesFilter)
 	if err != nil {
 		return []Asset{}, err
 	}

@@ -35,7 +35,7 @@ func (suite *EnvironmentsTestSuite) TestLoadEnvironments() {
 	_, err := LoadEnvironments(badEnvirontmentPath)
 	assert.NotNil(suite.T(), err)
 
-	_, err = LoadEnvironments("./not/there.yml")
+	_, err = LoadEnvironments(clean("./not/there.yml"))
 	assert.NotNil(suite.T(), err)
 }
 
@@ -44,11 +44,11 @@ func (suite *EnvironmentsTestSuite) TestSearchConfigPath() {
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), "yml", ext)
 
-	_, ext, err = searchConfigPath("../fixtures/project/config.json")
+	_, ext, err = searchConfigPath(clean("../fixtures/project/config.json"))
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), "json", ext)
 
-	_, ext, err = searchConfigPath("./not/there.yml")
+	_, ext, err = searchConfigPath(clean("./not/there.yml"))
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), os.ErrNotExist, err)
 }
@@ -71,7 +71,7 @@ func (suite *EnvironmentsTestSuite) TestSave() {
 	assert.Nil(suite.T(), err)
 	_, err = os.Stat(outputEnvirontmentPath)
 	assert.Nil(suite.T(), err)
-	err = suite.environments.Save("./no/where/path")
+	err = suite.environments.Save(clean("./no/where/path"))
 	assert.NotNil(suite.T(), err)
 }
 

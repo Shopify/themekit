@@ -2,6 +2,7 @@ package kit
 
 import (
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -11,9 +12,9 @@ import (
 	"gopkg.in/fsnotify.v1"
 )
 
-const (
-	textFixturePath  = "../fixtures/project/assets/application.js"
-	watchFixturePath = "../fixtures/project"
+var (
+	textFixturePath  = filepath.Join("..", "fixtures", "project", "assets", "application.js")
+	watchFixturePath = filepath.Join("..", "fixtures", "project")
 )
 
 type FileWatcherTestSuite struct {
@@ -53,10 +54,10 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 
 	go func() {
 		writes := []fsnotify.Event{
-			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
-			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
-			{Name: watchFixturePath + "/templates/template.liquid", Op: fsnotify.Write},
-			{Name: watchFixturePath + "/templates/customers/test.liquid", Op: fsnotify.Write},
+			{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write},
+			{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write},
+			{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write},
+			{Name: filepath.Join(watchFixturePath, "templates", "customers", "test.liquid"), Op: fsnotify.Write},
 		}
 		for _, fsEvent := range writes {
 			eventChan <- fsEvent
@@ -86,72 +87,22 @@ func (suite *FileWatcherTestSuite) TestHandleEvent() {
 		{Name: textFixturePath, Event: fsnotify.Create},
 		{Name: textFixturePath, Event: fsnotify.Write},
 		{Name: textFixturePath, Event: fsnotify.Remove},
-		{Name: "../fixtures/project/whatever.txt", Event: fsnotify.Write},
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(len(writes))
 
 	watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType, err error) {
-		if err != nil {
-			assert.Equal(suite.T(), "file ../fixtures/project/whatever.txt is not in project workspace", err.Error())
-			assert.Equal(suite.T(), "../fixtures/project/whatever.txt", asset.Key)
-		} else {
-			assert.Equal(suite.T(), extractAssetKey(textFixturePath), asset.Key)
-		}
+		assert.Equal(suite.T(), pathToProject(textFixturePath), asset.Key)
 		wg.Done()
 	}}
 
 	for _, write := range writes {
+		println(write.Name)
 		handleEvent(watcher, fsnotify.Event{Name: write.Name, Op: write.Event})
 	}
 
 	wg.Wait()
-}
-
-func (suite *FileWatcherTestSuite) TestExtractAssetKey() {
-	tests := map[string]string{
-		"/long/path/to/config.yml":                      "",
-		"/long/path/to/assets/logo.png":                 "assets/logo.png",
-		"/long/path/to/templates/customers/test.liquid": "templates/customers/test.liquid",
-		"/long/path/to/config/test.liquid":              "config/test.liquid",
-		"/long/path/to/layout/test.liquid":              "layout/test.liquid",
-		"/long/path/to/snippets/test.liquid":            "snippets/test.liquid",
-		"/long/path/to/templates/test.liquid":           "templates/test.liquid",
-		"/long/path/to/locales/test.liquid":             "locales/test.liquid",
-		"/long/path/to/sections/test.liquid":            "sections/test.liquid",
-	}
-	for input, expected := range tests {
-		assert.Equal(suite.T(), expected, extractAssetKey(input))
-	}
-}
-
-func (suite *FileWatcherTestSuite) TestAssetInProject() {
-	tests := map[string]bool{
-		"": false,
-		"/long/path/to/config.yml":                      false,
-		"/long/path/to/misc":                            false,
-		"/long/path/to/misc/other.html":                 false,
-		"/long/path/to/assets":                          true,
-		"/long/path/to/assets/logo.png":                 true,
-		"/long/path/to/templates/customers":             true,
-		"/long/path/to/templates/customers/test.liquid": true,
-		"/long/path/to/config":                          true,
-		"/long/path/to/config/test.liquid":              true,
-		"/long/path/to/layout/test.liquid":              true,
-		"/long/path/to/layout":                          true,
-		"/long/path/to/snippets/test.liquid":            true,
-		"/long/path/to/snippets":                        true,
-		"/long/path/to/templates/test.liquid":           true,
-		"/long/path/to/templates":                       true,
-		"/long/path/to/locales/test.liquid":             true,
-		"/long/path/to/locales":                         true,
-		"/long/path/to/sections/test.liquid":            true,
-		"/long/path/to/sections":                        true,
-	}
-	for input, expected := range tests {
-		assert.Equal(suite.T(), expected, assetInProject("/long/path/to", input), input)
-	}
 }
 
 func TestFileWatcherTestSuite(t *testing.T) {
@@ -159,5 +110,5 @@ func TestFileWatcherTestSuite(t *testing.T) {
 }
 
 func clean(path string) string {
-	return filepath.Clean(path)
+	return filepath.Join(strings.Split(filepath.Clean(path), "/")...)
 }

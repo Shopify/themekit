@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -13,19 +12,6 @@ import (
 
 const (
 	debounceTimeout = 1100 * time.Millisecond
-)
-
-var (
-	assetLocations = []string{
-		filepath.FromSlash("templates/customers"),
-		"assets",
-		"config",
-		"layout",
-		"snippets",
-		"templates",
-		"locales",
-		"sections",
-	}
 )
 
 // FileEventCallback is the callback that is called when there is an event from
@@ -70,13 +56,8 @@ func (watcher *FileWatcher) watchDirectory(root string) error {
 		}
 
 		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != root {
-			for _, dir := range assetLocations {
-				if strings.HasPrefix(path, filepath.Join(root, dir, string(filepath.Separator))) {
-					if err := watcher.watcher.Add(path); err != nil {
-						return fmt.Errorf("Could not watch directory %s: %s", path, err)
-					}
-					break
-				}
+			if err := watcher.watcher.Add(path); err != nil {
+				return fmt.Errorf("Could not watch directory %s: %s", path, err)
 			}
 		}
 		return nil
@@ -156,42 +137,6 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 	if event.Op&fsnotify.Remove == fsnotify.Remove {
 		eventType = Remove
 	}
-
-	root := filepath.Dir(event.Name)
-	filename := filepath.Base(event.Name)
-	asset, loadErr := loadAsset(root, filename)
-	if loadErr != nil { // remove event wont load asset
-		asset = Asset{}
-	}
-
-	var err error
-	asset.Key = extractAssetKey(event.Name)
-	if asset.Key == "" {
-		err = fmt.Errorf("file %s is not in project workspace", event.Name)
-		asset.Key = event.Name
-	}
-
+	asset, err := loadAsset(filepath.Dir(event.Name), filepath.Base(event.Name))
 	watcher.callback(watcher.client, asset, eventType, err)
-}
-
-func extractAssetKey(filename string) string {
-	for _, dir := range assetLocations {
-		split := strings.SplitAfterN(filename, dir+string(filepath.Separator), 2)
-		if len(split) > 1 {
-			return filepath.ToSlash(filepath.Join(dir, split[len(split)-1]))
-		}
-	}
-	return ""
-}
-
-func assetInProject(root, filename string) bool {
-	isAbs := strings.Contains(filename, root)
-	filename += string(filepath.Separator)
-	for _, dir := range assetLocations {
-		path := filepath.Join(root, dir) + string(filepath.Separator)
-		if (isAbs && strings.HasPrefix(filename, path)) || strings.HasPrefix(filename, dir+string(filepath.Separator)) {
-			return true
-		}
-	}
-	return false
 }
