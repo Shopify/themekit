@@ -48,7 +48,7 @@ func (suite *EnvironmentsTestSuite) TestSearchConfigPath() {
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), "json", ext)
 
-	_, ext, err = searchConfigPath(clean("./not/there.yml"))
+	_, _, err = searchConfigPath(clean("./not/there.yml"))
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), os.ErrNotExist, err)
 }
