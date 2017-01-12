@@ -16,7 +16,7 @@ const (
 
 // FileEventCallback is the callback that is called when there is an event from
 // a file watcher.
-type FileEventCallback func(ThemeClient, Asset, EventType, error)
+type FileEventCallback func(ThemeClient, Asset, EventType)
 
 // FileWatcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
@@ -137,6 +137,6 @@ func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
 	if event.Op&fsnotify.Remove == fsnotify.Remove {
 		eventType = Remove
 	}
-	asset, err := loadAsset(filepath.Dir(event.Name), filepath.Base(event.Name))
-	watcher.callback(watcher.client, asset, eventType, err)
+	asset, _ := loadAsset(filepath.Dir(event.Name), filepath.Base(event.Name))
+	watcher.callback(watcher.client, asset, eventType)
 }
