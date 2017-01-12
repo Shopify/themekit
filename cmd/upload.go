@@ -24,7 +24,6 @@ For more documentation please see http://shopify.github.io/themekit/commands/#up
 }
 
 func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-	fmt.Println(filenames)
 	defer wg.Done()
 
 	if client.Config.ReadOnly {
