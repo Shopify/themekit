@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/spf13/cobra"
