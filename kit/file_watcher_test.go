@@ -23,7 +23,7 @@ type FileWatcherTestSuite struct {
 }
 
 func (suite *FileWatcherTestSuite) TestNewFileReader() {
-	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, "", true, fileFilter{}, func(ThemeClient, Asset, EventType, error) {})
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, watcher.IsWatching())
 	watcher.StopWatching()
@@ -43,8 +43,7 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 		watcher: &fsnotify.Watcher{Events: eventChan},
 	}
 
-	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType, err error) {
-		assert.Nil(suite.T(), err)
+	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType) {
 		assert.Equal(suite.T(), Update, event)
 		assetChan <- asset
 		wg.Done()
@@ -71,7 +70,7 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 }
 
 func (suite *FileWatcherTestSuite) TestStopWatching() {
-	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, "", true, fileFilter{}, func(ThemeClient, Asset, EventType, error) {})
+	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, watcher.IsWatching())
 	watcher.StopWatching()
@@ -92,13 +91,12 @@ func (suite *FileWatcherTestSuite) TestHandleEvent() {
 	var wg sync.WaitGroup
 	wg.Add(len(writes))
 
-	watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType, err error) {
+	watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType) {
 		assert.Equal(suite.T(), pathToProject(textFixturePath), asset.Key)
 		wg.Done()
 	}}
 
 	for _, write := range writes {
-		println(write.Name)
 		handleEvent(watcher, fsnotify.Event{Name: write.Name, Op: write.Event})
 	}
 

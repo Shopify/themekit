@@ -50,7 +50,7 @@ func (suite *ThemeClientTestSuite) TestNewThemeClientError() {
 }
 
 func (suite *ThemeClientTestSuite) TestNewFileWatcher() {
-	watcher, err := suite.client.NewFileWatcher("", func(ThemeClient, Asset, EventType, error) {})
+	watcher, err := suite.client.NewFileWatcher("", func(ThemeClient, Asset, EventType) {})
 	assert.Nil(suite.T(), err)
 	assert.NotNil(suite.T(), watcher)
 }
