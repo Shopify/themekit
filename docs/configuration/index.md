@@ -81,7 +81,7 @@ debugging settings or scripting calls to Theme Kit from something like `cron`.
 | password     | `--password`    |         |
 | theme_id     | `--themeid`     |         |
 | store        | `--store`       | -s      |
-| directory    | `--directory`   | -d      |
+| directory    | `--dir`         | -d      |
 | ignore_files | `--ignored-file`|         |
 | ignores      | `--ignores`     |         |
 | proxy        | `--proxy`       |         |
