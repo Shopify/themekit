@@ -1,7 +1,9 @@
 package kit
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -21,16 +23,65 @@ type Asset struct {
 }
 
 // IsValid verifies that the Asset has a Key, and at least a Value or Attachment
-func (a Asset) IsValid() bool {
-	return len(a.Key) > 0 && (len(a.Value) > 0 || len(a.Attachment) > 0)
+func (asset Asset) IsValid() bool {
+	return len(asset.Key) > 0 && (len(asset.Value) > 0 || len(asset.Attachment) > 0)
 }
 
 // Size will return the length of the value or attachment depending on which exists.
-func (a Asset) Size() int {
-	if len(a.Value) > 0 {
-		return len(a.Value)
+func (asset Asset) Size() int {
+	if len(asset.Value) > 0 {
+		return len(asset.Value)
 	}
-	return len(a.Attachment)
+	return len(asset.Attachment)
+}
+
+// Write will write the asset out to the destination directory
+func (asset Asset) Write(directory string) error {
+	perms, err := os.Stat(directory)
+	if err != nil {
+		return err
+	}
+
+	filename := filepath.Join(directory, asset.Key)
+	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Sync()
+	defer file.Close()
+
+	contents, err := asset.Contents()
+	if err != nil {
+		return err
+	}
+
+	_, err = file.Write(contents)
+	return err
+}
+
+// Contents will return a byte array of data for the asset contents
+func (asset Asset) Contents() ([]byte, error) {
+	var data []byte
+	var err error
+	switch {
+	case len(asset.Value) > 0:
+		data = []byte(asset.Value)
+		if filepath.Ext(asset.Key) == ".json" {
+			var out bytes.Buffer
+			json.Indent(&out, data, "", "  ")
+			data = out.Bytes()
+		}
+	case len(asset.Attachment) > 0:
+		if data, err = base64.StdEncoding.DecodeString(asset.Attachment); err != nil {
+			return data, fmt.Errorf("Could not decode %s. error: %s", asset.Key, err)
+		}
+	}
+	return data, nil
 }
 
 // ByAsset implements sort.Interface for sorting remote assets

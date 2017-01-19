@@ -1,12 +1,8 @@
 package cmd
 
 import (
-	"bytes"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
+	"sync"
 
 	"github.com/spf13/cobra"
 
@@ -32,8 +28,10 @@ For more documentation please see http://shopify.github.io/themekit/commands/#do
 }
 
 func download(client kit.ThemeClient, filenames []string) error {
+	wg := sync.WaitGroup{}
+
 	if len(filenames) <= 0 {
-		kit.Printf("[%s] Fetching assets from %s",
+		kit.Printf("[%s] Fetching asset list from %s",
 			kit.GreenText(client.Config.Environment),
 			kit.YellowText(client.Config.Domain))
 		assets, err := client.AssetList()
@@ -41,85 +39,40 @@ func download(client kit.ThemeClient, filenames []string) error {
 			return err
 		}
 		for _, asset := range assets {
-			if err := writeToDisk(client.Config.Directory, asset); err != nil {
-				return err
-			}
-		}
-	} else {
-		for _, filename := range filenames {
-			kit.Printf("[%s] Fetching %s from %s",
-				kit.GreenText(client.Config.Environment),
-				filename,
-				kit.YellowText(client.Config.Domain))
-			asset, err := client.Asset(filename)
-			if err != nil {
-				return err
-			}
-			if err := writeToDisk(client.Config.Directory, asset); err != nil {
-				return err
-			}
+			filenames = append(filenames, asset.Key)
 		}
 	}
+
+	for _, filename := range filenames {
+		wg.Add(1)
+		if err := downloadFile(client, filename, &wg); err != nil {
+			return err
+		}
+	}
+
+	wg.Wait()
+
 	return nil
 }
 
-func writeToDisk(directory string, asset kit.Asset) error {
-	perms, err := os.Stat(directory)
+func downloadFile(client kit.ThemeClient, filename string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+
+	kit.Printf("[%s] Downloading %s from %s",
+		kit.GreenText(client.Config.Environment),
+		filename,
+		kit.YellowText(client.Config.Domain))
+
+	asset, err := client.Asset(filename)
 	if err != nil {
 		return err
 	}
 
-	filename := filepath.Join(directory, asset.Key)
-	err = os.MkdirAll(filepath.Dir(filename), perms.Mode())
-	if err != nil {
+	if err := asset.Write(client.Config.Directory); err != nil {
 		return err
 	}
 
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+	kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
 
-	contents, err := getAssetContents(asset)
-	if err != nil {
-		return err
-	}
-
-	if _, err = formatWrite(file, contents); err != nil {
-		return err
-	}
-
-	kit.Print(kit.GreenText(fmt.Sprintf("Successfully wrote %s to disk", filename)))
 	return nil
-}
-
-func getAssetContents(asset kit.Asset) ([]byte, error) {
-	var data []byte
-	var err error
-	switch {
-	case len(asset.Value) > 0:
-		data = []byte(asset.Value)
-	case len(asset.Attachment) > 0:
-		if data, err = base64.StdEncoding.DecodeString(asset.Attachment); err != nil {
-			return data, fmt.Errorf("Could not decode %s. error: %s", asset.Key, err)
-		}
-	}
-	return data, nil
-}
-
-func formatWrite(file *os.File, data []byte) (n int, err error) {
-	if len(data) == 0 {
-		return 0, nil
-	}
-
-	defer file.Sync()
-	switch filepath.Ext(file.Name()) {
-	case ".json":
-		var out bytes.Buffer
-		json.Indent(&out, data, "", "  ")
-		return file.Write(out.Bytes())
-	default:
-		return file.Write(data)
-	}
 }
