@@ -27,7 +27,6 @@ func (suite *DownloadTestSuite) TestDownloadWithFileNames() {
 	defer os.Remove("../fixtures/project/assets/hello.txt")
 	defer os.Remove("../fixtures/project/assets/hello.txt")
 	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-		println(r.URL.RawQuery)
 		if "asset[key]=assets/hello.txt" == r.URL.RawQuery {
 			fmt.Fprintf(w, jsonFixture("responses/asset"))
 		} else {
