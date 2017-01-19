@@ -45,9 +45,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 
 	for _, filename := range filenames {
 		wg.Add(1)
-		if err := downloadFile(client, filename, &wg); err != nil {
-			return err
-		}
+		go downloadFile(client, filename, &wg)
 	}
 
 	wg.Wait()
@@ -55,24 +53,19 @@ func download(client kit.ThemeClient, filenames []string) error {
 	return nil
 }
 
-func downloadFile(client kit.ThemeClient, filename string, wg *sync.WaitGroup) error {
+func downloadFile(client kit.ThemeClient, filename string, wg *sync.WaitGroup) {
 	defer wg.Done()
-
-	kit.Printf("[%s] Downloading %s from %s",
-		kit.GreenText(client.Config.Environment),
-		filename,
-		kit.YellowText(client.Config.Domain))
 
 	asset, err := client.Asset(filename)
 	if err != nil {
-		return err
+		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
+		return
 	}
 
 	if err := asset.Write(client.Config.Directory); err != nil {
-		return err
+		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
+		return
 	}
 
 	kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
-
-	return nil
 }
