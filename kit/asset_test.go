@@ -1,6 +1,8 @@
 package kit
 
 import (
+	"encoding/base64"
+	"os"
 	"sort"
 	"testing"
 
@@ -11,6 +13,11 @@ import (
 type LoadAssetSuite struct {
 	suite.Suite
 	allocatedFiles []string
+}
+
+func (s *LoadAssetSuite) TearDownTest() {
+	os.RemoveAll("../fixtures/output")
+	os.RemoveAll("../fixtures/download")
 }
 
 func (s *LoadAssetSuite) TestIsValid() {
@@ -29,6 +36,41 @@ func (s *LoadAssetSuite) TestSize() {
 	assert.Equal(s.T(), 3, asset.Size())
 	asset = Asset{Attachment: "other"}
 	assert.Equal(s.T(), 5, asset.Size())
+}
+
+func (s *LoadAssetSuite) TestWrite() {
+	asset := Asset{Key: "output/blah.txt", Value: "this is content"}
+
+	err := asset.Write("../nope")
+	assert.NotNil(s.T(), err)
+
+	err = asset.Write("../fixtures")
+	assert.Nil(s.T(), err)
+}
+
+func (s *LoadAssetSuite) TestContents() {
+	asset := Asset{Value: "this is content"}
+	data, err := asset.Contents()
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 15, len(data))
+
+	asset = Asset{Attachment: "this is bad content"}
+	data, err = asset.Contents()
+	assert.NotNil(s.T(), err)
+
+	asset = Asset{Attachment: base64.StdEncoding.EncodeToString([]byte("this is bad content"))}
+	data, err = asset.Contents()
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 19, len(data))
+	assert.Equal(s.T(), []byte("this is bad content"), data)
+
+	asset = Asset{Key: "test.json", Value: "{\"test\":\"one\"}"}
+	data, err = asset.Contents()
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 19, len(data))
+	assert.Equal(s.T(), `{
+  "test": "one"
+}`, string(data))
 }
 
 func (s *LoadAssetSuite) TestAssetsSort() {

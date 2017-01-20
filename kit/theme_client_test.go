@@ -58,7 +58,7 @@ func (suite *ThemeClientTestSuite) TestNewFileWatcher() {
 func (suite *ThemeClientTestSuite) TestAssetList() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
-		assert.Equal(suite.T(), "fields=key,attachment,value", r.URL.RawQuery)
+		assert.Equal(suite.T(), "", r.URL.RawQuery)
 		fmt.Fprintf(w, jsonFixture("responses/assets_raw"))
 	})
 	defer server.Close()
@@ -76,7 +76,7 @@ func (suite *ThemeClientTestSuite) TestAssetList() {
 func (suite *ThemeClientTestSuite) TestAsset() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
-		assert.Equal(suite.T(), "fields=key,attachment,value&asset[key]=file.txt", r.URL.RawQuery)
+		assert.Equal(suite.T(), "asset[key]=file.txt", r.URL.RawQuery)
 		fmt.Fprintf(w, jsonFixture("responses/asset"))
 	})
 	defer server.Close()

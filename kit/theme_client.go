@@ -45,6 +45,8 @@ func (t ThemeClient) NewFileWatcher(notifyFile string, callback FileEventCallbac
 
 // AssetList will return a slice of remote assets from the shopify servers. The
 // assets are sorted and any ignored files based on your config are filtered out.
+// The assets returned will not have any data, only ID and filenames. This is because
+// fetching all the assets at one time is not a good idea.
 func (t ThemeClient) AssetList() ([]Asset, Error) {
 	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{})
 	if err != nil && err.Fatal() {
