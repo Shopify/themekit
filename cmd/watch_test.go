@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -52,9 +51,7 @@ func (suite *WatchTestSuite) TestHandleWatchEvent() {
 	})
 	defer server.Close()
 
-	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove, fmt.Errorf("bad watch event"))
-
-	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove, nil)
+	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove)
 
 	assert.Equal(suite.T(), 1, len(requests))
 }

@@ -94,9 +94,9 @@ func loadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset
 }
 
 func loadAsset(root, filename string) (asset Asset, err error) {
-	asset = Asset{}
 	path := filepath.ToSlash(filepath.Join(root, filename))
 	path = strings.Replace(path, "\\", "/", -1)
+	asset = Asset{Key: pathToProject(path)}
 	file, err := os.Open(path)
 	if err != nil {
 		return asset, fmt.Errorf("loadAsset: %s", err)
@@ -117,7 +117,6 @@ func loadAsset(root, filename string) (asset Asset, err error) {
 		return asset, fmt.Errorf("loadAsset: %s", err)
 	}
 
-	asset = Asset{Key: pathToProject(path)}
 	if contentTypeFor(buffer) == "text" {
 		asset.Value = string(buffer)
 	} else {
