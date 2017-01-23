@@ -8,6 +8,7 @@ machine:
 dependencies:
   override:
     - mkdir -p "$PROJECT_PATH"
+    - mkdir "$GOPATH/bin"
     - rsync -azC --delete ./ "$PROJECT_PATH/"
     - cd $PROJECT_PATH && make tools
 test:
