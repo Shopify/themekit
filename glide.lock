@@ -1,10 +1,10 @@
 hash: c066f2443936bdf20522f14889145c819416da3916789fdd293693264a330f65
-updated: 2016-11-21T10:12:08.315782665-05:00
+updated: 2017-01-23T12:18:18.012154506-05:00
 imports:
 - name: github.com/caarlos0/env
   version: d0de832ed2fbc4e7bfaa30ab5cf0b3417d15f529
 - name: github.com/fatih/color
-  version: dea9d3a26a087187530244679c1cfb3a42937794
+  version: 34e4ee095d12986a2cef5ddb9aeb3b8cfcfea17c
 - name: github.com/hashicorp/go-version
   version: e96d3840402619007766590ecea8dd7af1292276
 - name: github.com/imdario/mergo
@@ -24,6 +24,8 @@ imports:
   version: 572520ed46dbddaed19ea3d9541bdd0494163693
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
+  subpackages:
+  - open
 - name: github.com/spf13/cobra
   version: 9c28e4bbd74e5c3ed7aacbc552b2cab7cfdfe744
 - name: github.com/spf13/pflag
