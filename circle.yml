@@ -15,6 +15,7 @@ dependencies:
     - go get -u github.com/golang/lint/golint
 test:
   pre:
+    - glide install
     - cd $PROJECT_PATH && make vet
     - cd $PROJECT_PATH && make lint
   override:
