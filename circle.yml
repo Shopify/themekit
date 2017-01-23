@@ -8,13 +8,12 @@ machine:
 dependencies:
   override:
     - mkdir -p "$PROJECT_PATH"
+    - mkdir "$GOPATH/bin"
     - rsync -azC --delete ./ "$PROJECT_PATH/"
-    - sudo add-apt-repository ppa:masterminds/glide -y
-    - sudo apt-get update
-    - sudo apt-get install glide
-    - go get -u github.com/golang/lint/golint
+    - cd $PROJECT_PATH && make tools
 test:
   pre:
+    - cd $PROJECT_PATH && glide install
     - cd $PROJECT_PATH && make vet
     - cd $PROJECT_PATH && make lint
   override:
