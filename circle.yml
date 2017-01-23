@@ -13,7 +13,7 @@ dependencies:
     - cd $PROJECT_PATH && make tools
 test:
   pre:
-    - glide install
+    - cd $PROJECT_PATH && glide install
     - cd $PROJECT_PATH && make vet
     - cd $PROJECT_PATH && make lint
   override:
