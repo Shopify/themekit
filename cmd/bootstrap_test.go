@@ -21,7 +21,6 @@ type BootstrapTestSuite struct {
 func (suite *BootstrapTestSuite) TestBootstrap() {
 	responses := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL.Path)
 		if r.URL.Path == "/feed" {
 			file, _ := os.Open("../fixtures/releases.atom")
 			bytes, _ := ioutil.ReadAll(file)

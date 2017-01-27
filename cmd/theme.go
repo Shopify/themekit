@@ -194,7 +194,7 @@ func setFlagConfig() {
 
 func newProgressBar(count int, name string) *mpb.Bar {
 	var bar *mpb.Bar
-	if !verbose {
+	if !verbose && progress != nil {
 		bar = progress.AddBar(int64(count)).
 			PrependName(fmt.Sprintf("[%s]: ", name), 0).
 			AppendPercentage().
