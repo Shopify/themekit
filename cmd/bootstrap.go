@@ -43,11 +43,13 @@ func bootstrap() error {
 	}
 
 	themeName := getThemeName()
-	kit.Printf(
-		"Attempting to create theme %s from %s",
-		kit.YellowText(themeName),
-		kit.YellowText(zipLocation),
-	)
+	if verbose {
+		kit.Printf(
+			"Attempting to create theme %s from %s",
+			kit.YellowText(themeName),
+			kit.YellowText(zipLocation),
+		)
+	}
 
 	client, theme, err := kit.CreateTheme(themeName, zipLocation)
 	if err != nil {

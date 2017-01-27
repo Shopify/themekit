@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/spf13/cobra"
+	"github.com/vbauerster/mpb"
 
 	"github.com/Shopify/themekit/kit"
 )
@@ -49,6 +51,9 @@ func (fa *flagArray) Value() []string {
 }
 
 var (
+	progress *mpb.Progress
+
+	verbose          bool
 	configPath       string
 	allenvs          bool
 	environment      string
@@ -91,6 +96,7 @@ func init() {
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.Domain, "store", "s", "", "your shopify domain. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVar(&flagConfig.Proxy, "proxy", "", "proxy for all theme requests. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().DurationVar(&flagConfig.Timeout, "timeout", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
+	ThemeCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable more verbose output from the running command.")
 	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
 	ThemeCmd.PersistentFlags().Var(&ignoredFiles, "ignored-file", "A single file to ignore, use the flag multiple times to add multiple.")
 	ThemeCmd.PersistentFlags().Var(&ignores, "ignores", "A path to a file that contains ignore patterns.")
@@ -113,6 +119,8 @@ func init() {
 }
 
 func generateThemeClients() ([]kit.ThemeClient, error) {
+	progress = mpb.New(nil)
+
 	themeClients := []kit.ThemeClient{}
 
 	if !noUpdateNotifier && kit.IsNewUpdateAvailable() {
@@ -155,6 +163,8 @@ type allEnvsCommand func(kit.ThemeClient, []string, *sync.WaitGroup)
 func forEachClient(handler allEnvsCommand, callbacks ...allEnvsCommand) cobraCommandE {
 	return func(cmd *cobra.Command, args []string) error {
 		themeClients, err := generateThemeClients()
+		defer progress.Stop()
+
 		if err != nil {
 			return err
 		}
@@ -180,4 +190,21 @@ func setFlagConfig() {
 	flagConfig.IgnoredFiles = ignoredFiles.Value()
 	flagConfig.Ignores = ignores.Value()
 	kit.SetFlagConfig(flagConfig)
+}
+
+func newProgressBar(count int, name string) *mpb.Bar {
+	var bar *mpb.Bar
+	if !verbose {
+		bar = progress.AddBar(int64(count)).
+			PrependName(fmt.Sprintf("[%s]: ", name), 0).
+			AppendPercentage().
+			PrependCounters(mpb.UnitNone, 0)
+	}
+	return bar
+}
+
+func incBar(bar *mpb.Bar) {
+	if bar != nil {
+		defer bar.Incr(1)
+	}
 }

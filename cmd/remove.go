@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
+	"github.com/vbauerster/mpb"
 
 	"github.com/Shopify/themekit/kit"
 )
@@ -28,18 +29,21 @@ func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		return
 	}
 
+	bar := newProgressBar(len(filenames)-1, client.Config.Environment)
 	for _, filename := range filenames {
 		wg.Add(1)
-		go performRemove(client, kit.Asset{Key: filename}, wg)
+		go performRemove(client, kit.Asset{Key: filename}, bar, wg)
 	}
 }
 
-func performRemove(client kit.ThemeClient, asset kit.Asset, wg *sync.WaitGroup) {
+func performRemove(client kit.ThemeClient, asset kit.Asset, bar *mpb.Bar, wg *sync.WaitGroup) {
 	defer wg.Done()
+	defer incBar(bar)
+
 	resp, err := client.DeleteAsset(asset)
 	if err != nil {
 		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-	} else {
+	} else if verbose {
 		kit.Printf(
 			"[%s] Successfully removed file %s from %s",
 			kit.GreenText(client.Config.Environment),
