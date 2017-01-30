@@ -84,7 +84,7 @@ func init() {
 	configPath = filepath.Join(pwd, "config.yml")
 
 	ThemeCmd.PersistentFlags().StringVarP(&configPath, "config", "c", configPath, "path to config.yml")
-	ThemeCmd.PersistentFlags().StringVarP(&environment, "env", "e", kit.DefaultEnvironment, "envionment to run the command")
+	ThemeCmd.PersistentFlags().StringVarP(&environment, "env", "e", kit.DefaultEnvironment, "environment to run the command")
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.Directory, "dir", "d", "", "directory that command will take effect. (default current directory)")
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.Password, "password", "p", "", "theme password. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.ThemeID, "themeid", "t", "", "theme id. This will override what is in your config.yml")
