@@ -25,7 +25,6 @@ func (suite *DownloadTestSuite) TearDownTest() {
 
 func (suite *DownloadTestSuite) TestDownloadWithFileNames() {
 	defer os.Remove("../fixtures/project/assets/hello.txt")
-	defer os.Remove("../fixtures/project/assets/hello.txt")
 	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
 		if "asset[key]=assets/hello.txt" == r.URL.RawQuery {
 			fmt.Fprintf(w, jsonFixture("responses/asset"))
@@ -55,6 +54,25 @@ func (suite *DownloadTestSuite) TestDownloadAll() {
 	defer os.Remove(client.Config.Directory)
 
 	assert.Nil(suite.T(), download(client, []string{}))
+}
+
+func (suite *DownloadTestSuite) TestExpandWildcards() {
+	requestCount := make(chan int, 100)
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, jsonFixture("responses/assets"))
+		requestCount <- 1
+	})
+	defer server.Close()
+
+	filenames, err := expandWildcards(client, []string{"assets/hello.txt"})
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), len(requestCount), 0)
+	assert.Equal(suite.T(), filenames, []string{"assets/hello.txt"})
+
+	filenames, err = expandWildcards(client, []string{"assets/*"})
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), len(requestCount), 1)
+	assert.Equal(suite.T(), filenames, []string{"assets/goodbye.txt", "assets/hello.txt"})
 }
 
 func TestDownloadTestSuite(t *testing.T) {

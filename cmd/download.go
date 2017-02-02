@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -41,6 +43,12 @@ func download(client kit.ThemeClient, filenames []string) error {
 		for _, asset := range assets {
 			filenames = append(filenames, asset.Key)
 		}
+	} else {
+		var err error
+		filenames, err = expandWildcards(client, filenames)
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, filename := range filenames {
@@ -68,4 +76,42 @@ func downloadFile(client kit.ThemeClient, filename string, wg *sync.WaitGroup) {
 	}
 
 	kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
+}
+
+func expandWildcards(client kit.ThemeClient, filenames []string) ([]string, error) {
+	outputFilenames := []string{}
+	wildCards := []string{}
+
+	for _, filename := range filenames {
+		if strings.Contains(filename, "*") {
+			wildCards = append(wildCards, filename)
+		} else {
+			outputFilenames = append(outputFilenames, filename)
+		}
+	}
+
+	if len(wildCards) == 0 {
+		return outputFilenames, nil
+	}
+
+	kit.Printf("[%s] Querying assets list from %s to match patterns",
+		kit.GreenText(client.Config.Environment),
+		kit.YellowText(client.Config.Domain))
+	assets, err := client.AssetList()
+	if err != nil {
+		return outputFilenames, err
+	}
+
+	for _, asset := range assets {
+		for _, wildcard := range wildCards {
+			if matched, err := filepath.Match(wildcard, asset.Key); matched && err == nil {
+				outputFilenames = append(outputFilenames, asset.Key)
+				break
+			} else if err != nil {
+				return outputFilenames, err
+			}
+		}
+	}
+
+	return outputFilenames, nil
 }
