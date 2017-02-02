@@ -66,10 +66,28 @@ func (t ThemeClient) Asset(filename string) (Asset, Error) {
 
 // LocalAssets will return a slice of assets from the local disk. The
 // assets are filtered based on your config.
-func (t ThemeClient) LocalAssets() ([]Asset, error) {
-	assets, err := loadAssetsFromDirectory(t.Config.Directory, t.filter.matchesFilter)
-	if err != nil {
-		return []Asset{}, err
+func (t ThemeClient) LocalAssets(paths ...string) (assets []Asset, err error) {
+	if paths == nil || len(paths) == 0 {
+		assets, err = loadAssetsFromDirectory(t.Config.Directory, "", t.filter.matchesFilter)
+		if err != nil {
+			return assets, err
+		}
+	} else {
+		assets = []Asset{}
+		for _, path := range paths {
+			asset, err := t.LocalAsset(path)
+			if err == ErrAssetIsDir {
+				dirAssets, err := loadAssetsFromDirectory(t.Config.Directory, path, t.filter.matchesFilter)
+				if err != nil {
+					return assets, err
+				}
+				assets = append(assets, dirAssets...)
+			} else if err != nil {
+				return assets, err
+			} else {
+				assets = append(assets, asset)
+			}
+		}
 	}
 	return t.filter.filterAssets(assets), nil
 }

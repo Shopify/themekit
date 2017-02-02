@@ -115,9 +115,9 @@ func (s *LoadAssetSuite) TestFindAllFiles() {
 }
 
 func (s *LoadAssetSuite) TestLoadAssetsFromDirectory() {
-	assets, err := loadAssetsFromDirectory(clean("../fixtures/project/valid_patterns"), func(path string) bool { return false })
+	assets, err := loadAssetsFromDirectory(clean("../fixtures/project/valid_patterns"), "", func(path string) bool { return false })
 	assert.Equal(s.T(), "Path is not a directory", err.Error())
-	assets, err = loadAssetsFromDirectory(clean("../fixtures/project"), func(path string) bool {
+	assets, err = loadAssetsFromDirectory(clean("../fixtures/project"), "", func(path string) bool {
 		return path != "assets/application.js"
 	})
 	assert.Nil(s.T(), err)

@@ -30,24 +30,10 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		return
 	}
 
-	var err error
-	localAssets := []kit.Asset{}
-
-	if len(filenames) == 0 {
-		localAssets, err = client.LocalAssets()
-		if err != nil {
-			kit.LogError(err)
-			return
-		}
-	} else {
-		for _, filename := range filenames {
-			asset, err := client.LocalAsset(filename)
-			if err != nil {
-				kit.LogError(err)
-				return
-			}
-			localAssets = append(localAssets, asset)
-		}
+	localAssets, err := client.LocalAssets(filenames...)
+	if err != nil {
+		kit.LogError(err)
+		return
 	}
 
 	for _, asset := range localAssets {

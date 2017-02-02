@@ -22,6 +22,9 @@ type Asset struct {
 	ThemeID     int64  `json:"theme_id,omitempty"`
 }
 
+// ErrAssetIsDir is the error returned if you try and load a directory with LocalAsset
+var ErrAssetIsDir = errors.New("loadAsset: File is a directory")
+
 // IsValid verifies that the Asset has a Key, and at least a Value or Attachment
 func (asset Asset) IsValid() bool {
 	return len(asset.Key) > 0 && (len(asset.Value) > 0 || len(asset.Attachment) > 0)
@@ -121,20 +124,20 @@ func findAllFiles(dir string) ([]string, error) {
 	return files, err
 }
 
-func loadAssetsFromDirectory(dir string, ignore func(path string) bool) ([]Asset, error) {
+func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) ([]Asset, error) {
 	assets := []Asset{}
-	files, err := findAllFiles(dir)
+	files, err := findAllFiles(filepath.Join(root, dir))
 	if err != nil {
 		return assets, err
 	}
 
 	for _, file := range files {
-		assetKey, err := filepath.Rel(dir, file)
+		assetKey, err := filepath.Rel(root, file)
 		if err != nil {
 			return assets, err
 		}
 		if !ignore(assetKey) {
-			asset, err := loadAsset(dir, assetKey)
+			asset, err := loadAsset(root, assetKey)
 			if err == nil {
 				assets = append(assets, asset)
 			}
@@ -160,7 +163,7 @@ func loadAsset(root, filename string) (asset Asset, err error) {
 	}
 
 	if info.IsDir() {
-		return asset, errors.New("loadAsset: File is a directory")
+		return asset, ErrAssetIsDir
 	}
 
 	buffer, err := ioutil.ReadAll(file)
