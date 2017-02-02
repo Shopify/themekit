@@ -27,6 +27,10 @@ For more documentation please see http://shopify.github.io/themekit/commands/#re
 }
 
 func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
+	if len(filenames) > 0 {
+		upload(client, filenames, wg)
+		return
+	}
 	defer wg.Done()
 
 	if client.Config.ReadOnly {
@@ -35,36 +39,24 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	}
 
 	assetsActions := map[string]assetAction{}
+	assets, remoteErr := client.AssetList()
+	if remoteErr != nil {
+		kit.LogError(remoteErr)
+		return
+	}
 
-	if len(filenames) == 0 {
-		assets, remoteErr := client.AssetList()
-		if remoteErr != nil {
-			kit.LogError(remoteErr)
-			return
-		}
+	for _, asset := range assets {
+		assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Remove}
+	}
 
-		for _, asset := range assets {
-			assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Remove}
-		}
+	localAssets, localErr := client.LocalAssets()
+	if localErr != nil {
+		kit.LogError(localErr)
+		return
+	}
 
-		localAssets, localErr := client.LocalAssets()
-		if localErr != nil {
-			kit.LogError(localErr)
-			return
-		}
-
-		for _, asset := range localAssets {
-			assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Update}
-		}
-	} else {
-		for _, filename := range filenames {
-			asset, err := client.LocalAsset(filename)
-			if err != nil {
-				kit.LogError(err)
-				return
-			}
-			assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Update}
-		}
+	for _, asset := range localAssets {
+		assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Update}
 	}
 
 	for key, action := range assetsActions {
