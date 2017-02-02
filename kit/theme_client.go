@@ -65,7 +65,10 @@ func (t ThemeClient) Asset(filename string) (Asset, Error) {
 }
 
 // LocalAssets will return a slice of assets from the local disk. The
-// assets are filtered based on your config.
+// assets are filtered based on your config. If not paths are passed to
+// the function then all the local assets are returned. If you pass file names
+// those assets will be loaded. If any of the file paths are directories, all
+// of the directory's recursive assets will be returned.
 func (t ThemeClient) LocalAssets(paths ...string) (assets []Asset, err error) {
 	if paths == nil || len(paths) == 0 {
 		assets, err = loadAssetsFromDirectory(t.Config.Directory, "", t.filter.matchesFilter)

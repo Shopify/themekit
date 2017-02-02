@@ -127,6 +127,12 @@ func (s *LoadAssetSuite) TestLoadAssetsFromDirectory() {
 	}}, assets)
 }
 
+func (s *LoadAssetSuite) TestLoadAssetsFromDirectoryWithSubdir() {
+	assets, err := loadAssetsFromDirectory(clean("../fixtures/project"), "assets", func(path string) bool { return false })
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 2, len(assets))
+}
+
 func (s *LoadAssetSuite) TestLoadAsset() {
 	asset, err := loadAsset(clean("../fixtures/project"), clean("assets/application.js"))
 	assert.Equal(s.T(), "assets/application.js", asset.Key)
@@ -139,7 +145,7 @@ func (s *LoadAssetSuite) TestLoadAsset() {
 
 	asset, err = loadAsset(clean("../fixtures/project"), "templates")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "loadAsset: File is a directory", err.Error())
+	assert.Equal(s.T(), ErrAssetIsDir, err)
 
 	asset, err = loadAsset(clean("../fixtures/project"), "assets/pixel.png")
 	assert.Nil(s.T(), err)

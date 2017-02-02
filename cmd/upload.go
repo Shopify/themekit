@@ -32,7 +32,7 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 
 	localAssets, err := client.LocalAssets(filenames...)
 	if err != nil {
-		kit.LogError(err)
+		kit.LogErrorf("[%s] %v", kit.GreenText(client.Config.Environment), err)
 		return
 	}
 
