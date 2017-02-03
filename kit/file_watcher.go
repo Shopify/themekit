@@ -21,26 +21,35 @@ type FileEventCallback func(ThemeClient, Asset, EventType)
 // FileWatcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
 type FileWatcher struct {
-	done     chan bool
-	client   ThemeClient
-	watcher  *fsnotify.Watcher
-	filter   fileFilter
-	callback FileEventCallback
-	notify   string
+	done          chan bool
+	client        ThemeClient
+	mainWatcher   *fsnotify.Watcher
+	reloadSignal  chan bool
+	configChanged bool
+	configWatcher *fsnotify.Watcher
+	filter        fileFilter
+	callback      FileEventCallback
+	notify        string
 }
 
 func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filter fileFilter, callback FileEventCallback) (*FileWatcher, error) {
-	watcher, err := fsnotify.NewWatcher()
+	mainWatcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return nil, err
+	}
+
+	configWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
 
 	newWatcher := &FileWatcher{
-		done:     make(chan bool),
-		client:   client,
-		watcher:  watcher,
-		callback: callback,
-		filter:   filter,
+		done:          make(chan bool),
+		client:        client,
+		mainWatcher:   mainWatcher,
+		configWatcher: configWatcher,
+		callback:      callback,
+		filter:        filter,
 	}
 
 	go newWatcher.watchFsEvents(notifyFile)
@@ -56,7 +65,7 @@ func (watcher *FileWatcher) watchDirectory(root string) error {
 		}
 
 		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != root {
-			if err := watcher.watcher.Add(path); err != nil {
+			if err := watcher.mainWatcher.Add(path); err != nil {
 				return fmt.Errorf("Could not watch directory %s: %s", path, err)
 			}
 		}
@@ -71,7 +80,15 @@ func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 
 	for {
 		select {
-		case currentEvent, more := <-watcher.watcher.Events:
+		case configEvent := <-watcher.configWatcher.Events:
+			if configEvent.Op != fsnotify.Chmod {
+				watcher.configChanged = true
+				if watcher.reloadSignal != nil {
+					watcher.reloadSignal <- true
+				}
+				return
+			}
+		case currentEvent, more := <-watcher.mainWatcher.Events:
 			if !more {
 				close(watcher.done)
 				return
@@ -115,6 +132,17 @@ func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 	}
 }
 
+// WatchConfig adds a priority watcher for the config file. A true will be sent down
+// the channel to notify you about a config file change. This is useful to keep
+// track of version control changes
+func (watcher *FileWatcher) WatchConfig(configFile string, reloadSignal chan bool) error {
+	if err := watcher.configWatcher.Add(configFile); err != nil {
+		return err
+	}
+	watcher.reloadSignal = reloadSignal
+	return nil
+}
+
 // IsWatching will return true if the watcher is currently watching for file changes.
 // it will return false if it has been stopped
 func (watcher *FileWatcher) IsWatching() bool {
@@ -129,10 +157,13 @@ func (watcher *FileWatcher) IsWatching() bool {
 // StopWatching will stop the Filewatcher from watching it's directories and clean
 // up any go routines doing work.
 func (watcher *FileWatcher) StopWatching() {
-	watcher.watcher.Close()
+	watcher.mainWatcher.Close()
 }
 
 func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
+	if watcher.configChanged {
+		return
+	}
 	eventType := Update
 	if event.Op&fsnotify.Remove == fsnotify.Remove {
 		eventType = Remove

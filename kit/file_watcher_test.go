@@ -38,9 +38,10 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
 
 	newWatcher := &FileWatcher{
-		done:    make(chan bool),
-		filter:  filter,
-		watcher: &fsnotify.Watcher{Events: eventChan},
+		done:          make(chan bool),
+		filter:        filter,
+		mainWatcher:   &fsnotify.Watcher{Events: eventChan},
+		configWatcher: &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
 	}
 
 	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType) {
