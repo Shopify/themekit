@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/fsnotify.v1"
+	"github.com/fsnotify/fsnotify"
 )
 
 const (
@@ -25,7 +25,6 @@ type FileWatcher struct {
 	client        ThemeClient
 	mainWatcher   *fsnotify.Watcher
 	reloadSignal  chan bool
-	configChanged bool
 	configWatcher *fsnotify.Watcher
 	filter        fileFilter
 	callback      FileEventCallback
@@ -82,7 +81,7 @@ func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 		select {
 		case configEvent := <-watcher.configWatcher.Events:
 			if configEvent.Op != fsnotify.Chmod {
-				watcher.configChanged = true
+				close(watcher.done)
 				if watcher.reloadSignal != nil {
 					watcher.reloadSignal <- true
 				}
@@ -104,10 +103,12 @@ func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 
 				go func(eventChan chan fsnotify.Event, eventName string) {
 					var event fsnotify.Event
+
 					for {
 						select {
 						case event = <-eventChan:
 						case <-time.After(debounceTimeout):
+							println("event dogin", debounceTimeout)
 							go handleEvent(watcher, event)
 							eventLock.Lock()
 							delete(recordedEvents, eventName)
@@ -161,7 +162,7 @@ func (watcher *FileWatcher) StopWatching() {
 }
 
 func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
-	if watcher.configChanged {
+	if !watcher.IsWatching() {
 		return
 	}
 	eventType := Update

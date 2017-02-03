@@ -49,7 +49,9 @@ func watch(themeClients []kit.ThemeClient) error {
 		if len(watchers) > 0 {
 			kit.Print("Cleaning up watchers")
 			for _, watcher := range watchers {
-				watcher.StopWatching()
+				// This is half assed because fsnotify sometimes deadlocks
+				// if it finishes before exit great if not garbage collection will do it.
+				go watcher.StopWatching()
 			}
 		}
 	}()

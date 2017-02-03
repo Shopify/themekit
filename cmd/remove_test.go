@@ -56,13 +56,17 @@ func TestRemoveTestSuite(t *testing.T) {
 	suite.Run(t, new(RemoveTestSuite))
 }
 
-func newClientAndTestServer(handler http.HandlerFunc) (kit.ThemeClient, *httptest.Server) {
-	server := httptest.NewServer(handler)
+func newTestClient(domain string) kit.ThemeClient {
 	config, _ := kit.NewConfiguration()
-	config.Domain = server.URL
+	config.Domain = domain
 	config.ThemeID = "123"
 	config.Password = "sharknado"
 	config.Directory = "../fixtures/project"
 	client, _ := kit.NewThemeClient(config)
-	return client, server
+	return client
+}
+
+func newClientAndTestServer(handler http.HandlerFunc) (kit.ThemeClient, *httptest.Server) {
+	server := httptest.NewServer(handler)
+	return newTestClient(server.URL), server
 }
