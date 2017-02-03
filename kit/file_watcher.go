@@ -108,7 +108,6 @@ func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 						select {
 						case event = <-eventChan:
 						case <-time.After(debounceTimeout):
-							println("event dogin", debounceTimeout)
 							go handleEvent(watcher, event)
 							eventLock.Lock()
 							delete(recordedEvents, eventName)
