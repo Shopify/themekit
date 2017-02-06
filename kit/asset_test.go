@@ -115,9 +115,9 @@ func (s *LoadAssetSuite) TestFindAllFiles() {
 }
 
 func (s *LoadAssetSuite) TestLoadAssetsFromDirectory() {
-	assets, err := loadAssetsFromDirectory(clean("../fixtures/project/valid_patterns"), func(path string) bool { return false })
+	assets, err := loadAssetsFromDirectory(clean("../fixtures/project/valid_patterns"), "", func(path string) bool { return false })
 	assert.Equal(s.T(), "Path is not a directory", err.Error())
-	assets, err = loadAssetsFromDirectory(clean("../fixtures/project"), func(path string) bool {
+	assets, err = loadAssetsFromDirectory(clean("../fixtures/project"), "", func(path string) bool {
 		return path != "assets/application.js"
 	})
 	assert.Nil(s.T(), err)
@@ -125,6 +125,12 @@ func (s *LoadAssetSuite) TestLoadAssetsFromDirectory() {
 		Key:   "assets/application.js",
 		Value: "//this is js\n",
 	}}, assets)
+}
+
+func (s *LoadAssetSuite) TestLoadAssetsFromDirectoryWithSubdir() {
+	assets, err := loadAssetsFromDirectory(clean("../fixtures/project"), "assets", func(path string) bool { return false })
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 2, len(assets))
 }
 
 func (s *LoadAssetSuite) TestLoadAsset() {
@@ -139,7 +145,7 @@ func (s *LoadAssetSuite) TestLoadAsset() {
 
 	asset, err = loadAsset(clean("../fixtures/project"), "templates")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "loadAsset: File is a directory", err.Error())
+	assert.Equal(s.T(), ErrAssetIsDir, err)
 
 	asset, err = loadAsset(clean("../fixtures/project"), "assets/pixel.png")
 	assert.Nil(s.T(), err)

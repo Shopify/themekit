@@ -38,6 +38,36 @@ func (suite *UploadTestSuite) TestUploadWithFilenames() {
 	wg.Wait()
 }
 
+func (suite *UploadTestSuite) TestUploadWithDirectoryNames() {
+	reqCount := make(chan int, 100)
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "PUT", r.Method)
+		reqCount <- 1
+	})
+	defer server.Close()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go upload(client, []string{"templates"}, &wg)
+	wg.Wait()
+	assert.Equal(suite.T(), 2, len(reqCount))
+}
+
+func (suite *UploadTestSuite) TestUploadWithBadFileNames() {
+	reqCount := make(chan int, 100)
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(suite.T(), "PUT", r.Method)
+		reqCount <- 1
+	})
+	defer server.Close()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go upload(client, []string{"templates/foo.liquid"}, &wg)
+	wg.Wait()
+	assert.Equal(suite.T(), 0, len(reqCount))
+}
+
 func (suite *UploadTestSuite) TestUploadAll() {
 	requests := map[string]string{}
 	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {

@@ -85,7 +85,7 @@ func (suite *ThemeClientTestSuite) TestAsset() {
 	assert.Equal(suite.T(), "assets/hello.txt", asset.Key)
 }
 
-func (suite *ThemeClientTestSuite) TestLocalAssets() {
+func (suite *ThemeClientTestSuite) TestLocalAssetsWithoutFilenames() {
 	assets, err := suite.client.LocalAssets()
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 7, len(assets))
@@ -93,6 +93,12 @@ func (suite *ThemeClientTestSuite) TestLocalAssets() {
 	suite.client.Config.Directory = "./nope"
 	_, err = suite.client.LocalAssets()
 	assert.NotNil(suite.T(), err)
+}
+
+func (suite *ThemeClientTestSuite) TestLocalAssetsWithFilenames() {
+	assets, err := suite.client.LocalAssets("assets", "config/settings_data.json")
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), 3, len(assets))
 }
 
 func (suite *ThemeClientTestSuite) TestLocalAsset() {
