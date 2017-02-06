@@ -100,11 +100,9 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 }
 
 func (suite *FileWatcherTestSuite) TestReloadConfig() {
-	configChan := make(chan fsnotify.Event)
 	reloadChan := make(chan bool, 100)
 
 	configWatcher, _ := fsnotify.NewWatcher()
-	configWatcher.Events = configChan
 	newWatcher := &FileWatcher{
 		done:          make(chan bool),
 		mainWatcher:   &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
@@ -116,7 +114,7 @@ func (suite *FileWatcherTestSuite) TestReloadConfig() {
 	assert.Nil(suite.T(), err)
 
 	go newWatcher.watchFsEvents("")
-	configChan <- fsnotify.Event{Name: goodEnvirontmentPath, Op: fsnotify.Write}
+	configWatcher.Events <- fsnotify.Event{Name: goodEnvirontmentPath, Op: fsnotify.Write}
 
 	assert.Equal(suite.T(), len(reloadChan), 1)
 	assert.Equal(suite.T(), newWatcher.IsWatching(), false)
