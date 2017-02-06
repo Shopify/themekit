@@ -103,10 +103,12 @@ func (suite *FileWatcherTestSuite) TestReloadConfig() {
 	configChan := make(chan fsnotify.Event)
 	reloadChan := make(chan bool, 100)
 
+	configWatcher, _ := fsnotify.NewWatcher()
+	configWatcher.Events = configChan
 	newWatcher := &FileWatcher{
 		done:          make(chan bool),
 		mainWatcher:   &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
-		configWatcher: &fsnotify.Watcher{Events: configChan},
+		configWatcher: configWatcher,
 	}
 
 	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType) {}
