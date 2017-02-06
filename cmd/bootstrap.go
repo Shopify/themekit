@@ -43,11 +43,13 @@ func bootstrap() error {
 	}
 
 	themeName := getThemeName()
-	kit.Printf(
-		"Attempting to create theme %s from %s",
-		kit.YellowText(themeName),
-		kit.YellowText(zipLocation),
-	)
+	if verbose {
+		kit.Printf(
+			"Attempting to create theme %s from %s",
+			kit.YellowText(themeName),
+			kit.YellowText(zipLocation),
+		)
+	}
 
 	client, theme, err := kit.CreateTheme(themeName, zipLocation)
 	if err != nil {
@@ -58,12 +60,14 @@ func bootstrap() error {
 		return err
 	}
 
-	kit.Printf(
-		"Successfully created theme '%s' with id of %s on shop %s",
-		kit.BlueText(theme.Name),
-		kit.BlueText(theme.ID),
-		kit.YellowText(client.Config.Domain),
-	)
+	if verbose {
+		kit.Printf(
+			"Successfully created theme '%s' with id of %s on shop %s",
+			kit.BlueText(theme.Name),
+			kit.BlueText(theme.ID),
+			kit.YellowText(client.Config.Domain),
+		)
+	}
 
 	return download(client, []string{})
 }

@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
+	"github.com/vbauerster/mpb"
 
 	"github.com/Shopify/themekit/kit"
 )
@@ -22,6 +23,7 @@ For more documentation please see http://shopify.github.io/themekit/commands/#do
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		themeClients, err := generateThemeClients()
+		defer progress.Stop()
 		if err != nil {
 			return err
 		}
@@ -51,9 +53,10 @@ func download(client kit.ThemeClient, filenames []string) error {
 		}
 	}
 
+	bar := newProgressBar(len(filenames)-1, client.Config.Environment)
 	for _, filename := range filenames {
 		wg.Add(1)
-		go downloadFile(client, filename, &wg)
+		go downloadFile(client, filename, bar, &wg)
 	}
 
 	wg.Wait()
@@ -61,8 +64,9 @@ func download(client kit.ThemeClient, filenames []string) error {
 	return nil
 }
 
-func downloadFile(client kit.ThemeClient, filename string, wg *sync.WaitGroup) {
+func downloadFile(client kit.ThemeClient, filename string, bar *mpb.Bar, wg *sync.WaitGroup) {
 	defer wg.Done()
+	defer incBar(bar)
 
 	asset, err := client.Asset(filename)
 	if err != nil {
@@ -75,7 +79,9 @@ func downloadFile(client kit.ThemeClient, filename string, wg *sync.WaitGroup) {
 		return
 	}
 
-	kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
+	if verbose {
+		kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
+	}
 }
 
 func expandWildcards(client kit.ThemeClient, filenames []string) ([]string, error) {

@@ -34,6 +34,10 @@ imports:
   version: b83537d79690b75cac5e021b036ae16792bf0f20
 - name: github.com/spf13/viper
   version: 670c42a85b2a2215949acd943cb8f11add317e3f
+- name: github.com/vbauerster/mpb
+  version: 2a03713cc377ead01e9d29a45055e4158c9662f6
+  subpackages:
+  - cwriter
 - name: golang.org/x/sys
   version: 8d1157a435470616f975ff9bb013bea8d0962067
   subpackages:
