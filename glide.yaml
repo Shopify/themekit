@@ -6,14 +6,14 @@ import:
 - package: github.com/ryanuber/go-glob
   version: ^0.1.0
 - package: github.com/spf13/cobra
-- package: gopkg.in/fsnotify.v1
-  version: ^1.4.1
 - package: gopkg.in/yaml.v1
 - package: github.com/spf13/viper
 - package: github.com/caarlos0/env
   version: ^2.1.0
 - package: github.com/hashicorp/go-version
 - package: github.com/skratchdot/open-golang
+- package: github.com/fsnotify/fsnotify
+  version: ^1.4.2
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4

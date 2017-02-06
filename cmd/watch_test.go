@@ -16,6 +16,14 @@ type WatchTestSuite struct {
 	suite.Suite
 }
 
+func (suite *WatchTestSuite) TestStartWatch() {
+	go func() {
+		signalChan <- os.Interrupt
+	}()
+	err := startWatch()
+	assert.NotNil(suite.T(), err)
+}
+
 func (suite *WatchTestSuite) TestWatch() {
 	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {})
 	defer server.Close()
@@ -34,6 +42,16 @@ func (suite *WatchTestSuite) TestReadOnlyWatch() {
 	client.Config.ReadOnly = true
 	watch([]kit.ThemeClient{client})
 	assert.Equal(suite.T(), false, requested)
+}
+
+func (suite *WatchTestSuite) TestHandleWatchReload() {
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {})
+	defer server.Close()
+	go func() {
+		reloadSignal <- true
+	}()
+	err := watch([]kit.ThemeClient{client})
+	assert.Equal(suite.T(), err, errReload)
 }
 
 func (suite *WatchTestSuite) TestHandleWatchEvent() {

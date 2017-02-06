@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"os/signal"
 
@@ -9,7 +10,11 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
-var signalChan = make(chan os.Signal)
+var (
+	signalChan   = make(chan os.Signal)
+	reloadSignal = make(chan bool)
+	errReload    = errors.New("Reload Watcher")
+)
 
 var watchCmd = &cobra.Command{
 	Use:   "watch",
@@ -21,12 +26,21 @@ run 'theme watch' while you are editing and it will detect create, update and de
 For more documentation please see http://shopify.github.io/themekit/commands/#watch
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		themeClients, err := generateThemeClients()
-		if err != nil {
-			return err
-		}
-		return watch(themeClients)
+		return startWatch()
 	},
+}
+
+func startWatch() error {
+	themeClients, err := generateThemeClients()
+	if err != nil {
+		return err
+	}
+	err = watch(themeClients)
+	if err == errReload {
+		kit.Print("Reloading because of config changes")
+		return startWatch()
+	}
+	return err
 }
 
 func watch(themeClients []kit.ThemeClient) error {
@@ -35,7 +49,9 @@ func watch(themeClients []kit.ThemeClient) error {
 		if len(watchers) > 0 {
 			kit.Print("Cleaning up watchers")
 			for _, watcher := range watchers {
-				watcher.StopWatching()
+				// This is half assed because fsnotify sometimes deadlocks
+				// if it finishes before exit great if not garbage collection will do it.
+				go watcher.StopWatching()
 			}
 		}
 	}()
@@ -51,12 +67,20 @@ func watch(themeClients []kit.ThemeClient) error {
 		if err != nil {
 			return err
 		}
+		watcher.WatchConfig(configPath, reloadSignal)
+		if err != nil {
+			return err
+		}
 		watchers = append(watchers, watcher)
 	}
 
 	if len(watchers) > 0 {
 		signal.Notify(signalChan, os.Interrupt)
-		<-signalChan
+		select {
+		case <-signalChan:
+		case <-reloadSignal:
+			return errReload
+		}
 	}
 
 	return nil

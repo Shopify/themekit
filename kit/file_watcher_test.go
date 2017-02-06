@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/fsnotify.v1"
 )
 
 var (
@@ -29,8 +29,38 @@ func (suite *FileWatcherTestSuite) TestNewFileReader() {
 	watcher.StopWatching()
 }
 
+func (suite *FileWatcherTestSuite) WatchDirectory() {
+	eventChan := make(chan fsnotify.Event)
+	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
+	newWatcher := &FileWatcher{
+		done:        make(chan bool),
+		filter:      filter,
+		mainWatcher: &fsnotify.Watcher{Events: eventChan},
+	}
+
+	newWatcher.watchDirectory(watchFixturePath)
+	path, _ := filepath.Abs(textFixturePath)
+	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(path))
+}
+
+func (suite *FileWatcherTestSuite) TestWatchConfig() {
+	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
+	w, _ := fsnotify.NewWatcher()
+	newWatcher := &FileWatcher{
+		done:          make(chan bool),
+		filter:        filter,
+		configWatcher: w,
+	}
+
+	err := newWatcher.WatchConfig("nope", make(chan bool))
+	assert.NotNil(suite.T(), err)
+
+	err = newWatcher.WatchConfig(goodEnvirontmentPath, make(chan bool))
+	assert.Nil(suite.T(), err)
+}
+
 func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
-	assetChan := make(chan Asset, 4)
+	assetChan := make(chan Asset, 100)
 	eventChan := make(chan fsnotify.Event)
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -38,9 +68,10 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
 
 	newWatcher := &FileWatcher{
-		done:    make(chan bool),
-		filter:  filter,
-		watcher: &fsnotify.Watcher{Events: eventChan},
+		done:          make(chan bool),
+		filter:        filter,
+		mainWatcher:   &fsnotify.Watcher{Events: eventChan},
+		configWatcher: &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
 	}
 
 	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType) {
@@ -61,12 +92,32 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 		for _, fsEvent := range writes {
 			eventChan <- fsEvent
 		}
-		close(eventChan)
 	}()
 
 	wg.Wait()
 	// test that the events are debounced
 	assert.Equal(suite.T(), 2, len(assetChan))
+}
+
+func (suite *FileWatcherTestSuite) TestReloadConfig() {
+	reloadChan := make(chan bool, 100)
+
+	configWatcher, _ := fsnotify.NewWatcher()
+	newWatcher := &FileWatcher{
+		done:          make(chan bool),
+		mainWatcher:   &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
+		configWatcher: configWatcher,
+	}
+
+	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType) {}
+	err := newWatcher.WatchConfig(goodEnvirontmentPath, reloadChan)
+	assert.Nil(suite.T(), err)
+
+	go newWatcher.watchFsEvents("")
+	configWatcher.Events <- fsnotify.Event{Name: goodEnvirontmentPath, Op: fsnotify.Write}
+
+	assert.Equal(suite.T(), len(reloadChan), 1)
+	assert.Equal(suite.T(), newWatcher.IsWatching(), false)
 }
 
 func (suite *FileWatcherTestSuite) TestStopWatching() {
