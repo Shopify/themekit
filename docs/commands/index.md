@@ -16,6 +16,8 @@ theme [command] --help
 - `--config`, -c : specify a path for your config file.
 - `--no-update-notifier` : this will supress the update notifier that lets the
   user know when there is an applicable update available.
+- `--verbose, -v` : Enable more verbose output from the running command. If this is
+  not provided a progress bar will be displayed instead.
 
 ## Bootstrap
 
