@@ -29,7 +29,7 @@ func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		return
 	}
 
-	bar := newProgressBar(len(filenames)-1, client.Config.Environment)
+	bar := newProgressBar(len(filenames), client.Config.Environment)
 	for _, filename := range filenames {
 		wg.Add(1)
 		go performRemove(client, kit.Asset{Key: filename}, bar, wg)
