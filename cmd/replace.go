@@ -60,9 +60,10 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Update}
 	}
 
-	bar := newProgressBar(len(assetsActions)-1, client.Config.Environment)
+	bar := newProgressBar(len(assetsActions), client.Config.Environment)
 	for key, action := range assetsActions {
 		if key == settingsDataKey {
+			incBar(bar) //pretend we did this one we will do it later
 			continue
 		}
 		wg.Add(1)

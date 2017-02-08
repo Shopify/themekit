@@ -37,9 +37,10 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		return
 	}
 
-	bar := newProgressBar(len(localAssets)-2, client.Config.Environment)
+	bar := newProgressBar(len(localAssets), client.Config.Environment)
 	for _, asset := range localAssets {
 		if asset.Key == settingsDataKey {
+			incBar(bar) //pretend we did this one we will do it later
 			continue
 		}
 		wg.Add(1)

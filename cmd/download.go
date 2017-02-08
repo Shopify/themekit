@@ -53,7 +53,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 		}
 	}
 
-	bar := newProgressBar(len(filenames)-1, client.Config.Environment)
+	bar := newProgressBar(len(filenames), client.Config.Environment)
 	for _, filename := range filenames {
 		wg.Add(1)
 		go downloadFile(client, filename, bar, &wg)
