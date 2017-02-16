@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	textFixturePath  = filepath.Join("..", "fixtures", "project", "assets", "application.js")
-	watchFixturePath = filepath.Join("..", "fixtures", "project")
+	textFixturePath    = filepath.Join("..", "fixtures", "project", "assets", "application.js")
+	watchFixturePath   = filepath.Join("..", "fixtures", "project")
+	symlinkFixturePath = filepath.Join("..", "fixtures", "symlink_project")
 )
 
 type FileWatcherTestSuite struct {
@@ -29,18 +30,26 @@ func (suite *FileWatcherTestSuite) TestNewFileReader() {
 	watcher.StopWatching()
 }
 
-func (suite *FileWatcherTestSuite) WatchDirectory() {
-	eventChan := make(chan fsnotify.Event)
+func (suite *FileWatcherTestSuite) TestWatchDirectory() {
 	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
+	w, _ := fsnotify.NewWatcher()
 	newWatcher := &FileWatcher{
-		done:        make(chan bool),
 		filter:      filter,
-		mainWatcher: &fsnotify.Watcher{Events: eventChan},
+		mainWatcher: w,
 	}
-
 	newWatcher.watchDirectory(watchFixturePath)
-	path, _ := filepath.Abs(textFixturePath)
-	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(path))
+	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(filepath.Join("..", "fixtures", "project", "assets")))
+}
+
+func (suite *FileWatcherTestSuite) TestWatchSymlinkDirectory() {
+	filter, _ := newFileFilter(symlinkFixturePath, []string{}, []string{})
+	w, _ := fsnotify.NewWatcher()
+	newWatcher := &FileWatcher{
+		filter:      filter,
+		mainWatcher: w,
+	}
+	newWatcher.watchDirectory(symlinkFixturePath)
+	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(filepath.Join("..", "fixtures", "project", "assets")))
 }
 
 func (suite *FileWatcherTestSuite) TestWatchConfig() {
