@@ -147,6 +147,11 @@ class ReleaseGenerator
       build_location = File.expand_path(DIST_DIR + "/#{platform}")
       binary = Dir.entries(build_location).find { |name| name =~ /theme/ }
       Release.new(version: version, platform: platform, filename: [build_location, binary].join('/'))
+
+      installer = Dir.entries(build_location).find { |name| name =~ /themekit-setup/ }
+      unless installer.nil?
+        Release.new(version: version, platform: platform, filename: [build_location, installer].join('/'))
+      end
     end
   end
 end

@@ -30,8 +30,16 @@ build32:
 	@export GOARCH=386; $(MAKE) build;
 
 windows: ## Build binaries for Windows (32 and 64 bit)
-	@echo "building win-64" && export GOOS=windows; export EXT=.exe; $(MAKE) build64 && echo "win-64 build complete";
-	@echo "building win-32" && export GOOS=windows; export EXT=.exe; $(MAKE) build32 && echo "win-32 build complete";
+	@echo "building win-64" &&\
+		export GOOS=windows; export EXT=.exe; $(MAKE) build64 &&\
+		makensis ./scripts/themekitInstaller64.nsi > /dev/null &&\
+		mv ./scripts/themekit-setup-64.exe ./build/dist/windows-amd64 &&\
+		echo "win-64 build complete";
+	@echo "building win-32" &&\
+		export GOOS=windows; export EXT=.exe; $(MAKE) build32 &&\
+		makensis ./scripts/themekitInstaller32.nsi > /dev/null &&\
+		mv ./scripts/themekit-setup-32.exe ./build/dist/windows-386 &&\
+		echo "win-32 build complete";
 
 mac: ## Build binaries for Mac OS X (64 bit)
 	@echo "building darwin-64" && export GOOS=darwin; $(MAKE) build64 && echo "darwin-64 build complete";
@@ -52,10 +60,16 @@ gen_sha: ## Generate sha256 for a darwin build for usage with homebrew
 serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
 	@cd docs && jekyll serve
 
-tools: ## Installs tools required for developing theme kit
+tools:
 	@curl https://glide.sh/get | sh
 	@go get -u github.com/golang/lint/golint
 	@gem install jekyll
+
+linux_tools: tools ## Installs linux tools required for developing theme kit
+	@sudo apt-get install nsis
+
+mac_tools: tools ## Installs mac tools required for developing theme kit
+	@brew install makensis
 
 help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

@@ -34,6 +34,12 @@ brew tap shopify/shopify
 brew install themekit
 ```
 
+### Windows Installer
+
+Download and run the installer:
+[windows-64](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-amd64/theme-setup-64.exe)
+[windows-32](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-386/theme-setup-32.exe)
+
 ### Manual Installation
 
 Download and unzip the latest release.
@@ -45,24 +51,6 @@ Download and unzip the latest release.
 | Windows| 32-bit       |  [download](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/windows-386.zip)
 | Linux  | 64-bit       |  [download](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/linux-amd64.zip)
 | Linux  | 32-bit       |  [download](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/linux-386.zip)
-
-**For macOS or Linux run the following commands**
-
-```bash
-cp ~/Downloads/theme /usr/local/bin # install the command onto your path
-theme # test output of theme and make sure it is working
-```
-
-**For installing on Windows run the following commands**
-
-- Create a folder inside `C:\Program Files\` called `Theme Kit`
-- Copy the extracted program into `C:\Program Files\Theme Kit`
-- Navigate to `Control Panel > System and Security > System`. Another way to get there is to Right-Click on `My Computer` and choose the `properties` item
-- Look for the button or link called `Environment Variables`
-- In the second panel look for the item called `Path` and double-click on it. This should open a window with a text field that is overflowing with content.
-- Move your cursor all the way to the end and add the following: `;C:\Program Files\Theme Kit\`
-- Click `OK` until all the windows are gone.
-- To verify that Theme Kit has been installed, open `cmd.exe` and type in `theme`.
 
 ## Get API Access
 
