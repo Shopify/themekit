@@ -29,6 +29,9 @@ run the command like the following:
 ```bash
 theme bootstrap --password=[your-api-password] --store=[your-store.myshopify.com]
 ```
+
+To get your credentials setup please refer to [the setup docs]({{ '/#get-api-access' | prepend: site.baseurl }})
+
 **Required Flags**
 
 * `--password` : Password for access to your Shopify account.
