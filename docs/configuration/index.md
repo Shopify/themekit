@@ -12,13 +12,13 @@ There are general values that you will be able to config for all of Theme Kit ac
 
 | Attribute    | Description
 |:-------------|:---------------------
-| password     | Your API password
-| theme_id     | The theme that you want the command to take effect on. If you want to make changes to the current live theme you may set this value to `'live'`
-| store        | Your store's Shopify domain with the `.myshopify.com` postfix.
+| password     | Your API password. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
+| theme_id     | The theme that you want the command to take effect on. If you want to make changes to the current live theme you may set this value to `'live'`. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
+| store        | Your store's Shopify domain with the `.myshopify.com` postfix. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
 | directory    | The project root directory. This allows you to run the command from another directory.
 | ignore_files | A list of patterns to ignore when executing commands. Please see the [Ignore Patterns]({{ '/ignores' | prepend: site.baseurl }})  documentation.
 | ignores      | A list of file paths to files that contain ignore patterns. Please see the [Ignore Patterns]({{ '/ignores' | prepend: site.baseurl }})  documentation.
-| proxy        | A full URL to proxy your requests through.
+| proxy        | A full URL to proxy your requests through. The URL only supports the `http` protocol.
 | timeout      | Request timeout. If you have larger files in your project that may take longer than the default 30s to upload, you may want to increase this value. You can set this value to 60s for seconds or 1m for one minute.
 | readonly     | All actions are readonly. This means you can download from this environment but you cannot do any modifications to the theme on shopify.
 
