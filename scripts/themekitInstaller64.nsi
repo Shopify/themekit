@@ -1,6 +1,6 @@
 !include "EnvVarUpdate.nsh"
 Name 'Shopify Theme Kit 64 Bit'
-OutFile 'themekit-setup-64.exe'
+OutFile '../build/dist/themekit-setup-64.exe'
 InstallDir $PROGRAMFILES\themekit
 Section "Install"
   SetOutPath $INSTDIR

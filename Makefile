@@ -33,12 +33,10 @@ windows: ## Build binaries for Windows (32 and 64 bit)
 	@echo "building win-64" &&\
 		export GOOS=windows; export EXT=.exe; $(MAKE) build64 &&\
 		makensis ./scripts/themekitInstaller64.nsi > /dev/null &&\
-		mv ./scripts/themekit-setup-64.exe ./build/dist/windows-amd64 &&\
 		echo "win-64 build complete";
 	@echo "building win-32" &&\
 		export GOOS=windows; export EXT=.exe; $(MAKE) build32 &&\
 		makensis ./scripts/themekitInstaller32.nsi > /dev/null &&\
-		mv ./scripts/themekit-setup-32.exe ./build/dist/windows-386 &&\
 		echo "win-32 build complete";
 
 mac: ## Build binaries for Mac OS X (64 bit)

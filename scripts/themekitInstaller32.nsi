@@ -1,6 +1,6 @@
 !include "EnvVarUpdate.nsh"
 Name 'Shopify Theme Kit 32 Bit'
-OutFile 'themekit-setup-32.exe'
+OutFile '../build/dist/themekit-setup-32.exe'
 InstallDir $PROGRAMFILES\themekit
 Section "Install"
   SetOutPath $INSTDIR

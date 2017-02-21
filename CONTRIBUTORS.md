@@ -42,7 +42,8 @@ access to the theme command. Run `theme` to make sure it is installed.
 - On Github create a new release for the tag and take note of any relevant changes
   - Include a brief summary of all the changes
   - Include links to the Pull Requests that introduced these changes
-  - Also upload the zipped binaries from `build/dist/` manually to Github so people can easily download them
+  - Upload the zipped binaries from `build/dist/` manually to the Github release.
+  - Upload both the 32bit and 64bit windows installers from `build/dist` to the Github release as well.
 - Update the [documentation website](https://shopify.github.io/themekit/)
   - run `make serve_docs`
   - update any changes to the API
