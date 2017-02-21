@@ -95,7 +95,13 @@ class Release
     }
   end
 
+  def upload storage_manager
+    storage_manager.upload!(full_name, data)
+    location = storage_manager.url(full_name)
+  end
+
   private
+
   def load_file(filename)
     file = File.open(filename, 'rb')
     @full_name = [version, platform, File.basename(file.path)].join('/')
@@ -105,7 +111,7 @@ class Release
 end
 
 class ReleaseGenerator
-  attr_reader :version, :releases, :storage_manager
+  attr_reader :version, :storage_manager
 
   DIST_DIR = File.expand_path(__FILE__ + "/../../build/dist")
   BUILDS = %w(darwin-amd64 linux-386 linux-amd64 windows-386 windows-amd64)
@@ -113,7 +119,6 @@ class ReleaseGenerator
   def initialize(version, storage_manager)
     ensure_builds_have_been_created
     @version = version
-    @releases = prepare_releases
     @storage_manager = storage_manager
   end
 
@@ -121,9 +126,30 @@ class ReleaseGenerator
     ensure_release_is_necessary
     releases.each do |release|
       logger.puts "  - Uploading #{release.full_name}" if logger
-      storage_manager.upload!(release.full_name, release.data)
-      release.location = storage_manager.url(release.full_name)
+      release.upload(storage_manager)
     end
+    installers.each do |release|
+      logger.puts "  - Uploading #{release.full_name}" if logger
+      release.upload(storage_manager)
+    end
+  end
+
+  def releases
+    @releases ||= BUILDS.map do |platform|
+      build_location = File.expand_path(DIST_DIR + "/#{platform}")
+      binary = Dir.entries(build_location).find { |name| name =~ /theme/ }
+      Release.new(version: version, platform: platform, filename: [build_location, binary].join('/'))
+    end
+  end
+
+  def installers
+    @installers ||= BUILDS.map do |platform|
+      build_location = File.expand_path(DIST_DIR + "/#{platform}")
+      installer = Dir.entries(build_location).find { |name| name =~ /themekit-setup/ }
+      unless installer.nil?
+        Release.new(version: version, platform: platform, filename: [build_location, installer].join('/'))
+      end
+    end.compact
   end
 
   private
@@ -139,19 +165,6 @@ class ReleaseGenerator
     if feed.find { |r| r['version'] == version }
       puts "v#{version} has already been deployed. If this was intended to be a new release, ensure version.go has been updated and add an appropriate tag to git"
       exit(1)
-    end
-  end
-
-  def prepare_releases
-    BUILDS.map do |platform|
-      build_location = File.expand_path(DIST_DIR + "/#{platform}")
-      binary = Dir.entries(build_location).find { |name| name =~ /theme/ }
-      Release.new(version: version, platform: platform, filename: [build_location, binary].join('/'))
-
-      installer = Dir.entries(build_location).find { |name| name =~ /themekit-setup/ }
-      unless installer.nil?
-        Release.new(version: version, platform: platform, filename: [build_location, installer].join('/'))
-      end
     end
   end
 end
