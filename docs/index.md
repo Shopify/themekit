@@ -37,8 +37,9 @@ brew install themekit
 ### Windows Installer
 
 Download and run the installer:
-[windows-64](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/themekit-setup-64.exe)
-[windows-32](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/themekit-setup-32.exe)
+
+- [windows-64](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/themekit-setup-64.exe)
+- [windows-32](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/themekit-setup-32.exe)
 
 ### Manual Installation
 
