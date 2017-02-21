@@ -10,7 +10,7 @@ dependencies:
     - mkdir -p "$PROJECT_PATH"
     - mkdir "$GOPATH/bin"
     - rsync -azC --delete ./ "$PROJECT_PATH/"
-    - cd $PROJECT_PATH && make tools
+    - cd $PROJECT_PATH && make linux_tools
 test:
   pre:
     - cd $PROJECT_PATH && glide install
