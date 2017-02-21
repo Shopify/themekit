@@ -13,16 +13,41 @@ Theme Kit is a cross-platform tool for building Shopify Themes. Theme Kit is a s
 
 ## Installation
 
-You can find installation instructions for each platform [shopify.github.io/themekit/](https://shopify.github.io/themekit/)
+You can find installation instructions for each platform on the [Docs Website](https://shopify.github.io/themekit/#installation)
 
-## Usage and Docs
+## Setup, Usage and Commands
 
-Please find further usage instructions at [theme kit website](https://shopify.github.io/themekit/commands/) and for developing using theme kit please see the [![GoDoc](https://godoc.org/github.com/Shopify/themekit?status.svg)](http://godoc.org/github.com/Shopify/themekit)
+Please find further usage instructions on the [theme kit website](https://shopify.github.io/themekit/)
 
-## Downloads
+# Development
 
-You can get your hands on a build for your system by checking out the [releases section](https://github.com/Shopify/themekit/releases).
+You can setup your development environment by running the following:
 
-## Contributing
+```bash
+go get -u github.com/Shopify/themekit
+cd $GOPATH/src/github.com/Shopify/themekit
+make [mac_tools|linux_tools] # install platform specific development tools
+glide install # see https://github.com/Masterminds/glide for glide usage
+make # build themekit
+theme version #should output the current themekit version
+```
 
-Please see [CONTRIBUTORS](https://github.com/Shopify/themekit/blob/master/CONTRIBUTORS.md) file for details
+This will install theme kit into `$GOPATH/bin` and you will now have access to
+the theme command.
+
+## Contribution Guidelines
+
+We welcome your contributions to the project. There are a few steps to take when
+looking to make a contribution.
+
+- Open an issue to discuss the feature/bug
+- If feature/bug is deemed valid then fork repo.
+- Implement patch to resolve issue.
+- Include tests to prevent regressions and validate the patch.
+- Update the docs for any API changes.
+- Submit pull request and mention maintainers. Current maintainers are @tanema, @chrisbutcher
+
+## Authors
+
+[Chris Saunders](https://github.com/csaunders), [Tim Anema](https://github.com/tanema),
+[Chris Butcher](https://github.com/chrisbutcher), [Jakob Külzer](https://github.com/ilikeorangutans)
