@@ -87,24 +87,6 @@ func (asset Asset) Contents() ([]byte, error) {
 	return data, nil
 }
 
-// ByAsset implements sort.Interface for sorting remote assets
-type ByAsset []Asset
-
-// Len returns the length of the array.
-func (assets ByAsset) Len() int {
-	return len(assets)
-}
-
-// Swap swaps two values in the slive
-func (assets ByAsset) Swap(i, j int) {
-	assets[i], assets[j] = assets[j], assets[i]
-}
-
-// Less is the comparison method. Will return true if the first is less than the second.
-func (assets ByAsset) Less(i, j int) bool {
-	return assets[i].Key < assets[j].Key
-}
-
 func findAllFiles(dir string) ([]string, error) {
 	var files []string
 

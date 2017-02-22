@@ -82,30 +82,3 @@ func TestReleasesListGet(t *testing.T) {
 	assert.Equal(t, "", r.Version)
 	assert.Equal(t, false, r.IsValid())
 }
-
-func TestReleasesListLen(t *testing.T) {
-	var releases releasesList
-	resp := jsonFixture("responses/all_releases")
-	json.Unmarshal([]byte(resp), &releases)
-	assert.Equal(t, 4, releases.Len())
-}
-
-func TestReleasesListSwap(t *testing.T) {
-	var releases releasesList
-	resp := jsonFixture("responses/all_releases")
-	json.Unmarshal([]byte(resp), &releases)
-
-	assert.Equal(t, "0.4.4", releases[0].Version)
-	assert.Equal(t, "0.4.7", releases[1].Version)
-	releases.Swap(0, 1)
-	assert.Equal(t, "0.4.4", releases[1].Version)
-	assert.Equal(t, "0.4.7", releases[0].Version)
-}
-
-func TestReleasesListLess(t *testing.T) {
-	var releases releasesList
-	resp := jsonFixture("responses/all_releases")
-	json.Unmarshal([]byte(resp), &releases)
-	assert.Equal(t, false, releases.Less(0, 1))
-	assert.Equal(t, true, releases.Less(1, 2))
-}

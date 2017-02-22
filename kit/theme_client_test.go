@@ -66,7 +66,9 @@ func (suite *ThemeClientTestSuite) TestAssetList() {
 	expected := map[string][]Asset{}
 	bytes := []byte(jsonFixture("responses/assets_filtered"))
 	json.Unmarshal(bytes, &expected)
-	sort.Sort(ByAsset(expected["assets"]))
+	sort.Slice(expected["assets"], func(i, j int) bool {
+		return expected["assets"][i].Key < expected["assets"][j].Key
+	})
 
 	assets, err := suite.client.AssetList()
 	assert.Nil(suite.T(), err)

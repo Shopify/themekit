@@ -90,7 +90,7 @@ func newFileFilter(rootDir string, patterns []string, files []string) (fileFilte
 // will filter the first asset (`app.js`) from the slice.
 func (e fileFilter) filterAssets(assets []Asset) []Asset {
 	filteredAssets := []Asset{}
-	sort.Sort(ByAsset(assets))
+	sort.Slice(assets, func(i, j int) bool { return assets[i].Key < assets[j].Key })
 	for index, asset := range assets {
 		if !e.matchesFilter(asset.Key) &&
 			(index == len(assets)-1 || assets[index+1].Key != asset.Key+".liquid") {

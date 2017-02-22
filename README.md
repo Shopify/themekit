@@ -21,7 +21,8 @@ Please find further usage instructions on the [theme kit website](https://shopif
 
 # Development
 
-You can setup your development environment by running the following:
+Themekit requires go 1.8. You can setup your development environment by running
+the following:
 
 ```bash
 go get -u github.com/Shopify/themekit
