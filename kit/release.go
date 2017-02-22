@@ -49,7 +49,11 @@ func (r release) ForCurrentPlatform() platform {
 type releasesList []release
 
 func (releases releasesList) Get(ver string) release {
-	sort.Sort(releases)
+	sort.Slice(releases, func(i, j int) bool {
+		iversion, _ := version.NewVersion(releases[i].Version)
+		jversion, _ := version.NewVersion(releases[j].Version)
+		return jversion.LessThan(iversion)
+	})
 	if ver == "latest" {
 		return releases[0]
 	}
@@ -61,18 +65,4 @@ func (releases releasesList) Get(ver string) release {
 		}
 	}
 	return release{}
-}
-
-func (releases releasesList) Len() int {
-	return len(releases)
-}
-
-func (releases releasesList) Swap(i, j int) {
-	releases[i], releases[j] = releases[j], releases[i]
-}
-
-func (releases releasesList) Less(i, j int) bool {
-	iversion, _ := version.NewVersion(releases[i].Version)
-	jversion, _ := version.NewVersion(releases[j].Version)
-	return jversion.LessThan(iversion)
 }

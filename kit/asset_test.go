@@ -3,7 +3,6 @@ package kit
 import (
 	"encoding/base64"
 	"os"
-	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -71,25 +70,6 @@ func (s *LoadAssetSuite) TestContents() {
 	assert.Equal(s.T(), `{
   "test": "one"
 }`, string(data))
-}
-
-func (s *LoadAssetSuite) TestAssetsSort() {
-	input := []Asset{
-		{Key: "assets/ajaxify.js.liquid"},
-		{Key: "assets/ajaxify.js"},
-		{Key: "assets/ajaxify.css"},
-		{Key: "assets/ajaxify.css.liquid"},
-		{Key: "layouts/customers.liquid"},
-	}
-	expected := []Asset{
-		{Key: "assets/ajaxify.css"},
-		{Key: "assets/ajaxify.css.liquid"},
-		{Key: "assets/ajaxify.js"},
-		{Key: "assets/ajaxify.js.liquid"},
-		{Key: "layouts/customers.liquid"},
-	}
-	sort.Sort(ByAsset(input))
-	assert.Equal(s.T(), expected, input)
 }
 
 func (s *LoadAssetSuite) TestFindAllFiles() {
