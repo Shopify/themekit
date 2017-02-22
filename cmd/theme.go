@@ -130,7 +130,9 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 	setFlagConfig()
 
 	environments, err := kit.LoadEnvironments(configPath)
-	if err != nil {
+	if err != nil && os.IsNotExist(err) {
+		return themeClients, fmt.Errorf("Could not file config file at %v", configPath)
+	} else if err != nil {
 		return themeClients, err
 	}
 
