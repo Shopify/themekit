@@ -3,10 +3,10 @@ package kit
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/mattn/go-colorable"
 )
 
 // RedText is a func that wraps a string in red color tags and it will be
@@ -31,9 +31,14 @@ var CyanText = color.New(color.FgCyan).SprintFunc()
 
 const timestampFormat = "15:04:05"
 
+var (
+	stdOut = colorable.NewColorableStdout()
+	stdErr = colorable.NewColorableStderr()
+)
+
 func init() {
 	log.SetFlags(0)
-	log.SetOutput(os.Stderr)
+	log.SetOutput(stdErr)
 }
 
 func timestamp() string {
@@ -42,12 +47,12 @@ func timestamp() string {
 
 // Printf will output a formatted message to the output log (default stdout)
 func Printf(content string, args ...interface{}) {
-	fmt.Println(timestamp() + fmt.Sprintf(content, args...))
+	fmt.Fprintln(stdOut, timestamp()+fmt.Sprintf(content, args...))
 }
 
 // Print will output a message to the output log (default stdout)
 func Print(args ...interface{}) {
-	fmt.Println(timestamp() + fmt.Sprint(args...))
+	fmt.Fprintln(stdOut, timestamp()+fmt.Sprint(args...))
 }
 
 // LogErrorf will output a formatted red message to the output log (default stdout)
