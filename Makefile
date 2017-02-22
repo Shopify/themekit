@@ -47,7 +47,10 @@ linux: ## Build binaries for Linux (32 and 64 bit)
 	@echo "building linux-32" && export GOOS=linux; $(MAKE) build32 && echo "linux-32 build complete";
 
 zip: ## Create zip file with distributable binaries
-	@echo "compressing releases" && ./scripts/compress && echo "finished compressing";
+	@echo "compressing releases" &&\
+		cd build/dist &&\
+		ls | grep -v '\.' | xargs -n 1 sh -c 'zip $${0}\.zip $${0}/*' &&\
+		echo "finished compressing";
 
 upload_to_s3: ## Upload zip file with binaries to S3
 	@echo "uploading to S3" && bundle exec ruby ./scripts/release && echo "upload complete";
