@@ -71,6 +71,10 @@ All of the Theme Kit environment variables are prefixed with `THEMEKIT_`
 **Note** Any environment variable will take precedence over your `config.yml` values
 so please keep that in mind while debugging your config.
 
+Environment variables are platform dependant. For more information on environment
+variables please see [this link for macOS and linux](https://www.cyberciti.biz/faq/set-environment-variable-linux/)
+and [for windows please see this link](http://www.computerhope.com/issues/ch000549.htm)
+
 ## Global Flags
 
 You can enforce any setting manually using a command line flag. This is useful for
