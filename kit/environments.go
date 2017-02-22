@@ -13,7 +13,7 @@ import (
 // DefaultEnvironment is the environment that will be loaded if no environment is specified.
 const DefaultEnvironment string = "development"
 
-var supportedExts = []string{"json", "yml", "yaml"}
+var supportedExts = []string{"yml", "yaml", "json"}
 
 // Environments is a map of configurations to their environment name.
 type Environments map[string]*Configuration
@@ -31,9 +31,13 @@ func LoadEnvironments(location string) (env Environments, err error) {
 	if err == nil {
 		switch ext {
 		case "yml", "yaml":
-			err = yaml.Unmarshal(contents, &env)
+			if err = yaml.Unmarshal(contents, &env); err != nil {
+				return env, fmt.Errorf("Invalid yaml found while loading the config file: %v", err)
+			}
 		case "json":
-			err = json.Unmarshal(contents, &env)
+			if err = json.Unmarshal(contents, &env); err != nil {
+				return env, fmt.Errorf("Invalid json found while loading the config file: %v", err)
+			}
 		}
 	}
 	return
