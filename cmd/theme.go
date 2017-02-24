@@ -107,6 +107,7 @@ func init() {
 	replaceCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
 	uploadCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
 	openCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
+	customizeCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
 
 	bootstrapCmd.Flags().StringVar(&bootstrapVersion, "version", latestRelease, "version of Shopify Timber to use")
 	bootstrapCmd.Flags().StringVar(&bootstrapPrefix, "prefix", "", "prefix to the Timber theme being created")
@@ -115,7 +116,7 @@ func init() {
 
 	updateCmd.Flags().StringVar(&updateVersion, "version", "latest", "version of themekit to install")
 
-	ThemeCmd.AddCommand(bootstrapCmd, removeCmd, replaceCmd, uploadCmd, watchCmd, downloadCmd, versionCmd, updateCmd, configureCmd, openCmd)
+	ThemeCmd.AddCommand(bootstrapCmd, removeCmd, replaceCmd, uploadCmd, watchCmd, downloadCmd, versionCmd, updateCmd, configureCmd, openCmd, customizeCmd)
 }
 
 func generateThemeClients() ([]kit.ThemeClient, error) {
