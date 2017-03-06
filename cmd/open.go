@@ -25,7 +25,7 @@ func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 		client.Config.ThemeID)
 
 	if openEdit {
-		url = fmt.Sprintf("https://%s/admin/themes/%s",
+		url = fmt.Sprintf("https://%s/admin/themes/%s/editor",
 			client.Config.Domain,
 			client.Config.ThemeID)
 	}
