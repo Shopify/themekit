@@ -8,7 +8,7 @@ import (
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Update Theme kit to the newest verion.",
+	Short: "Update Theme kit to the newest version.",
 	Long: `Update will check for a new release, then
 if there is an applicable update it will download it and apply it.
 
