@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -21,14 +20,16 @@ type FileEventCallback func(ThemeClient, Asset, EventType)
 // FileWatcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
 type FileWatcher struct {
-	done          chan bool
-	client        ThemeClient
-	mainWatcher   *fsnotify.Watcher
-	reloadSignal  chan bool
-	configWatcher *fsnotify.Watcher
-	filter        fileFilter
-	callback      FileEventCallback
-	notify        string
+	done            chan bool
+	client          ThemeClient
+	mainWatcher     *fsnotify.Watcher
+	reloadSignal    chan bool
+	configWatcher   *fsnotify.Watcher
+	filter          fileFilter
+	callback        FileEventCallback
+	notify          string
+	recordedEvents  *eventMap
+	notifyProcessed bool
 }
 
 func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filter fileFilter, callback FileEventCallback) (*FileWatcher, error) {
@@ -49,9 +50,10 @@ func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filt
 		configWatcher: configWatcher,
 		callback:      callback,
 		filter:        filter,
+		notify:        notifyFile,
 	}
 
-	go newWatcher.watchFsEvents(notifyFile)
+	go newWatcher.watchFsEvents()
 
 	return newWatcher, newWatcher.watchDirectory(dir)
 }
@@ -77,19 +79,15 @@ func (watcher *FileWatcher) watchDirectory(root string) error {
 	})
 }
 
-func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
-	var eventLock sync.Mutex
-	notifyProcessed := false
-	recordedEvents := map[string]chan fsnotify.Event{}
+func (watcher *FileWatcher) watchFsEvents() {
+	watcher.notifyProcessed = false
+	watcher.recordedEvents = newEventMap()
 
 	for {
 		select {
 		case configEvent := <-watcher.configWatcher.Events:
 			if configEvent.Op != fsnotify.Chmod {
-				close(watcher.done)
-				if watcher.reloadSignal != nil {
-					watcher.reloadSignal <- true
-				}
+				watcher.onReload()
 				return
 			}
 		case currentEvent, more := <-watcher.mainWatcher.Events:
@@ -98,41 +96,11 @@ func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 				return
 			}
 
-			if currentEvent.Op == fsnotify.Chmod || watcher.filter.matchesFilter(currentEvent.Name) {
-				break
+			if currentEvent.Op != fsnotify.Chmod && !watcher.filter.matchesFilter(currentEvent.Name) {
+				watcher.onEvent(currentEvent)
 			}
-
-			eventLock.Lock()
-			if _, ok := recordedEvents[currentEvent.Name]; !ok {
-				recordedEvents[currentEvent.Name] = make(chan fsnotify.Event)
-
-				go func(eventChan chan fsnotify.Event, eventName string) {
-					var event fsnotify.Event
-
-					for {
-						select {
-						case event = <-eventChan:
-						case <-time.After(debounceTimeout):
-							go handleEvent(watcher, event)
-							eventLock.Lock()
-							delete(recordedEvents, eventName)
-							eventLock.Unlock()
-							return
-						}
-					}
-				}(recordedEvents[currentEvent.Name], currentEvent.Name)
-			}
-			recordedEvents[currentEvent.Name] <- currentEvent
-			notifyProcessed = true
-			eventLock.Unlock()
 		case <-time.Tick(1 * time.Second):
-			eventLock.Lock()
-			if notifyProcessed && len(recordedEvents) == 0 && notifyFile != "" {
-				os.Create(notifyFile)
-				os.Chtimes(notifyFile, time.Now(), time.Now())
-				notifyProcessed = false
-			}
-			eventLock.Unlock()
+			watcher.onIdle()
 		}
 	}
 }
@@ -165,7 +133,46 @@ func (watcher *FileWatcher) StopWatching() {
 	watcher.mainWatcher.Close()
 }
 
-func handleEvent(watcher *FileWatcher, event fsnotify.Event) {
+func (watcher *FileWatcher) onReload() {
+	close(watcher.done)
+	if watcher.reloadSignal != nil {
+		watcher.reloadSignal <- true
+	}
+}
+
+func (watcher *FileWatcher) onEvent(event fsnotify.Event) {
+	eventsChan, ok := watcher.recordedEvents.Get(event.Name)
+	if !ok {
+		eventsChan = watcher.recordedEvents.New(event.Name)
+		go watcher.watchConsecutiveEvents(eventsChan, event.Name)
+	}
+	eventsChan <- event
+	watcher.notifyProcessed = true
+}
+
+func (watcher *FileWatcher) onIdle() {
+	if !watcher.notifyProcessed || watcher.recordedEvents.Count() > 0 || watcher.notify == "" {
+		return
+	}
+	os.Create(watcher.notify)
+	os.Chtimes(watcher.notify, time.Now(), time.Now())
+	watcher.notifyProcessed = false
+}
+
+func (watcher *FileWatcher) watchConsecutiveEvents(eventChan chan fsnotify.Event, eventName string) {
+	var event fsnotify.Event
+	for {
+		select {
+		case event = <-eventChan:
+		case <-time.After(debounceTimeout):
+			go watcher.handleEvent(event)
+			watcher.recordedEvents.Del(eventName)
+			return
+		}
+	}
+}
+
+func (watcher *FileWatcher) handleEvent(event fsnotify.Event) {
 	if !watcher.IsWatching() {
 		return
 	}
