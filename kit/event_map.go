@@ -43,8 +43,7 @@ func (em *eventMap) Set(eventName string, eventsChan chan fsnotify.Event) {
 }
 
 func (em *eventMap) New(eventName string) chan fsnotify.Event {
-	em.Lock()
-	defer em.Unlock()
-	em.events[eventName] = make(chan fsnotify.Event)
-	return em.events[eventName]
+	eventsChan := make(chan fsnotify.Event)
+	em.Set(eventName, eventsChan)
+	return eventsChan
 }

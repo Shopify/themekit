@@ -1,6 +1,7 @@
 package kit
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -89,7 +90,7 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 		wg.Done()
 	}
 
-	go newWatcher.watchFsEvents("")
+	go newWatcher.watchFsEvents()
 
 	go func() {
 		writes := []fsnotify.Event{
@@ -122,7 +123,7 @@ func (suite *FileWatcherTestSuite) TestReloadConfig() {
 	err := newWatcher.WatchConfig(goodEnvirontmentPath, reloadChan)
 	assert.Nil(suite.T(), err)
 
-	go newWatcher.watchFsEvents("")
+	go newWatcher.watchFsEvents()
 	configWatcher.Events <- fsnotify.Event{Name: goodEnvirontmentPath, Op: fsnotify.Write}
 
 	assert.Equal(suite.T(), len(reloadChan), 1)
@@ -136,6 +137,93 @@ func (suite *FileWatcherTestSuite) TestStopWatching() {
 	watcher.StopWatching()
 	time.Sleep(50 * time.Millisecond)
 	assert.Equal(suite.T(), false, watcher.IsWatching())
+}
+
+func (suite *FileWatcherTestSuite) TestOnReload() {
+	reloadChan := make(chan bool, 100)
+
+	configWatcher, _ := fsnotify.NewWatcher()
+	newWatcher := &FileWatcher{
+		done:          make(chan bool),
+		mainWatcher:   &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
+		configWatcher: configWatcher,
+	}
+
+	err := newWatcher.WatchConfig(goodEnvirontmentPath, reloadChan)
+	assert.Nil(suite.T(), err)
+	newWatcher.onReload()
+
+	assert.Equal(suite.T(), len(reloadChan), 1)
+	assert.Equal(suite.T(), newWatcher.IsWatching(), false)
+}
+
+func (suite *FileWatcherTestSuite) TestOnEvent() {
+	newWatcher := &FileWatcher{
+		notifyProcessed: false,
+		recordedEvents:  newEventMap(),
+		callback:        func(client ThemeClient, asset Asset, event EventType) {},
+	}
+
+	event1 := fsnotify.Event{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write}
+	event2 := fsnotify.Event{Name: filepath.Join(watchFixturePath, "templates", "customers", "test.liquid"), Op: fsnotify.Write}
+
+	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 0)
+	newWatcher.onEvent(event1)
+	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
+	assert.True(suite.T(), newWatcher.notifyProcessed)
+	newWatcher.onEvent(event1)
+	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
+	newWatcher.onEvent(event2)
+	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 2)
+}
+
+func (suite *FileWatcherTestSuite) TestOnIdle() {
+	notifyPath := "notifyTestFile"
+	testEventName := "test"
+	newWatcher := &FileWatcher{
+		notify:          notifyPath,
+		notifyProcessed: true,
+		recordedEvents:  newEventMap(),
+	}
+	assert.False(suite.T(), fileExists(notifyPath))
+	newWatcher.onIdle()
+	assert.True(suite.T(), fileExists(notifyPath))
+	os.Remove(notifyPath)
+
+	assert.False(suite.T(), fileExists(notifyPath))
+	newWatcher.notifyProcessed = true
+	newWatcher.onIdle()
+	assert.True(suite.T(), fileExists(notifyPath))
+	os.Remove(notifyPath)
+
+	newWatcher.notifyProcessed = true
+	assert.False(suite.T(), fileExists(notifyPath))
+	newWatcher.notify = ""
+	newWatcher.onIdle()
+	assert.False(suite.T(), fileExists(notifyPath))
+	newWatcher.notify = notifyPath
+	newWatcher.onIdle()
+	assert.True(suite.T(), fileExists(notifyPath))
+	os.Remove(notifyPath)
+
+	newWatcher.notifyProcessed = true
+	assert.False(suite.T(), fileExists(notifyPath))
+	newWatcher.recordedEvents.New(testEventName)
+	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
+	newWatcher.onIdle()
+	assert.False(suite.T(), fileExists(notifyPath))
+	newWatcher.recordedEvents.Del(testEventName)
+	newWatcher.onIdle()
+	assert.True(suite.T(), fileExists(notifyPath))
+	os.Remove(notifyPath)
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
+
+func (suite *FileWatcherTestSuite) TestWatchConsecutiveEvents() {
 }
 
 func (suite *FileWatcherTestSuite) TestHandleEvent() {
@@ -157,7 +245,7 @@ func (suite *FileWatcherTestSuite) TestHandleEvent() {
 	}}
 
 	for _, write := range writes {
-		handleEvent(watcher, fsnotify.Event{Name: write.Name, Op: write.Event})
+		watcher.handleEvent(fsnotify.Event{Name: write.Name, Op: write.Event})
 	}
 
 	wg.Wait()
