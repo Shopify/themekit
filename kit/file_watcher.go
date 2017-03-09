@@ -20,16 +20,16 @@ type FileEventCallback func(ThemeClient, Asset, EventType)
 // FileWatcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
 type FileWatcher struct {
-	done            chan bool
-	client          ThemeClient
-	mainWatcher     *fsnotify.Watcher
-	reloadSignal    chan bool
-	configWatcher   *fsnotify.Watcher
-	filter          fileFilter
-	callback        FileEventCallback
-	notify          string
-	recordedEvents  *eventMap
-	notifyProcessed bool
+	done           chan bool
+	client         ThemeClient
+	mainWatcher    *fsnotify.Watcher
+	reloadSignal   chan bool
+	configWatcher  *fsnotify.Watcher
+	filter         fileFilter
+	callback       FileEventCallback
+	notify         string
+	recordedEvents *eventMap
+	waitNotify     bool
 }
 
 func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filter fileFilter, callback FileEventCallback) (*FileWatcher, error) {
@@ -80,7 +80,7 @@ func (watcher *FileWatcher) watchDirectory(root string) error {
 }
 
 func (watcher *FileWatcher) watchFsEvents() {
-	watcher.notifyProcessed = false
+	watcher.waitNotify = false
 	watcher.recordedEvents = newEventMap()
 
 	for {
@@ -99,8 +99,6 @@ func (watcher *FileWatcher) watchFsEvents() {
 			if currentEvent.Op != fsnotify.Chmod && !watcher.filter.matchesFilter(currentEvent.Name) {
 				watcher.onEvent(currentEvent)
 			}
-		case <-time.Tick(1 * time.Second):
-			watcher.onIdle()
 		}
 	}
 }
@@ -147,16 +145,32 @@ func (watcher *FileWatcher) onEvent(event fsnotify.Event) {
 		go watcher.watchConsecutiveEvents(eventsChan, event.Name)
 	}
 	eventsChan <- event
-	watcher.notifyProcessed = true
+	watcher.watchForIdle()
 }
 
-func (watcher *FileWatcher) onIdle() {
-	if !watcher.notifyProcessed || watcher.recordedEvents.Count() > 0 || watcher.notify == "" {
+func (watcher *FileWatcher) watchForIdle() {
+	if watcher.waitNotify {
 		return
 	}
+	watcher.waitNotify = true
+	go func() {
+		for {
+			select {
+			case <-time.Tick(debounceTimeout):
+				if watcher.recordedEvents.Count() > 0 || watcher.notify == "" {
+					break
+				}
+				watcher.touchNotifyFile()
+				return
+			}
+		}
+	}()
+}
+
+func (watcher *FileWatcher) touchNotifyFile() {
 	os.Create(watcher.notify)
 	os.Chtimes(watcher.notify, time.Now(), time.Now())
-	watcher.notifyProcessed = false
+	watcher.waitNotify = false
 }
 
 func (watcher *FileWatcher) watchConsecutiveEvents(eventChan chan fsnotify.Event, eventName string) {

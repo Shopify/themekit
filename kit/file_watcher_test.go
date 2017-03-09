@@ -159,9 +159,9 @@ func (suite *FileWatcherTestSuite) TestOnReload() {
 
 func (suite *FileWatcherTestSuite) TestOnEvent() {
 	newWatcher := &FileWatcher{
-		notifyProcessed: false,
-		recordedEvents:  newEventMap(),
-		callback:        func(client ThemeClient, asset Asset, event EventType) {},
+		waitNotify:     false,
+		recordedEvents: newEventMap(),
+		callback:       func(client ThemeClient, asset Asset, event EventType) {},
 	}
 
 	event1 := fsnotify.Event{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write}
@@ -170,60 +170,29 @@ func (suite *FileWatcherTestSuite) TestOnEvent() {
 	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 0)
 	newWatcher.onEvent(event1)
 	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
-	assert.True(suite.T(), newWatcher.notifyProcessed)
+	assert.True(suite.T(), newWatcher.waitNotify)
 	newWatcher.onEvent(event1)
 	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
 	newWatcher.onEvent(event2)
 	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 2)
 }
 
-func (suite *FileWatcherTestSuite) TestOnIdle() {
+func (suite *FileWatcherTestSuite) TestTouchNotifyFile() {
 	notifyPath := "notifyTestFile"
-	testEventName := "test"
 	newWatcher := &FileWatcher{
-		notify:          notifyPath,
-		notifyProcessed: true,
-		recordedEvents:  newEventMap(),
+		notify: notifyPath,
 	}
 	assert.False(suite.T(), fileExists(notifyPath))
-	newWatcher.onIdle()
+	newWatcher.waitNotify = true
+	newWatcher.touchNotifyFile()
 	assert.True(suite.T(), fileExists(notifyPath))
-	os.Remove(notifyPath)
-
-	assert.False(suite.T(), fileExists(notifyPath))
-	newWatcher.notifyProcessed = true
-	newWatcher.onIdle()
-	assert.True(suite.T(), fileExists(notifyPath))
-	os.Remove(notifyPath)
-
-	newWatcher.notifyProcessed = true
-	assert.False(suite.T(), fileExists(notifyPath))
-	newWatcher.notify = ""
-	newWatcher.onIdle()
-	assert.False(suite.T(), fileExists(notifyPath))
-	newWatcher.notify = notifyPath
-	newWatcher.onIdle()
-	assert.True(suite.T(), fileExists(notifyPath))
-	os.Remove(notifyPath)
-
-	newWatcher.notifyProcessed = true
-	assert.False(suite.T(), fileExists(notifyPath))
-	newWatcher.recordedEvents.New(testEventName)
-	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
-	newWatcher.onIdle()
-	assert.False(suite.T(), fileExists(notifyPath))
-	newWatcher.recordedEvents.Del(testEventName)
-	newWatcher.onIdle()
-	assert.True(suite.T(), fileExists(notifyPath))
+	assert.False(suite.T(), newWatcher.waitNotify)
 	os.Remove(notifyPath)
 }
 
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
-}
-
-func (suite *FileWatcherTestSuite) TestWatchConsecutiveEvents() {
 }
 
 func (suite *FileWatcherTestSuite) TestHandleEvent() {
