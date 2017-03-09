@@ -170,7 +170,6 @@ func (suite *FileWatcherTestSuite) TestOnEvent() {
 	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 0)
 	newWatcher.onEvent(event1)
 	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
-	assert.True(suite.T(), newWatcher.waitNotify)
 	newWatcher.onEvent(event1)
 	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
 	newWatcher.onEvent(event2)

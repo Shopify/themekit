@@ -149,7 +149,7 @@ func (watcher *FileWatcher) onEvent(event fsnotify.Event) {
 }
 
 func (watcher *FileWatcher) watchForIdle() {
-	if watcher.waitNotify {
+	if watcher.waitNotify || watcher.notify == "" {
 		return
 	}
 	watcher.waitNotify = true
@@ -157,11 +157,10 @@ func (watcher *FileWatcher) watchForIdle() {
 		for {
 			select {
 			case <-time.Tick(debounceTimeout):
-				if watcher.recordedEvents.Count() > 0 || watcher.notify == "" {
-					break
+				if watcher.recordedEvents.Count() == 0 {
+					watcher.touchNotifyFile()
+					return
 				}
-				watcher.touchNotifyFile()
-				return
 			}
 		}
 	}()
