@@ -141,9 +141,22 @@ func (watcher *FileWatcher) watchFsEvents(notifyFile string) {
 // the channel to notify you about a config file change. This is useful to keep
 // track of version control changes
 func (watcher *FileWatcher) WatchConfig(configFile string, reloadSignal chan bool) error {
+	configDir := filepath.Dir(configFile)
 	if err := watcher.configWatcher.Add(configFile); err != nil {
 		return err
 	}
+
+	vcsPaths := []string{
+		filepath.Join(configDir, ".git", "HEAD"),
+		filepath.Join(configDir, ".hg", "branch"),
+	}
+
+	for _, path := range vcsPaths {
+		if err := watcher.configWatcher.Add(path); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+
 	watcher.reloadSignal = reloadSignal
 	return nil
 }
