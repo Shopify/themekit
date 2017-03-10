@@ -55,15 +55,17 @@ Download and unzip the latest release.
 
 ## Get API Access
 
-To develop themes with Theme Kit, you will need to authorize Theme Kit to access your store.
-Head to `https://[your-store-name].myshopify.com/admin/apps/private` it should look something
-like this:
+You will need to set up an API key to add to our configuration and create a connection
+between your store and Theme Kit. The API key allows Theme Kit to talk to and access
+your store, as well as its theme files.
 
-<img src="{{ "/assets/images/private-apps.png" | prepend: site.baseurl }}" />
+To do so, log into the Shopify store, and create a private app. In the Shopify
+Admin, go to Apps and click on View private apps. From there, click Generate API
+credentials to create your private app. Make sure to set the permissions of **Theme
+templates and theme assets** to have ***Read and write*** access in order to generate the
+appropriate API credentials, then click Save.
 
-Click on the `Create private apps` button. You will see this screen:
-
-<img src="{{ "/assets/images/create-private-app.png" | prepend: site.baseurl }}" />
+<img src="{{ "/assets/images/shopify-local-theme-development-generate-api.gif" | prepend: site.baseurl }}" />
 
 Fill out the information at the top and set the permissions of `Theme templates and theme assets` to
 read and write access. Press `Save` and you will be presented with the next screen. In it you will
@@ -84,11 +86,11 @@ it will download all those assets from Shopify and automatically create a `confi
 
 ## Configure an existing theme.
 
-If you already have a theme on Shopify and want to start using it you will need to
-view it in your browser and grab the theme ID from the URL. It should look like the
-following:
+To connect an existing theme, you need the theme’s ID number. The easiest way to
+get your theme’s ID number is to go to the Theme Editor click on Edit HTML/CSS and
+copy the theme ID number from the URL — it will be last several digits after mystore.myshopify.com/admin/themes/.
 
-<img src="{{ "/assets/images/theme-id.png" | prepend: site.baseurl }}" />
+<img src="{{ "/assets/images/shopify-local-theme-development-theme-id.gif" | prepend: site.baseurl }}" />
 
 Then once you have noted your theme ID, run the following commands:
 
