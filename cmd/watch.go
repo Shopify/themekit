@@ -67,7 +67,7 @@ func watch(themeClients []kit.ThemeClient) error {
 		if err != nil {
 			return err
 		}
-		watcher.WatchConfig(configPath, reloadSignal)
+		err = watcher.WatchConfig(configPath, reloadSignal)
 		if err != nil {
 			return err
 		}
