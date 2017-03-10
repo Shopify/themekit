@@ -55,8 +55,8 @@ Download and unzip the latest release.
 
 ## Get API Access
 
-We’ll need to set up an API key to add to our configuration and create a connection
-between yout store and Theme Kit. The API key allows Theme Kit to talk to and access
+You will need to set up an API key to add to our configuration and create a connection
+between your store and Theme Kit. The API key allows Theme Kit to talk to and access
 your store, as well as its theme files.
 
 To do so, log into the Shopify store, and create a private app. In the Shopify
