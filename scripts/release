@@ -4,6 +4,7 @@ require 'dotenv'
 require 'json'
 require 'digest'
 require 'git'
+require 'semverly'
 
 Dotenv.load
 
@@ -61,7 +62,7 @@ class Repository
 
   private
   def latest_tag
-    @git.tags.last
+    @git.tags.sort { |a, b| SemVer.parse(a.name) <=> SemVer.parse(b.name)}.last
   end
 
   def ensure_head_is_at_latest_version
