@@ -68,6 +68,7 @@ var (
 	bootstrapURL     string
 	bootstrapName    string
 	setThemeID       bool
+	openEdit         bool
 
 	updateVersion string
 )
@@ -114,6 +115,8 @@ func init() {
 	bootstrapCmd.Flags().StringVar(&bootstrapName, "name", "", "a name to define your theme on your shopify admin")
 
 	updateCmd.Flags().StringVar(&updateVersion, "version", "latest", "version of themekit to install")
+
+	openCmd.Flags().BoolVarP(&openEdit, "edit", "E", false, "open the web editor for the theme.")
 
 	ThemeCmd.AddCommand(bootstrapCmd, removeCmd, replaceCmd, uploadCmd, watchCmd, downloadCmd, versionCmd, updateCmd, configureCmd, openCmd)
 }
