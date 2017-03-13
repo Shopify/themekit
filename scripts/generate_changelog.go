@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type Release struct {
+type release struct {
 	URL    string    `json:"html_url"`
 	Tag    string    `json:"tag_name"`
 	Body   string    `json:"body"`
@@ -38,12 +38,12 @@ func main() {
 	jsonData, err := ioutil.ReadAll(resp.Body)
 	must(err)
 
-	releases := []Release{}
+	releases := []release{}
 	must(json.Unmarshal(jsonData, &releases))
 
 	tmpl, err := template.New("changelog").Parse(changelogTemplate)
 	must(tmpl.Execute(os.Stdout, struct {
-		AllReleases []Release
+		AllReleases []release
 	}{releases}))
 }
 
