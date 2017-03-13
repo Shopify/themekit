@@ -16,7 +16,7 @@ type release struct {
 	Date   time.Time `json:"published_at"`
 	Author struct {
 		Name string `json:"login"`
-		URL  string `json:"url"`
+		URL  string `json:"html_url"`
 	} `json:"author"`
 }
 
@@ -26,6 +26,8 @@ All released changes to this project will be documented in this file.
 
 {{range .AllReleases}}
 ## [{{.Tag}}]({{.URL}}) {{.Date.Format "Jan 02, 2006"}}
+
+Released By: [@{{.Author.Name}}]({{.Author.URL}})
 
 {{.Body}}
 {{end}}
