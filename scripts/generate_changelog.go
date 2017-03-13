@@ -25,8 +25,7 @@ const changelogTemplate = `# Change Log
 All released changes to this project will be documented in this file.
 
 {{range .AllReleases}}
-## [{{.Tag}}] {{.Date.Format "Jan 02, 2006"}}
-{{.URL}}
+## [{{.Tag}}]({{.URL}}) {{.Date.Format "Jan 02, 2006"}}
 
 {{.Body}}
 {{end}}
