@@ -38,8 +38,19 @@ brew install themekit
 
 Download and run the installer:
 
-- [windows-64](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/themekit-setup-64.exe)
-- [windows-32](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/themekit-setup-32.exe)
+**The installer was reported to wipe out the PATH on some windows machines. It is being fixed.
+To install please follow the following instructions**
+
+**For installing on Windows**
+
+- Create a folder inside `C:\Program Files\` called `Theme Kit`
+- Copy the extracted program into `C:\Program Files\Theme Kit`
+- Navigate to `Control Panel > System and Security > System`. Another way to get there is to Right-Click on `My Computer` and choose the `properties` item
+- Look for the button or link called `Environment Variables`
+- In the second panel look for the item called `Path` and double-click on it. This should open a window with a text field that is overflowing with content.
+- Move your cursor all the way to the end and add the following: `;C:\Program Files\Theme Kit\`
+- Click `OK` until all the windows are gone.
+- To verify that Theme Kit has been installed, open `cmd.exe` and type in `theme`.
 
 ### Manual Installation
 
