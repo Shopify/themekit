@@ -34,17 +34,10 @@ brew tap shopify/shopify
 brew install themekit
 ```
 
-### Windows Installer
-
-Download and run the installer:
-
-**The installer was reported to wipe out the PATH on some windows machines. It is being fixed.
-To install please follow the following instructions**
-
-**For installing on Windows**
+### Windows Installation
 
 - Create a folder inside `C:\Program Files\` called `Theme Kit`
-- Copy the extracted program into `C:\Program Files\Theme Kit`
+- Download themekit (below) and copy the extracted program into `C:\Program Files\Theme Kit`
 - Navigate to `Control Panel > System and Security > System`. Another way to get there is to Right-Click on `My Computer` and choose the `properties` item
 - Look for the button or link called `Environment Variables`
 - In the second panel look for the item called `Path` and double-click on it. This should open a window with a text field that is overflowing with content.
