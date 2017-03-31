@@ -69,6 +69,7 @@ var (
 	bootstrapName    string
 	setThemeID       bool
 	openEdit         bool
+	disableIgnore    bool
 
 	updateVersion string
 )
@@ -101,6 +102,7 @@ func init() {
 	ThemeCmd.PersistentFlags().BoolVarP(&noUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
 	ThemeCmd.PersistentFlags().Var(&ignoredFiles, "ignored-file", "A single file to ignore, use the flag multiple times to add multiple.")
 	ThemeCmd.PersistentFlags().Var(&ignores, "ignores", "A path to a file that contains ignore patterns.")
+	ThemeCmd.PersistentFlags().BoolVar(&disableIgnore, "no-ignore", false, "Will disable config ignores so that all files can be changed")
 
 	watchCmd.Flags().StringVarP(&notifyFile, "notify", "n", "", "file to touch when workers have gone idle")
 	watchCmd.Flags().BoolVarP(&allenvs, "allenvs", "a", false, "run command with all environments")
@@ -152,6 +154,10 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 		if err != nil {
 			return themeClients, err
 		}
+		if disableIgnore {
+			config.IgnoredFiles = []string{}
+			config.Ignores = []string{}
+		}
 		client, err := kit.NewThemeClient(config)
 		if err != nil {
 			return themeClients, err
@@ -192,8 +198,10 @@ func forEachClient(handler allEnvsCommand, callbacks ...allEnvsCommand) cobraCom
 }
 
 func setFlagConfig() {
-	flagConfig.IgnoredFiles = ignoredFiles.Value()
-	flagConfig.Ignores = ignores.Value()
+	if !disableIgnore {
+		flagConfig.IgnoredFiles = ignoredFiles.Value()
+		flagConfig.Ignores = ignores.Value()
+	}
 	kit.SetFlagConfig(flagConfig)
 }
 
