@@ -84,14 +84,14 @@ func (client *httpClient) ThemePath(themeID int64) string {
 }
 
 func (client *httpClient) AssetQuery(event EventType, query map[string]string) (*ShopifyResponse, Error) {
-	querystr := []string{}
-	for key, value := range query {
-		querystr = append(querystr, key+"="+value)
+	queryParams := url.Values{}
+	for key, val := range query {
+		queryParams.Set(key, val)
 	}
 	path := client.AssetPath()
 	rtype := listRequest
-	if len(querystr) > 0 {
-		path += "?" + strings.Join(querystr, "&")
+	if len(queryParams.Encode()) > 0 {
+		path += "?" + queryParams.Encode()
 		rtype = assetRequest
 	}
 	return client.sendRequest(rtype, event, path, nil)

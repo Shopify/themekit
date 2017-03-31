@@ -90,7 +90,7 @@ func (suite *HTTPClientTestSuite) TestAssetQuery() {
 
 	server = suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
-		assert.Equal(suite.T(), "asset[key]=file.txt", r.URL.RawQuery)
+		assert.Equal(suite.T(), "asset%5Bkey%5D=file.txt", r.URL.RawQuery)
 		fmt.Fprintf(w, jsonFixture("responses/asset"))
 	})
 	resp, err = suite.client.AssetQuery(Retrieve, map[string]string{"asset[key]": "file.txt"})
