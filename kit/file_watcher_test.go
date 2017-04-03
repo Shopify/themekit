@@ -126,7 +126,8 @@ func (suite *FileWatcherTestSuite) TestReloadConfig() {
 	go newWatcher.watchFsEvents()
 	configWatcher.Events <- fsnotify.Event{Name: goodEnvirontmentPath, Op: fsnotify.Write}
 
-	assert.Equal(suite.T(), len(reloadChan), 1)
+	_, ok := <-newWatcher.done
+	assert.False(suite.T(), ok)
 	assert.Equal(suite.T(), newWatcher.IsWatching(), false)
 }
 
