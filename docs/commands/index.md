@@ -17,6 +17,7 @@ theme [command] --help
 - `--no-update-notifier` : this will supress the update notifier that lets the
   user know when there is an applicable update available.
 - `--verbose, -v` : Enable more verbose output from the running command. If this is not provided a progress bar will be displayed instead.
+- `--no-ignore` : Switch of your ignore in your config so that you may make changes or download ignored files.
 
 ## Bootstrap
 
