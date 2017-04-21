@@ -275,3 +275,11 @@ table {
 .u-alignRight {
   text-align: right;
 }
+
+
+@media screen and (max-height: 990px){
+  .docs-nav{
+    height: calc(100vh - 223px);
+    overflow: auto;
+  }
+}
