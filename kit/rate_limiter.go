@@ -5,23 +5,26 @@ import (
 )
 
 type rateLimiter struct {
-	rate     time.Duration
 	nextChan chan bool
 }
 
-func newRateLimiter(rate time.Duration) *rateLimiter {
-	newLimiter := &rateLimiter{
-		rate:     rate,
-		nextChan: make(chan bool),
+var (
+	apiLimit       = time.Second / 2
+	domainLimitMap = make(map[string]*rateLimiter)
+)
+
+func rateLimitFor(domain string) *rateLimiter {
+	if _, ok := domainLimitMap[domain]; !ok {
+		domainLimitMap[domain] = &rateLimiter{nextChan: make(chan bool)}
+		domainLimitMap[domain].next()
 	}
-	newLimiter.next()
-	return newLimiter
+	return domainLimitMap[domain]
 }
 
 func (limiter *rateLimiter) next() {
 	go func() {
 		select {
-		case <-time.Tick(limiter.rate):
+		case <-time.Tick(apiLimit):
 			limiter.nextChan <- true
 		}
 	}()

@@ -11,14 +11,12 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 )
-
-var apiLimit = newRateLimiter(time.Second / 2)
 
 type httpClient struct {
 	client *http.Client
 	config *Configuration
+	limit  *rateLimiter
 }
 
 type requestType int
@@ -33,6 +31,7 @@ func newHTTPClient(config *Configuration) (*httpClient, error) {
 	client := &httpClient{
 		client: &http.Client{Timeout: config.Timeout},
 		config: config,
+		limit:  rateLimitFor(config.Domain),
 	}
 
 	if len(config.Proxy) > 0 {
@@ -148,7 +147,7 @@ func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr
 		return newShopifyResponse(rtype, event, urlStr, nil, err)
 	}
 
-	apiLimit.Wait()
+	client.limit.Wait()
 
 	resp, respErr := client.client.Do(req)
 	return newShopifyResponse(rtype, event, urlStr, resp, respErr)
