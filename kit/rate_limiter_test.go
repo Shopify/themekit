@@ -7,8 +7,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestRateLimiterForDomain(t *testing.T) {
+	limiter1 := rateLimitFor("domain.com")
+	limiter2 := rateLimitFor("domain.com")
+	limiter3 := rateLimitFor("otherdomain.com")
+	assert.Equal(t, limiter1, limiter2)
+	assert.NotEqual(t, limiter2, limiter3)
+}
+
 func TestRateLimiterHalts(t *testing.T) {
-	limiter := newRateLimiter(time.Millisecond)
+	limiter := rateLimitFor("domain.com")
 	timeout := false
 	received := false
 	select {
@@ -24,11 +32,12 @@ func TestRateLimiterHalts(t *testing.T) {
 func TestRateLimiterCanGoAfterTimeout(t *testing.T) {
 	timeout := false
 	received := false
-	limiter := newRateLimiter(time.Millisecond)
+	limiter := &rateLimiter{nextChan: make(chan bool)}
+	limiter.next()
 	select {
 	case <-limiter.nextChan:
 		received = true
-	case <-time.Tick(2 * time.Millisecond):
+	case <-time.Tick(3 * time.Second):
 		timeout = true
 	}
 	assert.Equal(t, false, timeout)
