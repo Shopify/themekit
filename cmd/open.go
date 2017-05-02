@@ -34,10 +34,7 @@ func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 }
 
 func openURL(env, url string) {
-	if verbose {
-		kit.Printf("[%s] opening %s", kit.GreenText(env), kit.GreenText(url))
-	}
-
+	kit.Printf("[%s] opening %s", kit.GreenText(env), kit.GreenText(url))
 	err := open.Run(url)
 	if err != nil {
 		kit.LogErrorf("[%s] %s", kit.GreenText(env), kit.RedText(err))
