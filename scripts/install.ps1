@@ -10,9 +10,11 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 }
 $dest = "$($destFolder)\themekit.exe"
 
+New-Item -ItemType Directory -Force -Path $destFolder
+
 foreach($platform in $release.platforms) {
-  if ((platform.name == "windows-amd64" && [System.Environment]::Is64BitOperatingSystem) ||
-    (platform.name == "windows-386" && ![System.Environment]::Is64BitOperatingSystem)) {
+  if ((platform.name == "windows-amd64" -And [System.Environment]::Is64BitOperatingSystem) -Or
+    (platform.name == "windows-386" -And ![System.Environment]::Is64BitOperatingSystem)) {
     $web_client.DownloadFile(platform.url, $dest)
   }
 }
