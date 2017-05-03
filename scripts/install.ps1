@@ -12,7 +12,7 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 }
 $dest = "$($destFolder)\theme.exe"
 
-New-Item -ItemType Directory -Force -Path $destFolder
+New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
 
 foreach($platform in $release.platforms) {
   if (($platform.name -eq "windows-amd64" -And [System.Environment]::Is64BitOperatingSystem) -Or
