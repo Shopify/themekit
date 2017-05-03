@@ -39,7 +39,7 @@ brew install themekit
 #### Automatic Powershell Install
 Run the following commands in Powershell as Administrator.
 ```
-PS C:\Users\you> (New-Object System.Net.WebClient).DownloadString("https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install.ps1") | powershell -command -
+(New-Object System.Net.WebClient).DownloadString("https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install.ps1") | powershell -command -
 ```
 
 #### Manual

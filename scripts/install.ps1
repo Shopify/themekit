@@ -1,6 +1,4 @@
-﻿# Run this using
-# (New-Object System.Net.WebClient).DownloadString("https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install.ps1") | powershell -command -
-$web_client = New-Object System.Net.WebClient
+﻿$web_client = New-Object System.Net.WebClient
 $latest_release_url = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
 
 Write-Output "Fetching release data";
