@@ -1,126 +1,45 @@
 #!/usr/bin/python
 import os
-import httplib as http
-import stat
-from urlparse import urlparse
-import xml.etree.ElementTree as ET
-from zipfile import ZipFile
+import urllib
+import json
 
-class HTTPSClient(object):
-    @classmethod
-    def get(self, host, path):
-        conn = http.HTTPSConnection(host)
-        conn.request("GET", path)
-        resp = conn.getresponse()
-        result = resp.read()
-        resp.close()
-        if 300 <= resp.status < 400:
-            url = urlparse(resp.getheader('Location'))
-            return self.get(url.netloc, "%s?%s" % (url.path, url.query))
-        return result
-
-class System(object):
-    MAPPING = {
-        "darwin x86_64": "darwin-amd64.zip",
-        "linux x86_64": "linux-amd64.zip",
-        "linux i686": "linux-386.zip"
-    }
-
-    def __init__(self, platform, architecture):
-        self.platform = platform
-        self.architecture = architecture
-        self.zip = System.MAPPING["%s %s" % (platform, architecture)]
-
-class Releases(object):
-    FEED_HOST = "github.com"
-    FEED_PATH = "/Shopify/themekit/releases.atom"
-    NS = "{http://www.w3.org/2005/Atom}"
-
-    def __init__(self, system):
-        self.releases = []
-        self.sys = system
-
-    def all(self):
-        return self.__releases()
-
-    def latest(self):
-        return self.__releases()[0]
-
-    def __releases(self):
-        if len(self.releases) == 0:
-            self.__parsefeed()
-        return self.releases
-
-    def __parsefeed(self):
-        ns = Releases.NS
-        if self.releases != []:
-            return
-        doc = ET.XML(self.__getfeed())
-        entries = doc.findall(ns+"entry")
-        versions = [os.path.basename(e.find(ns+"link").get('href')) for e in entries]
-        self.releases = [(Releases.FEED_HOST, "/Shopify/themekit/releases/download/%s/%s" % (v, self.sys.zip), self.sys.zip) for v in versions]
-
-    def __getfeed(self):
-        return HTTPSClient.get(Releases.FEED_HOST, Releases.FEED_PATH)
+INSTALL_PATH = "/usr/local/bin/theme"
+LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
+ARCH_MAPPING = {
+    "darwin x86_64": "darwin-amd64",
+    "linux x86_64": "linux-amd64",
+    "linux i686": "linux-386"
+}
 
 class Installer(object):
-    def __init__(self, ziplocation, installlocation="/usr/local/bin"):
-        self.host, self.path, self.root = ziplocation
-        self.root = self.root.replace('.zip', '')
-        self.zipfile = os.path.basename(self.path)
-        self.installlocation = os.path.expanduser(installlocation)
-
     def install(self):
-        self.__createdir()
-        print("Downloading themekit from %s/%s" % (self.host, self.path))
-        self.__download()
-        print("Installing themekit to %s" % self.installlocation)
-        self.__unzip()
-        print("Removing temporary files from disk")
-        self.__clean()
-        print("")
-        self.__pathinstall()
-
-    def __createdir(self):
-        if not os.path.exists(self.installlocation):
-            os.makedirs(self.installlocation)
-
-    def __download(self):
-        data = HTTPSClient.get(self.host, self.path)
-        output = open(self.zipfile, 'wb')
-        output.write(data)
-        output.flush()
-        output.close()
-
-    def __clean(self):
-        os.remove(self.zipfile)
-
-    def __unzip(self):
-        with ZipFile(self.zipfile, 'r') as unzip:
-            theme = unzip.open('%s/theme' % self.root)
-            self.__save(theme)
-
-    def __save(self, theme):
-        filename = "%s/%s" % (self.installlocation, 'theme')
-        dest = open(filename, 'wb')
-        dest.write(theme.read())
-        dest.flush()
-        dest.close()
-        os.chmod(filename, 0o755)
-
-    def __pathinstall(self):
-        print("Theme Kit has been installed at %s/theme" % self.installlocation)
+        print("Fetching release data")
+        release = self.__fetchRelease()
+        print("Downloading version %s of Shopify Themekit" % release['version'])
+        self.__download(release)
+        print("Theme Kit has been installed at %s" % INSTALL_PATH)
         print('To verify themekit is working simply type "theme"')
 
-def systemCommand(command):
-    pipe = os.popen(command)
-    result = pipe.readline()
-    pipe.close()
-    return result.strip().lower()
+    def __getArch(self):
+        command = "echo \"$(uname) $(uname -m)\""
+        pipe = os.popen(command)
+        result = pipe.readline()
+        pipe.close()
+        return ARCH_MAPPING[result.strip().lower()]
 
-platform = systemCommand("uname")
-architecture = systemCommand("uname -m")
+    def __findReleaseURL(self, release):
+        arch = self.__getArch()
+        for index, platform in enumerate(release['platforms']):
+            if platform['name'] == arch:
+                return platform['url']
 
-system = System(platform, architecture)
-releases = Releases(system)
-Installer(releases.latest()).install()
+    def __fetchRelease(self):
+        return json.loads(urllib.urlopen(LATEST_RELEASE_URL).read().decode("utf-8"))
+
+    def __download(self, release):
+        data = urllib.urlopen(self.__findReleaseURL(release)).read()
+        with open(INSTALL_PATH, "wb") as themefile:
+            themefile.write(data)
+        os.chmod(INSTALL_PATH, 0o755)
+
+Installer().install()
