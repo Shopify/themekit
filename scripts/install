@@ -21,11 +21,10 @@ class Installer(object):
         print('To verify themekit is working simply type "theme"')
 
     def __getArch(self):
-        command = "echo \"$(uname) $(uname -m)\""
-        pipe = os.popen(command)
-        result = pipe.readline()
+        pipe = os.popen("echo \"$(uname) $(uname -m)\"")
+        arch_name = pipe.readline().strip().lower()
         pipe.close()
-        return ARCH_MAPPING[result.strip().lower()]
+        return ARCH_MAPPING[arch_name]
 
     def __findReleaseURL(self, release):
         arch = self.__getArch()
