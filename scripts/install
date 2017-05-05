@@ -3,28 +3,28 @@ import os
 import urllib
 import json
 
-INSTALL_PATH = "/usr/local/bin/theme"
-LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
-ARCH_MAPPING = {
-    "darwin x86_64": "darwin-amd64",
-    "linux x86_64": "linux-amd64",
-    "linux i686": "linux-386"
-}
-
 class Installer(object):
+    INSTALL_PATH = "/usr/local/bin/theme"
+    LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
+    ARCH_MAPPING = {
+        "darwin x86_64": "darwin-amd64",
+        "linux x86_64": "linux-amd64",
+        "linux i686": "linux-386"
+    }
+
     def install(self):
         print("Fetching release data")
         release = self.__fetchRelease()
         print("Downloading version %s of Shopify Themekit" % release['version'])
         self.__download(release)
-        print("Theme Kit has been installed at %s" % INSTALL_PATH)
+        print("Theme Kit has been installed at %s" % Installer.INSTALL_PATH)
         print('To verify themekit is working simply type "theme"')
 
     def __getArch(self):
         pipe = os.popen("echo \"$(uname) $(uname -m)\"")
         arch_name = pipe.readline().strip().lower()
         pipe.close()
-        return ARCH_MAPPING[arch_name]
+        return Installer.ARCH_MAPPING[arch_name]
 
     def __findReleaseURL(self, release):
         arch = self.__getArch()
@@ -33,12 +33,12 @@ class Installer(object):
                 return platform['url']
 
     def __fetchRelease(self):
-        return json.loads(urllib.urlopen(LATEST_RELEASE_URL).read().decode("utf-8"))
+        return json.loads(urllib.urlopen(Installer.LATEST_RELEASE_URL).read().decode("utf-8"))
 
     def __download(self, release):
         data = urllib.urlopen(self.__findReleaseURL(release)).read()
-        with open(INSTALL_PATH, "wb") as themefile:
+        with open(Installer.INSTALL_PATH, "wb") as themefile:
             themefile.write(data)
-        os.chmod(INSTALL_PATH, 0o755)
+        os.chmod(Installer.INSTALL_PATH, 0o755)
 
 Installer().install()
