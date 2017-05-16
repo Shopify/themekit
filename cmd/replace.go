@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/vbauerster/mpb"
 
 	"github.com/Shopify/themekit/kit"
 )
@@ -67,24 +66,6 @@ func replace(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 			continue
 		}
 		wg.Add(1)
-		go performReplace(client, action.asset, action.event, bar, wg)
-	}
-}
-
-func performReplace(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *mpb.Bar, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer incBar(bar)
-
-	resp, err := client.Perform(asset, event)
-	if err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-	} else if verbose {
-		kit.Printf(
-			"[%s] Successfully performed %s on file %s from %s",
-			kit.GreenText(client.Config.Environment),
-			kit.GreenText(resp.EventType),
-			kit.GreenText(resp.Asset.Key),
-			kit.YellowText(resp.Host),
-		)
+		go perform(client, action.asset, action.event, bar, wg)
 	}
 }
