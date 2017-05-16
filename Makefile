@@ -32,12 +32,13 @@ build32:
 windows: ## Build binaries for Windows (32 and 64 bit)
 	@echo "building win-64" &&\
 		export GOOS=windows; export EXT=.exe; $(MAKE) build64 &&\
-		makensis ./scripts/themekitInstaller64.nsi > /dev/null &&\
 		echo "win-64 build complete";
 	@echo "building win-32" &&\
 		export GOOS=windows; export EXT=.exe; $(MAKE) build32 &&\
-		makensis ./scripts/themekitInstaller32.nsi > /dev/null &&\
 		echo "win-32 build complete";
+	@echo "building windows installer" &&\
+		makensis ./scripts/themekitInstaller.nsi > /dev/null &&\
+		echo "windows installer build complete";
 
 mac: ## Build binaries for Mac OS X (64 bit)
 	@echo "building darwin-64" && export GOOS=darwin; $(MAKE) build64 && echo "darwin-64 build complete";

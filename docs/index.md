@@ -36,6 +36,13 @@ brew install themekit
 
 ### Windows Installation
 
+#### Automatic Powershell Install
+Run the following commands in Powershell as Administrator.
+```
+(New-Object System.Net.WebClient).DownloadString("https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install.ps1") | powershell -command -
+```
+
+#### Manual
 - Create a folder inside `C:\Program Files\` called `Theme Kit`
 - Download themekit (below) and copy the extracted program into `C:\Program Files\Theme Kit`
 - Navigate to `Control Panel > System and Security > System`. Another way to get there is to Right-Click on `My Computer` and choose the `properties` item
