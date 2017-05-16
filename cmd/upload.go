@@ -44,22 +44,23 @@ func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 			continue
 		}
 		wg.Add(1)
-		go performUpload(client, asset, bar, wg)
+		go perform(client, asset, kit.Update, bar, wg)
 	}
 }
 
-func performUpload(client kit.ThemeClient, asset kit.Asset, bar *mpb.Bar, wg *sync.WaitGroup) {
+func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *mpb.Bar, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer incBar(bar)
 
-	resp, err := client.UpdateAsset(asset)
+	resp, err := client.Perform(asset, event)
 	if err != nil {
 		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
 	} else if verbose {
 		kit.Printf(
-			"[%s] Successfully performed Update on file %s from %s",
+			"[%s] Successfully performed %s on file %s from %s",
 			kit.GreenText(client.Config.Environment),
-			kit.GreenText(asset.Key),
+			kit.GreenText(resp.EventType),
+			kit.GreenText(resp.Asset.Key),
 			kit.YellowText(resp.Host),
 		)
 	}
@@ -77,7 +78,7 @@ func uploadSettingsData(client kit.ThemeClient, filenames []string, wg *sync.Wai
 			return
 		}
 		wg.Add(1)
-		go performUpload(client, asset, nil, wg)
+		go perform(client, asset, kit.Update, nil, wg)
 	}
 
 	if len(filenames) == 0 {
