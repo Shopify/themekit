@@ -2,6 +2,7 @@ package kit
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -171,5 +172,17 @@ func (t ThemeClient) Perform(asset Asset, event EventType) (*ShopifyResponse, Er
 	if t.filter.matchesFilter(asset.Key) {
 		return &ShopifyResponse{}, kitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Key)))}
 	}
-	return t.httpClient.AssetAction(event, asset)
+	return t.afterHooks(t.httpClient.AssetAction(event, asset))
+}
+
+func (t ThemeClient) afterHooks(resp *ShopifyResponse, err Error) (*ShopifyResponse, Error) {
+	if resp.Code == 422 && strings.Contains(err.Error(), "Cannot overwrite generated asset") {
+		resp, err = t.Perform(Asset{Key: resp.Asset.Key + ".liquid"}, Remove)
+		if err != nil {
+			return resp, err
+		}
+		resp, err = t.Perform(resp.Asset, Update)
+	}
+
+	return resp, err
 }
