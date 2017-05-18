@@ -177,10 +177,8 @@ func (t ThemeClient) Perform(asset Asset, event EventType) (*ShopifyResponse, Er
 
 func (t ThemeClient) afterHooks(resp *ShopifyResponse, err Error) (*ShopifyResponse, Error) {
 	if resp.Code == 422 && strings.Contains(err.Error(), "Cannot overwrite generated asset") {
-		resp, err = t.Perform(Asset{Key: resp.Asset.Key + ".liquid"}, Remove)
-		if err != nil {
-			return resp, err
-		}
+		// No need to check the error because if it fails then remove will be tried again.
+		t.Perform(Asset{Key: resp.Asset.Key + ".liquid"}, Remove)
 		resp, err = t.Perform(resp.Asset, Update)
 	}
 
