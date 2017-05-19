@@ -203,7 +203,7 @@ func (watcher *FileWatcher) handleEvent(event fsnotify.Event) {
 		return
 	}
 	eventType := Update
-	if event.Op&fsnotify.Remove == fsnotify.Remove {
+	if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Rename == fsnotify.Rename {
 		eventType = Remove
 	}
 	asset, _ := loadAsset(filepath.Dir(event.Name), filepath.Base(event.Name))

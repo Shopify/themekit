@@ -197,27 +197,23 @@ func fileExists(path string) bool {
 
 func (suite *FileWatcherTestSuite) TestHandleEvent() {
 	writes := []struct {
-		Name  string
-		Event fsnotify.Op
+		Name          string
+		Event         fsnotify.Op
+		ExpectedEvent EventType
 	}{
-		{Name: textFixturePath, Event: fsnotify.Create},
-		{Name: textFixturePath, Event: fsnotify.Write},
-		{Name: textFixturePath, Event: fsnotify.Remove},
+		{Name: textFixturePath, Event: fsnotify.Create, ExpectedEvent: Update},
+		{Name: textFixturePath, Event: fsnotify.Write, ExpectedEvent: Update},
+		{Name: textFixturePath, Event: fsnotify.Remove, ExpectedEvent: Remove},
+		{Name: textFixturePath, Event: fsnotify.Rename, ExpectedEvent: Remove},
 	}
-
-	var wg sync.WaitGroup
-	wg.Add(len(writes))
-
-	watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType) {
-		assert.Equal(suite.T(), pathToProject(textFixturePath), asset.Key)
-		wg.Done()
-	}}
 
 	for _, write := range writes {
+		watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType) {
+			assert.Equal(suite.T(), pathToProject(textFixturePath), asset.Key)
+			assert.Equal(suite.T(), write.ExpectedEvent, event)
+		}}
 		watcher.handleEvent(fsnotify.Event{Name: write.Name, Op: write.Event})
 	}
-
-	wg.Wait()
 }
 
 func TestFileWatcherTestSuite(t *testing.T) {
