@@ -15,7 +15,13 @@ lint: ## Lint all packages
 check: lint vet test # lint, vet and test the code
 
 dist: lint vet test clean  ## Build binaries for all platforms, zip, and upload to S3
-	@$(MAKE) windows && $(MAKE) mac && $(MAKE) linux && $(MAKE) zip && $(MAKE) upload_to_s3;
+	@$(MAKE) windows && \
+		$(MAKE) mac && \
+		$(MAKE) linux && \
+		$(MAKE) zip && \
+		$(MAKE) upload_to_s3 && \
+		echo "Dist complete to update the hombrew formula please use this sha" && \
+		$(Make) gen_sha;
 
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";

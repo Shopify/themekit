@@ -58,11 +58,11 @@ Download and unzip the latest release.
 
 | OS     | Architecture |          |
 | :------| :------------| :------- |
-| macOS  | 64-bit       |  [download](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/darwin-amd64.zip)
-| Windows| 64-bit       |  [download](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/windows-amd64.zip)
-| Windows| 32-bit       |  [download](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/windows-386.zip)
-| Linux  | 64-bit       |  [download](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/linux-amd64.zip)
-| Linux  | 32-bit       |  [download](https://github.com/Shopify/themekit/releases/download/{{ site.themekitversion }}/linux-386.zip)
+| macOS  | 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/darwin-amd64/theme)
+| Windows| 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-amd64/theme.exe)
+| Windows| 32-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-386/theme.exe)
+| Linux  | 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-amd64/theme)
+| Linux  | 32-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-386/theme)
 
 ## Get API Access
 
