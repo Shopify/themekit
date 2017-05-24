@@ -224,6 +224,38 @@ func (suite *ThemeClientTestSuite) TestPerform() {
 	assert.NotNil(suite.T(), err)
 }
 
+func (suite *ThemeClientTestSuite) TestUploadingACompiledAsset() {
+	type expectsStruct struct {
+		Method string
+		Key    string
+		JSON   string
+		Code   int
+	}
+	respChan := make(chan expectsStruct, 3)
+	respChan <- expectsStruct{Method: "PUT", Key: "templates/template.html", JSON: "{\"errors\":{\"asset\":[\"Cannot overwrite generated asset 'assets/ajax-cart.js'.\"]}}", Code: 422}
+	respChan <- expectsStruct{Method: "DELETE", Key: "templates/template.html.liquid", JSON: "{}", Code: 200}
+	respChan <- expectsStruct{Method: "PUT", Key: "templates/template.html", JSON: "{}", Code: 200}
+
+	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
+		expected := <-respChan
+		assert.Equal(suite.T(), expected.Method, r.Method)
+
+		decoder := json.NewDecoder(r.Body)
+		var t map[string]Asset
+		decoder.Decode(&t)
+		defer r.Body.Close()
+
+		assert.Equal(suite.T(), expected.Key, t["asset"].Key)
+		w.WriteHeader(expected.Code)
+		fmt.Fprintf(w, expected.JSON)
+	})
+	defer server.Close()
+
+	_, err := suite.client.Perform(Asset{Key: "templates/template.html", Value: "value();"}, Update)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), 0, len(respChan))
+}
+
 func (suite *ThemeClientTestSuite) NewTestServer(handler http.HandlerFunc) *httptest.Server {
 	server := httptest.NewServer(handler)
 	suite.client.httpClient.config.Domain = server.URL
