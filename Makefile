@@ -21,7 +21,7 @@ dist: lint vet test clean  ## Build binaries for all platforms, zip, and upload 
 		$(MAKE) zip && \
 		$(MAKE) upload_to_s3 && \
 		echo "Dist complete to update the hombrew formula please use this sha" && \
-		$(Make) gen_sha;
+		$(MAKE) gen_sha;
 
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
@@ -42,9 +42,6 @@ windows: ## Build binaries for Windows (32 and 64 bit)
 	@echo "building win-32" &&\
 		export GOOS=windows; export EXT=.exe; $(MAKE) build32 &&\
 		echo "win-32 build complete";
-	@echo "building windows installer" &&\
-		makensis ./scripts/themekitInstaller.nsi > /dev/null &&\
-		echo "windows installer build complete";
 
 mac: ## Build binaries for Mac OS X (64 bit)
 	@echo "building darwin-64" && export GOOS=darwin; $(MAKE) build64 && echo "darwin-64 build complete";
