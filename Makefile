@@ -15,7 +15,12 @@ lint: ## Lint all packages
 check: lint vet test # lint, vet and test the code
 
 dist: lint vet test clean  ## Build binaries for all platforms, zip, and upload to S3
-	@$(MAKE) windows && $(MAKE) mac && $(MAKE) linux && $(MAKE) zip && $(MAKE) upload_to_s3;
+	@$(MAKE) windows &&\
+		$(MAKE) mac &&\
+		$(MAKE) linux &&\
+		$(MAKE) zip &&\
+		$(MAKE) upload_to_s3; &&\
+		$(MAKE) gen_changelog
 
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
@@ -58,6 +63,9 @@ upload_to_s3: ## Upload zip file with binaries to S3
 
 gen_sha: ## Generate sha256 for a darwin build for usage with homebrew
 	@shasum -a 256 ./build/dist/darwin-amd64/theme
+
+gen_changelog: ## Generate themekits changelog from the releases path.
+	@go run ./scripts/generate_changelog.go > Changelog.md
 
 serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
 	@cd docs && jekyll serve
