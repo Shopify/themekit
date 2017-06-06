@@ -23,6 +23,7 @@ var defaultRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`Thumbs\.db`),
 	regexp.MustCompile(`desktop\.ini`),
 	regexp.MustCompile(`config.yml`),
+	regexp.MustCompile(`node_modules`),
 }
 
 var defaultGlobs = []string{}
