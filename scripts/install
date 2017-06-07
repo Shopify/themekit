@@ -4,7 +4,6 @@ import urllib
 import json
 
 class Installer(object):
-    INSTALL_PATH = "/usr/local/bin/theme"
     LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
     ARCH_MAPPING = {
         "darwin x86_64": "darwin-amd64",
@@ -12,12 +11,16 @@ class Installer(object):
         "linux i686": "linux-386"
     }
 
+    def __init__(self, path="/usr/local/bin"):
+        self.install_path = os.path.expanduser(path)
+        self.bin_path = "%s/theme" % self.install_path
+
     def install(self):
         print("Fetching release data")
         release = self.__fetchRelease()
         print("Downloading version %s of Shopify Themekit" % release['version'])
         self.__download(release)
-        print("Theme Kit has been installed at %s" % Installer.INSTALL_PATH)
+        print("Theme Kit has been installed at %s" % self.bin_path)
         print('To verify themekit is working simply type "theme"')
 
     def __getArch(self):
@@ -37,8 +40,10 @@ class Installer(object):
 
     def __download(self, release):
         data = urllib.urlopen(self.__findReleaseURL(release)).read()
-        with open(Installer.INSTALL_PATH, "wb") as themefile:
+        if not os.path.exists(self.install_path):
+            os.makedirs(self.install_path)
+        with open(self.bin_path, "wb") as themefile:
             themefile.write(data)
-        os.chmod(Installer.INSTALL_PATH, 0o755)
+        os.chmod(self.bin_path, 0o755)
 
 Installer().install()

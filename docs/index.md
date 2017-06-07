@@ -17,9 +17,7 @@ Using Theme Kit will enable you to
 
 ### Automatic Installation
 
-If you are on Mac or Linux you can use the following installation script to automatically
-download and install Theme Kit for you. Please follow the directions outputted to your
-console to change your bash profile so that you will have access to the `theme` command
+If you are on Mac or Linux you can use the following installation script to automatically download and install Theme Kit for you.
 
 ```bash
 curl -s https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | sudo python
