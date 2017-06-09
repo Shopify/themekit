@@ -41,7 +41,7 @@ func NewThemeClient(config *Configuration) (ThemeClient, error) {
 
 // NewFileWatcher creates a new filewatcher using the theme clients file filter
 func (t ThemeClient) NewFileWatcher(notifyFile string, callback FileEventCallback) (*FileWatcher, error) {
-	return newFileWatcher(t, t.Config.Directory, notifyFile, true, t.filter, callback)
+	return newFileWatcher(t, notifyFile, true, t.filter, callback)
 }
 
 // AssetList will return a slice of remote assets from the shopify servers. The

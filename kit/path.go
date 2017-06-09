@@ -18,33 +18,37 @@ var (
 	}
 )
 
-func pathInProject(filename string) bool {
-	return pathToProject(filename) != "" || isProjectDirectory(filename)
+func pathInProject(root, filename string) bool {
+	return pathToProject(root, filename) != "" || isProjectDirectory(root, filename)
 }
 
-func isProjectDirectory(filename string) bool {
+func isProjectDirectory(root, filename string) bool {
+	filename = strings.TrimPrefix(
+		filepath.ToSlash(filepath.Clean(filename)),
+		filepath.Clean(root)+"/",
+	)
+
 	for _, dir := range assetLocations {
-		if directoriesEqual(filename, dir) {
+		if dir == filename {
 			return true
 		}
 	}
+
 	return false
 }
 
-func directoriesEqual(dir, other string) bool {
-	return strings.HasSuffix(
-		filepath.Clean(filepath.ToSlash(dir)+"/"),
-		filepath.Clean(filepath.ToSlash(other)+"/"),
+func pathToProject(root, filename string) string {
+	filename = strings.TrimPrefix(
+		filepath.ToSlash(filepath.Clean(filename)),
+		filepath.Clean(root)+"/",
 	)
-}
 
-func pathToProject(filename string) string {
-	filename = filepath.ToSlash(filepath.Clean(filename))
 	for _, dir := range assetLocations {
 		split := strings.SplitAfterN(filename, dir+"/", 2)
-		if len(split) > 1 {
+		if len(split) > 1 && strings.HasPrefix(filename, dir+"/") {
 			return filepath.ToSlash(filepath.Join(dir, split[len(split)-1]))
 		}
 	}
+
 	return ""
 }

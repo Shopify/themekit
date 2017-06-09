@@ -39,7 +39,7 @@ func (suite *BootstrapTestSuite) TestBootstrap() {
 	err := bootstrap()
 	assert.NotNil(suite.T(), err)
 
-	flagConfig.Directory = "../fixtures/bootstrap"
+	flagConfig.Directory = "../fixtures"
 	flagConfig.Password = "foo"
 	flagConfig.Domain = server.URL + "/domain"
 	setFlagConfig()
