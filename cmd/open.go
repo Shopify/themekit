@@ -10,6 +10,8 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
+var openFunc = open.Run
+
 var openCmd = &cobra.Command{
 	Use:   "open",
 	Short: "Open the preview for your store.",
@@ -20,9 +22,26 @@ url for your reference`,
 
 func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	url := fmt.Sprintf("https://%s?preview_theme_id=%s",
-		client.Config.Domain,
-		client.Config.ThemeID)
+
+	themeID := client.Config.ThemeID
+
+	if openEdit && themeID == "live" {
+		kit.Printf(
+			"[%s] Cannot open editor for live theme without theme id.",
+			kit.GreenText(client.Config.Environment),
+		)
+		return
+	}
+
+	if themeID == "live" {
+		kit.Printf(
+			"[%s] This theme is live so preview is the same as your live shop.",
+			kit.GreenText(client.Config.Environment),
+		)
+		themeID = ""
+	}
+
+	url := fmt.Sprintf("https://%s?preview_theme_id=%s", client.Config.Domain, themeID)
 
 	if openEdit {
 		url = fmt.Sprintf("https://%s/admin/themes/%s/editor",
@@ -30,13 +49,17 @@ func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 			client.Config.ThemeID)
 	}
 
-	openURL(client.Config.Environment, url)
-}
+	kit.Printf(
+		"[%s] opening %s",
+		kit.GreenText(client.Config.Environment),
+		kit.GreenText(url),
+	)
 
-func openURL(env, url string) {
-	kit.Printf("[%s] opening %s", kit.GreenText(env), kit.GreenText(url))
-	err := open.Run(url)
-	if err != nil {
-		kit.LogErrorf("[%s] %s", kit.GreenText(env), kit.RedText(err))
+	if err := openFunc(url); err != nil {
+		kit.LogErrorf(
+			"[%s] Error opening: %s",
+			kit.GreenText(client.Config.Environment),
+			kit.RedText(err),
+		)
 	}
 }
