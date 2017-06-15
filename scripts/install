@@ -2,11 +2,13 @@
 import os
 import urllib
 import json
+import sys
 
 class Installer(object):
     LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
     ARCH_MAPPING = {
         "darwin x86_64": "darwin-amd64",
+        "darwin i386": "darwin-amd64",
         "linux x86_64": "linux-amd64",
         "linux i686": "linux-386"
     }
@@ -14,12 +16,11 @@ class Installer(object):
     def __init__(self, path="/usr/local/bin"):
         self.install_path = os.path.expanduser(path)
         self.bin_path = "%s/theme" % self.install_path
-
-    def install(self):
+        self.arch = self.__getArch()
         print("Fetching release data")
-        release = self.__fetchRelease()
-        print("Downloading version %s of Shopify Themekit" % release['version'])
-        self.__download(release)
+        self.release = json.loads(urllib.urlopen(Installer.LATEST_RELEASE_URL).read().decode("utf-8"))
+        print("Downloading version %s of Shopify Themekit" % self.release['version'])
+        self.__download()
         print("Theme Kit has been installed at %s" % self.bin_path)
         print('To verify themekit is working simply type "theme"')
 
@@ -27,23 +28,23 @@ class Installer(object):
         pipe = os.popen("echo \"$(uname) $(uname -m)\"")
         arch_name = pipe.readline().strip().lower()
         pipe.close()
+        if arch_name not in Installer.ARCH_MAPPING:
+            print("Cannot find binary to match your architecture [%s]" % arch_name)
+            sys.exit("Please open an issue at https://github.com/Shopify/themekit/issues")
         return Installer.ARCH_MAPPING[arch_name]
 
-    def __findReleaseURL(self, release):
-        arch = self.__getArch()
-        for index, platform in enumerate(release['platforms']):
-            if platform['name'] == arch:
+    def __findReleaseURL(self):
+        for index, platform in enumerate(self.release['platforms']):
+            if platform['name'] == self.arch:
                 return platform['url']
 
-    def __fetchRelease(self):
-        return json.loads(urllib.urlopen(Installer.LATEST_RELEASE_URL).read().decode("utf-8"))
-
-    def __download(self, release):
-        data = urllib.urlopen(self.__findReleaseURL(release)).read()
+    def __download(self):
+        release_url = self.__findReleaseURL()
+        data = urllib.urlopen(release_url).read()
         if not os.path.exists(self.install_path):
             os.makedirs(self.install_path)
         with open(self.bin_path, "wb") as themefile:
             themefile.write(data)
         os.chmod(self.bin_path, 0o755)
 
-Installer().install()
+Installer()
