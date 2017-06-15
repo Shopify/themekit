@@ -52,7 +52,7 @@ Run the following commands in Powershell as Administrator.
 
 ### Manual Installation
 
-Download and unzip the latest release.
+Download the latest release executable.
 
 | OS     | Architecture |          |
 | :------| :------------| :------- |
