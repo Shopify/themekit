@@ -1,5 +1,25 @@
+# Bug Reporting
+
+Themekit uses github issue tracking to manage bugs, please open an issue there.
+
+# Feature Request
+
+You can open a new issue on the github issues and label it with `enhancment`
+
+# Developing Themekit
+
+Requirements:
+
+- Go 1.8 or higher
+
+Helpful commands
+
+- `make` will compile themekit into your GOPATH/bin
+- `make check` will run linting/vetting/testing to make sure your code is of high standard
+
 # Deploying Themekit
-- You will need to have a valid `.env` file with credentials for the Amazon account.
+
+- You will need to have a valid `.env` file with credentials for the Amazon account. Please contact an admin with this info
 - run `make check` to test and lint the code.
 - Update ThemeKitVersion in `kit/version.go` and commit.
 - run `git tag <version> && git push origin --tags`
