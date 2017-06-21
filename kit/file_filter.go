@@ -3,6 +3,7 @@ package kit
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -23,6 +24,7 @@ var defaultRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`Thumbs\.db`),
 	regexp.MustCompile(`desktop\.ini`),
 	regexp.MustCompile(`config.yml`),
+	regexp.MustCompile(`node_modules`),
 }
 
 var defaultGlobs = []string{}
@@ -40,6 +42,11 @@ func newFileFilter(rootDir string, patterns []string, files []string) (fileFilte
 	}
 
 	patterns = append(patterns, filePatterns...)
+
+	rootDir, symlinkErr := filepath.EvalSymlinks(filepath.Clean(rootDir))
+	if symlinkErr != nil {
+		return fileFilter{}, symlinkErr
+	}
 
 	if !strings.HasSuffix(rootDir, "/") {
 		rootDir += "/"
@@ -101,7 +108,7 @@ func (e fileFilter) filterAssets(assets []Asset) []Asset {
 }
 
 func (e fileFilter) matchesFilter(filename string) bool {
-	if len(filename) == 0 || !pathInProject(filename) {
+	if len(filename) == 0 || !pathInProject(e.rootDir, filename) {
 		return true
 	}
 

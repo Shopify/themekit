@@ -131,8 +131,7 @@ func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) ([
 
 func loadAsset(root, filename string) (asset Asset, err error) {
 	path := filepath.ToSlash(filepath.Join(root, filename))
-	path = strings.Replace(path, "\\", "/", -1)
-	asset = Asset{Key: pathToProject(path)}
+	asset = Asset{Key: pathToProject(root, path)}
 	file, err := os.Open(path)
 	if err != nil {
 		return asset, fmt.Errorf("loadAsset: %s", err)

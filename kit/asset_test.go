@@ -114,7 +114,7 @@ func (s *LoadAssetSuite) TestLoadAssetsFromDirectoryWithSubdir() {
 }
 
 func (s *LoadAssetSuite) TestLoadAsset() {
-	asset, err := loadAsset(clean("../fixtures/project"), clean("assets/application.js"))
+	asset, err := loadAsset(clean("../fixtures/project"), "assets/application.js")
 	assert.Equal(s.T(), "assets/application.js", asset.Key)
 	assert.Equal(s.T(), true, asset.IsValid())
 	assert.Equal(s.T(), "//this is js\n", asset.Value)

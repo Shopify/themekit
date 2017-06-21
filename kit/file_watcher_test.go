@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	textFixturePath    = filepath.Join("..", "fixtures", "project", "assets", "application.js")
 	watchFixturePath   = filepath.Join("..", "fixtures", "project")
+	textFixturePath    = filepath.Join(watchFixturePath, "assets", "application.js")
 	symlinkFixturePath = filepath.Join("..", "fixtures", "symlink_project")
 )
 
@@ -25,7 +25,8 @@ type FileWatcherTestSuite struct {
 }
 
 func (suite *FileWatcherTestSuite) TestNewFileReader() {
-	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
+	client := ThemeClient{Config: &Configuration{Directory: watchFixturePath}}
+	watcher, err := newFileWatcher(client, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, watcher.IsWatching())
 	watcher.StopWatching()
@@ -37,9 +38,10 @@ func (suite *FileWatcherTestSuite) TestWatchDirectory() {
 	newWatcher := &FileWatcher{
 		filter:      filter,
 		mainWatcher: w,
+		client:      ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
 	}
-	newWatcher.watchDirectory(watchFixturePath)
-	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(filepath.Join("..", "fixtures", "project", "assets")))
+	newWatcher.watch()
+	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(filepath.Join(watchFixturePath, "assets")))
 }
 
 func (suite *FileWatcherTestSuite) TestWatchSymlinkDirectory() {
@@ -48,9 +50,10 @@ func (suite *FileWatcherTestSuite) TestWatchSymlinkDirectory() {
 	newWatcher := &FileWatcher{
 		filter:      filter,
 		mainWatcher: w,
+		client:      ThemeClient{Config: &Configuration{Directory: symlinkFixturePath}},
 	}
-	newWatcher.watchDirectory(symlinkFixturePath)
-	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(filepath.Join("..", "fixtures", "project", "assets")))
+	newWatcher.watch()
+	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(filepath.Join(watchFixturePath, "assets")))
 }
 
 func (suite *FileWatcherTestSuite) TestWatchConfig() {
@@ -81,6 +84,7 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 		done:          make(chan bool),
 		filter:        filter,
 		mainWatcher:   &fsnotify.Watcher{Events: eventChan},
+		client:        ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
 		configWatcher: &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
 	}
 
@@ -132,7 +136,8 @@ func (suite *FileWatcherTestSuite) TestReloadConfig() {
 }
 
 func (suite *FileWatcherTestSuite) TestStopWatching() {
-	watcher, err := newFileWatcher(ThemeClient{}, watchFixturePath, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
+	client := ThemeClient{Config: &Configuration{Directory: watchFixturePath}}
+	watcher, err := newFileWatcher(client, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), true, watcher.IsWatching())
 	watcher.StopWatching()
@@ -148,6 +153,7 @@ func (suite *FileWatcherTestSuite) TestOnReload() {
 		done:          make(chan bool),
 		mainWatcher:   &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
 		configWatcher: configWatcher,
+		client:        ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
 	}
 
 	err := newWatcher.WatchConfig(goodEnvirontmentPath, reloadChan)
@@ -163,6 +169,7 @@ func (suite *FileWatcherTestSuite) TestOnEvent() {
 		waitNotify:     false,
 		recordedEvents: newEventMap(),
 		callback:       func(client ThemeClient, asset Asset, event EventType) {},
+		client:         ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
 	}
 
 	event1 := fsnotify.Event{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write}
@@ -209,9 +216,11 @@ func (suite *FileWatcherTestSuite) TestHandleEvent() {
 
 	for _, write := range writes {
 		watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType) {
-			assert.Equal(suite.T(), pathToProject(textFixturePath), asset.Key)
+			assert.Equal(suite.T(), pathToProject(watchFixturePath, textFixturePath), asset.Key)
 			assert.Equal(suite.T(), write.ExpectedEvent, event)
-		}}
+		},
+			client: ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
+		}
 		watcher.handleEvent(fsnotify.Event{Name: write.Name, Op: write.Event})
 	}
 }

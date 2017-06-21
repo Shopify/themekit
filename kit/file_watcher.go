@@ -32,7 +32,7 @@ type FileWatcher struct {
 	waitNotify     bool
 }
 
-func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filter fileFilter, callback FileEventCallback) (*FileWatcher, error) {
+func newFileWatcher(client ThemeClient, notifyFile string, recur bool, filter fileFilter, callback FileEventCallback) (*FileWatcher, error) {
 	mainWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -55,12 +55,11 @@ func newFileWatcher(client ThemeClient, dir, notifyFile string, recur bool, filt
 
 	go newWatcher.watchFsEvents()
 
-	return newWatcher, newWatcher.watchDirectory(dir)
+	return newWatcher, newWatcher.watch()
 }
 
-func (watcher *FileWatcher) watchDirectory(root string) error {
-	var symlinkErr error
-	root, symlinkErr = filepath.EvalSymlinks(filepath.Clean(root))
+func (watcher *FileWatcher) watch() error {
+	root, symlinkErr := filepath.EvalSymlinks(filepath.Clean(watcher.client.Config.Directory))
 	if symlinkErr != nil {
 		return symlinkErr
 	}
@@ -206,6 +205,8 @@ func (watcher *FileWatcher) handleEvent(event fsnotify.Event) {
 	if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Rename == fsnotify.Rename {
 		eventType = Remove
 	}
-	asset, _ := loadAsset(filepath.Dir(event.Name), filepath.Base(event.Name))
+
+	root := watcher.client.Config.Directory
+	asset, _ := loadAsset(root, pathToProject(root, event.Name))
 	watcher.callback(watcher.client, asset, eventType)
 }
