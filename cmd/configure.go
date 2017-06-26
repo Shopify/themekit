@@ -31,6 +31,6 @@ func saveConfiguration(config *kit.Configuration) error {
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	env.SetConfiguration(environment, config)
+	env.SetConfiguration(kit.DefaultEnvironment, config)
 	return env.Save(configPath)
 }
