@@ -8,6 +8,19 @@ You can open a new issue on the github issues and label it with `enhancment`
 
 # Developing Themekit
 
+Themekit requires go 1.8. You can setup your development environment by running the following:
+
+```
+go get -u github.com/Shopify/themekit
+cd $GOPATH/src/github.com/Shopify/themekit
+make [mac_tools|linux_tools] # install platform specific development tools
+glide install # see https://github.com/Masterminds/glide for glide usage
+make # build themekit
+theme version #should output the current themekit version
+```
+
+This will install theme kit into $GOPATH/bin and you will now have access to the theme command.
+
 Requirements:
 
 - Go 1.8 or higher
