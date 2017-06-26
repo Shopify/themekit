@@ -1,3 +1,14 @@
+# Contributing
+
+We welcome your contributions to the project. There are a few steps to take when looking to make a contribution.
+
+Open an issue to discuss the feature/bug
+If feature/bug is deemed valid then fork repo.
+Implement patch to resolve issue.
+Include tests to prevent regressions and validate the patch.
+Update the docs for any API changes.
+Submit pull request and mention maintainers. Current maintainers are @tanema, @chrisbutcher
+
 # Bug Reporting
 
 Themekit uses github issue tracking to manage bugs, please open an issue there.
