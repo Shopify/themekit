@@ -19,34 +19,9 @@ You can find installation instructions for each platform on the [Docs Website](h
 
 Please find further usage instructions on the [theme kit website](https://shopify.github.io/themekit/)
 
-# Development
+# Contribution & Development
 
-Themekit requires go 1.8. You can setup your development environment by running
-the following:
-
-```bash
-go get -u github.com/Shopify/themekit
-cd $GOPATH/src/github.com/Shopify/themekit
-make [mac_tools|linux_tools] # install platform specific development tools
-glide install # see https://github.com/Masterminds/glide for glide usage
-make # build themekit
-theme version #should output the current themekit version
-```
-
-This will install theme kit into `$GOPATH/bin` and you will now have access to
-the theme command.
-
-## Contribution Guidelines
-
-We welcome your contributions to the project. There are a few steps to take when
-looking to make a contribution.
-
-- Open an issue to discuss the feature/bug
-- If feature/bug is deemed valid then fork repo.
-- Implement patch to resolve issue.
-- Include tests to prevent regressions and validate the patch.
-- Update the docs for any API changes.
-- Submit pull request and mention maintainers. Current maintainers are @tanema, @chrisbutcher
+Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob/master/.github/CONTRIBUTING.md)
 
 ## Authors
 
