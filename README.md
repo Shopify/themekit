@@ -19,7 +19,7 @@ You can find installation instructions for each platform on the [Docs Website](h
 
 Please find further usage instructions on the [theme kit website](https://shopify.github.io/themekit/)
 
-# Contribution & Development
+## Contribution & Development
 
 Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob/master/.github/CONTRIBUTING.md)
 
