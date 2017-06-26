@@ -1,10 +1,10 @@
-hash: d604ab3da870745bdfa628a3ec25836c23f47299872e5ebd2050813486bbf33a
-updated: 2017-02-03T15:52:47.09645985-05:00
+hash: 76caea347948c9ff0888c3e4e355f1928e47338a3e5e329aa61314eb155bec18
+updated: 2017-07-04T12:38:47.040243585-04:00
 imports:
 - name: github.com/caarlos0/env
   version: d0de832ed2fbc4e7bfaa30ab5cf0b3417d15f529
 - name: github.com/fatih/color
-  version: 34e4ee095d12986a2cef5ddb9aeb3b8cfcfea17c
+  version: 570b54cabe6b8eb0bc2dfce68d964677d63b5260
 - name: github.com/fsnotify/fsnotify
   version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: github.com/hashicorp/go-version
@@ -19,9 +19,11 @@ imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/mattn/go-colorable
-  version: 6c903ff4aa50920ca86087a280590b36b3152b9c
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  repo: https://github.com/mattn/go-colorable
 - name: github.com/mattn/go-isatty
-  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  repo: https://github.com/mattn/go-isatty
 - name: github.com/ryanuber/go-glob
   version: 572520ed46dbddaed19ea3d9541bdd0494163693
 - name: github.com/skratchdot/open-golang
@@ -35,15 +37,22 @@ imports:
 - name: github.com/spf13/viper
   version: 670c42a85b2a2215949acd943cb8f11add317e3f
 - name: github.com/vbauerster/mpb
-  version: 2a03713cc377ead01e9d29a45055e4158c9662f6
+  version: d46bc0835ecb0f793a5115c028ae273cff8527d8
   subpackages:
   - cwriter
+- name: golang.org/x/net
+  version: 570fa1c91359c1869590e9cedf3b53162a51a167
+  subpackages:
+  - context
+- name: golang.org/x/sync
+  version: f52d1811a62927559de87708c8913c1650ce4f26
+  subpackages:
+  - errgroup
 - name: golang.org/x/sys
-  version: 8d1157a435470616f975ff9bb013bea8d0962067
+  version: e24f485414aeafb646f6fca458b0bf869c0880a1
+  repo: https://go.googlesource.com/sys
   subpackages:
   - unix
-- name: gopkg.in/fsnotify.v1
-  version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: gopkg.in/yaml.v1
   version: 9f9df34309c04878acc86042b16630b0f696e1de
 testImports:

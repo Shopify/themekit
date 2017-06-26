@@ -25,22 +25,18 @@ run 'theme watch' while you are editing and it will detect create, update and de
 
 For more documentation please see http://shopify.github.io/themekit/commands/#watch
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return startWatch()
-	},
+	RunE: startWatch,
 }
 
-func startWatch() error {
-	themeClients, err := generateThemeClients()
-	if err != nil {
+func startWatch(cmd *cobra.Command, args []string) error {
+	if err := arbiter.generateThemeClients(); err != nil {
 		return err
 	}
-	err = watch(themeClients)
-	if err == errReload {
+	if err := watch(arbiter.activeThemeClients); err == errReload {
 		kit.Print("Reloading because of config changes")
-		return startWatch()
+		return startWatch(cmd, args)
 	}
-	return err
+	return nil
 }
 
 func watch(themeClients []kit.ThemeClient) error {
@@ -63,11 +59,11 @@ func watch(themeClients []kit.ThemeClient) error {
 		}
 
 		kit.Printf("[%s] Watching for file changes on host %s ", kit.GreenText(client.Config.Environment), kit.YellowText(client.Config.Domain))
-		watcher, err := client.NewFileWatcher(notifyFile, handleWatchEvent)
+		watcher, err := client.NewFileWatcher(arbiter.notifyFile, handleWatchEvent)
 		if err != nil {
 			return err
 		}
-		err = watcher.WatchConfig(configPath, reloadSignal)
+		err = watcher.WatchConfig(arbiter.configPath, reloadSignal)
 		if err != nil {
 			return err
 		}
@@ -93,7 +89,21 @@ func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventTy
 		kit.GreenText(event),
 		kit.BlueText(asset.Key),
 	)
-	resp, err := client.Perform(asset, event)
+
+	var resp *kit.ShopifyResponse
+	var err error
+
+	if arbiter.force {
+		resp, err = client.Perform(asset, event)
+	} else {
+		var version string
+		version, err = arbiter.manifest.Get(asset.Key, client.Config.Environment)
+		if err != nil {
+			kit.LogErrorf("[%s] Cannot get file version %s", kit.GreenText(client.Config.Environment), err)
+		}
+		resp, err = client.PerformStrict(asset, event, version)
+	}
+
 	if err != nil {
 		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
 	} else {

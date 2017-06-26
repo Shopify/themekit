@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/vbauerster/mpb"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Shopify/themekit/kit"
 )
@@ -18,38 +18,27 @@ var removeCmd = &cobra.Command{
 
 For more documentation please see http://shopify.github.io/themekit/commands/#remove
 	`,
-	RunE: forEachClient(remove),
+	RunE: arbiter.forEachClient(remove),
 }
 
-func remove(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func remove(client kit.ThemeClient, filenames []string) error {
 	if client.Config.ReadOnly {
-		kit.LogErrorf("[%s]environment is reaonly", kit.GreenText(client.Config.Environment))
-		return
+		return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
+	} else if len(filenames) == 0 {
+		return fmt.Errorf("[%s] please specify files to be removed", kit.GreenText(client.Config.Environment))
 	}
 
-	bar := newProgressBar(len(filenames), client.Config.Environment)
+	var removeGroup errgroup.Group
+	bar := arbiter.newProgressBar(len(filenames), client.Config.Environment)
 	for _, filename := range filenames {
-		wg.Add(1)
-		go performRemove(client, kit.Asset{Key: filename}, bar, wg)
+		asset := kit.Asset{Key: filename}
+		removeGroup.Go(func() error {
+			if perform(client, asset, kit.Remove, bar, nil) {
+				return os.Remove(filepath.Join(client.Config.Directory, asset.Key))
+			}
+			return nil
+		})
 	}
-}
 
-func performRemove(client kit.ThemeClient, asset kit.Asset, bar *mpb.Bar, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer incBar(bar)
-
-	resp, err := client.DeleteAsset(asset)
-	if err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-	} else if verbose {
-		kit.Printf(
-			"[%s] Successfully removed file %s from %s",
-			kit.GreenText(client.Config.Environment),
-			kit.BlueText(asset.Key),
-			kit.YellowText(resp.Host),
-		)
-		os.Remove(filepath.Join(client.Config.Directory, asset.Key))
-	}
+	return removeGroup.Wait()
 }

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
@@ -17,20 +16,17 @@ var openCmd = &cobra.Command{
 	Short: "Open the preview for your store.",
 	Long: `Open will open the preview page in your browser as well as print out
 url for your reference`,
-	RunE: forEachClient(preview),
+	RunE: arbiter.forSingleClient(preview),
 }
 
-func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func preview(client kit.ThemeClient, filenames []string) error {
 	themeID := client.Config.ThemeID
 
 	if openEdit && themeID == "live" {
-		kit.Printf(
+		return fmt.Errorf(
 			"[%s] Cannot open editor for live theme without theme id.",
 			kit.GreenText(client.Config.Environment),
 		)
-		return
 	}
 
 	if themeID == "live" {
@@ -56,10 +52,12 @@ func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 	)
 
 	if err := openFunc(url); err != nil {
-		kit.LogErrorf(
+		return fmt.Errorf(
 			"[%s] Error opening: %s",
 			kit.GreenText(client.Config.Environment),
 			kit.RedText(err),
 		)
 	}
+
+	return nil
 }

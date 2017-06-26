@@ -1,14 +1,10 @@
 package kit
 
 import (
-	"bytes"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
-	"runtime"
 	"strconv"
 	"strings"
 )
@@ -25,6 +21,8 @@ const (
 	themeRequest requestType = iota
 	assetRequest
 	listRequest
+
+	assetDataFields = "key,updated_at"
 )
 
 func newHTTPClient(config *Configuration) (*httpClient, error) {
@@ -68,8 +66,16 @@ func (client *httpClient) AdminURL() string {
 }
 
 // AssetPath will return the assets endpoint in the admin section of shopify.
-func (client *httpClient) AssetPath() string {
-	return fmt.Sprintf("%s/assets.json", client.AdminURL())
+func (client *httpClient) AssetPath(query map[string]string) string {
+	if len(query) == 0 {
+		return fmt.Sprintf("%s/assets.json", client.AdminURL())
+	}
+
+	queryParams := url.Values{}
+	for key, value := range query {
+		queryParams.Set(key, value)
+	}
+	return fmt.Sprintf("%s/assets.json?%s", client.AdminURL(), queryParams.Encode())
 }
 
 // ThemesPath will return the endpoint of the themes interactions.
@@ -82,73 +88,111 @@ func (client *httpClient) ThemePath(themeID int64) string {
 	return fmt.Sprintf("%s/themes/%d.json", client.AdminURL(), themeID)
 }
 
-func (client *httpClient) AssetQuery(event EventType, query map[string]string) (*ShopifyResponse, Error) {
-	queryParams := url.Values{}
-	for key, val := range query {
-		queryParams.Set(key, val)
-	}
-	path := client.AssetPath()
-	rtype := listRequest
-	if len(queryParams.Encode()) > 0 {
-		path += "?" + queryParams.Encode()
-		rtype = assetRequest
-	}
-	return client.sendRequest(rtype, event, path, nil)
-}
-
+// NewTheme will create a request to create a new theme with the proviced name and
+// create it with the source provided
 func (client *httpClient) NewTheme(name, source string) (*ShopifyResponse, Error) {
-	return client.sendJSON(themeRequest, Create, client.ThemesPath(), map[string]interface{}{
-		"theme": Theme{Name: name, Source: source, Role: "unpublished"},
-	})
+	req, err := newShopifyRequest(client.config, themeRequest, Create, client.ThemesPath())
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
+
+	err = req.setJSONBody(map[string]interface{}{"theme": Theme{Name: name, Source: source, Role: "unpublished"}})
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
+
+	return client.sendRequest(req)
 }
 
+// GetTheme will load the theme data for the provided theme id
 func (client *httpClient) GetTheme(themeID int64) (*ShopifyResponse, Error) {
-	return client.sendRequest(themeRequest, Retrieve, client.ThemePath(themeID), nil)
+	req, err := newShopifyRequest(client.config, themeRequest, Retrieve, client.ThemePath(themeID))
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
+	return client.sendRequest(req)
+}
+
+// AssetList will return a shopify respinse with []Assets defined however none of
+// the assets will have a body. Those will have to be requested separately
+func (client *httpClient) AssetList() (*ShopifyResponse, Error) {
+	req, err := newShopifyRequest(client.config, listRequest, Retrieve, client.AssetPath(
+		map[string]string{"fields": assetDataFields},
+	))
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
+	return client.sendRequest(req)
+}
+
+func (client *httpClient) GetAssetInfo(filename string) (*ShopifyResponse, Error) {
+	path := client.AssetPath(map[string]string{
+		"asset[key]": filename,
+		"fields":     assetDataFields,
+	})
+	req, err := newShopifyRequest(client.config, assetRequest, Retrieve, path)
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
+
+	return client.sendRequest(req)
+}
+
+func (client *httpClient) GetAsset(filename string) (*ShopifyResponse, Error) {
+	path := client.AssetPath(map[string]string{"asset[key]": filename})
+	req, err := newShopifyRequest(client.config, assetRequest, Retrieve, path)
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
+
+	return client.sendRequest(req)
 }
 
 func (client *httpClient) AssetAction(event EventType, asset Asset) (*ShopifyResponse, Error) {
-	resp, _ := client.sendJSON(assetRequest, event, client.AssetPath(), map[string]interface{}{
-		"asset": asset,
-	})
+	req, err := newShopifyRequest(client.config, assetRequest, event, client.AssetPath(nil))
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
+
+	err = req.setJSONBody(map[string]interface{}{"asset": asset})
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
+
+	resp, err := client.sendRequest(req)
 	// If there were any errors the asset is nil so lets set it and reformat errors
-	resp.Asset = asset
+	if err != nil || resp.Asset.Key == "" {
+		resp.Asset = asset
+	}
 	return resp, resp.Error()
 }
 
-func (client *httpClient) newRequest(event EventType, urlStr string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(event.toMethod(), urlStr, body)
+func (client *httpClient) AssetActionStrict(event EventType, asset Asset, version string) (*ShopifyResponse, Error) {
+	req, err := newShopifyRequest(client.config, assetRequest, event, client.AssetPath(nil))
 	if err != nil {
-		return nil, err
+		return newShopifyResponse(req, nil, err)
 	}
 
-	req.Header.Add("X-Shopify-Access-Token", client.config.Password)
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s)", runtime.GOOS, runtime.GOARCH))
+	err = req.setJSONBody(map[string]interface{}{"asset": asset})
+	if err != nil {
+		return newShopifyResponse(req, nil, err)
+	}
 
-	return req, nil
+	req.Header.Add("If-Unmodified-Since", version)
+
+	resp, err := client.sendRequest(req)
+	// If there were any errors the asset is nil so lets set it and reformat errors
+	if err != nil || resp.Asset.Key == "" {
+		resp.Asset = asset
+	}
+	return resp, resp.Error()
 }
 
-func (client *httpClient) sendJSON(rtype requestType, event EventType, urlStr string, body map[string]interface{}) (*ShopifyResponse, Error) {
-	data, err := json.Marshal(body)
-	if err != nil {
-		return newShopifyResponse(rtype, event, urlStr, nil, err)
+func (client *httpClient) sendRequest(req *shopifyRequest) (*ShopifyResponse, Error) {
+	if client.config.ReadOnly && req.event != Retrieve {
+		return newShopifyResponse(req, nil, fmt.Errorf("Theme is read only"))
 	}
-	return client.sendRequest(rtype, event, urlStr, bytes.NewBuffer(data))
-}
-
-func (client *httpClient) sendRequest(rtype requestType, event EventType, urlStr string, body io.Reader) (*ShopifyResponse, Error) {
-	if client.config.ReadOnly && event != Retrieve {
-		return newShopifyResponse(rtype, event, urlStr, nil, fmt.Errorf("Theme is read only"))
-	}
-
-	req, err := client.newRequest(event, urlStr, body)
-	if err != nil {
-		return newShopifyResponse(rtype, event, urlStr, nil, err)
-	}
-
 	client.limit.Wait()
-
-	resp, respErr := client.client.Do(req)
-	return newShopifyResponse(rtype, event, urlStr, resp, respErr)
+	resp, respErr := client.client.Do(req.Request)
+	return newShopifyResponse(req, resp, respErr)
 }

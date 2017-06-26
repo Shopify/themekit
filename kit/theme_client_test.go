@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sort"
 	"strings"
 	"testing"
@@ -20,10 +21,7 @@ type ThemeClientTestSuite struct {
 }
 
 func (suite *ThemeClientTestSuite) SetupTest() {
-	suite.config, _ = NewConfiguration()
-	suite.config.Domain = "test.myshopify.com"
-	suite.config.ThemeID = "123"
-	suite.config.Password = "sharknado"
+	suite.config = newTestConfig()
 	suite.config.Directory = "../fixtures/project"
 	suite.config.IgnoredFiles = []string{"fookeybee"}
 	suite.client, _ = NewThemeClient(suite.config)
@@ -58,7 +56,7 @@ func (suite *ThemeClientTestSuite) TestNewFileWatcher() {
 func (suite *ThemeClientTestSuite) TestAssetList() {
 	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(suite.T(), "GET", r.Method)
-		assert.Equal(suite.T(), "", r.URL.RawQuery)
+		assert.Equal(suite.T(), "fields="+url.QueryEscape(assetDataFields), r.URL.RawQuery)
 		fmt.Fprintf(w, jsonFixture("responses/assets_raw"))
 	})
 	defer server.Close()
@@ -218,10 +216,8 @@ func (suite *ThemeClientTestSuite) TestPerform() {
 	})
 	defer server.Close()
 
-	suite.client.Perform(Asset{Key: "fookey", Value: "value"}, Create)
-
-	_, err := suite.client.Perform(Asset{Key: "fookeybee", Value: "value"}, Create)
-	assert.NotNil(suite.T(), err)
+	_, err := suite.client.Perform(Asset{Key: "fookey", Value: "value"}, Create)
+	assert.Nil(suite.T(), err)
 }
 
 func (suite *ThemeClientTestSuite) TestUploadingACompiledAsset() {

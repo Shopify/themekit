@@ -22,46 +22,46 @@ type ThemeTestSuite struct {
 
 func (suite *ThemeTestSuite) TestGenerateThemeClients() {
 	configPath = goodEnvirontmentPath
-	clients, err := generateThemeClients()
+	clients, _, err := generateThemeClients()
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 1, len(clients))
 
 	environments = stringArgArray{[]string{"nope"}}
-	clients, err = generateThemeClients()
+	clients, _, err = generateThemeClients()
 	assert.NotNil(suite.T(), err)
 	environments = stringArgArray{[]string{"development"}}
 
 	allenvs = true
-	clients, err = generateThemeClients()
+	clients, _, err = generateThemeClients()
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 3, len(clients))
 	allenvs = false
 
 	configPath = badEnvirontmentPath
-	_, err = generateThemeClients()
+	_, _, err = generateThemeClients()
 	assert.NotNil(suite.T(), err)
 }
 
-func (suite *ThemeTestSuite) TestUseEnvironment() {
+func (suite *ThemeTestSuite) TestShouldUseEnvironment() {
 	environments = stringArgArray{}
-	assert.True(suite.T(), useEnvironment("development"))
+	assert.True(suite.T(), shouldUseEnvironment("development"))
 
 	environments = stringArgArray{[]string{"production"}}
-	assert.True(suite.T(), useEnvironment("production"))
+	assert.True(suite.T(), shouldUseEnvironment("production"))
 
 	allenvs = true
 	environments = stringArgArray{}
-	assert.True(suite.T(), useEnvironment("nope"))
+	assert.True(suite.T(), shouldUseEnvironment("nope"))
 	allenvs = false
 
 	environments = stringArgArray{[]string{"p*"}}
-	assert.True(suite.T(), useEnvironment("production"))
-	assert.True(suite.T(), useEnvironment("prod"))
-	assert.True(suite.T(), useEnvironment("puddle"))
-	assert.False(suite.T(), useEnvironment("development"))
+	assert.True(suite.T(), shouldUseEnvironment("production"))
+	assert.True(suite.T(), shouldUseEnvironment("prod"))
+	assert.True(suite.T(), shouldUseEnvironment("puddle"))
+	assert.False(suite.T(), shouldUseEnvironment("development"))
 
 	environments = stringArgArray{}
-	assert.False(suite.T(), useEnvironment("production"))
+	assert.False(suite.T(), shouldUseEnvironment("production"))
 }
 
 func (suite *ThemeTestSuite) TestForEachClient() {

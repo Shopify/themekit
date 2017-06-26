@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -20,42 +21,62 @@ to shopify.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#upload
 `,
-	RunE: forEachClient(upload, uploadSettingsData),
+	RunE:     arbiter.forEachClient(upload),
+	PostRunE: arbiter.forEachClient(uploadSettingsData),
 }
 
-func upload(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func upload(client kit.ThemeClient, filenames []string) error {
 	if client.Config.ReadOnly {
-		kit.LogErrorf("[%s]environment is reaonly", kit.GreenText(client.Config.Environment))
-		return
+		return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
 	}
 
 	localAssets, err := client.LocalAssets(filenames...)
 	if err != nil {
-		kit.LogErrorf("[%s] %v", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("[%s] %v", kit.GreenText(client.Config.Environment), err)
 	}
 
-	bar := newProgressBar(len(localAssets), client.Config.Environment)
+	var wg sync.WaitGroup
+	bar := arbiter.newProgressBar(len(localAssets), client.Config.Environment)
 	for _, asset := range localAssets {
 		if asset.Key == settingsDataKey {
-			incBar(bar) //pretend we did this one we will do it later
+			arbiter.incBar(bar) //pretend we did this one we will do it later
 			continue
 		}
 		wg.Add(1)
-		go perform(client, asset, kit.Update, bar, wg)
+		go perform(client, asset, kit.Update, bar, &wg)
 	}
+	wg.Wait()
+
+	return nil
 }
 
-func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *mpb.Bar, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer incBar(bar)
+func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *mpb.Bar, wg *sync.WaitGroup) bool {
+	defer func() {
+		if wg != nil {
+			wg.Done()
+		}
+		arbiter.incBar(bar)
+	}()
+
+	if !arbiter.force && !arbiter.manifest.Should(event, settingsDataKey, client.Config.Environment) {
+		if arbiter.verbose {
+			kit.Printf(
+				"[%s] Skipping %s on file %s because file versions match",
+				kit.GreenText(client.Config.Environment),
+				kit.GreenText(event),
+				kit.GreenText(asset.Key),
+			)
+		}
+		return true
+	}
 
 	resp, err := client.Perform(asset, event)
 	if err != nil {
 		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-	} else if verbose {
+		return false
+	}
+
+	if arbiter.verbose {
 		kit.Printf(
 			"[%s] Successfully performed %s on file %s from %s",
 			kit.GreenText(client.Config.Environment),
@@ -64,31 +85,39 @@ func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *
 			kit.YellowText(resp.Host),
 		)
 	}
-}
 
-func uploadSettingsData(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-	if client.Config.ReadOnly {
-		return
+	var storeErr error
+	if event == kit.Remove {
+		storeErr = arbiter.manifest.Delete(resp.Asset.Key, client.Config.Environment)
+	} else {
+		storeErr = arbiter.manifest.Set(resp.Asset.Key, client.Config.Environment, resp.Asset.UpdatedAt)
 	}
 
-	doupload := func() {
+	return storeErr == nil
+}
+
+func uploadSettingsData(client kit.ThemeClient, filenames []string) error {
+	if client.Config.ReadOnly {
+		return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
+	}
+
+	doupload := func() error {
 		asset, err := client.LocalAsset(settingsDataKey)
 		if err != nil {
-			kit.LogError(err)
-			return
+			return err
 		}
-		wg.Add(1)
-		go perform(client, asset, kit.Update, nil, wg)
+		perform(client, asset, kit.Update, nil, nil)
+		return nil
 	}
 
 	if len(filenames) == 0 {
-		doupload()
+		return doupload()
 	} else {
 		for _, filename := range filenames {
 			if filename == settingsDataKey {
-				doupload()
-				return
+				return doupload()
 			}
 		}
 	}
+	return nil
 }

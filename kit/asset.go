@@ -20,6 +20,7 @@ type Asset struct {
 	Attachment  string `json:"attachment,omitempty"`
 	ContentType string `json:"content_type,omitempty"`
 	ThemeID     int64  `json:"theme_id,omitempty"`
+	UpdatedAt   string `json:"updated_at,omitempty"`
 }
 
 // ErrAssetIsDir is the error returned if you try and load a directory with LocalAsset

@@ -17,7 +17,8 @@ type ShopifyResponseTestSuite struct {
 func (suite *ShopifyResponseTestSuite) TestRequestError() {
 	errorMessage := "something went wrong"
 	badErr := fmt.Errorf(errorMessage)
-	resp, err := newShopifyResponse(themeRequest, Create, "", nil, badErr)
+	req, _ := newShopifyRequest(newTestConfig(), themeRequest, Create, "")
+	resp, err := newShopifyResponse(req, nil, badErr)
 	assert.NotNil(suite.T(), resp)
 	assert.NotNil(suite.T(), err)
 }
@@ -28,7 +29,8 @@ func (suite *ShopifyResponseTestSuite) TestNoBody() {
 		Body:    fileFixture("responses/general_error"),
 	}
 	mock.Body.Close()
-	resp, err := newShopifyResponse(themeRequest, Create, "", mock, nil)
+	req, _ := newShopifyRequest(newTestConfig(), themeRequest, Create, "")
+	resp, err := newShopifyResponse(req, mock, nil)
 	assert.NotNil(suite.T(), resp)
 	assert.NotNil(suite.T(), err)
 }
@@ -102,7 +104,8 @@ func (suite *ShopifyResponseTestSuite) TestError() {
 }
 
 func (suite *ShopifyResponseTestSuite) shopifyResp(path string) (*ShopifyResponse, Error) {
-	return newShopifyResponse(themeRequest, Create, "", suite.respFixture(path), nil)
+	req, _ := newShopifyRequest(newTestConfig(), themeRequest, Create, "")
+	return newShopifyResponse(req, suite.respFixture(path), nil)
 }
 
 func (suite *ShopifyResponseTestSuite) respFixture(path string) *http.Response {

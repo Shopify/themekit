@@ -37,9 +37,21 @@ func (suite *DownloadTestSuite) TestDownloadWithFileNames() {
 
 	err := download(client, []string{"assets/hello.txt"})
 	assert.Nil(suite.T(), err)
+}
 
+func (suite *DownloadTestSuite) TestDownloadWithReadOnly() {
+	defer os.Remove("../fixtures/project/assets/hello.txt")
+	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if "asset[key]=assets/hello.txt" == r.URL.RawQuery {
+			fmt.Fprintf(w, jsonFixture("responses/asset"))
+		} else {
+			w.WriteHeader(404)
+			fmt.Fprintf(w, "404")
+		}
+	})
+	defer server.Close()
 	client.Config.ReadOnly = true
-	err = download(client, []string{"output/nope.txt"})
+	err := download(client, []string{"output/nope.txt"})
 	assert.Nil(suite.T(), err)
 }
 

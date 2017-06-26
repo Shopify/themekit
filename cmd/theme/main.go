@@ -24,9 +24,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	if err := cmd.ThemeCmd.Execute(); err != nil {
-		kit.LogFatal(err)
-	}
+	cmd.ThemeCmd.Execute()
 
 	if memProfile := os.Getenv(memProfileVar); memProfile != "" {
 		f, err := os.Create(memProfile)

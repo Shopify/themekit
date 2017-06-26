@@ -25,12 +25,12 @@ type ShopifyResponse struct {
 	Errors    requestError `json:"errors"`
 }
 
-func newShopifyResponse(rtype requestType, event EventType, requestURL string, resp *http.Response, err error) (*ShopifyResponse, Error) {
-	parsedURL, _ := url.Parse(requestURL)
+func newShopifyResponse(req *shopifyRequest, resp *http.Response, err error) (*ShopifyResponse, Error) {
+	parsedURL, _ := url.Parse(req.url)
 
 	newResponse := &ShopifyResponse{
-		Type:      rtype,
-		EventType: event,
+		Type:      req.rtype,
+		EventType: req.event,
 		Host:      parsedURL.Host,
 		URL:       parsedURL,
 	}

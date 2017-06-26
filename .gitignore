@@ -9,6 +9,7 @@ tags
 cmd/theme/config.yml
 cmd/theme/theme
 coverage.out
+theme.lock
 
 # for docs
 docs/_site/

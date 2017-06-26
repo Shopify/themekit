@@ -58,6 +58,7 @@ func TestRemoveTestSuite(t *testing.T) {
 
 func newTestClient(domain string) kit.ThemeClient {
 	config, _ := kit.NewConfiguration()
+	config.Environment = "test"
 	config.Domain = domain
 	config.ThemeID = "123"
 	config.Password = "sharknado"

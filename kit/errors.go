@@ -72,6 +72,9 @@ func (err *assetError) generateHints() {
 	if err.resp.EventType == Update && err.resp.Code == 404 {
 		err.requestErr.AddS("This file is not part of your theme.")
 	}
+	if err.resp.EventType == Update && err.resp.Code == 409 {
+		err.requestErr.AddS("There have been changes to this file made remotely.")
+	}
 }
 
 func (err assetError) Error() string {

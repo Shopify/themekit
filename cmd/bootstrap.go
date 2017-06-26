@@ -30,20 +30,17 @@ your config file and create a new theme id for you.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#bootstrap
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		setFlagConfig()
-		return bootstrap()
-	},
+	RunE: bootstrap,
 }
 
-func bootstrap() error {
+func bootstrap(cmd *cobra.Command, args []string) error {
 	zipLocation, err := getZipPath()
 	if err != nil {
 		return err
 	}
 
 	themeName := getThemeName()
-	if verbose {
+	if arbiter.verbose {
 		kit.Printf(
 			"Attempting to create theme %s from %s",
 			kit.YellowText(themeName),
@@ -60,7 +57,7 @@ func bootstrap() error {
 		return err
 	}
 
-	if verbose {
+	if arbiter.verbose {
 		kit.Printf(
 			"Successfully created theme '%s' with id of %s on shop %s",
 			kit.BlueText(theme.Name),
