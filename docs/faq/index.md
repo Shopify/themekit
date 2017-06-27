@@ -36,3 +36,9 @@ sudo sysctl -w kern.maxfiles=65536
 sudo sysctl -w kern.maxfilesperproc=65536
 ulimit -n 65536 65536
 ```
+
+## I am using Cloud9 and it is replacing my files with other content
+
+If you are using the Cloud9 Editor, you can make themekit work by placing all of
+your theme files in a folder in your workspace, then run themekit under that new
+folder. [Please refer to this corresponding issue](https://github.com/Shopify/themekit/issues/416)
