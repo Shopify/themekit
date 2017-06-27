@@ -26,10 +26,10 @@ func (suite *ThemeTestSuite) TestGenerateThemeClients() {
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 1, len(clients))
 
-	environment = "nope"
+	environments = stringArgArray{[]string{"nope"}}
 	clients, err = generateThemeClients()
 	assert.NotNil(suite.T(), err)
-	environment = "development"
+	environments = stringArgArray{[]string{"development"}}
 
 	allenvs = true
 	clients, err = generateThemeClients()
@@ -40,6 +40,28 @@ func (suite *ThemeTestSuite) TestGenerateThemeClients() {
 	configPath = badEnvirontmentPath
 	_, err = generateThemeClients()
 	assert.NotNil(suite.T(), err)
+}
+
+func (suite *ThemeTestSuite) TestUseEnvironment() {
+	environments = stringArgArray{}
+	assert.True(suite.T(), useEnvironment("development"))
+
+	environments = stringArgArray{[]string{"production"}}
+	assert.True(suite.T(), useEnvironment("production"))
+
+	allenvs = true
+	environments = stringArgArray{}
+	assert.True(suite.T(), useEnvironment("nope"))
+	allenvs = false
+
+	environments = stringArgArray{[]string{"p*"}}
+	assert.True(suite.T(), useEnvironment("production"))
+	assert.True(suite.T(), useEnvironment("prod"))
+	assert.True(suite.T(), useEnvironment("puddle"))
+	assert.False(suite.T(), useEnvironment("development"))
+
+	environments = stringArgArray{}
+	assert.False(suite.T(), useEnvironment("production"))
 }
 
 func (suite *ThemeTestSuite) TestForEachClient() {

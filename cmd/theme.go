@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ryanuber/go-glob"
 	"github.com/spf13/cobra"
 	"github.com/vbauerster/mpb"
 
@@ -24,26 +25,26 @@ const updateAvailableMessage string = `
 ----------------------------------------
 `
 
-type flagArray struct {
+type stringArgArray struct {
 	values []string
 }
 
-func (fa *flagArray) String() string {
+func (fa *stringArgArray) String() string {
 	return strings.Join(fa.values, ",")
 }
 
-func (fa *flagArray) Set(value string) error {
+func (fa *stringArgArray) Set(value string) error {
 	if len(value) > 0 {
 		fa.values = append(fa.values, value)
 	}
 	return nil
 }
 
-func (fa *flagArray) Type() string {
+func (fa *stringArgArray) Type() string {
 	return "string"
 }
 
-func (fa *flagArray) Value() []string {
+func (fa *stringArgArray) Value() []string {
 	if len(fa.values) == 0 {
 		return nil
 	}
@@ -51,17 +52,18 @@ func (fa *flagArray) Value() []string {
 }
 
 var (
-	progress *mpb.Progress
+	defaultEnvironments = stringArgArray{[]string{kit.DefaultEnvironment}}
+	progress            *mpb.Progress
 
 	verbose          bool
 	configPath       string
 	allenvs          bool
-	environment      string
+	environments     stringArgArray
 	notifyFile       string
 	noUpdateNotifier bool
 	flagConfig       = kit.Configuration{}
-	ignoredFiles     flagArray
-	ignores          flagArray
+	ignoredFiles     stringArgArray
+	ignores          stringArgArray
 
 	bootstrapVersion string
 	bootstrapPrefix  string
@@ -91,7 +93,7 @@ func init() {
 	configPath = filepath.Join(pwd, "config.yml")
 
 	ThemeCmd.PersistentFlags().StringVarP(&configPath, "config", "c", configPath, "path to config.yml")
-	ThemeCmd.PersistentFlags().StringVarP(&environment, "env", "e", kit.DefaultEnvironment, "environment to run the command")
+	ThemeCmd.PersistentFlags().VarP(&environments, "env", "e", "environment to run the command")
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.Directory, "dir", "d", "", "directory that command will take effect. (default current directory)")
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.Password, "password", "p", "", "theme password. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVarP(&flagConfig.ThemeID, "themeid", "t", "", "theme id. This will override what is in your config.yml")
@@ -134,23 +136,19 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 
 	setFlagConfig()
 
-	environments, err := kit.LoadEnvironments(configPath)
+	configEnvs, err := kit.LoadEnvironments(configPath)
 	if err != nil && os.IsNotExist(err) {
 		return themeClients, fmt.Errorf("Could not file config file at %v", configPath)
 	} else if err != nil {
 		return themeClients, err
 	}
 
-	if !allenvs {
-		config, err := environments.GetConfiguration(environment)
-		if err != nil {
-			return themeClients, err
+	for env := range configEnvs {
+		if !useEnvironment(env) {
+			continue
 		}
-		environments = map[string]*kit.Configuration{environment: config}
-	}
 
-	for env := range environments {
-		config, err := environments.GetConfiguration(env)
+		config, err := configEnvs.GetConfiguration(env)
 		if err != nil {
 			return themeClients, err
 		}
@@ -165,7 +163,24 @@ func generateThemeClients() ([]kit.ThemeClient, error) {
 		themeClients = append(themeClients, client)
 	}
 
+	if len(themeClients) == 0 {
+		return nil, fmt.Errorf("Could not load any valid environments")
+	}
+
 	return themeClients, nil
+}
+
+func useEnvironment(envName string) bool {
+	flagEnvs := environments.Value()
+	if allenvs || (len(flagEnvs) == 0 && envName == kit.DefaultEnvironment) {
+		return true
+	}
+	for _, env := range flagEnvs {
+		if env == envName || glob.Glob(env, envName) {
+			return true
+		}
+	}
+	return false
 }
 
 type cobraCommandE func(*cobra.Command, []string) error

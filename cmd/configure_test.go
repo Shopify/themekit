@@ -10,10 +10,9 @@ import (
 )
 
 func TestSaveConfiguration(t *testing.T) {
-	environment = "default"
 	configPath = goodEnvirontmentPath
 	env, err := kit.LoadEnvironments(configPath)
-	config, _ := env.GetConfiguration(environment)
+	config, _ := env.GetConfiguration(kit.DefaultEnvironment)
 
 	err = saveConfiguration(config)
 	assert.Nil(t, err)
