@@ -203,6 +203,8 @@ func (store *YStore) read() error {
 		return err
 	}
 
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
 	if err = yaml.Unmarshal(contents, &store.data); err != nil {
 		return err
 	}

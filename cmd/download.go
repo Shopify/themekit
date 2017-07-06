@@ -19,16 +19,13 @@ and write them to disk.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#download
 `,
-	RunE: arbiter.forSingleClient(download),
+	PreRunE: arbiter.generateThemeClients,
+	RunE:    arbiter.forSingleClient(download),
 }
 
 func download(client kit.ThemeClient, filenames []string) error {
 	var wg sync.WaitGroup
 	filenames = arbiter.manifest.FetchableFiles(filenames, client.Config.Environment)
-	if len(filenames) == 0 {
-		kit.Print(kit.GreenText(fmt.Sprintf("[%s] no changes to download", client.Config.Environment)))
-		return nil
-	}
 	bar := arbiter.newProgressBar(len(filenames), client.Config.Environment)
 	for _, filename := range filenames {
 		wg.Add(1)
@@ -39,8 +36,14 @@ func download(client kit.ThemeClient, filenames []string) error {
 }
 
 func downloadFile(client kit.ThemeClient, filename string, bar *mpb.Bar, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer arbiter.incBar(bar)
+	defer arbiter.cleanupAction(bar, wg)
+
+	if !arbiter.force && !arbiter.manifest.NeedsDownloading(filename, client.Config.Environment) {
+		if arbiter.verbose {
+			kit.Print(kit.GreenText(fmt.Sprintf("[%s] no changes were made to %s so it was skipped", client.Config.Environment, filename)))
+		}
+		return
+	}
 
 	asset, err := client.Asset(filename)
 	if err != nil {

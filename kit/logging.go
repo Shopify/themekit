@@ -68,13 +68,11 @@ func LogError(args ...interface{}) {
 // LogFatalf will output a formatted red message to the output log along with the
 // library information. Then it will quit the application.
 func LogFatalf(content string, args ...interface{}) {
-	log.Println(RedText(LibraryInfo()))
-	log.Fatal(timestamp() + fmt.Sprintf(content, args...))
+	log.Fatal(fmt.Sprintf(content, args...))
 }
 
 // LogFatal will output a red message to the output log along with the
 // library information. Then it will quit the application.
 func LogFatal(args ...interface{}) {
-	log.Println(RedText(LibraryInfo()))
-	log.Fatal(timestamp() + fmt.Sprint(args...))
+	log.Fatal(fmt.Sprint(args...))
 }

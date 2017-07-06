@@ -21,62 +21,64 @@ to shopify.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#upload
 `,
-	RunE:     arbiter.forEachClient(upload),
+	PreRunE:  arbiter.generateThemeClients,
+	RunE:     arbiter.forEachClient(deploy(false)),
 	PostRunE: arbiter.forEachClient(uploadSettingsData),
 }
 
-func upload(client kit.ThemeClient, filenames []string) error {
-	if client.Config.ReadOnly {
-		return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
-	}
-
-	localAssets, err := client.LocalAssets(filenames...)
-	if err != nil {
-		return fmt.Errorf("[%s] %v", kit.GreenText(client.Config.Environment), err)
-	}
-
-	var wg sync.WaitGroup
-	bar := arbiter.newProgressBar(len(localAssets), client.Config.Environment)
-	for _, asset := range localAssets {
-		if asset.Key == settingsDataKey {
-			arbiter.incBar(bar) //pretend we did this one we will do it later
-			continue
+func deploy(destructive bool) arbitratedCommand {
+	return func(client kit.ThemeClient, filenames []string) error {
+		if client.Config.ReadOnly {
+			return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
 		}
-		wg.Add(1)
-		go perform(client, asset, kit.Update, bar, &wg)
-	}
-	wg.Wait()
 
-	return nil
+		actions, err := arbiter.generateAssetActions(client, filenames, destructive)
+		if err != nil {
+			return err
+		}
+
+		if err := arbiter.preflightCheck(actions, destructive); err != nil {
+			return err
+		}
+
+		var wg sync.WaitGroup
+		bar := arbiter.newProgressBar(len(actions), client.Config.Environment)
+		for key, action := range actions {
+			shouldPerform := arbiter.force || arbiter.manifest.Should(action.event, action.asset.Key, client.Config.Environment)
+			// pretend we did the settings data and we will do it last
+			if !shouldPerform || key == settingsDataKey {
+				arbiter.cleanupAction(bar, nil)
+				continue
+			}
+			wg.Add(1)
+			go perform(client, action.asset, action.event, bar, &wg)
+		}
+		wg.Wait()
+		return nil
+	}
 }
 
 func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *mpb.Bar, wg *sync.WaitGroup) bool {
-	defer func() {
-		if wg != nil {
-			wg.Done()
-		}
-		arbiter.incBar(bar)
-	}()
+	defer arbiter.cleanupAction(bar, wg)
 
-	if !arbiter.force && !arbiter.manifest.Should(event, settingsDataKey, client.Config.Environment) {
-		if arbiter.verbose {
-			kit.Printf(
-				"[%s] Skipping %s on file %s because file versions match",
-				kit.GreenText(client.Config.Environment),
-				kit.GreenText(event),
-				kit.GreenText(asset.Key),
-			)
+	var resp *kit.ShopifyResponse
+	var err error
+
+	if arbiter.force {
+		resp, err = client.Perform(asset, event)
+	} else {
+		var version string
+		version, err = arbiter.manifest.Get(asset.Key, client.Config.Environment)
+		if err != nil {
+			kit.LogErrorf("[%s] Cannot get file version %s", kit.GreenText(client.Config.Environment), err)
 		}
-		return true
+		resp, err = client.PerformStrict(asset, event, version)
 	}
 
-	resp, err := client.Perform(asset, event)
 	if err != nil {
 		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
 		return false
-	}
-
-	if arbiter.verbose {
+	} else if arbiter.verbose {
 		kit.Printf(
 			"[%s] Successfully performed %s on file %s from %s",
 			kit.GreenText(client.Config.Environment),
@@ -112,11 +114,10 @@ func uploadSettingsData(client kit.ThemeClient, filenames []string) error {
 
 	if len(filenames) == 0 {
 		return doupload()
-	} else {
-		for _, filename := range filenames {
-			if filename == settingsDataKey {
-				return doupload()
-			}
+	}
+	for _, filename := range filenames {
+		if filename == settingsDataKey {
+			return doupload()
 		}
 	}
 	return nil

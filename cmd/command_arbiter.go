@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/ryanuber/go-glob"
 	"github.com/spf13/cobra"
@@ -33,6 +34,10 @@ type (
 	}
 	cobraCommandE     func(*cobra.Command, []string) error
 	arbitratedCommand func(kit.ThemeClient, []string) error
+	assetAction       struct {
+		asset kit.Asset
+		event kit.EventType
+	}
 )
 
 func newCommandArbiter() *commandArbiter {
@@ -50,14 +55,11 @@ func (arbiter *commandArbiter) generateManifest() error {
 	return err
 }
 
-func (arbiter *commandArbiter) generateThemeClients() error {
-	if arbiter.manifest != nil {
-		return nil
-	}
-
+func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []string) error {
 	arbiter.activeThemeClients = []kit.ThemeClient{}
 	arbiter.allThemeClients = []kit.ThemeClient{}
 	configEnvs, err := kit.LoadEnvironments(arbiter.configPath)
+
 	if err != nil && os.IsNotExist(err) {
 		return fmt.Errorf("Could not file config file at %v", arbiter.configPath)
 	} else if err != nil {
@@ -107,19 +109,6 @@ func (arbiter *commandArbiter) shouldUseEnvironment(envName string) bool {
 func (arbiter *commandArbiter) forEachClient(handler arbitratedCommand) cobraCommandE {
 	return func(cmd *cobra.Command, args []string) error {
 		defer arbiter.progress.Stop()
-		if err := arbiter.generateThemeClients(); err != nil {
-			return err
-		}
-
-		if !arbiter.force {
-			for _, client := range arbiter.activeThemeClients {
-				diff := arbiter.manifest.Diff(client.Config.Environment, arbiter.master)
-				if diff.Any() {
-					return diff
-				}
-			}
-		}
-
 		var handlerGroup errgroup.Group
 		for _, client := range arbiter.activeThemeClients {
 			client := client
@@ -133,13 +122,10 @@ func (arbiter *commandArbiter) forEachClient(handler arbitratedCommand) cobraCom
 
 func (arbiter *commandArbiter) forSingleClient(handler arbitratedCommand) cobraCommandE {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := arbiter.generateThemeClients(); err != nil {
-			return err
-		}
 		defer arbiter.progress.Stop()
 
 		if len(arbiter.activeThemeClients) > 1 {
-			return fmt.Errorf("more than one environment specified for a single environment command.")
+			return fmt.Errorf("more than one environment specified for a single environment command")
 		}
 
 		return handler(arbiter.activeThemeClients[0], args)
@@ -165,8 +151,49 @@ func (arbiter *commandArbiter) newProgressBar(count int, name string) *mpb.Bar {
 	return bar
 }
 
-func (arbiter *commandArbiter) incBar(bar *mpb.Bar) {
+func (arbiter *commandArbiter) cleanupAction(bar *mpb.Bar, wg *sync.WaitGroup) {
 	if bar != nil {
 		defer bar.Incr(1)
 	}
+	if wg != nil {
+		wg.Done()
+	}
+}
+
+func (arbiter *commandArbiter) generateAssetActions(client kit.ThemeClient, filenames []string, destructive bool) (map[string]assetAction, error) {
+	assetsActions := map[string]assetAction{}
+	var err error
+	var assets []kit.Asset
+	if len(filenames) == 0 && destructive {
+		if assets, err = client.AssetList(); err != nil {
+			return nil, err
+		}
+		for _, asset := range assets {
+			assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Remove}
+		}
+	}
+
+	if assets, err = client.LocalAssets(filenames...); err != nil {
+		return nil, err
+	}
+	for _, asset := range assets {
+		assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Update}
+	}
+
+	return assetsActions, nil
+}
+
+func (arbiter *commandArbiter) preflightCheck(actions map[string]assetAction, destructive bool) error {
+	if arbiter.force {
+		return nil
+	}
+
+	for _, client := range arbiter.activeThemeClients {
+		diff := arbiter.manifest.Diff(actions, client.Config.Environment, arbiter.master)
+		if diff.Any(destructive) {
+			return diff
+		}
+	}
+
+	return nil
 }

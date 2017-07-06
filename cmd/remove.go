@@ -18,14 +18,21 @@ var removeCmd = &cobra.Command{
 
 For more documentation please see http://shopify.github.io/themekit/commands/#remove
 	`,
-	RunE: arbiter.forEachClient(remove),
+	PreRunE: arbiter.generateThemeClients,
+	RunE:    arbiter.forEachClient(remove),
 }
 
 func remove(client kit.ThemeClient, filenames []string) error {
 	if client.Config.ReadOnly {
 		return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
 	} else if len(filenames) == 0 {
-		return fmt.Errorf("[%s] please specify files to be removed", kit.GreenText(client.Config.Environment))
+		return fmt.Errorf("[%s] please specify file(s) to be removed", kit.GreenText(client.Config.Environment))
+	}
+
+	for _, filename := range filenames {
+		if !arbiter.force && !arbiter.manifest.ShouldRemove(filename, client.Config.Environment) {
+			return fmt.Errorf("[%s] file was modified remotely", kit.GreenText(client.Config.Environment))
+		}
 	}
 
 	var removeGroup errgroup.Group

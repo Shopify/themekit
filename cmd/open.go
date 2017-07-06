@@ -16,7 +16,8 @@ var openCmd = &cobra.Command{
 	Short: "Open the preview for your store.",
 	Long: `Open will open the preview page in your browser as well as print out
 url for your reference`,
-	RunE: arbiter.forSingleClient(preview),
+	PreRunE: arbiter.generateThemeClients,
+	RunE:    arbiter.forSingleClient(preview),
 }
 
 func preview(client kit.ThemeClient, filenames []string) error {
@@ -24,7 +25,7 @@ func preview(client kit.ThemeClient, filenames []string) error {
 
 	if openEdit && themeID == "live" {
 		return fmt.Errorf(
-			"[%s] Cannot open editor for live theme without theme id.",
+			"[%s] cannot open editor for live theme without theme id",
 			kit.GreenText(client.Config.Environment),
 		)
 	}

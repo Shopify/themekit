@@ -1,7 +1,1 @@
-{
-  "errors":{
-    "src":[
-      "is empty"
-    ]
-  }
-}
+{ "errors":{ "src":[ "is empty" ] } }
