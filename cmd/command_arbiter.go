@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/ryanuber/go-glob"
 	"github.com/spf13/cobra"
@@ -150,9 +151,12 @@ func (arbiter *commandArbiter) newProgressBar(count int, name string) *mpb.Bar {
 	return bar
 }
 
-func (arbiter *commandArbiter) incBar(bar *mpb.Bar) {
+func (arbiter *commandArbiter) cleanupAction(bar *mpb.Bar, wg *sync.WaitGroup) {
 	if bar != nil {
 		defer bar.Incr(1)
+	}
+	if wg != nil {
+		wg.Done()
 	}
 }
 

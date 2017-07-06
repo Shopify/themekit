@@ -47,7 +47,7 @@ func deploy(destructive bool) arbitratedCommand {
 			shouldPerform := arbiter.force || arbiter.manifest.Should(action.event, action.asset.Key, client.Config.Environment)
 			// pretend we did the settings data and we will do it last
 			if !shouldPerform || key == settingsDataKey {
-				arbiter.incBar(bar)
+				arbiter.cleanupAction(bar, nil)
 				continue
 			}
 			wg.Add(1)
@@ -59,12 +59,7 @@ func deploy(destructive bool) arbitratedCommand {
 }
 
 func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *mpb.Bar, wg *sync.WaitGroup) bool {
-	defer func() {
-		if wg != nil {
-			wg.Done()
-		}
-		arbiter.incBar(bar)
-	}()
+	defer arbiter.cleanupAction(bar, wg)
 
 	var resp *kit.ShopifyResponse
 	var err error

@@ -40,8 +40,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 }
 
 func downloadFile(client kit.ThemeClient, filename string, bar *mpb.Bar, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer arbiter.incBar(bar)
+	defer arbiter.cleanupAction(bar, wg)
 
 	asset, err := client.Asset(filename)
 	if err != nil {
