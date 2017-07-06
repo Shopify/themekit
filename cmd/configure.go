@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/kit"
@@ -23,13 +21,4 @@ For more documentation please see http://shopify.github.io/themekit/commands/#co
 		}
 		return saveConfiguration(config)
 	},
-}
-
-func saveConfiguration(config *kit.Configuration) error {
-	env, err := kit.LoadEnvironments(arbiter.configPath)
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	env.SetConfiguration(kit.DefaultEnvironment, config)
-	return env.Save(arbiter.configPath)
 }

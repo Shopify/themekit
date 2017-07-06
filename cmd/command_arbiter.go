@@ -188,7 +188,6 @@ func (arbiter *commandArbiter) preflightCheck(actions map[string]assetAction, de
 		return nil
 	}
 
-	//arbiter.manifest.Should(event, asset.Key, client.Config.Environment)
 	for _, client := range arbiter.activeThemeClients {
 		diff := arbiter.manifest.Diff(actions, client.Config.Environment, arbiter.master)
 		if diff.Any(destructive) {

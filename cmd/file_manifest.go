@@ -113,24 +113,21 @@ func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []s
 	fetchableFilenames := []string{}
 	if len(filenames) <= 0 {
 		for assetName := range manifest.remote {
-			if manifest.NeedsDownloading(assetName, env) {
-				fetchableFilenames = append(fetchableFilenames, assetName)
-			}
+			fetchableFilenames = append(fetchableFilenames, assetName)
 		}
 	} else {
 		wildCards := []string{}
 		for _, filename := range filenames {
 			if strings.Contains(filename, "*") {
 				wildCards = append(wildCards, filename)
-			} else if manifest.NeedsDownloading(filename, env) {
-				fetchableFilenames = append(fetchableFilenames, filename)
 			}
+			fetchableFilenames = append(fetchableFilenames, filename)
 		}
 
 		if len(wildCards) > 0 {
 			for assetName := range manifest.remote {
 				for _, wildcard := range wildCards {
-					if matched, _ := filepath.Match(wildcard, assetName); matched && manifest.NeedsDownloading(assetName, env) {
+					if matched, _ := filepath.Match(wildcard, assetName); matched {
 						fetchableFilenames = append(fetchableFilenames, assetName)
 					}
 				}
