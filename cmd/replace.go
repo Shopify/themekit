@@ -1,18 +1,6 @@
 package cmd
 
-import (
-	"fmt"
-	"sync"
-
-	"github.com/spf13/cobra"
-
-	"github.com/Shopify/themekit/kit"
-)
-
-type assetAction struct {
-	asset kit.Asset
-	event kit.EventType
-}
+import "github.com/spf13/cobra"
 
 var replaceCmd = &cobra.Command{
 	Use:   "replace <filenames>",
@@ -24,48 +12,7 @@ exist on your local machine will be removed from shopify.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#replace
 `,
-	RunE:     arbiter.forEachClient(replace),
+	PreRunE:  arbiter.generateThemeClients,
+	RunE:     arbiter.forEachClient(deploy(true)),
 	PostRunE: arbiter.forEachClient(uploadSettingsData),
-}
-
-func replace(client kit.ThemeClient, filenames []string) error {
-	if len(filenames) > 0 {
-		return upload(client, filenames)
-	}
-
-	if client.Config.ReadOnly {
-		return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
-	}
-
-	assetsActions := map[string]assetAction{}
-	assets, remoteErr := client.AssetList()
-	if remoteErr != nil {
-		return remoteErr
-	}
-
-	for _, asset := range assets {
-		assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Remove}
-	}
-
-	localAssets, localErr := client.LocalAssets()
-	if localErr != nil {
-		return localErr
-	}
-
-	for _, asset := range localAssets {
-		assetsActions[asset.Key] = assetAction{asset: asset, event: kit.Update}
-	}
-
-	var wg sync.WaitGroup
-	bar := arbiter.newProgressBar(len(assetsActions), client.Config.Environment)
-	for key, action := range assetsActions {
-		if key == settingsDataKey {
-			arbiter.incBar(bar) //pretend we did this one we will do it later
-			continue
-		}
-		wg.Add(1)
-		go perform(client, action.asset, action.event, bar, &wg)
-	}
-	wg.Wait()
-	return nil
 }

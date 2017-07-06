@@ -95,7 +95,7 @@ func (manifest *fileManifest) ShouldUpload(filename, environment string) bool {
 
 func (manifest *fileManifest) ShouldRemove(filename, environment string) bool {
 	localTime, remoteTime := manifest.fileDates(filename, environment)
-	return remoteTime.Before(localTime) && !remoteTime.IsZero()
+	return remoteTime.Before(localTime)
 }
 
 func (manifest *fileManifest) Should(event kit.EventType, filename, environment string) bool {
@@ -112,9 +112,9 @@ func (manifest *fileManifest) Should(event kit.EventType, filename, environment 
 func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []string {
 	fetchableFilenames := []string{}
 	if len(filenames) <= 0 {
-		for asset_name := range manifest.remote {
-			if manifest.NeedsDownloading(asset_name, env) {
-				fetchableFilenames = append(fetchableFilenames, asset_name)
+		for assetName := range manifest.remote {
+			if manifest.NeedsDownloading(assetName, env) {
+				fetchableFilenames = append(fetchableFilenames, assetName)
 			}
 		}
 	} else {
@@ -128,10 +128,10 @@ func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []s
 		}
 
 		if len(wildCards) > 0 {
-			for asset_name := range manifest.remote {
+			for assetName := range manifest.remote {
 				for _, wildcard := range wildCards {
-					if matched, _ := filepath.Match(wildcard, asset_name); matched && manifest.NeedsDownloading(asset_name, env) {
-						fetchableFilenames = append(fetchableFilenames, asset_name)
+					if matched, _ := filepath.Match(wildcard, assetName); matched && manifest.NeedsDownloading(assetName, env) {
+						fetchableFilenames = append(fetchableFilenames, assetName)
 					}
 				}
 			}
@@ -140,16 +140,13 @@ func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []s
 	return fetchableFilenames
 }
 
-func (manifest *fileManifest) Diff(dstEnv, srcEnv string) *themeDiff {
+func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEnv string) *themeDiff {
 	diff := newDiff()
-	for filename := range manifest.local {
+	for filename := range actions {
 		local, remote := manifest.diffDates(filename, dstEnv, srcEnv)
 		if !local.IsZero() && remote.IsZero() {
 			diff.Removed = append(diff.Removed, kit.RedText(filename))
 		}
-	}
-	for filename := range manifest.remote {
-		local, remote := manifest.diffDates(filename, dstEnv, srcEnv)
 		if local.IsZero() && !remote.IsZero() {
 			diff.Created = append(diff.Created, kit.GreenText(filename))
 		}

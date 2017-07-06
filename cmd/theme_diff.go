@@ -45,7 +45,10 @@ func newDiff() *themeDiff {
 	}
 }
 
-func (diff *themeDiff) Any() bool {
+func (diff *themeDiff) Any(destructive bool) bool {
+	if !destructive {
+		return len(diff.Updated) > 0
+	}
 	return len(diff.Created) > 0 || len(diff.Updated) > 0 || len(diff.Removed) > 0
 }
 

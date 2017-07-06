@@ -29,17 +29,20 @@ For more documentation please see http://shopify.github.io/themekit/commands/#wa
 }
 
 func startWatch(cmd *cobra.Command, args []string) error {
-	if err := arbiter.generateThemeClients(); err != nil {
+	arbiter.verbose = true
+	if err := arbiter.generateThemeClients(cmd, args); err != nil {
 		return err
 	}
-	if err := watch(arbiter.activeThemeClients); err == errReload {
+	if err := watch(); err == errReload {
 		kit.Print("Reloading because of config changes")
 		return startWatch(cmd, args)
+	} else if err != nil {
+		return err
 	}
 	return nil
 }
 
-func watch(themeClients []kit.ThemeClient) error {
+func watch() error {
 	watchers := []*kit.FileWatcher{}
 	defer func() {
 		if len(watchers) > 0 {
@@ -52,9 +55,9 @@ func watch(themeClients []kit.ThemeClient) error {
 		}
 	}()
 
-	for _, client := range themeClients {
+	for _, client := range arbiter.activeThemeClients {
 		if client.Config.ReadOnly {
-			kit.LogErrorf("[%s]environment is reaonly", kit.GreenText(client.Config.Environment))
+			kit.LogErrorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
 			continue
 		}
 
@@ -89,30 +92,5 @@ func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventTy
 		kit.GreenText(event),
 		kit.BlueText(asset.Key),
 	)
-
-	var resp *kit.ShopifyResponse
-	var err error
-
-	if arbiter.force {
-		resp, err = client.Perform(asset, event)
-	} else {
-		var version string
-		version, err = arbiter.manifest.Get(asset.Key, client.Config.Environment)
-		if err != nil {
-			kit.LogErrorf("[%s] Cannot get file version %s", kit.GreenText(client.Config.Environment), err)
-		}
-		resp, err = client.PerformStrict(asset, event, version)
-	}
-
-	if err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-	} else {
-		kit.Printf(
-			"[%s] Successfully performed %s operation for file %s to %s",
-			kit.GreenText(client.Config.Environment),
-			kit.GreenText(resp.EventType),
-			kit.BlueText(resp.Asset.Key),
-			kit.YellowText(resp.Host),
-		)
-	}
+	perform(client, asset, event, nil, nil)
 }

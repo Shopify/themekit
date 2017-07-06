@@ -19,7 +19,8 @@ and write them to disk.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#download
 `,
-	RunE: arbiter.forSingleClient(download),
+	PreRunE: arbiter.generateThemeClients,
+	RunE:    arbiter.forSingleClient(download),
 }
 
 func download(client kit.ThemeClient, filenames []string) error {
