@@ -39,7 +39,8 @@ Theme Kit is a fast and cross platform tool that enables you
 to build shopify themes with ease.
 
 Complete documentation is available at https://shopify.github.io/themekit/`,
-	SilenceUsage: true,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !noUpdateNotifier && kit.IsNewUpdateAvailable() {
 			kit.Print(kit.YellowText(updateAvailableMessage))
