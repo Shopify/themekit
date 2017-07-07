@@ -91,6 +91,7 @@ func init() {
 
 	ThemeCmd.AddCommand(
 		bootstrapCmd,
+		configureCmd,
 		removeCmd,
 		replaceCmd,
 		uploadCmd,
@@ -98,7 +99,6 @@ func init() {
 		downloadCmd,
 		versionCmd,
 		updateCmd,
-		configureCmd,
 		openCmd,
 	)
 }

@@ -1,29 +1,29 @@
 package cmd
 
-// import (
-//	"os"
-//	"testing"
+import (
+	"os"
+	"testing"
 
-//	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
+)
 
-//	"github.com/Shopify/themekit/kit"
-// )
+func TestConfigure(t *testing.T) {
+	defer os.Remove("config.yml")
+	defer resetArbiter()
+	arbiter.configPath = "config.yml"
 
-// func TestSaveConfiguration(t *testing.T) {
-//	configPath = goodEnvirontmentPath
-//	env, err := kit.LoadEnvironments(configPath)
-//	config, _ := env.GetConfiguration(kit.DefaultEnvironment)
+	err := configureCmd.RunE(nil, []string{})
+	assert.NotNil(t, err)
 
-//	err = saveConfiguration(config)
-//	assert.Nil(t, err)
+	arbiter.flagConfig.Password = "foo"
+	arbiter.flagConfig.Domain = "myshop.myshopify.com"
+	arbiter.flagConfig.ThemeID = "1"
+	arbiter.setFlagConfig()
 
-//	configPath = badEnvirontmentPath
-//	err = saveConfiguration(config)
-//	assert.NotNil(t, err)
+	err = configureCmd.RunE(nil, []string{})
+	assert.Nil(t, err)
 
-//	configPath = "../fixtures/project/out.yml"
-//	err = saveConfiguration(config)
-//	assert.Nil(t, err)
-
-//	os.Remove(configPath)
-// }
+	arbiter.configPath = "does_not_exist/nope.xm"
+	err = configureCmd.RunE(nil, []string{})
+	assert.NotNil(t, err)
+}

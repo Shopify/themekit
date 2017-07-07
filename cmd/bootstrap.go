@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -66,6 +67,9 @@ func bootstrap(cmd *cobra.Command, args []string) error {
 		)
 	}
 
+	if err := arbiter.generateThemeClients(nil, []string{}); err != nil {
+		return err
+	}
 	return download(client, []string{})
 }
 
@@ -147,4 +151,13 @@ func buildInvalidVersionError(feed atom.Feed, version string) error {
 	return fmt.Errorf(`invalid Timber Version: %s
 Available Versions Are:
 - %s`, version, strings.Join(entries, "\n- "))
+}
+
+func saveConfiguration(config *kit.Configuration) error {
+	env, err := kit.LoadEnvironments(arbiter.configPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	env.SetConfiguration(kit.DefaultEnvironment, config)
+	return env.Save(arbiter.configPath)
 }
