@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Shopify/themekit/cmd/internal/atom"
+	"github.com/Shopify/themekit/cmd/atom"
 	"github.com/Shopify/themekit/kit"
 )
 

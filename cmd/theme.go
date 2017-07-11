@@ -47,6 +47,9 @@ Complete documentation is available at https://shopify.github.io/themekit/`,
 		}
 		arbiter.setFlagConfig()
 	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		arbiter.progress.Stop()
+	},
 }
 
 func init() {

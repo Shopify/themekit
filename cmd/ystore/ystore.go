@@ -157,14 +157,17 @@ func (store *YStore) ReadAll(collection string) ([]string, error) {
 func (store *YStore) Delete(collection, key string) error {
 	if collection == "" {
 		return ErrorInvalidCollectionName
+	} else if key == "" {
+		return ErrorInvalidKeyName
 	}
+
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
 
 	if _, ok := store.data[collection]; !ok {
 		return ErrorCollectionNotFound
 	}
 
-	store.mutex.Lock()
-	defer store.mutex.Unlock()
 	delete(store.data[collection], key)
 	if len(store.data[collection]) == 0 {
 		delete(store.data, collection)

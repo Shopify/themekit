@@ -1,41 +1,36 @@
 package cmd
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/kittest"
 )
 
-func init() {
-	resetArbiter()
-}
-
 func TestBootstrap(t *testing.T) {
-	server := newTestServer()
+	server := kittest.NewTestServer()
 	defer server.Close()
+	kittest.Setup()
+	defer kittest.Cleanup()
 	defer resetArbiter()
-	defer os.Remove("config.yml")
+	timberFeedPath = server.URL + "/feed"
 
-	err := bootstrap(nil, []string{})
-	assert.NotNil(t, err)
+	assert.NotNil(t, bootstrap(nil, []string{}))
 
 	arbiter.flagConfig.Password = "foo"
-	arbiter.flagConfig.Domain = server.URL + "/domain"
+	arbiter.flagConfig.Domain = server.URL
+	arbiter.flagConfig.Directory = kittest.FixtureProjectPath
 	arbiter.setFlagConfig()
-
-	err = bootstrap(nil, []string{})
-	assert.Nil(t, err)
+	assert.Nil(t, bootstrap(nil, []string{}))
 
 	timberFeedPath = "http://nope.com/nope.json"
-	err = bootstrap(nil, []string{})
-	assert.NotNil(t, err)
+	assert.NotNil(t, bootstrap(nil, []string{}))
 }
 
 func TestGetZipPath(t *testing.T) {
-	server := newTestServer()
+	server := kittest.NewTestServer()
 	defer server.Close()
 
 	bootstrapVersion = "master"
@@ -74,7 +69,8 @@ func TestZipPath(t *testing.T) {
 }
 
 func TestZipPathForVersion(t *testing.T) {
-	server := newTestServer()
+	server := kittest.NewTestServer()
+	timberFeedPath = server.URL + "/feed"
 
 	// master jst returns early for master version
 	path, err := zipPathForVersion("master")
@@ -100,7 +96,8 @@ func TestZipPathForVersion(t *testing.T) {
 }
 
 func TestDownloadAtomFeed(t *testing.T) {
-	server := newTestServer()
+	server := kittest.NewTestServer()
+	timberFeedPath = server.URL + "/feed"
 
 	feed, err := downloadAtomFeed()
 	assert.Nil(t, err)
@@ -119,7 +116,7 @@ func TestDownloadAtomFeed(t *testing.T) {
 }
 
 func TestFindReleaseWith(t *testing.T) {
-	feed := loadAtom()
+	feed := kittest.ReleaseAtom
 	entry, err := findReleaseWith(feed, "latest")
 	assert.Equal(t, feed.LatestEntry(), entry)
 	assert.Nil(t, err)
@@ -134,27 +131,22 @@ func TestFindReleaseWith(t *testing.T) {
 }
 
 func TestBuildInvalidVersionError(t *testing.T) {
-	feed := loadAtom()
+	feed := kittest.ReleaseAtom
 	err := buildInvalidVersionError(feed, "nope")
 	assert.Equal(t, "invalid Timber Version: nope\nAvailable Versions Are:\n- master\n- latest\n- v2.0.2\n- v2.0.1\n- v2.0.0\n- v1.3.2\n- v1.3.1\n- v1.3.0\n- v1.2.1\n- v1.2.0\n- v1.1.3\n- v1.1.2\n- v1.1.1\n- v1.1.0\n- v1.0.0", err.Error())
 }
 
 func TestSaveConfiguration(t *testing.T) {
-	defer os.Remove("config.yml")
 	defer resetArbiter()
+	defer kittest.Cleanup()
 
-	arbiter.configPath = goodEnvirontmentPath
-	env, err := kit.LoadEnvironments(arbiter.configPath)
+	kittest.GenerateConfig("example.myshopify.io", true)
+	env, _ := kit.LoadEnvironments("config.yml")
 	config, _ := env.GetConfiguration(kit.DefaultEnvironment)
+	assert.Nil(t, saveConfiguration(config))
 
-	err = saveConfiguration(config)
-	assert.Nil(t, err)
-
-	arbiter.configPath = badEnvirontmentPath
-	err = saveConfiguration(config)
-	assert.NotNil(t, err)
-
-	arbiter.configPath = "config.yml"
-	err = saveConfiguration(config)
-	assert.Nil(t, err)
+	kittest.GenerateConfig("example.myshopify.io", false)
+	env, _ = kit.LoadEnvironments("config.yml")
+	config, _ = env.GetConfiguration(kit.DefaultEnvironment)
+	assert.NotNil(t, saveConfiguration(config))
 }

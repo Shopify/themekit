@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/ryanuber/go-glob"
 	"github.com/spf13/cobra"
@@ -32,9 +31,9 @@ type (
 		allThemeClients    []kit.ThemeClient
 		manifest           *fileManifest
 	}
-	cobraCommandE     func(*cobra.Command, []string) error
-	arbitratedCommand func(kit.ThemeClient, []string) error
-	assetAction       struct {
+	cobraCmdE     func(*cobra.Command, []string) error
+	arbitratedCmd func(kit.ThemeClient, []string) error
+	assetAction   struct {
 		asset kit.Asset
 		event kit.EventType
 	}
@@ -61,7 +60,7 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 	configEnvs, err := kit.LoadEnvironments(arbiter.configPath)
 
 	if err != nil && os.IsNotExist(err) {
-		return fmt.Errorf("Could not file config file at %v", arbiter.configPath)
+		return fmt.Errorf("Could not find config file at %v", arbiter.configPath)
 	} else if err != nil {
 		return err
 	}
@@ -106,9 +105,8 @@ func (arbiter *commandArbiter) shouldUseEnvironment(envName string) bool {
 	return false
 }
 
-func (arbiter *commandArbiter) forEachClient(handler arbitratedCommand) cobraCommandE {
+func (arbiter *commandArbiter) forEachClient(handler arbitratedCmd) cobraCmdE {
 	return func(cmd *cobra.Command, args []string) error {
-		defer arbiter.progress.Stop()
 		var handlerGroup errgroup.Group
 		for _, client := range arbiter.activeThemeClients {
 			client := client
@@ -120,10 +118,8 @@ func (arbiter *commandArbiter) forEachClient(handler arbitratedCommand) cobraCom
 	}
 }
 
-func (arbiter *commandArbiter) forSingleClient(handler arbitratedCommand) cobraCommandE {
+func (arbiter *commandArbiter) forSingleClient(handler arbitratedCmd) cobraCmdE {
 	return func(cmd *cobra.Command, args []string) error {
-		defer arbiter.progress.Stop()
-
 		if len(arbiter.activeThemeClients) > 1 {
 			return fmt.Errorf("more than one environment specified for a single environment command")
 		}
@@ -149,15 +145,6 @@ func (arbiter *commandArbiter) newProgressBar(count int, name string) *mpb.Bar {
 			PrependCounters(0, 0)
 	}
 	return bar
-}
-
-func (arbiter *commandArbiter) cleanupAction(bar *mpb.Bar, wg *sync.WaitGroup) {
-	if bar != nil {
-		defer bar.Incr(1)
-	}
-	if wg != nil {
-		wg.Done()
-	}
 }
 
 func (arbiter *commandArbiter) generateAssetActions(client kit.ThemeClient, filenames []string, destructive bool) (map[string]assetAction, error) {

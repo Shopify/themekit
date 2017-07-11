@@ -145,6 +145,9 @@ func TestDelete(t *testing.T) {
 	if err := store.Delete("", "development"); err == nil {
 		t.Errorf("Allowed empty collection to delete: %v", err)
 	}
+	if err := store.Delete(collection, ""); err == nil {
+		t.Errorf("Allowed empty key to delete: %v", err)
+	}
 	if err := store.Delete("nope", "development"); err == nil {
 		t.Errorf("Allowed delete on non existant collection: %v", err)
 	}
