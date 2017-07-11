@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Shopify/themekit/cmd/internal/atom"
+	"github.com/Shopify/themekit/cmd/atom"
 	"github.com/Shopify/themekit/kit"
 )
 
@@ -42,10 +42,10 @@ func bootstrap(cmd *cobra.Command, args []string) error {
 
 	themeName := getThemeName()
 	if arbiter.verbose {
-		kit.Printf(
+		stdOut.Printf(
 			"Attempting to create theme %s from %s",
-			kit.YellowText(themeName),
-			kit.YellowText(zipLocation),
+			yellow(themeName),
+			yellow(zipLocation),
 		)
 	}
 
@@ -59,11 +59,11 @@ func bootstrap(cmd *cobra.Command, args []string) error {
 	}
 
 	if arbiter.verbose {
-		kit.Printf(
+		stdOut.Printf(
 			"Successfully created theme '%s' with id of %s on shop %s",
-			kit.BlueText(theme.Name),
-			kit.BlueText(theme.ID),
-			kit.YellowText(client.Config.Domain),
+			blue(theme.Name),
+			blue(theme.ID),
+			yellow(client.Config.Domain),
 		)
 	}
 

@@ -1,129 +1,96 @@
 package cmd
 
-// import (
-//	"encoding/json"
-//	"net/http"
-//	"sync"
-//	"testing"
+import (
+	"path/filepath"
+	"strings"
+	"testing"
 
-//	"github.com/stretchr/testify/assert"
-//	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
 
-//	"github.com/Shopify/themekit/kit"
-// )
+	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/kittest"
+)
 
-// type UploadTestSuite struct {
-//	suite.Suite
-// }
+func TestDeploy(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	kittest.TouchFixtureFile(filepath.Join("config", "settings_data.json"), "")
+	defer kittest.Cleanup()
+	defer resetArbiter()
 
-// func (suite *UploadTestSuite) SetupTest() {
-//	configPath = "../fixtures/project/valid_config.yml"
-// }
+	client, err := getClient()
+	if assert.Nil(t, err) {
+		deployMthd := deploy(true)
+		client.Config.ReadOnly = true
+		err := deployMthd(client, []string{})
+		assert.True(t, strings.Contains(err.Error(), "environment is reaonly"))
+		client.Config.ReadOnly = false
 
-// func (suite *UploadTestSuite) TestUploadWithFilenames() {
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		assert.Equal(suite.T(), "PUT", r.Method)
+		err = deployMthd(client, []string{})
+		assert.True(t, strings.Contains(err.Error(), "Diff"))
 
-//		var t map[string]kit.Asset
-//		json.NewDecoder(r.Body).Decode(&t)
-//		defer r.Body.Close()
+		arbiter.force = true
+		assert.Nil(t, deployMthd(client, []string{}))
 
-//		assert.Equal(suite.T(), kit.Asset{Key: "templates/template.liquid", Value: ""}, t["asset"])
-//	})
-//	defer server.Close()
+		err = deployMthd(client, []string{"nope.txt"})
+		assert.True(t, strings.Contains(err.Error(), "no such file"))
+	}
+}
 
-//	var wg sync.WaitGroup
-//	wg.Add(1)
-//	go upload(client, []string{"templates/template.liquid"}, &wg)
-//	wg.Wait()
-// }
+func TestIncBar(t *testing.T) {
+	incBar(arbiter.progress.AddBar(int64(1)))
+}
 
-// func (suite *UploadTestSuite) TestUploadWithDirectoryNames() {
-//	reqCount := make(chan int, 100)
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		assert.Equal(suite.T(), "PUT", r.Method)
-//		reqCount <- 1
-//	})
-//	defer server.Close()
+func TestPerform(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	kittest.TouchFixtureFile(filepath.Join("config", "settings_data.json"), "")
+	defer kittest.Cleanup()
+	defer resetArbiter()
 
-//	var wg sync.WaitGroup
-//	wg.Add(1)
-//	go upload(client, []string{"templates"}, &wg)
-//	wg.Wait()
-//	assert.Equal(suite.T(), 2, len(reqCount))
-// }
+	client, err := getClient()
+	if assert.Nil(t, err) {
+		server.Reset()
 
-// func (suite *UploadTestSuite) TestUploadWithBadFileNames() {
-//	reqCount := make(chan int, 100)
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		assert.Equal(suite.T(), "PUT", r.Method)
-//		reqCount <- 1
-//	})
-//	defer server.Close()
+		err := perform(client, kit.Asset{}, kit.Update, nil)
+		assert.True(t, strings.Contains(err.Error(), "No collection name provided"))
+		err = perform(client, kit.Asset{}, kit.Remove, nil)
+		assert.True(t, strings.Contains(err.Error(), "No collection name provided"))
 
-//	var wg sync.WaitGroup
-//	wg.Add(1)
-//	go upload(client, []string{"templates/foo.liquid"}, &wg)
-//	wg.Wait()
-//	assert.Equal(suite.T(), 0, len(reqCount))
-// }
+		assert.Nil(t, perform(client, kit.Asset{Key: "asset.js"}, kit.Update, nil))
+		arbiter.force = true
+		assert.Nil(t, perform(client, kit.Asset{Key: "asset.js"}, kit.Update, nil))
+		assert.Nil(t, perform(client, kit.Asset{Key: "asset.js"}, kit.Remove, nil))
 
-// func (suite *UploadTestSuite) TestUploadAll() {
-//	requests := map[string]string{}
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		var t map[string]kit.Asset
-//		json.NewDecoder(r.Body).Decode(&t)
-//		defer r.Body.Close()
-//		requests[t["asset"].Key] = r.Method
-//	})
-//	defer server.Close()
+		err = perform(client, kit.Asset{Key: "empty"}, kit.Update, nil)
+		assert.True(t, strings.Contains(err.Error(), "No value provided"))
+		client.Config.Environment = ""
+		err = perform(client, kit.Asset{Key: "empty"}, kit.Remove, nil)
+		assert.True(t, strings.Contains(err.Error(), "No key name provided"))
+	}
+}
 
-//	var wg sync.WaitGroup
-//	wg.Add(1)
-//	go upload(client, []string{}, &wg)
-//	wg.Wait()
+func TestUploadSettingsData(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	kittest.TouchFixtureFile(filepath.Join("config", "settings_data.json"), "")
+	defer kittest.Cleanup()
+	defer resetArbiter()
 
-//	assets, _ := client.LocalAssets()
-//	assert.Equal(suite.T(), len(assets)-1, len(requests))
-//	for _, asset := range assets {
-//		if asset.Key == settingsDataKey {
-//			continue
-//		}
-//		assert.Equal(suite.T(), "PUT", requests[asset.Key])
-//	}
-// }
+	client, err := getClient()
+	if assert.Nil(t, err) {
+		server.Reset()
 
-// func (suite *UploadTestSuite) TestReadOnlyUpload() {
-//	requested := false
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		requested = true
-//	})
-//	defer server.Close()
+		assert.Nil(t, uploadSettingsData(client, []string{}))
+		assert.Nil(t, uploadSettingsData(client, []string{"templates/template.liquid"}))
+		assert.Nil(t, uploadSettingsData(client, []string{"templates/template.liquid", "config/settings_data.json"}))
 
-//	var wg sync.WaitGroup
-//	wg.Add(1)
-//	client.Config.ReadOnly = true
-//	go upload(client, []string{}, &wg)
-//	wg.Wait()
+		kittest.Cleanup()
+		assert.NotNil(t, uploadSettingsData(client, []string{}))
 
-//	assert.Equal(suite.T(), false, requested)
-// }
-
-// func (suite *UploadTestSuite) TestUploadSettingsData() {
-//	requests := make(chan int, 100)
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		requests <- 1
-//	})
-//	defer server.Close()
-
-//	var wg sync.WaitGroup
-//	uploadSettingsData(client, []string{}, &wg)
-//	uploadSettingsData(client, []string{"templates/template.liquid"}, &wg)
-//	uploadSettingsData(client, []string{"templates/template.liquid", "config/settings_data.json"}, &wg)
-//	wg.Wait()
-//	assert.Equal(suite.T(), 2, len(requests))
-// }
-
-// func TestUploadTestSuite(t *testing.T) {
-//	suite.Run(t, new(UploadTestSuite))
-// }
+		assert.Equal(t, 2, len(server.Requests))
+	}
+}

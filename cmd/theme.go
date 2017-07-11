@@ -6,17 +6,6 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
-const updateAvailableMessage string = `
-----------------------------------------
-| An update for Theme Kit is available |
-|                                      |
-| To apply the update simply type      |
-| the following command:               |
-|                                      |
-| theme update                         |
-----------------------------------------
-`
-
 var (
 	arbiter          = newCommandArbiter()
 	bootstrapVersion string
@@ -43,9 +32,12 @@ Complete documentation is available at https://shopify.github.io/themekit/`,
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !noUpdateNotifier && kit.IsNewUpdateAvailable() {
-			kit.Print(kit.YellowText(updateAvailableMessage))
+			stdOut.Print(yellow("An update for Themekit is available. To update please run `theme update`"))
 		}
 		arbiter.setFlagConfig()
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		arbiter.progress.Stop()
 	},
 }
 
@@ -71,15 +63,16 @@ func init() {
 	uploadCmd.Flags().BoolVarP(&arbiter.allenvs, "allenvs", "a", false, "run command with all environments")
 	openCmd.Flags().BoolVarP(&arbiter.allenvs, "allenvs", "a", false, "run command with all environments")
 
+	downloadCmd.Flags().BoolVarP(&arbiter.force, "force", "f", false, "disable version checking and force all changes")
 	watchCmd.Flags().BoolVarP(&arbiter.force, "force", "f", false, "disable version checking and force all changes")
 	removeCmd.Flags().BoolVarP(&arbiter.force, "force", "f", false, "disable version checking and force all changes")
 	replaceCmd.Flags().BoolVarP(&arbiter.force, "force", "f", false, "disable version checking and force all changes")
 	uploadCmd.Flags().BoolVarP(&arbiter.force, "force", "f", false, "disable version checking and force all changes")
 
 	watchCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "The destination from which all changes will be applied")
-	removeCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "")
-	replaceCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "")
-	uploadCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "")
+	removeCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "The destination from which all changes will be applied")
+	replaceCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "The destination from which all changes will be applied")
+	uploadCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "The destination from which all changes will be applied")
 
 	bootstrapCmd.Flags().StringVar(&bootstrapVersion, "version", latestRelease, "version of Shopify Timber to use")
 	bootstrapCmd.Flags().StringVar(&bootstrapPrefix, "prefix", "", "prefix to the Timber theme being created")

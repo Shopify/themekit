@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -23,6 +24,7 @@ type FileWatcher struct {
 	done           chan bool
 	client         ThemeClient
 	mainWatcher    *fsnotify.Watcher
+	mutex          sync.Mutex
 	reloadSignal   chan bool
 	configWatcher  *fsnotify.Watcher
 	filter         fileFilter
@@ -121,7 +123,8 @@ func (watcher *FileWatcher) WatchConfig(configFile string, reloadSignal chan boo
 			return err
 		}
 	}
-
+	watcher.mutex.Lock()
+	defer watcher.mutex.Unlock()
 	watcher.reloadSignal = reloadSignal
 	return nil
 }
@@ -144,6 +147,8 @@ func (watcher *FileWatcher) StopWatching() {
 }
 
 func (watcher *FileWatcher) onReload() {
+	watcher.mutex.Lock()
+	defer watcher.mutex.Unlock()
 	close(watcher.done)
 	if watcher.reloadSignal != nil {
 		watcher.reloadSignal <- true

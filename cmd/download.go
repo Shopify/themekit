@@ -2,10 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/vbauerster/mpb"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Shopify/themekit/kit"
 )
@@ -24,44 +23,53 @@ For more documentation please see http://shopify.github.io/themekit/commands/#do
 }
 
 func download(client kit.ThemeClient, filenames []string) error {
-	var wg sync.WaitGroup
+	var downloadGroup errgroup.Group
 	filenames = arbiter.manifest.FetchableFiles(filenames, client.Config.Environment)
 	bar := arbiter.newProgressBar(len(filenames), client.Config.Environment)
 	for _, filename := range filenames {
-		wg.Add(1)
-		go downloadFile(client, filename, bar, &wg)
+		filename := filename
+		downloadGroup.Go(func() error {
+			if err := downloadFile(client, filename); err != nil {
+				stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
+			}
+			incBar(bar)
+			return nil
+		})
 	}
-	wg.Wait()
-	return nil
+	return downloadGroup.Wait()
 }
 
-func downloadFile(client kit.ThemeClient, filename string, bar *mpb.Bar, wg *sync.WaitGroup) {
-	defer arbiter.cleanupAction(bar, wg)
-
+func downloadFile(client kit.ThemeClient, filename string) error {
 	if !arbiter.force && !arbiter.manifest.NeedsDownloading(filename, client.Config.Environment) {
 		if arbiter.verbose {
-			kit.Print(kit.GreenText(fmt.Sprintf("[%s] no changes were made to %s so it was skipped", client.Config.Environment, filename)))
+			stdOut.Printf(
+				"[%s] skipping %s",
+				green(client.Config.Environment),
+				green(filename),
+			)
 		}
-		return
+		return nil
 	}
 
 	asset, err := client.Asset(filename)
 	if err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("error downloading asset: %v", err)
 	}
 
 	if err := asset.Write(client.Config.Directory); err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("error writing asset: %v", err)
 	}
 
 	if err := arbiter.manifest.Set(asset.Key, client.Config.Environment, asset.UpdatedAt); err != nil {
-		kit.LogErrorf("[%s] Could not update manifest %s", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("error updating manifest: %v", err)
 	}
 
 	if arbiter.verbose {
-		kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
+		stdOut.Printf(
+			"[%s] Successfully wrote %s to disk",
+			green(client.Config.Environment),
+			green(filename),
+		)
 	}
+	return nil
 }

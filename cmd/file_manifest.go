@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/Shopify/themekit/cmd/internal/ystore"
+	"github.com/Shopify/themekit/cmd/ystore"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/Shopify/themekit/kit"
@@ -14,6 +15,7 @@ import (
 
 type fileManifest struct {
 	store  *ystore.YStore
+	mutex  sync.Mutex
 	local  map[string]map[string]string
 	remote map[string]map[string]string
 }
@@ -27,18 +29,19 @@ func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, err
 	}
 
 	manifest := &fileManifest{store: store}
-
-	manifest.local, err = store.Dump()
-	if err != nil {
+	if manifest.local, err = store.Dump(); err != nil {
 		return nil, err
 	}
 
-	return manifest, manifest.generateRemote(clients)
+	if err := manifest.generateRemote(clients); err != nil {
+		return nil, err
+	}
+
+	return manifest, manifest.prune(clients)
 }
 
 func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 	manifest.remote = make(map[string]map[string]string)
-	var mutex sync.Mutex
 
 	var requestGroup errgroup.Group
 	for _, client := range clients {
@@ -48,19 +51,42 @@ func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 			if err != nil {
 				return err
 			}
-			mutex.Lock()
 			for _, asset := range assets {
+				manifest.mutex.Lock()
 				if _, ok := manifest.remote[asset.Key]; !ok {
 					manifest.remote[asset.Key] = make(map[string]string)
 				}
 				manifest.remote[asset.Key][client.Config.Environment] = asset.UpdatedAt
+				manifest.mutex.Unlock()
 			}
-			mutex.Unlock()
 			return nil
 		})
 	}
 
 	return requestGroup.Wait()
+}
+
+func (manifest *fileManifest) prune(clients []kit.ThemeClient) error {
+	for filename := range manifest.local {
+		if _, found := manifest.remote[filename]; !found {
+			for _, client := range clients {
+				path := filepath.ToSlash(filepath.Join(client.Config.Directory, filename))
+				if info, err := os.Stat(path); err == nil && !info.IsDir() {
+					found = true
+					break
+				}
+			}
+			if !found {
+				if err := manifest.store.DeleteCollection(filename); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	var err error
+	manifest.local, err = manifest.store.Dump()
+	return err
 }
 
 func parseTime(t string) time.Time {
@@ -70,6 +96,9 @@ func parseTime(t string) time.Time {
 }
 
 func (manifest *fileManifest) diffDates(filename, dstEnv, srcEnv string) (local, remote time.Time) {
+	manifest.mutex.Lock()
+	defer manifest.mutex.Unlock()
+
 	if _, ok := manifest.local[filename]; ok {
 		local = parseTime(manifest.local[filename][srcEnv])
 	}
@@ -79,23 +108,19 @@ func (manifest *fileManifest) diffDates(filename, dstEnv, srcEnv string) (local,
 	return local, remote
 }
 
-func (manifest *fileManifest) fileDates(filename, env string) (local, remote time.Time) {
-	return manifest.diffDates(filename, env, env)
-}
-
 func (manifest *fileManifest) NeedsDownloading(filename, environment string) bool {
-	localTime, remoteTime := manifest.fileDates(filename, environment)
+	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
 	return localTime.Before(remoteTime) || localTime.IsZero()
 }
 
 func (manifest *fileManifest) ShouldUpload(filename, environment string) bool {
-	localTime, remoteTime := manifest.fileDates(filename, environment)
-	return remoteTime.Before(localTime) || remoteTime.IsZero()
+	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
+	return remoteTime.Before(localTime) || remoteTime.IsZero() || localTime.IsZero()
 }
 
 func (manifest *fileManifest) ShouldRemove(filename, environment string) bool {
-	localTime, remoteTime := manifest.fileDates(filename, environment)
-	return remoteTime.Before(localTime)
+	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
+	return remoteTime.Before(localTime) || localTime.IsZero()
 }
 
 func (manifest *fileManifest) Should(event kit.EventType, filename, environment string) bool {
@@ -120,8 +145,9 @@ func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []s
 		for _, filename := range filenames {
 			if strings.Contains(filename, "*") {
 				wildCards = append(wildCards, filename)
+			} else {
+				fetchableFilenames = append(fetchableFilenames, filename)
 			}
-			fetchableFilenames = append(fetchableFilenames, filename)
 		}
 
 		if len(wildCards) > 0 {
@@ -134,21 +160,26 @@ func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []s
 			}
 		}
 	}
+
 	return fetchableFilenames
+}
+
+func fmtTime(t time.Time) string {
+	return "[" + t.Format("Jan 2 3:04PM 2006") + "]"
 }
 
 func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEnv string) *themeDiff {
 	diff := newDiff()
-	for filename := range actions {
+	for filename, action := range actions {
 		local, remote := manifest.diffDates(filename, dstEnv, srcEnv)
 		if !local.IsZero() && remote.IsZero() {
-			diff.Removed = append(diff.Removed, kit.RedText(filename))
+			diff.Removed = append(diff.Removed, red(filename+" "+fmtTime(local)))
 		}
-		if local.IsZero() && !remote.IsZero() {
-			diff.Created = append(diff.Created, kit.GreenText(filename))
+		if local.IsZero() && !remote.IsZero() && action.event == kit.Remove {
+			diff.Created = append(diff.Created, green(filename+" "+fmtTime(remote)))
 		}
 		if !local.IsZero() && local.Before(remote) {
-			diff.Updated = append(diff.Updated, kit.YellowText(filename))
+			diff.Updated = append(diff.Updated, yellow(filename+" local:"+fmtTime(local)+" remote:"+fmtTime(remote)))
 		}
 	}
 	return diff
@@ -156,6 +187,9 @@ func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEn
 
 func (manifest *fileManifest) Set(filename, environment, value string) error {
 	var err error
+	manifest.mutex.Lock()
+	defer manifest.mutex.Unlock()
+
 	if _, ok := manifest.remote[filename]; !ok {
 		manifest.remote[filename] = make(map[string]string)
 	}
@@ -184,7 +218,9 @@ func (manifest *fileManifest) Delete(filename, environment string) error {
 		return err
 	}
 
-	if _, ok := manifest.remote[filename]; !ok {
+	manifest.mutex.Lock()
+	defer manifest.mutex.Unlock()
+	if _, ok := manifest.remote[filename]; ok {
 		delete(manifest.remote[filename], environment)
 	}
 

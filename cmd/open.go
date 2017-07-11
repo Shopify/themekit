@@ -26,14 +26,14 @@ func preview(client kit.ThemeClient, filenames []string) error {
 	if openEdit && themeID == "live" {
 		return fmt.Errorf(
 			"[%s] cannot open editor for live theme without theme id",
-			kit.GreenText(client.Config.Environment),
+			green(client.Config.Environment),
 		)
 	}
 
 	if themeID == "live" {
-		kit.Printf(
+		stdOut.Printf(
 			"[%s] This theme is live so preview is the same as your live shop.",
-			kit.GreenText(client.Config.Environment),
+			green(client.Config.Environment),
 		)
 		themeID = ""
 	}
@@ -46,17 +46,17 @@ func preview(client kit.ThemeClient, filenames []string) error {
 			client.Config.ThemeID)
 	}
 
-	kit.Printf(
+	stdOut.Printf(
 		"[%s] opening %s",
-		kit.GreenText(client.Config.Environment),
-		kit.GreenText(url),
+		green(client.Config.Environment),
+		green(url),
 	)
 
 	if err := openFunc(url); err != nil {
 		return fmt.Errorf(
 			"[%s] Error opening: %s",
-			kit.GreenText(client.Config.Environment),
-			kit.RedText(err),
+			green(client.Config.Environment),
+			red(err),
 		)
 	}
 

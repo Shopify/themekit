@@ -24,12 +24,6 @@ var (
 	newFileChecksum = md5.Sum(newFile)
 )
 
-func TestLibraryInfo(t *testing.T) {
-	messageSeparator := "\n----------------------------------------------------------------\n"
-	info := fmt.Sprintf("\t%s %s", "ThemeKit - Shopify Theme Utilities", ThemeKitVersion.String())
-	assert.Equal(t, fmt.Sprintf("%s%s%s", messageSeparator, info, messageSeparator), LibraryInfo())
-}
-
 type VersionTestSuite struct {
 	suite.Suite
 }
@@ -53,7 +47,7 @@ func (suite *VersionTestSuite) TestIsNewUpdateAvailable() {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, jsonFixture("responses/all_releases"))
 	}))
-	releasesURL = server.URL
+	ThemeKitReleasesURL = server.URL
 	defer server.Close()
 	ThemeKitVersion, _ = version.NewVersion("20.0.0")
 	assert.Equal(suite.T(), false, IsNewUpdateAvailable())
@@ -90,7 +84,7 @@ func (suite *VersionTestSuite) TestInstallThemeKitVersion() {
 		requests++
 	}))
 	defer server.Close()
-	releasesURL = server.URL
+	ThemeKitReleasesURL = server.URL
 
 	ThemeKitVersion, _ = version.NewVersion("0.4.7")
 	err := InstallThemeKitVersion("latest")
@@ -109,7 +103,7 @@ func (suite *VersionTestSuite) TestFetchReleases() {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, jsonFixture("responses/all_releases"))
 	}))
-	releasesURL = server.URL
+	ThemeKitReleasesURL = server.URL
 
 	releases, err := fetchReleases()
 	assert.Nil(suite.T(), err)
@@ -119,7 +113,7 @@ func (suite *VersionTestSuite) TestFetchReleases() {
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "this is not json")
 	}))
-	releasesURL = server.URL
+	ThemeKitReleasesURL = server.URL
 	_, err = fetchReleases()
 	assert.NotNil(suite.T(), err)
 	server.Close()
@@ -128,7 +122,7 @@ func (suite *VersionTestSuite) TestFetchReleases() {
 		w.WriteHeader(404)
 		fmt.Fprintf(w, "404")
 	}))
-	releasesURL = server.URL
+	ThemeKitReleasesURL = server.URL
 	_, err = fetchReleases()
 	assert.NotNil(suite.T(), err)
 	server.Close()

@@ -15,21 +15,10 @@ import (
 var (
 	// ThemeKitVersion is the version build of the library
 	ThemeKitVersion, _ = version.NewVersion("0.6.12")
-	releasesURL        = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
+	// ThemeKitReleasesURL is the url that fetches new version of themekit. Change this
+	// for testing reasons.
+	ThemeKitReleasesURL = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
 )
-
-// LibraryInfo will return a string array with information about the library used
-// for logging.
-func LibraryInfo() string {
-	messageSeparator := "\n----------------------------------------------------------------\n"
-	info := fmt.Sprintf("\t%s %s", "ThemeKit - Shopify Theme Utilities", ThemeKitVersion.String())
-	return fmt.Sprintf("%s%s%s", messageSeparator, info, messageSeparator)
-}
-
-// PrintInfo will output the version banner for the themekit library.
-func PrintInfo() {
-	Print(GreenText(LibraryInfo()))
-}
 
 // IsNewUpdateAvailable will check if there is an update to the theme kit command
 // and if there is one it will return true. Otherwise it will return false.
@@ -56,24 +45,12 @@ func InstallThemeKitVersion(ver string) error {
 	} else if ver == "latest" && !requestedRelease.IsApplicable() {
 		return fmt.Errorf("no applicable update available")
 	}
-	Printf("Updating from %s to %s", YellowText(ThemeKitVersion), YellowText(requestedRelease.Version))
-	err = applyUpdate(requestedRelease.ForCurrentPlatform())
-	if err == nil {
-		Printf(`
-Successfully updated to theme kit version %v,
-If you have troubles with this release please
-report them to https://github.com/Shopify/themekit/issues
-If your troubles are preventing you from working
-you can roll back to the previous version using
-the command 'theme update --version=v%s'
-`, GreenText(requestedRelease.Version), YellowText(ThemeKitVersion))
-	}
-	return err
+	return applyUpdate(requestedRelease.ForCurrentPlatform())
 }
 
 func fetchReleases() (releasesList, error) {
 	var releases releasesList
-	resp, err := http.Get(releasesURL)
+	resp, err := http.Get(ThemeKitReleasesURL)
 	if err != nil {
 		return releases, err
 	}

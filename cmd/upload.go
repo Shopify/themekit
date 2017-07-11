@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"sync"
+	"sort"
 
 	"github.com/spf13/cobra"
 	"github.com/vbauerster/mpb"
+	"golang.org/x/sync/errgroup"
 
+	"github.com/Shopify/themekit/cmd/ystore"
 	"github.com/Shopify/themekit/kit"
 )
 
@@ -26,10 +28,10 @@ For more documentation please see http://shopify.github.io/themekit/commands/#up
 	PostRunE: arbiter.forEachClient(uploadSettingsData),
 }
 
-func deploy(destructive bool) arbitratedCommand {
+func deploy(destructive bool) arbitratedCmd {
 	return func(client kit.ThemeClient, filenames []string) error {
 		if client.Config.ReadOnly {
-			return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
+			return fmt.Errorf("[%s] environment is reaonly", green(client.Config.Environment))
 		}
 
 		actions, err := arbiter.generateAssetActions(client, filenames, destructive)
@@ -41,84 +43,94 @@ func deploy(destructive bool) arbitratedCommand {
 			return err
 		}
 
-		var wg sync.WaitGroup
+		var deployGroup errgroup.Group
 		bar := arbiter.newProgressBar(len(actions), client.Config.Environment)
 		for key, action := range actions {
 			shouldPerform := arbiter.force || arbiter.manifest.Should(action.event, action.asset.Key, client.Config.Environment)
 			// pretend we did the settings data and we will do it last
 			if !shouldPerform || key == settingsDataKey {
-				arbiter.cleanupAction(bar, nil)
+				if arbiter.verbose {
+					stdOut.Printf(
+						"[%s] skipping %s of %s",
+						green(client.Config.Environment),
+						yellow(action.event),
+						green(action.asset.Key),
+					)
+				}
+
+				incBar(bar)
 				continue
 			}
-			wg.Add(1)
-			go perform(client, action.asset, action.event, bar, &wg)
+			action := action
+			deployGroup.Go(func() error {
+				if err := perform(client, action.asset, action.event, bar); err != nil {
+					stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
+				}
+				return nil
+			})
 		}
-		wg.Wait()
-		return nil
+		return deployGroup.Wait()
 	}
 }
 
-func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *mpb.Bar, wg *sync.WaitGroup) bool {
-	defer arbiter.cleanupAction(bar, wg)
+func incBar(bar *mpb.Bar) {
+	if bar != nil {
+		defer bar.Incr(1)
+	}
+}
 
-	var resp *kit.ShopifyResponse
-	var err error
+func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *mpb.Bar) error {
+	defer incBar(bar)
+
+	var (
+		resp    *kit.ShopifyResponse
+		err     error
+		version string
+	)
 
 	if arbiter.force {
 		resp, err = client.Perform(asset, event)
-	} else {
-		var version string
-		version, err = arbiter.manifest.Get(asset.Key, client.Config.Environment)
-		if err != nil {
-			kit.LogErrorf("[%s] Cannot get file version %s", kit.GreenText(client.Config.Environment), err)
-		}
+	} else if version, err = arbiter.manifest.Get(asset.Key, client.Config.Environment); err == nil {
 		resp, err = client.PerformStrict(asset, event, version)
 	}
 
 	if err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-		return false
+		return err
 	} else if arbiter.verbose {
-		kit.Printf(
+		stdOut.Printf(
 			"[%s] Successfully performed %s on file %s from %s",
-			kit.GreenText(client.Config.Environment),
-			kit.GreenText(resp.EventType),
-			kit.GreenText(resp.Asset.Key),
-			kit.YellowText(resp.Host),
+			green(client.Config.Environment),
+			green(resp.EventType),
+			green(resp.Asset.Key),
+			yellow(resp.Host),
 		)
 	}
 
-	var storeErr error
 	if event == kit.Remove {
-		storeErr = arbiter.manifest.Delete(resp.Asset.Key, client.Config.Environment)
-	} else {
-		storeErr = arbiter.manifest.Set(resp.Asset.Key, client.Config.Environment, resp.Asset.UpdatedAt)
-	}
-
-	return storeErr == nil
-}
-
-func uploadSettingsData(client kit.ThemeClient, filenames []string) error {
-	if client.Config.ReadOnly {
-		return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
-	}
-
-	doupload := func() error {
-		asset, err := client.LocalAsset(settingsDataKey)
-		if err != nil {
+		if err := arbiter.manifest.Delete(resp.Asset.Key, client.Config.Environment); err != nil && err != ystore.ErrorCollectionNotFound {
 			return err
 		}
-		perform(client, asset, kit.Update, nil, nil)
+	} else if err := arbiter.manifest.Set(resp.Asset.Key, client.Config.Environment, resp.Asset.UpdatedAt); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func uploadSettingsData(client kit.ThemeClient, files []string) error {
+	if len(files) == 0 {
+		if actions, err := arbiter.generateAssetActions(client, files, false); err != nil {
+			return err
+		} else if _, found := actions[settingsDataKey]; !found {
+			return nil
+		}
+	} else if i := sort.Search(len(files), func(i int) bool { return files[i] == settingsDataKey }); i == len(files) {
 		return nil
 	}
 
-	if len(filenames) == 0 {
-		return doupload()
+	asset, err := client.LocalAsset(settingsDataKey)
+	if err != nil {
+		return err
 	}
-	for _, filename := range filenames {
-		if filename == settingsDataKey {
-			return doupload()
-		}
-	}
-	return nil
+	return perform(client, asset, kit.Update, nil)
 }

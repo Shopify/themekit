@@ -1,57 +1,47 @@
 package cmd
 
-// import (
-//	"encoding/json"
-//	"net/http"
-//	"net/http/httptest"
-//	"sync"
-//	"testing"
+import (
+	"os"
+	"strings"
+	"testing"
 
-//	"github.com/stretchr/testify/assert"
-//	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
 
-//	"github.com/Shopify/themekit/kit"
-// )
+	"github.com/Shopify/themekit/kittest"
+)
 
-// type RemoveTestSuite struct {
-//	suite.Suite
-// }
+func TestRemove(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
 
-// func (suite *RemoveTestSuite) TestRemove() {
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		assert.Equal(suite.T(), "DELETE", r.Method)
+	client, err := getClient()
+	server.Reset()
+	if assert.Nil(t, err) {
+		arbiter.force = true
+		err = remove(client, []string{"templates/layout.liquid"})
+		assert.True(t, os.IsNotExist(err))
+		if assert.Equal(t, 1, len(server.Requests)) {
+			assert.Equal(t, "DELETE", server.Requests[0].Method)
+		}
 
-//		decoder := json.NewDecoder(r.Body)
-//		var t map[string]kit.Asset
-//		decoder.Decode(&t)
-//		defer r.Body.Close()
+		arbiter.manifest.Set("templates/layout.liquid", "development", "2011-07-06T02:04:21-11:00")
+		arbiter.force = false
+		err = remove(client, []string{"templates/layout.liquid"})
+		assert.True(t, strings.Contains(err.Error(), "file was modified remotely"))
 
-//		assert.Equal(suite.T(), kit.Asset{Key: "templates/layout.liquid", Value: ""}, t["asset"])
-//	})
-//	defer server.Close()
+		client.Config.ReadOnly = true
+		err := remove(client, []string{"templates/layout.liquid"})
+		assert.True(t, strings.Contains(err.Error(), "environment is reaonly"))
 
-//	var wg sync.WaitGroup
-//	wg.Add(1)
-//	go remove(client, []string{"templates/layout.liquid"}, &wg)
-//	wg.Wait()
-// }
+		client.Config.ReadOnly = false
+		err = remove(client, []string{})
+		assert.True(t, strings.Contains(err.Error(), "please specify file(s) to be removed"))
 
-// func (suite *RemoveTestSuite) TestReadOnlyRemove() {
-//	requested := false
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		requested = true
-//	})
-//	defer server.Close()
-
-//	var wg sync.WaitGroup
-//	wg.Add(1)
-//	client.Config.ReadOnly = true
-//	go remove(client, []string{"templates/layout.liquid"}, &wg)
-//	wg.Wait()
-
-//	assert.Equal(suite.T(), false, requested)
-// }
-
-// func TestRemoveTestSuite(t *testing.T) {
-//	suite.Run(t, new(RemoveTestSuite))
-// }
+		arbiter.force = true
+		server.Close()
+		assert.Nil(t, remove(client, []string{"templates/layout.liquid"}))
+	}
+}
