@@ -35,33 +35,34 @@ func download(client kit.ThemeClient, filenames []string) error {
 	return nil
 }
 
-func downloadFile(client kit.ThemeClient, filename string, bar *mpb.Bar, wg *sync.WaitGroup) {
+func downloadFile(client kit.ThemeClient, filename string, bar *mpb.Bar, wg *sync.WaitGroup) error {
 	defer arbiter.cleanupAction(bar, wg)
 
 	if !arbiter.force && !arbiter.manifest.NeedsDownloading(filename, client.Config.Environment) {
 		if arbiter.verbose {
 			kit.Print(kit.GreenText(fmt.Sprintf("[%s] no changes were made to %s so it was skipped", client.Config.Environment, filename)))
 		}
-		return
+		return fmt.Errorf("Skipping because versions match")
 	}
 
 	asset, err := client.Asset(filename)
 	if err != nil {
 		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("error downloading asset: %v", err)
 	}
 
 	if err := asset.Write(client.Config.Directory); err != nil {
 		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("error writing asset: %v", err)
 	}
 
 	if err := arbiter.manifest.Set(asset.Key, client.Config.Environment, asset.UpdatedAt); err != nil {
 		kit.LogErrorf("[%s] Could not update manifest %s", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("error updating manifest: %v", err)
 	}
 
 	if arbiter.verbose {
 		kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
 	}
+	return nil
 }

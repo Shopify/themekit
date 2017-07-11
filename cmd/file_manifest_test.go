@@ -7,7 +7,7 @@ package cmd
 
 //	"github.com/stretchr/testify/assert"
 
-//	"github.com/Shopify/themekit/cmd/internal/ystore"
+//	"github.com/Shopify/themekit/cmd/ystore"
 //	"github.com/Shopify/themekit/kit"
 // )
 

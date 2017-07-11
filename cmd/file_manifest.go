@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Shopify/themekit/cmd/internal/ystore"
+	"github.com/Shopify/themekit/cmd/ystore"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/Shopify/themekit/kit"
@@ -14,6 +14,7 @@ import (
 
 type fileManifest struct {
 	store  *ystore.YStore
+	mutex  sync.Mutex
 	local  map[string]map[string]string
 	remote map[string]map[string]string
 }
@@ -38,7 +39,6 @@ func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, err
 
 func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 	manifest.remote = make(map[string]map[string]string)
-	var mutex sync.Mutex
 
 	var requestGroup errgroup.Group
 	for _, client := range clients {
@@ -48,14 +48,14 @@ func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 			if err != nil {
 				return err
 			}
-			mutex.Lock()
+			manifest.mutex.Lock()
 			for _, asset := range assets {
 				if _, ok := manifest.remote[asset.Key]; !ok {
 					manifest.remote[asset.Key] = make(map[string]string)
 				}
 				manifest.remote[asset.Key][client.Config.Environment] = asset.UpdatedAt
 			}
-			mutex.Unlock()
+			manifest.mutex.Unlock()
 			return nil
 		})
 	}
@@ -70,6 +70,9 @@ func parseTime(t string) time.Time {
 }
 
 func (manifest *fileManifest) diffDates(filename, dstEnv, srcEnv string) (local, remote time.Time) {
+	manifest.mutex.Lock()
+	defer manifest.mutex.Unlock()
+
 	if _, ok := manifest.local[filename]; ok {
 		local = parseTime(manifest.local[filename][srcEnv])
 	}
@@ -156,6 +159,9 @@ func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEn
 
 func (manifest *fileManifest) Set(filename, environment, value string) error {
 	var err error
+	manifest.mutex.Lock()
+	defer manifest.mutex.Unlock()
+
 	if _, ok := manifest.remote[filename]; !ok {
 		manifest.remote[filename] = make(map[string]string)
 	}
