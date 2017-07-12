@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 
@@ -73,13 +74,15 @@ func watch() error {
 		watchers = append(watchers, watcher)
 	}
 
-	if len(watchers) > 0 {
-		signal.Notify(signalChan, os.Interrupt)
-		select {
-		case <-signalChan:
-		case <-reloadSignal:
-			return errReload
-		}
+	if len(watchers) == 0 {
+		return fmt.Errorf("no valid configuration to start watch")
+	}
+
+	signal.Notify(signalChan, os.Interrupt)
+	select {
+	case <-signalChan:
+	case <-reloadSignal:
+		return errReload
 	}
 
 	return nil

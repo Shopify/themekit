@@ -20,20 +20,16 @@ func TestBootstrap(t *testing.T) {
 	defer kittest.Cleanup()
 	defer resetArbiter()
 
-	err := bootstrap(nil, []string{})
-	assert.NotNil(t, err)
+	assert.NotNil(t, bootstrap(nil, []string{}))
 
 	arbiter.flagConfig.Password = "foo"
 	arbiter.flagConfig.Domain = server.URL
 	arbiter.flagConfig.Directory = kittest.FixtureProjectPath
 	arbiter.setFlagConfig()
-
-	err = bootstrap(nil, []string{})
-	assert.Nil(t, err)
+	assert.Nil(t, bootstrap(nil, []string{}))
 
 	timberFeedPath = "http://nope.com/nope.json"
-	err = bootstrap(nil, []string{})
-	assert.NotNil(t, err)
+	assert.NotNil(t, bootstrap(nil, []string{}))
 }
 
 func TestGetZipPath(t *testing.T) {

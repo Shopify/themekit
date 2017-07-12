@@ -1,79 +1,74 @@
 package cmd
 
-// import (
-//	"encoding/json"
-//	"net/http"
-//	"os"
-//	"testing"
+import (
+	"os"
+	"strings"
+	"testing"
 
-//	"github.com/stretchr/testify/assert"
-//	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
 
-//	"github.com/Shopify/themekit/kit"
-// )
+	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/kittest"
+)
 
-// type WatchTestSuite struct {
-//	suite.Suite
-// }
+func TestStartWatch(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
 
-// func (suite *WatchTestSuite) TestStartWatch() {
-//	go func() {
-//		signalChan <- os.Interrupt
-//	}()
-//	err := startWatch()
-//	assert.NotNil(suite.T(), err)
-// }
+	assert.NotNil(t, startWatch(nil, []string{}))
 
-// func (suite *WatchTestSuite) TestWatch() {
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {})
-//	defer server.Close()
-//	go func() {
-//		signalChan <- os.Interrupt
-//	}()
-//	watch([]kit.ThemeClient{client})
-// }
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
 
-// func (suite *WatchTestSuite) TestReadOnlyWatch() {
-//	requested := false
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		requested = true
-//	})
-//	defer server.Close()
-//	client.Config.ReadOnly = true
-//	watch([]kit.ThemeClient{client})
-//	assert.Equal(suite.T(), false, requested)
-// }
+	go func() {
+		reloadSignal <- true
+		signalChan <- os.Interrupt
+	}()
+	assert.Nil(t, startWatch(nil, []string{}))
+}
 
-// func (suite *WatchTestSuite) TestHandleWatchReload() {
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {})
-//	defer server.Close()
-//	go func() {
-//		reloadSignal <- true
-//	}()
-//	err := watch([]kit.ThemeClient{client})
-//	assert.Equal(suite.T(), err, errReload)
-// }
+func TestWatch(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
 
-// func (suite *WatchTestSuite) TestHandleWatchEvent() {
-//	requests := make(chan int, 1000)
-//	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-//		assert.Equal(suite.T(), "DELETE", r.Method)
+	_, err := getClient()
+	if assert.Nil(t, err) {
+		go func() { reloadSignal <- true }()
+		err := watch()
+		assert.Equal(t, errReload, err)
 
-//		decoder := json.NewDecoder(r.Body)
-//		var t map[string]kit.Asset
-//		decoder.Decode(&t)
-//		defer r.Body.Close()
+		for _, client := range arbiter.activeThemeClients {
+			client.Config.ReadOnly = true
+		}
+		err = watch()
+		assert.Equal(t, err.Error(), "no valid configuration to start watch")
+		for _, client := range arbiter.activeThemeClients {
+			client.Config.ReadOnly = false
+		}
 
-//		assert.Equal(suite.T(), kit.Asset{Key: "templates/layout.liquid", Value: ""}, t["asset"])
-//		requests <- 1
-//	})
-//	defer server.Close()
+		os.Remove("config.yml")
+		err = watch()
+		assert.True(t, strings.Contains(err.Error(), "no such file or directory"))
 
-//	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove)
+		kittest.Cleanup()
+		err = watch()
+		assert.Equal(t, err.Error(), "lstat fixtures: no such file or directory")
+	}
+}
 
-//	assert.Equal(suite.T(), 1, len(requests))
-// }
+func TestHandleWatchEvent(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
 
-// func TestWatchTestSuite(t *testing.T) {
-//	suite.Run(t, new(WatchTestSuite))
-// }
+	client, err := getClient()
+	if assert.Nil(t, err) {
+		server.Reset()
+		handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove)
+		assert.Equal(t, 1, len(server.Requests))
+		assert.Equal(t, "DELETE", server.Requests[0].Method)
+	}
+}

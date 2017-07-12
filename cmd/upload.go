@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vbauerster/mpb"
 
+	"github.com/Shopify/themekit/cmd/ystore"
 	"github.com/Shopify/themekit/kit"
 )
 
@@ -88,14 +89,15 @@ func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *
 		)
 	}
 
-	var storeErr error
 	if event == kit.Remove {
-		storeErr = arbiter.manifest.Delete(resp.Asset.Key, client.Config.Environment)
-	} else {
-		storeErr = arbiter.manifest.Set(resp.Asset.Key, client.Config.Environment, resp.Asset.UpdatedAt)
+		if err := arbiter.manifest.Delete(resp.Asset.Key, client.Config.Environment); err != nil && err != ystore.ErrorCollectionNotFound {
+			return false
+		}
+	} else if err := arbiter.manifest.Set(resp.Asset.Key, client.Config.Environment, resp.Asset.UpdatedAt); err != nil {
+		return false
 	}
 
-	return storeErr == nil
+	return true
 }
 
 func uploadSettingsData(client kit.ThemeClient, filenames []string) error {
