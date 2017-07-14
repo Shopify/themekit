@@ -32,7 +32,11 @@ func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, err
 		return nil, err
 	}
 
-	return manifest, manifest.generateRemote(clients)
+	if err := manifest.generateRemote(clients); err != nil {
+		return nil, err
+	}
+
+	return manifest, manifest.prune()
 }
 
 func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
@@ -46,19 +50,33 @@ func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 			if err != nil {
 				return err
 			}
-			manifest.mutex.Lock()
 			for _, asset := range assets {
+				manifest.mutex.Lock()
 				if _, ok := manifest.remote[asset.Key]; !ok {
 					manifest.remote[asset.Key] = make(map[string]string)
 				}
 				manifest.remote[asset.Key][client.Config.Environment] = asset.UpdatedAt
+				manifest.mutex.Unlock()
 			}
-			manifest.mutex.Unlock()
 			return nil
 		})
 	}
 
 	return requestGroup.Wait()
+}
+
+func (manifest *fileManifest) prune() error {
+	for filename := range manifest.local {
+		if _, found := manifest.remote[filename]; !found {
+			if err := manifest.store.DeleteCollection(filename); err != nil {
+				return err
+			}
+		}
+	}
+
+	var err error
+	manifest.local, err = manifest.store.Dump()
+	return err
 }
 
 func parseTime(t string) time.Time {

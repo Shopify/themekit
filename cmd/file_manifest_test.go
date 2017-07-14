@@ -38,6 +38,20 @@ func TestGenerateRemote(t *testing.T) {
 	}
 }
 
+func TestPrune(t *testing.T) {
+	file, env, now := "asset.js", "development", "2017-07-06T02:04:21-11:00"
+	store, _ := ystore.New(storeName)
+	manifest := &fileManifest{
+		store:  store,
+		local:  map[string]map[string]string{file: {env: now}},
+		remote: map[string]map[string]string{},
+	}
+	assert.Nil(t, manifest.prune())
+
+	manifest.local = map[string]map[string]string{"": {env: now}}
+	assert.NotNil(t, manifest.prune())
+}
+
 func TestParseTime(t *testing.T) {
 	time := parseTime("2012-07-06T02:04:21-11:00")
 	assert.Equal(t, time.Hour(), 2)
