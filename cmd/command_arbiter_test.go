@@ -1,93 +1,203 @@
 package cmd
 
-// import (
-//	"sync"
-//	"testing"
+import (
+	"strings"
+	"testing"
 
-//	"github.com/spf13/cobra"
-//	"github.com/stretchr/testify/assert"
-//	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
 
-//	"github.com/Shopify/themekit/kit"
-// )
+	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/kittest"
+)
 
-// func (suite *ThemeTestSuite) TestGenerateThemeClients() {
-//	configPath = goodEnvirontmentPath
-//	clients, _, err := generateThemeClients()
-//	assert.Nil(suite.T(), err)
-//	assert.Equal(suite.T(), 1, len(clients))
+func TestNewCommandArbiter(t *testing.T) {
+	arb := newCommandArbiter()
+	assert.NotNil(t, arb)
+	assert.NotNil(t, arb.progress)
+	assert.NotNil(t, arb.flagConfig)
+	assert.False(t, arb.configPath == "")
+}
 
-//	environments = stringArgArray{[]string{"nope"}}
-//	clients, _, err = generateThemeClients()
-//	assert.NotNil(suite.T(), err)
-//	environments = stringArgArray{[]string{"development"}}
+func TestGenerateManifest(t *testing.T) {
+	assert.Nil(t, arbiter.generateManifest())
+	assert.NotNil(t, arbiter.manifest)
+}
 
-//	allenvs = true
-//	clients, _, err = generateThemeClients()
-//	assert.Nil(suite.T(), err)
-//	assert.Equal(suite.T(), 3, len(clients))
-//	allenvs = false
+func TestGenerateThemeClients(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
 
-//	configPath = badEnvirontmentPath
-//	_, _, err = generateThemeClients()
-//	assert.NotNil(suite.T(), err)
-// }
+	err := arbiter.generateThemeClients(nil, []string{})
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "Could not find config file"))
 
-// func (suite *ThemeTestSuite) TestShouldUseEnvironment() {
-//	environments = stringArgArray{}
-//	assert.True(suite.T(), shouldUseEnvironment("development"))
+	assert.Nil(t, kittest.GenerateConfig(server.URL, false))
 
-//	environments = stringArgArray{[]string{"production"}}
-//	assert.True(suite.T(), shouldUseEnvironment("production"))
+	err = arbiter.generateThemeClients(nil, []string{})
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "Invalid yaml found"))
 
-//	allenvs = true
-//	environments = stringArgArray{}
-//	assert.True(suite.T(), shouldUseEnvironment("nope"))
-//	allenvs = false
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
 
-//	environments = stringArgArray{[]string{"p*"}}
-//	assert.True(suite.T(), shouldUseEnvironment("production"))
-//	assert.True(suite.T(), shouldUseEnvironment("prod"))
-//	assert.True(suite.T(), shouldUseEnvironment("puddle"))
-//	assert.False(suite.T(), shouldUseEnvironment("development"))
+	arbiter.environments = stringArgArray{[]string{"nope"}}
+	err = arbiter.generateThemeClients(nil, []string{})
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "Could not load any valid environments"))
 
-//	environments = stringArgArray{}
-//	assert.False(suite.T(), shouldUseEnvironment("production"))
-// }
+	arbiter.environments = stringArgArray{[]string{"production"}}
+	arbiter.disableIgnore = true
+	assert.Nil(t, arbiter.generateThemeClients(nil, []string{}))
+	assert.Equal(t, 1, len(arbiter.activeThemeClients))
+	assert.Equal(t, 3, len(arbiter.allThemeClients))
+	assert.Equal(t, 0, len(arbiter.allThemeClients[0].Config.IgnoredFiles))
 
-// func (suite *ThemeTestSuite) TestForEachClient() {
-//	configPath = goodEnvirontmentPath
-//	allenvs = true
-//	runtimes := make(chan int, 100)
-//	callbacks := make(chan int, 100)
-//	runner := forEachClient(func(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-//		defer wg.Done()
-//		runtimes <- 1
-//	}, func(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-//		callbacks <- 1
-//	})
-//	assert.NotNil(suite.T(), runner)
+	arbiter.environments = stringArgArray{[]string{}}
+	assert.Nil(t, arbiter.generateThemeClients(nil, []string{}))
+}
 
-//	err := runner(&cobra.Command{}, []string{})
-//	assert.Nil(suite.T(), err)
-//	assert.Equal(suite.T(), 3, len(runtimes))
-//	assert.Equal(suite.T(), 3, len(callbacks))
+func TestShouldUseEnvironment(t *testing.T) {
+	defer resetArbiter()
 
-//	configPath = badEnvirontmentPath
-//	err = runner(&cobra.Command{}, []string{})
-//	assert.NotNil(suite.T(), err)
+	arbiter.environments = stringArgArray{}
+	assert.True(t, arbiter.shouldUseEnvironment("development"))
+	assert.False(t, arbiter.shouldUseEnvironment("production"))
 
-//	allenvs = false
-// }
+	arbiter.environments = stringArgArray{[]string{"production"}}
+	assert.True(t, arbiter.shouldUseEnvironment("production"))
+	assert.False(t, arbiter.shouldUseEnvironment("development"))
 
-// func (suite *ThemeTestSuite) TestSetFlagConfig() {
-//	flagConfig.Password = "foo"
-//	flagConfig.Domain = "bar"
-//	flagConfig.Directory = "my/dir/now"
-//	setFlagConfig()
+	arbiter.allenvs = true
+	arbiter.environments = stringArgArray{}
+	assert.True(t, arbiter.shouldUseEnvironment("nope"))
+	arbiter.allenvs = false
 
-//	config, _ := kit.NewConfiguration()
-//	assert.Equal(suite.T(), "foo", config.Password)
-//	assert.Equal(suite.T(), "bar", config.Domain)
-//	assert.Equal(suite.T(), "my/dir/now", config.Directory)
-// }
+	arbiter.environments = stringArgArray{[]string{"p*", "other"}}
+	assert.True(t, arbiter.shouldUseEnvironment("production"))
+	assert.True(t, arbiter.shouldUseEnvironment("prod"))
+	assert.True(t, arbiter.shouldUseEnvironment("puddle"))
+	assert.False(t, arbiter.shouldUseEnvironment("development"))
+	assert.True(t, arbiter.shouldUseEnvironment("other"))
+}
+
+func TestForEachClient(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
+
+	arbiter.allenvs = true
+	_, err := getClient()
+	if assert.Nil(t, err) {
+		runner := arbiter.forEachClient(func(client kit.ThemeClient, filenames []string) error {
+			return nil
+		})
+		assert.Nil(t, runner(nil, []string{}))
+	}
+}
+
+func TestForSingleClient(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
+
+	arbiter.allenvs = true
+	_, err := getClient()
+	if assert.Nil(t, err) {
+		runner := arbiter.forSingleClient(func(client kit.ThemeClient, filenames []string) error {
+			return nil
+		})
+		err := runner(nil, []string{})
+		assert.NotNil(t, err)
+		assert.True(t, strings.Contains(err.Error(), "more than one env"))
+	}
+
+	arbiter.allenvs = false
+	_, err = getClient()
+	if assert.Nil(t, err) {
+		runner := arbiter.forSingleClient(func(client kit.ThemeClient, filenames []string) error {
+			return nil
+		})
+		assert.Nil(t, runner(nil, []string{}))
+	}
+}
+
+func TestSetFlagConfig(t *testing.T) {
+	defer resetArbiter()
+	arbiter.flagConfig.Password = "foo"
+	arbiter.flagConfig.Domain = "bar.myshopify.com"
+	arbiter.flagConfig.Directory = "my/dir/now"
+	arbiter.flagConfig.ThemeID = "123"
+	arbiter.setFlagConfig()
+
+	config, err := kit.NewConfiguration()
+	assert.Nil(t, err)
+	assert.Equal(t, "foo", config.Password)
+	assert.Equal(t, "bar.myshopify.com", config.Domain)
+	assert.Equal(t, "my/dir/now", config.Directory)
+	assert.Equal(t, "123", config.ThemeID)
+}
+
+func TestNewProgressBar(t *testing.T) {
+	defer resetArbiter()
+	arbiter.verbose = false
+	bar := arbiter.newProgressBar(1, "Dev")
+	assert.NotNil(t, bar)
+	arbiter.verbose = true
+	bar = arbiter.newProgressBar(1, "Dev")
+	assert.Nil(t, bar)
+	assert.Equal(t, 1, arbiter.progress.BarCount())
+}
+
+func TestGenerateAssetActions(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	assert.Nil(t, kittest.GenerateProject())
+	defer kittest.Cleanup()
+	defer resetArbiter()
+
+	client, err := getClient()
+	if assert.Nil(t, err) {
+		actions, err := arbiter.generateAssetActions(client, []string{}, true)
+		assert.Nil(t, err)
+		assert.Equal(t, len(kittest.ProjectFiles)-1+2, len(actions)) //remove .gitkeep add 2 removes
+
+		server.Close()
+		_, err = arbiter.generateAssetActions(client, []string{}, true)
+		assert.NotNil(t, err)
+	}
+}
+
+func TestPreflightCheck(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
+
+	_, err := getClient()
+	if assert.Nil(t, err) {
+		assert.Nil(t, arbiter.preflightCheck(map[string]assetAction{}, true))
+
+		err := arbiter.preflightCheck(map[string]assetAction{
+			"assets/hello.txt": {event: kit.Update},
+		}, true)
+
+		assert.NotNil(t, err)
+		assert.True(t, strings.Contains(err.Error(), "Diff"))
+
+		assert.Nil(t, arbiter.preflightCheck(map[string]assetAction{
+			"assets/hello.txt": {event: kit.Update},
+		}, false))
+
+		arbiter.force = true
+		assert.Nil(t, arbiter.preflightCheck(map[string]assetAction{
+			"assets/hello.txt": {event: kit.Update},
+		}, true))
+	}
+}

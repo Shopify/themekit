@@ -28,9 +28,7 @@ func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, err
 	}
 
 	manifest := &fileManifest{store: store}
-
-	manifest.local, err = store.Dump()
-	if err != nil {
+	if manifest.local, err = store.Dump(); err != nil {
 		return nil, err
 	}
 
@@ -82,22 +80,18 @@ func (manifest *fileManifest) diffDates(filename, dstEnv, srcEnv string) (local,
 	return local, remote
 }
 
-func (manifest *fileManifest) fileDates(filename, env string) (local, remote time.Time) {
-	return manifest.diffDates(filename, env, env)
-}
-
 func (manifest *fileManifest) NeedsDownloading(filename, environment string) bool {
-	localTime, remoteTime := manifest.fileDates(filename, environment)
+	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
 	return localTime.Before(remoteTime) || localTime.IsZero()
 }
 
 func (manifest *fileManifest) ShouldUpload(filename, environment string) bool {
-	localTime, remoteTime := manifest.fileDates(filename, environment)
+	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
 	return remoteTime.Before(localTime) || remoteTime.IsZero()
 }
 
 func (manifest *fileManifest) ShouldRemove(filename, environment string) bool {
-	localTime, remoteTime := manifest.fileDates(filename, environment)
+	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
 	return remoteTime.Before(localTime)
 }
 
@@ -123,8 +117,9 @@ func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []s
 		for _, filename := range filenames {
 			if strings.Contains(filename, "*") {
 				wildCards = append(wildCards, filename)
+			} else {
+				fetchableFilenames = append(fetchableFilenames, filename)
 			}
-			fetchableFilenames = append(fetchableFilenames, filename)
 		}
 
 		if len(wildCards) > 0 {
@@ -137,6 +132,7 @@ func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []s
 			}
 		}
 	}
+
 	return fetchableFilenames
 }
 
@@ -190,7 +186,9 @@ func (manifest *fileManifest) Delete(filename, environment string) error {
 		return err
 	}
 
-	if _, ok := manifest.remote[filename]; !ok {
+	manifest.mutex.Lock()
+	defer manifest.mutex.Unlock()
+	if _, ok := manifest.remote[filename]; ok {
 		delete(manifest.remote[filename], environment)
 	}
 

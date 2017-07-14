@@ -40,10 +40,11 @@ func remove(client kit.ThemeClient, filenames []string) error {
 	for _, filename := range filenames {
 		asset := kit.Asset{Key: filename}
 		removeGroup.Go(func() error {
-			if perform(client, asset, kit.Remove, bar, nil) {
-				return os.Remove(filepath.Join(client.Config.Directory, asset.Key))
+			if err := perform(client, asset, kit.Remove, bar); err != nil {
+				kit.LogErrorf("[%s] %s", kit.GreenText(client.Config.Environment), err)
+				return nil
 			}
-			return nil
+			return os.Remove(filepath.Join(client.Config.Directory, asset.Key))
 		})
 	}
 

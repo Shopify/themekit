@@ -4,6 +4,10 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
+func init() {
+	resetArbiter()
+}
+
 func resetArbiter() {
 	arbiter = newCommandArbiter()
 	arbiter.verbose = true

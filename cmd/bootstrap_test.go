@@ -9,16 +9,13 @@ import (
 	"github.com/Shopify/themekit/kittest"
 )
 
-func init() {
-	resetArbiter()
-}
-
 func TestBootstrap(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	kittest.Setup()
 	defer kittest.Cleanup()
 	defer resetArbiter()
+	timberFeedPath = server.URL + "/feed"
 
 	assert.NotNil(t, bootstrap(nil, []string{}))
 

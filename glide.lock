@@ -1,5 +1,5 @@
 hash: 76caea347948c9ff0888c3e4e355f1928e47338a3e5e329aa61314eb155bec18
-updated: 2017-07-04T12:38:47.040243585-04:00
+updated: 2017-07-13T23:50:08.942539932-04:00
 imports:
 - name: github.com/caarlos0/env
   version: d0de832ed2fbc4e7bfaa30ab5cf0b3417d15f529
@@ -41,7 +41,7 @@ imports:
   subpackages:
   - cwriter
 - name: golang.org/x/net
-  version: 570fa1c91359c1869590e9cedf3b53162a51a167
+  version: f01ecb60fe3835d80d9a0b7b2bf24b228c89260e
   subpackages:
   - context
 - name: golang.org/x/sync

@@ -15,6 +15,7 @@ func TestRemove(t *testing.T) {
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
 	defer kittest.Cleanup()
+	defer resetArbiter()
 
 	client, err := getClient()
 	server.Reset()

@@ -1,6 +1,7 @@
 package kittest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -44,10 +45,26 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else if r.URL.Path == "/admin/themes.json" {
 		fmt.Fprintf(w, themesResponse)
 	} else if glob.Glob("/admin/themes/*/assets.json", r.URL.Path) {
-		if glob.Glob("*asset%5Bkey%5D=*", r.URL.RawQuery) {
+		if r.Method == "GET" && glob.Glob("*asset%5Bkey%5D=*", r.URL.RawQuery) {
 			if glob.Glob("*nope*", r.URL.RawQuery) {
 				w.WriteHeader(404)
 				fmt.Fprintf(w, "not found")
+			} else {
+				fmt.Fprintf(w, assetResponse)
+			}
+		} else if r.Method != "GET" {
+			decoder := json.NewDecoder(r.Body)
+			var theme map[string]struct {
+				Key string
+			}
+			decoder.Decode(&theme)
+			defer r.Body.Close()
+
+			if asset, ok := theme["asset"]; ok && asset.Key == "nope" {
+				w.WriteHeader(409)
+				fmt.Fprintf(w, "not found")
+			} else if ok && asset.Key == "empty" {
+				fmt.Fprintf(w, "{\"asset\": {\"key\":\"\"}")
 			} else {
 				fmt.Fprintf(w, assetResponse)
 			}

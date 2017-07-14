@@ -95,5 +95,5 @@ func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventTy
 		kit.GreenText(event),
 		kit.BlueText(asset.Key),
 	)
-	perform(client, asset, event, nil, nil)
+	perform(client, asset, event, nil)
 }

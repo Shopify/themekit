@@ -14,6 +14,7 @@ func TestDownload(t *testing.T) {
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
 	defer kittest.Cleanup()
+	defer resetArbiter()
 
 	client, err := getClient()
 	if assert.Nil(t, err) {
@@ -26,30 +27,30 @@ func TestDownloadWithFile(t *testing.T) {
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
 	defer kittest.Cleanup()
+	defer resetArbiter()
 
 	client, err := getClient()
+
 	if assert.Nil(t, err) {
-		err := downloadFile(client, "assets/hello.txt", nil, nil)
-		assert.NotNil(t, err)
-		assert.Equal(t, "Skipping because versions match", err.Error())
+		err := downloadFile(client, "assets/hello.txt")
+		assert.Nil(t, err)
 
 		arbiter.force = true
-		assert.Nil(t, downloadFile(client, "assets/hello.txt", nil, nil))
-		println(client.Config.Directory)
+		assert.Nil(t, downloadFile(client, "assets/hello.txt"))
 
-		err = downloadFile(client, "nope.txt", nil, nil)
+		err = downloadFile(client, "nope.txt")
 		assert.NotNil(t, err)
 		assert.True(t, strings.Contains(err.Error(), "error downloading asset:"))
 
 		oldDir := client.Config.Directory
 		client.Config.Directory = "nonexistant"
-		err = downloadFile(client, "assets/hello.txt", nil, nil)
+		err = downloadFile(client, "assets/hello.txt")
 		assert.NotNil(t, err)
 		assert.True(t, strings.Contains(err.Error(), "error writing asset: "))
 
 		client.Config.Directory = oldDir
 		client.Config.Environment = ""
-		err = downloadFile(client, "assets/hello.txt", nil, nil)
+		err = downloadFile(client, "assets/hello.txt")
 		assert.NotNil(t, err)
 		assert.True(t, strings.Contains(err.Error(), "error updating manifest:"))
 	}

@@ -32,6 +32,7 @@ func TestWatch(t *testing.T) {
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
 	defer kittest.Cleanup()
+	defer resetArbiter()
 
 	_, err := getClient()
 	if assert.Nil(t, err) {
