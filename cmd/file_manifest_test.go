@@ -39,6 +39,13 @@ func TestGenerateRemote(t *testing.T) {
 }
 
 func TestPrune(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
+	assert.Nil(t, arbiter.generateThemeClients(nil, []string{}))
+
 	file, env, now := "asset.js", "development", "2017-07-06T02:04:21-11:00"
 	store, _ := ystore.New(storeName)
 	manifest := &fileManifest{
@@ -46,10 +53,11 @@ func TestPrune(t *testing.T) {
 		local:  map[string]map[string]string{file: {env: now}},
 		remote: map[string]map[string]string{},
 	}
-	assert.Nil(t, manifest.prune())
+	kittest.TouchFixtureFile("asset.js", "")
+	assert.Nil(t, manifest.prune(arbiter.activeThemeClients))
 
 	manifest.local = map[string]map[string]string{"": {env: now}}
-	assert.NotNil(t, manifest.prune())
+	assert.NotNil(t, manifest.prune(arbiter.activeThemeClients))
 }
 
 func TestParseTime(t *testing.T) {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -36,7 +37,7 @@ func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, err
 		return nil, err
 	}
 
-	return manifest, manifest.prune()
+	return manifest, manifest.prune(clients)
 }
 
 func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
@@ -65,11 +66,20 @@ func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 	return requestGroup.Wait()
 }
 
-func (manifest *fileManifest) prune() error {
+func (manifest *fileManifest) prune(clients []kit.ThemeClient) error {
 	for filename := range manifest.local {
 		if _, found := manifest.remote[filename]; !found {
-			if err := manifest.store.DeleteCollection(filename); err != nil {
-				return err
+			for _, client := range clients {
+				path := filepath.ToSlash(filepath.Join(client.Config.Directory, filename))
+				if info, err := os.Stat(path); err == nil && !info.IsDir() {
+					found = true
+					break
+				}
+			}
+			if !found {
+				if err := manifest.store.DeleteCollection(filename); err != nil {
+					return err
+				}
 			}
 		}
 	}
