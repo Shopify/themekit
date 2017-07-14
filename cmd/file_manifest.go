@@ -154,18 +154,22 @@ func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []s
 	return fetchableFilenames
 }
 
+func fmtTime(t time.Time) string {
+	return "[" + t.Format("Jan 2 3:04PM 2006") + "]"
+}
+
 func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEnv string) *themeDiff {
 	diff := newDiff()
 	for filename := range actions {
 		local, remote := manifest.diffDates(filename, dstEnv, srcEnv)
 		if !local.IsZero() && remote.IsZero() {
-			diff.Removed = append(diff.Removed, kit.RedText(filename))
+			diff.Removed = append(diff.Removed, kit.RedText(filename+" "+fmtTime(local)))
 		}
 		if local.IsZero() && !remote.IsZero() {
-			diff.Created = append(diff.Created, kit.GreenText(filename))
+			diff.Created = append(diff.Created, kit.GreenText(filename+" "+fmtTime(remote)))
 		}
 		if !local.IsZero() && local.Before(remote) {
-			diff.Updated = append(diff.Updated, kit.YellowText(filename))
+			diff.Updated = append(diff.Updated, kit.YellowText(filename+" local:"+fmtTime(local)+" remote:"+fmtTime(remote)))
 		}
 	}
 	return diff
