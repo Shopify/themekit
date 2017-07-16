@@ -31,7 +31,7 @@ For more documentation please see http://shopify.github.io/themekit/commands/#up
 func deploy(destructive bool) arbitratedCmd {
 	return func(client kit.ThemeClient, filenames []string) error {
 		if client.Config.ReadOnly {
-			return fmt.Errorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
+			return fmt.Errorf("[%s] environment is reaonly", green(client.Config.Environment))
 		}
 
 		actions, err := arbiter.generateAssetActions(client, filenames, destructive)
@@ -55,7 +55,7 @@ func deploy(destructive bool) arbitratedCmd {
 			action := action
 			deployGroup.Go(func() error {
 				if err := perform(client, action.asset, action.event, bar); err != nil {
-					kit.LogErrorf("[%s] %s", kit.GreenText(client.Config.Environment), err)
+					stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
 				}
 				return nil
 			})
@@ -88,12 +88,12 @@ func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *
 	if err != nil {
 		return err
 	} else if arbiter.verbose {
-		kit.Printf(
+		stdOut.Printf(
 			"[%s] Successfully performed %s on file %s from %s",
-			kit.GreenText(client.Config.Environment),
-			kit.GreenText(resp.EventType),
-			kit.GreenText(resp.Asset.Key),
-			kit.YellowText(resp.Host),
+			green(client.Config.Environment),
+			green(resp.EventType),
+			green(resp.Asset.Key),
+			yellow(resp.Host),
 		)
 	}
 

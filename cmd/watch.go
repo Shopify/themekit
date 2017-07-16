@@ -35,7 +35,7 @@ func startWatch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if err := watch(); err == errReload {
-		kit.Print("Reloading because of config changes")
+		stdOut.Print("Reloading because of config changes")
 		return startWatch(cmd, args)
 	} else if err != nil {
 		return err
@@ -47,7 +47,7 @@ func watch() error {
 	watchers := []*kit.FileWatcher{}
 	defer func() {
 		if len(watchers) > 0 {
-			kit.Print("Cleaning up watchers")
+			stdOut.Print("Cleaning up watchers")
 			for _, watcher := range watchers {
 				// This is half assed because fsnotify sometimes deadlocks
 				// if it finishes before exit great if not garbage collection will do it.
@@ -58,11 +58,15 @@ func watch() error {
 
 	for _, client := range arbiter.activeThemeClients {
 		if client.Config.ReadOnly {
-			kit.LogErrorf("[%s] environment is reaonly", kit.GreenText(client.Config.Environment))
+			stdErr.Printf("[%s] environment is reaonly", green(client.Config.Environment))
 			continue
 		}
 
-		kit.Printf("[%s] Watching for file changes on host %s ", kit.GreenText(client.Config.Environment), kit.YellowText(client.Config.Domain))
+		stdOut.Printf(
+			"[%s] Watching for file changes on host %s ",
+			green(client.Config.Environment),
+			yellow(client.Config.Domain),
+		)
 		watcher, err := client.NewFileWatcher(arbiter.notifyFile, handleWatchEvent)
 		if err != nil {
 			return err
@@ -89,11 +93,11 @@ func watch() error {
 }
 
 func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventType) {
-	kit.Printf(
+	stdOut.Printf(
 		"[%s] Received %s event on %s",
-		kit.GreenText(client.Config.Environment),
-		kit.GreenText(event),
-		kit.BlueText(asset.Key),
+		green(client.Config.Environment),
+		green(event),
+		blue(asset.Key),
 	)
 	perform(client, asset, event, nil)
 }

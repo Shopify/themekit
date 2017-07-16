@@ -74,6 +74,14 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 			config.IgnoredFiles = []string{}
 			config.Ignores = []string{}
 		}
+		if config.Proxy != "" {
+			stdOut.Printf(
+				"[%s] Proxy URL detected from Configuration: %s SSL Certificate Validation will be disabled!",
+				green(config.Environment),
+				yellow(config.Proxy),
+			)
+		}
+
 		client, err := kit.NewThemeClient(config)
 		if err != nil {
 			return err
