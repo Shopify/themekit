@@ -2,10 +2,18 @@ package cmd
 
 import (
 	"testing"
+
+	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/kittest"
 )
 
 func TestThemePreRun(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
 	defer resetArbiter()
+
+	kit.ThemeKitReleasesURL = server.URL + "/themekit_update"
+
 	// just making sure that it does not throw
 	ThemeCmd.PersistentPreRun(nil, []string{})
 }

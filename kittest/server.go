@@ -40,7 +40,9 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Method: r.Method,
 		URL:    r.URL,
 	})
-	if r.URL.Path == "/feed" {
+	if r.URL.Path == "/themekit_update" {
+		fmt.Fprintf(w, themekitUpdateFeed)
+	} else if r.URL.Path == "/feed" {
 		fmt.Fprintf(w, releaseAtom)
 	} else if r.URL.Path == "/admin/themes.json" {
 		fmt.Fprintf(w, themesResponse)

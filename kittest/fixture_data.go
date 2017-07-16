@@ -59,4 +59,7 @@ var (
     "warnings": []
   }
 }`
+	themekitUpdateFeed = `
+[{"version":"8.8.8","platforms":[{"name":"darwin-amd64","url":"","digest":""},{"name":"linux-386","url":"","digest":""},{"name":"linux-amd64","url":"","digest":""},{"name":"windows-386","url":"","digest":""},{"name":"windows-amd64","url":"","digest":""}]}]
+	`
 )

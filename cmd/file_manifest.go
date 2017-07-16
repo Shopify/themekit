@@ -173,13 +173,13 @@ func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEn
 	for filename := range actions {
 		local, remote := manifest.diffDates(filename, dstEnv, srcEnv)
 		if !local.IsZero() && remote.IsZero() {
-			diff.Removed = append(diff.Removed, kit.RedText(filename+" "+fmtTime(local)))
+			diff.Removed = append(diff.Removed, red(filename+" "+fmtTime(local)))
 		}
 		if local.IsZero() && !remote.IsZero() {
-			diff.Created = append(diff.Created, kit.GreenText(filename+" "+fmtTime(remote)))
+			diff.Created = append(diff.Created, green(filename+" "+fmtTime(remote)))
 		}
 		if !local.IsZero() && local.Before(remote) {
-			diff.Updated = append(diff.Updated, kit.YellowText(filename+" local:"+fmtTime(local)+" remote:"+fmtTime(remote)))
+			diff.Updated = append(diff.Updated, yellow(filename+" local:"+fmtTime(local)+" remote:"+fmtTime(remote)))
 		}
 	}
 	return diff

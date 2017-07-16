@@ -5,8 +5,6 @@ package main
 import (
 	"math"
 	"syscall"
-
-	"github.com/Shopify/themekit/kit"
 )
 
 const minFileDescriptors float64 = 2048
@@ -16,11 +14,10 @@ const minFileDescriptors float64 = 2048
 func init() {
 	var rLimit syscall.Rlimit
 	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
-		kit.LogErrorf("Could not read max file limit: %s\n", err)
+		stdErr.Printf("Could not read max file limit: %s\n", err)
 	}
 	rLimit.Cur = uint64(math.Max(minFileDescriptors, float64(rLimit.Cur)))
 	if err := syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
-		kit.Print(err)
-		kit.Print(kit.YellowText("Could not set file descriptor limits. Themekit will work, but you might encounter issues if your project holds many files. You can set the limits manually using ulimit -n 2048."))
+		stdErr.Printf("Could not set file descriptor limits. Themekit will work, but you might encounter issues if your project holds many files. You can set the limits manually using ulimit -n 2048: %v", err)
 	}
 }

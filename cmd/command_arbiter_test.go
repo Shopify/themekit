@@ -55,6 +55,11 @@ func TestGenerateThemeClients(t *testing.T) {
 
 	arbiter.environments = stringArgArray{[]string{}}
 	assert.Nil(t, arbiter.generateThemeClients(nil, []string{}))
+
+	kittest.Cleanup()
+	assert.Nil(t, kittest.GenerateProxyConfig(server.URL, false))
+	arbiter.generateThemeClients(nil, []string{})
+	assert.Equal(t, "[\x1b[32mdevelopment\x1b[0m] Proxy URL detected from Configuration: \x1b[33mhttp://localhost:3000\x1b[0m SSL Certificate Validation will be disabled!\n", stdOutOutput.String())
 }
 
 func TestShouldUseEnvironment(t *testing.T) {

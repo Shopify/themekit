@@ -44,6 +44,14 @@ var invalidConfig = template.Must(template.New("invalidConfig").Parse(`developme
     - *.png
 `))
 
+var proxyConfig = template.Must(template.New("proxyConfig").Parse(`development:
+  password: foo
+  theme_id: "2"
+  store: "{{ .Domain }}"
+  proxy: "http://localhost:3000"
+  directory: "{{ .Directory }}"
+`))
+
 var jsonConfig = template.Must(template.New("jsonConfig").Parse(`{
   "default": {
     "password": "foo",
@@ -78,6 +86,17 @@ func GenerateConfig(domain string, valid bool) error {
 		}
 	}
 	return nil
+}
+
+// GenerateProxyConfig will generate a config using the passed domain with proxy config.
+func GenerateProxyConfig(domain string, valid bool) error {
+	Setup()
+	f, err := os.OpenFile("config.yml", os.O_CREATE|os.O_WRONLY, 0777)
+	if err != nil {
+		return err
+	}
+	data := struct{ Domain, Directory string }{domain, FixtureProjectPath}
+	return proxyConfig.Execute(f, data)
 }
 
 // GenerateJSONConfig will generate and write a valid json config for testing

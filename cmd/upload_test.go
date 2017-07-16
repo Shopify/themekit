@@ -78,6 +78,7 @@ func TestUploadSettingsData(t *testing.T) {
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
 	kittest.TouchFixtureFile(filepath.Join("config", "settings_data.json"), "")
 	defer kittest.Cleanup()
+	defer resetArbiter()
 
 	client, err := getClient()
 	if assert.Nil(t, err) {

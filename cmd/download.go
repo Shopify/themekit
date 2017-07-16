@@ -30,7 +30,7 @@ func download(client kit.ThemeClient, filenames []string) error {
 		filename := filename
 		downloadGroup.Go(func() error {
 			if err := downloadFile(client, filename); err != nil {
-				kit.LogErrorf("[%s] %s", kit.GreenText(client.Config.Environment), err)
+				stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
 			}
 			incBar(bar)
 			return nil
@@ -42,7 +42,11 @@ func download(client kit.ThemeClient, filenames []string) error {
 func downloadFile(client kit.ThemeClient, filename string) error {
 	if !arbiter.force && !arbiter.manifest.NeedsDownloading(filename, client.Config.Environment) {
 		if arbiter.verbose {
-			kit.Print(kit.GreenText(fmt.Sprintf("[%s] skipping %s", client.Config.Environment, filename)))
+			stdOut.Printf(
+				"[%s] skipping %s",
+				green(client.Config.Environment),
+				green(filename),
+			)
 		}
 		return nil
 	}
@@ -61,7 +65,11 @@ func downloadFile(client kit.ThemeClient, filename string) error {
 	}
 
 	if arbiter.verbose {
-		kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
+		stdOut.Printf(
+			"[%s] Successfully wrote %s to disk",
+			green(client.Config.Environment),
+			green(filename),
+		)
 	}
 	return nil
 }
