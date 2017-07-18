@@ -59,7 +59,7 @@ func TestGenerateThemeClients(t *testing.T) {
 	kittest.Cleanup()
 	assert.Nil(t, kittest.GenerateProxyConfig(server.URL, false))
 	arbiter.generateThemeClients(nil, []string{})
-	assert.Equal(t, "[\x1b[32mdevelopment\x1b[0m] Proxy URL detected from Configuration: \x1b[33mhttp://localhost:3000\x1b[0m SSL Certificate Validation will be disabled!\n", stdOutOutput.String())
+	assert.True(t, strings.Contains(stdOutOutput.String(), "Proxy URL detected from Configuration"))
 }
 
 func TestShouldUseEnvironment(t *testing.T) {
@@ -190,7 +190,7 @@ func TestPreflightCheck(t *testing.T) {
 		assert.Nil(t, arbiter.preflightCheck(map[string]assetAction{}, true))
 
 		err := arbiter.preflightCheck(map[string]assetAction{
-			"assets/hello.txt": {event: kit.Update},
+			"assets/hello.txt": {event: kit.Remove},
 		}, true)
 
 		assert.NotNil(t, err)

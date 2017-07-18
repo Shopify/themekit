@@ -115,12 +115,12 @@ func (manifest *fileManifest) NeedsDownloading(filename, environment string) boo
 
 func (manifest *fileManifest) ShouldUpload(filename, environment string) bool {
 	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
-	return remoteTime.Before(localTime) || remoteTime.IsZero()
+	return remoteTime.Before(localTime) || remoteTime.IsZero() || localTime.IsZero()
 }
 
 func (manifest *fileManifest) ShouldRemove(filename, environment string) bool {
 	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
-	return remoteTime.Before(localTime)
+	return remoteTime.Before(localTime) || localTime.IsZero()
 }
 
 func (manifest *fileManifest) Should(event kit.EventType, filename, environment string) bool {
@@ -170,12 +170,12 @@ func fmtTime(t time.Time) string {
 
 func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEnv string) *themeDiff {
 	diff := newDiff()
-	for filename := range actions {
+	for filename, action := range actions {
 		local, remote := manifest.diffDates(filename, dstEnv, srcEnv)
 		if !local.IsZero() && remote.IsZero() {
 			diff.Removed = append(diff.Removed, red(filename+" "+fmtTime(local)))
 		}
-		if local.IsZero() && !remote.IsZero() {
+		if local.IsZero() && !remote.IsZero() && action.event == kit.Remove {
 			diff.Created = append(diff.Created, green(filename+" "+fmtTime(remote)))
 		}
 		if !local.IsZero() && local.Before(remote) {

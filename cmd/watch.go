@@ -101,5 +101,7 @@ func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventTy
 		green(event),
 		blue(asset.Key),
 	)
-	perform(client, asset, event, nil)
+	if err := perform(client, asset, event, nil); err != nil {
+		stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
+	}
 }

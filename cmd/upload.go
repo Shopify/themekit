@@ -49,6 +49,15 @@ func deploy(destructive bool) arbitratedCmd {
 			shouldPerform := arbiter.force || arbiter.manifest.Should(action.event, action.asset.Key, client.Config.Environment)
 			// pretend we did the settings data and we will do it last
 			if !shouldPerform || key == settingsDataKey {
+				if arbiter.verbose {
+					stdOut.Printf(
+						"[%s] skipping %s of %s",
+						green(client.Config.Environment),
+						yellow(action.event),
+						green(action.asset.Key),
+					)
+				}
+
 				incBar(bar)
 				continue
 			}
@@ -109,14 +118,19 @@ func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *
 }
 
 func uploadSettingsData(client kit.ThemeClient, files []string) error {
-	i := sort.Search(len(files), func(i int) bool { return files[i] == settingsDataKey })
-	if len(files) > 0 && i == len(files) {
+	if len(files) == 0 {
+		if actions, err := arbiter.generateAssetActions(client, files, false); err != nil {
+			return err
+		} else if _, found := actions[settingsDataKey]; !found {
+			return nil
+		}
+	} else if i := sort.Search(len(files), func(i int) bool { return files[i] == settingsDataKey }); i == len(files) {
 		return nil
 	}
+
 	asset, err := client.LocalAsset(settingsDataKey)
 	if err != nil {
 		return err
 	}
-	perform(client, asset, kit.Update, nil)
-	return nil
+	return perform(client, asset, kit.Update, nil)
 }

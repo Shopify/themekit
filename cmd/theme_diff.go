@@ -11,7 +11,7 @@ type themeDiff struct {
 	Removed []string
 }
 
-var themeDiffErrorTmplt = template.Must(template.New("themeDiffError").Parse(`Remote files are inconsistent with manifest
+var themeDiffErrorTmplt = template.Must(template.New("themeDiffError").Parse(`Unexpected changes made on remote.
 Diff:
 {{- if .Created }}
 	New Files:

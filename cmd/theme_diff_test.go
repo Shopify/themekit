@@ -17,7 +17,7 @@ func TestThemeDiff(t *testing.T) {
 	diff.Created = append(diff.Created, "testcreated.txt")
 	diff.Removed = append(diff.Removed, "testremoved.txt")
 
-	expected := `Remote files are inconsistent with manifest
+	expected := `Unexpected changes made on remote.
 Diff:
 	New Files:
 		- testcreated.txt

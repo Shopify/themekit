@@ -110,6 +110,13 @@ func TestShould(t *testing.T) {
 
 	delete(manifest.remote[file], env)
 	assert.True(t, manifest.Should(kit.Update, file, env))
+	assert.True(t, manifest.Should(kit.Remove, file, env))
+	assert.False(t, manifest.Should(kit.Retrieve, file, env))
+
+	delete(manifest.local[file], env)
+	assert.True(t, manifest.Should(kit.Update, file, env))
+	assert.True(t, manifest.Should(kit.Remove, file, env))
+	assert.True(t, manifest.Should(kit.Retrieve, file, env))
 
 	assert.False(t, manifest.Should(kit.EventType(25), file, env))
 }
