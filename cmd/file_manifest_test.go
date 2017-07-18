@@ -180,7 +180,7 @@ func TestManifestSet(t *testing.T) {
 		assert.Nil(t, err)
 
 		_, err = os.Stat(storeName)
-		assert.NotNil(t, err)
+		assert.Nil(t, err)
 		assert.Nil(t, manifest.Set("test", "development", "test"))
 		_, err = os.Stat(storeName)
 		assert.Nil(t, err)
