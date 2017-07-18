@@ -12,9 +12,10 @@ import (
 
 // YStore is the struct that handles all interaction with the datastore.
 type YStore struct {
-	mutex sync.Mutex
-	path  string
-	data  map[string]map[string]string
+	mutex   sync.Mutex
+	path    string
+	data    map[string]map[string]string
+	comment string
 }
 
 var (
@@ -43,6 +44,14 @@ func New(path string) (*YStore, error) {
 		}
 	}
 	return currentStores[path], currentStores[path].read()
+}
+
+// SetComment will set a comment that will be prepended to the file.
+func (store *YStore) SetComment(comment string) error {
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	store.comment = comment
+	return store.flush()
 }
 
 // Batch will return a batch object for this store that can be used to write multiple
@@ -225,7 +234,7 @@ func (store *YStore) flush() error {
 	if err != nil {
 		return err
 	}
-	if _, err = file.Write(bytes); err != nil {
+	if _, err = file.Write(append([]byte("# "+store.comment+"\n"), bytes...)); err != nil {
 		return err
 	}
 	return nil

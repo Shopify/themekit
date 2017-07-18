@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	"text/template"
 
 	"github.com/spf13/cobra"
 
@@ -18,8 +20,15 @@ const (
 )
 
 var (
-	themeZipRoot   = "https://github.com/Shopify/Timber/archive/"
-	timberFeedPath = "https://github.com/Shopify/Timber/releases.atom"
+	themeZipRoot        = "https://github.com/Shopify/Timber/archive/"
+	timberFeedPath      = "https://github.com/Shopify/Timber/releases.atom"
+	invalidVersionTmplt = template.Must(template.New("invalidVersionError").Parse(`Invalid Timber Version: {{ .Requested }}
+Available Versions Are:
+- master
+- latest
+{{- range .Versions }}
+- {{ . }}
+{{- end }}`))
 )
 
 var bootstrapCmd = &cobra.Command{
@@ -35,12 +44,12 @@ For more documentation please see http://shopify.github.io/themekit/commands/#bo
 }
 
 func bootstrap(cmd *cobra.Command, args []string) error {
-	zipLocation, err := getZipPath()
+	zipLocation, err := getNewThemeZipPath()
 	if err != nil {
 		return err
 	}
 
-	themeName := getThemeName()
+	themeName := getNewThemeName()
 	if arbiter.verbose {
 		stdOut.Printf(
 			"Attempting to create theme %s from %s",
@@ -73,14 +82,27 @@ func bootstrap(cmd *cobra.Command, args []string) error {
 	return download(client, []string{})
 }
 
-func getZipPath() (string, error) {
+func getNewThemeZipPath() (string, error) {
 	if bootstrapURL != "" {
 		return bootstrapURL, nil
+	} else if bootstrapVersion == masterBranch {
+		return themeZipRoot + masterBranch + ".zip", nil
 	}
-	return zipPathForVersion(bootstrapVersion)
+
+	feed, err := downloadThemeReleaseAtomFeed()
+	if err != nil {
+		return "", err
+	}
+
+	entry, err := findThemeReleaseWith(feed, bootstrapVersion)
+	if err != nil {
+		return "", err
+	}
+
+	return themeZipRoot + entry.Title + ".zip", nil
 }
 
-func getThemeName() string {
+func getNewThemeName() string {
 	if bootstrapName != "" {
 		return bootstrapName
 	}
@@ -93,29 +115,7 @@ func getThemeName() string {
 	return bootstrapPrefix + "Timber-" + bootstrapVersion
 }
 
-func zipPathForVersion(version string) (string, error) {
-	if version == masterBranch {
-		return zipPath(masterBranch), nil
-	}
-
-	feed, err := downloadAtomFeed()
-	if err != nil {
-		return "", err
-	}
-
-	entry, err := findReleaseWith(feed, version)
-	if err != nil {
-		return "", err
-	}
-
-	return zipPath(entry.Title), nil
-}
-
-func zipPath(version string) string {
-	return themeZipRoot + version + ".zip"
-}
-
-func downloadAtomFeed() (atom.Feed, error) {
+func downloadThemeReleaseAtomFeed() (atom.Feed, error) {
 	resp, err := http.Get(timberFeedPath)
 	if err != nil {
 		return atom.Feed{}, err
@@ -129,28 +129,26 @@ func downloadAtomFeed() (atom.Feed, error) {
 	return feed, nil
 }
 
-func findReleaseWith(feed atom.Feed, version string) (atom.Entry, error) {
+func findThemeReleaseWith(feed atom.Feed, version string) (atom.Entry, error) {
 	if version == latestRelease {
 		return feed.LatestEntry(), nil
 	}
+
+	entries := []string{}
 	for _, entry := range feed.Entries {
 		if entry.Title == version {
 			return entry, nil
 		}
-	}
-	return atom.Entry{Title: "Invalid Feed"}, buildInvalidVersionError(feed, version)
-}
-
-func buildInvalidVersionError(feed atom.Feed, version string) error {
-	entries := []string{"master", "latest"}
-
-	for _, entry := range feed.Entries {
 		entries = append(entries, entry.Title)
 	}
 
-	return fmt.Errorf(`invalid Timber Version: %s
-Available Versions Are:
-- %s`, version, strings.Join(entries, "\n- "))
+	var tpl bytes.Buffer
+	invalidVersionTmplt.Execute(&tpl, struct {
+		Requested string
+		Versions  []string
+	}{version, entries})
+
+	return atom.Entry{Title: "Invalid Feed"}, fmt.Errorf(tpl.String())
 }
 
 func saveConfiguration(config *kit.Configuration) error {

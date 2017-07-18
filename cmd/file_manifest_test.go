@@ -50,11 +50,17 @@ func TestPrune(t *testing.T) {
 	store, _ := ystore.New(storeName)
 	manifest := &fileManifest{
 		store:  store,
-		local:  map[string]map[string]string{file: {env: now}},
+		local:  map[string]map[string]string{file: {env: now, "other": now}},
 		remote: map[string]map[string]string{},
 	}
 	kittest.TouchFixtureFile("asset.js", "")
+	assert.Equal(t, ystore.ErrorCollectionNotFound, manifest.prune(arbiter.activeThemeClients))
+
+	store.Write(file, "other", now)
 	assert.Nil(t, manifest.prune(arbiter.activeThemeClients))
+
+	_, ok := manifest.local[file]["other"]
+	assert.False(t, ok)
 
 	manifest.local = map[string]map[string]string{"": {env: now}}
 	assert.NotNil(t, manifest.prune(arbiter.activeThemeClients))
@@ -180,7 +186,7 @@ func TestManifestSet(t *testing.T) {
 		assert.Nil(t, err)
 
 		_, err = os.Stat(storeName)
-		assert.NotNil(t, err)
+		assert.Nil(t, err)
 		assert.Nil(t, manifest.Set("test", "development", "test"))
 		_, err = os.Stat(storeName)
 		assert.Nil(t, err)

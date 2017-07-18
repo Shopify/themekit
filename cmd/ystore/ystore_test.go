@@ -35,6 +35,17 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestSetComment(t *testing.T) {
+	store, err := New(storePath)
+	if err != nil {
+		t.Errorf("Unexpected error while creating store: %v", err)
+	}
+	store.SetComment("This is comment")
+	if store.comment != "This is comment" {
+		t.Errorf("wasn't able to set comment")
+	}
+}
+
 func TestWriteAndRead(t *testing.T) {
 	store, err := New(storePath)
 	if err != nil {
@@ -92,6 +103,11 @@ func TestRead(t *testing.T) {
 		t.Errorf("Failed to read: %v", err)
 	} else if len(collections) != 1 || collections[0] != collection {
 		t.Errorf("Failed to read collections")
+	}
+
+	val, err := store.Read(collection, "no")
+	if val != "" || err != ErrorKeyNotFound {
+		t.Errorf("didn't return errorkeynotfound")
 	}
 }
 

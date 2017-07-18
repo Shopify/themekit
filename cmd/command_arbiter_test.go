@@ -19,6 +19,7 @@ func TestNewCommandArbiter(t *testing.T) {
 }
 
 func TestGenerateManifest(t *testing.T) {
+	defer resetArbiter()
 	assert.Nil(t, arbiter.generateManifest())
 	assert.NotNil(t, arbiter.manifest)
 }
