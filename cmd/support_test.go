@@ -20,7 +20,10 @@ func resetArbiter() {
 	arbiter = newCommandArbiter()
 	arbiter.verbose = true
 	arbiter.setFlagConfig()
+	resetLog()
+}
 
+func resetLog() {
 	stdOutOutput = new(bytes.Buffer)
 	stdErrOutput = new(bytes.Buffer)
 	stdOut = log.New(stdOutOutput, "", 0)

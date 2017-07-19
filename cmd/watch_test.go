@@ -64,6 +64,7 @@ func TestHandleWatchEvent(t *testing.T) {
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
 	defer kittest.Cleanup()
+	defer resetArbiter()
 
 	client, err := getClient()
 	if assert.Nil(t, err) {
@@ -71,5 +72,16 @@ func TestHandleWatchEvent(t *testing.T) {
 		handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove)
 		assert.Equal(t, 1, len(server.Requests))
 		assert.Equal(t, "DELETE", server.Requests[0].Method)
+		assert.True(t, strings.Contains(stdOutOutput.String(), "Received"))
+		assert.True(t, strings.Contains(stdOutOutput.String(), "Successfully"))
+
+		server.Reset()
+		resetLog()
+		handleWatchEvent(client, kit.Asset{Key: "nope"}, kit.Update)
+		assert.Equal(t, 1, len(server.Requests))
+		assert.Equal(t, "PUT", server.Requests[0].Method)
+
+		assert.True(t, strings.Contains(stdOutOutput.String(), "Received"))
+		assert.True(t, strings.Contains(stdOutOutput.String(), "Conflict"))
 	}
 }
