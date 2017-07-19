@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -74,17 +75,25 @@ func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 }
 
 func (manifest *fileManifest) prune(clients []kit.ThemeClient) error {
+	// prune files that no longer exist
 	for filename := range manifest.local {
 		if _, found := manifest.remote[filename]; !found {
-			for _, client := range clients {
-				path := filepath.ToSlash(filepath.Join(client.Config.Directory, filename))
-				if info, err := os.Stat(path); err == nil && !info.IsDir() {
-					found = true
-					break
+			if i := sort.Search(len(clients), func(i int) bool {
+				info, err := os.Stat(filepath.ToSlash(filepath.Join(clients[i].Config.Directory, filename)))
+				return err == nil && !info.IsDir()
+			}); i == len(clients) {
+				if err := manifest.store.DeleteCollection(filename); err != nil {
+					return err
 				}
 			}
-			if !found {
-				if err := manifest.store.DeleteCollection(filename); err != nil {
+		}
+	}
+
+	// prune environments that no longer exist
+	for filename, envs := range manifest.local {
+		for envname := range envs {
+			if i := sort.Search(len(clients), func(i int) bool { return clients[i].Config.Environment == envname }); i == len(clients) {
+				if err := manifest.store.Delete(filename, envname); err != nil {
 					return err
 				}
 			}

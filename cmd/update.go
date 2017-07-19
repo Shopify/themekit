@@ -33,11 +33,7 @@ For more documentation please see http://shopify.github.io/themekit/commands/#up
 		err := kit.InstallThemeKitVersion(updateVersion)
 
 		if err == nil {
-			stdOut.Printf(
-				afterUpdateMessage,
-				green(updateVersion),
-				yellow(kit.ThemeKitVersion),
-			)
+			stdOut.Printf(afterUpdateMessage, green(updateVersion), yellow(kit.ThemeKitVersion))
 		}
 
 		return err
