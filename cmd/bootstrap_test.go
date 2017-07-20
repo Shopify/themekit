@@ -29,34 +29,54 @@ func TestBootstrap(t *testing.T) {
 	assert.NotNil(t, bootstrap(nil, []string{}))
 }
 
-func TestGetZipPath(t *testing.T) {
+func TestGetNewThemeZipPath(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
+	timberFeedPath = server.URL + "/feed"
 
+	bootstrapURL = "http://github.com/shopify/theme.zip"
+	path, err := getNewThemeZipPath()
+	assert.Equal(t, bootstrapURL, path)
+	assert.Nil(t, err)
+	bootstrapURL = ""
+
+	// master just returns early for master version
 	bootstrapVersion = "master"
-	path, err := getZipPath()
+	path, err = getNewThemeZipPath()
 	assert.Equal(t, themeZipRoot+"master.zip", path)
 	assert.Nil(t, err)
 
-	bootstrapURL = "http://github.com/shopify/theme.zip"
-	path, err = getZipPath()
-	assert.Equal(t, bootstrapURL, path)
+	// valid request
+	bootstrapVersion = "v2.0.2"
+	path, err = getNewThemeZipPath()
+	assert.Equal(t, themeZipRoot+"v2.0.2.zip", path)
 	assert.Nil(t, err)
 
-	bootstrapURL = ""
-	bootstrapVersion = ""
+	// not found version
+	bootstrapVersion = "vn.0.p"
+	path, err = getNewThemeZipPath()
+	assert.Equal(t, "", path)
+	assert.NotNil(t, err)
+
+	server.Close()
+
+	// server fails to return
+	bootstrapVersion = "v2.0.2"
+	path, err = getNewThemeZipPath()
+	assert.Equal(t, "", path)
+	assert.NotNil(t, err)
 }
 
-func TestGetThemeName(t *testing.T) {
+func TestNewGetThemeName(t *testing.T) {
 	bootstrapPrefix = "prEfix"
 	bootstrapVersion = "4.2.0"
-	assert.Equal(t, "prEfixTimber-4.2.0", getThemeName())
+	assert.Equal(t, "prEfixTimber-4.2.0", getNewThemeName())
 
 	bootstrapURL = "http://github.com/shopify/theme.zip"
-	assert.Equal(t, "prEfixtheme", getThemeName())
+	assert.Equal(t, "prEfixtheme", getNewThemeName())
 
 	bootstrapName = "bootStrapNaeme"
-	assert.Equal(t, "bootStrapNaeme", getThemeName())
+	assert.Equal(t, "bootStrapNaeme", getNewThemeName())
 
 	bootstrapPrefix = ""
 	bootstrapVersion = ""
@@ -64,76 +84,40 @@ func TestGetThemeName(t *testing.T) {
 	bootstrapName = ""
 }
 
-func TestZipPath(t *testing.T) {
-	assert.Equal(t, themeZipRoot+"foo.zip", zipPath("foo"))
-}
-
-func TestZipPathForVersion(t *testing.T) {
+func TestDownloadThemeReleaseAtomFeed(t *testing.T) {
 	server := kittest.NewTestServer()
 	timberFeedPath = server.URL + "/feed"
 
-	// master jst returns early for master version
-	path, err := zipPathForVersion("master")
-	assert.Equal(t, themeZipRoot+"master.zip", path)
-	assert.Nil(t, err)
-
-	// valid request
-	path, err = zipPathForVersion("v2.0.2")
-	assert.Equal(t, themeZipRoot+"v2.0.2.zip", path)
-	assert.Nil(t, err)
-
-	// not found version
-	path, err = zipPathForVersion("vn.0.p")
-	assert.Equal(t, "", path)
-	assert.NotNil(t, err)
-
-	server.Close()
-
-	// server fails to return
-	path, err = zipPathForVersion("v2.0.2")
-	assert.Equal(t, "", path)
-	assert.NotNil(t, err)
-}
-
-func TestDownloadAtomFeed(t *testing.T) {
-	server := kittest.NewTestServer()
-	timberFeedPath = server.URL + "/feed"
-
-	feed, err := downloadAtomFeed()
+	feed, err := downloadThemeReleaseAtomFeed()
 	assert.Nil(t, err)
 	assert.Equal(t, 13, len(feed.Entries))
 
 	timberFeedPath = "http://nope.com/nope.json"
-	feed, err = downloadAtomFeed()
+	feed, err = downloadThemeReleaseAtomFeed()
 	assert.NotNil(t, err)
 	assert.Equal(t, 0, len(feed.Entries))
 
 	server.Close()
 
-	feed, err = downloadAtomFeed()
+	feed, err = downloadThemeReleaseAtomFeed()
 	assert.NotNil(t, err)
 	assert.Equal(t, 0, len(feed.Entries))
 }
 
-func TestFindReleaseWith(t *testing.T) {
+func TestFindThemeReleaseWith(t *testing.T) {
 	feed := kittest.ReleaseAtom
-	entry, err := findReleaseWith(feed, "latest")
+	entry, err := findThemeReleaseWith(feed, "latest")
 	assert.Equal(t, feed.LatestEntry(), entry)
 	assert.Nil(t, err)
 
-	entry, err = findReleaseWith(feed, "v2.0.2")
+	entry, err = findThemeReleaseWith(feed, "v2.0.2")
 	assert.Equal(t, "v2.0.2", entry.Title)
 	assert.Nil(t, err)
 
-	entry, err = findReleaseWith(feed, "nope")
+	entry, err = findThemeReleaseWith(feed, "nope")
 	assert.Equal(t, "Invalid Feed", entry.Title)
+	assert.Equal(t, "Invalid Timber Version: nope\nAvailable Versions Are:\n- master\n- latest\n- v2.0.2\n- v2.0.1\n- v2.0.0\n- v1.3.2\n- v1.3.1\n- v1.3.0\n- v1.2.1\n- v1.2.0\n- v1.1.3\n- v1.1.2\n- v1.1.1\n- v1.1.0\n- v1.0.0", err.Error())
 	assert.NotNil(t, err)
-}
-
-func TestBuildInvalidVersionError(t *testing.T) {
-	feed := kittest.ReleaseAtom
-	err := buildInvalidVersionError(feed, "nope")
-	assert.Equal(t, "invalid Timber Version: nope\nAvailable Versions Are:\n- master\n- latest\n- v2.0.2\n- v2.0.1\n- v2.0.0\n- v1.3.2\n- v1.3.1\n- v1.3.0\n- v1.2.1\n- v1.2.0\n- v1.1.3\n- v1.1.2\n- v1.1.1\n- v1.1.0\n- v1.0.0", err.Error())
 }
 
 func TestSaveConfiguration(t *testing.T) {
