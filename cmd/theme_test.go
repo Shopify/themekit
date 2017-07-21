@@ -1,11 +1,25 @@
 package cmd
 
 import (
+	"bytes"
+	"log"
 	"testing"
 
 	"github.com/Shopify/themekit/kit"
 	"github.com/Shopify/themekit/kittest"
 )
+
+var (
+	stdOutOutput *bytes.Buffer
+	stdErrOutput *bytes.Buffer
+)
+
+func resetLog() {
+	stdOutOutput = new(bytes.Buffer)
+	stdErrOutput = new(bytes.Buffer)
+	stdOut = log.New(stdOutOutput, "", 0)
+	stdErr = log.New(stdOutOutput, "", 0)
+}
 
 func TestThemePreRun(t *testing.T) {
 	server := kittest.NewTestServer()

@@ -10,9 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-const (
-	debounceTimeout = 1100 * time.Millisecond
-)
+var debounceTimeout = 1100 * time.Millisecond
 
 // FileEventCallback is the callback that is called when there is an event from
 // a file watcher.
@@ -81,7 +79,9 @@ func (watcher *FileWatcher) watch() error {
 }
 
 func (watcher *FileWatcher) watchFsEvents() {
+	watcher.mutex.Lock()
 	watcher.waitNotify = false
+	watcher.mutex.Unlock()
 	watcher.recordedEvents = newEventMap()
 
 	for {
@@ -166,24 +166,30 @@ func (watcher *FileWatcher) onEvent(event fsnotify.Event) {
 }
 
 func (watcher *FileWatcher) watchForIdle() {
+	watcher.mutex.Lock()
+	defer watcher.mutex.Unlock()
 	if watcher.waitNotify || watcher.notify == "" {
 		return
 	}
 	watcher.waitNotify = true
-	go func() {
-		for {
-			select {
-			case <-time.Tick(debounceTimeout):
-				if watcher.recordedEvents.Count() == 0 {
-					watcher.touchNotifyFile()
-					return
-				}
+	go watcher.idleMonitor()
+}
+
+func (watcher *FileWatcher) idleMonitor() {
+	for {
+		select {
+		case <-time.Tick(debounceTimeout):
+			if watcher.recordedEvents.Count() == 0 {
+				watcher.touchNotifyFile()
+				return
 			}
 		}
-	}()
+	}
 }
 
 func (watcher *FileWatcher) touchNotifyFile() {
+	watcher.mutex.Lock()
+	defer watcher.mutex.Unlock()
 	os.Create(watcher.notify)
 	os.Chtimes(watcher.notify, time.Now(), time.Now())
 	watcher.waitNotify = false

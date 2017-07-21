@@ -37,14 +37,6 @@ var (
     }
   ]
 }`
-	themeResponse = `{
-  "theme": {
-    "name": "timberland",
-    "source": "https://githubz.com/shopify/timberlands",
-    "role": "unpublished",
-    "previewable": true
-  }
-}`
 	assetsReponse = `{
   "assets": [
     { "key": "assets/hello.txt", "value": "Hello World", "updated_at":"2012-07-06T02:04:21-11:00" },
@@ -59,7 +51,5 @@ var (
     "warnings": []
   }
 }`
-	themekitUpdateFeed = `
-[{"version":"8.8.8","platforms":[{"name":"darwin-amd64","url":"","digest":""},{"name":"linux-386","url":"","digest":""},{"name":"linux-amd64","url":"","digest":""},{"name":"windows-386","url":"","digest":""},{"name":"windows-amd64","url":"","digest":""}]}]
-	`
+	themekitUpdateFeed = `[{"version":"0.4.4"},{"version":"0.4.7", "platforms": [{}]},{"version":"0.4.6"},{"version":"0.4.5"}]`
 )

@@ -89,37 +89,23 @@ func (client *httpClient) ThemePath(themeID int64) string {
 // NewTheme will create a request to create a new theme with the proviced name and
 // create it with the source provided
 func (client *httpClient) NewTheme(name, source string) (*ShopifyResponse, Error) {
-	req, err := newShopifyRequest(client.config, themeRequest, Create, client.ThemesPath())
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
-
-	err = req.setJSONBody(map[string]interface{}{"theme": Theme{Name: name, Source: source, Role: "unpublished"}})
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
-
+	req := newShopifyRequest(client.config, themeRequest, Create, client.ThemesPath())
+	req.setJSONBody(map[string]interface{}{"theme": Theme{Name: name, Source: source, Role: "unpublished"}})
 	return client.sendRequest(req)
 }
 
 // GetTheme will load the theme data for the provided theme id
 func (client *httpClient) GetTheme(themeID int64) (*ShopifyResponse, Error) {
-	req, err := newShopifyRequest(client.config, themeRequest, Retrieve, client.ThemePath(themeID))
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
+	req := newShopifyRequest(client.config, themeRequest, Retrieve, client.ThemePath(themeID))
 	return client.sendRequest(req)
 }
 
 // AssetList will return a shopify respinse with []Assets defined however none of
 // the assets will have a body. Those will have to be requested separately
 func (client *httpClient) AssetList() (*ShopifyResponse, Error) {
-	req, err := newShopifyRequest(client.config, listRequest, Retrieve, client.AssetPath(
+	req := newShopifyRequest(client.config, listRequest, Retrieve, client.AssetPath(
 		map[string]string{"fields": assetDataFields},
 	))
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
 	return client.sendRequest(req)
 }
 
@@ -128,35 +114,19 @@ func (client *httpClient) GetAssetInfo(filename string) (*ShopifyResponse, Error
 		"asset[key]": filename,
 		"fields":     assetDataFields,
 	})
-	req, err := newShopifyRequest(client.config, assetRequest, Retrieve, path)
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
-
+	req := newShopifyRequest(client.config, assetRequest, Retrieve, path)
 	return client.sendRequest(req)
 }
 
 func (client *httpClient) GetAsset(filename string) (*ShopifyResponse, Error) {
 	path := client.AssetPath(map[string]string{"asset[key]": filename})
-	req, err := newShopifyRequest(client.config, assetRequest, Retrieve, path)
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
-
+	req := newShopifyRequest(client.config, assetRequest, Retrieve, path)
 	return client.sendRequest(req)
 }
 
 func (client *httpClient) AssetAction(event EventType, asset Asset) (*ShopifyResponse, Error) {
-	req, err := newShopifyRequest(client.config, assetRequest, event, client.AssetPath(nil))
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
-
-	err = req.setJSONBody(map[string]interface{}{"asset": asset})
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
-
+	req := newShopifyRequest(client.config, assetRequest, event, client.AssetPath(nil))
+	req.setJSONBody(map[string]interface{}{"asset": asset})
 	resp, err := client.sendRequest(req)
 	// If there were any errors the asset is nil so lets set it and reformat errors
 	if err != nil || resp.Asset.Key == "" {
@@ -166,16 +136,8 @@ func (client *httpClient) AssetAction(event EventType, asset Asset) (*ShopifyRes
 }
 
 func (client *httpClient) AssetActionStrict(event EventType, asset Asset, version string) (*ShopifyResponse, Error) {
-	req, err := newShopifyRequest(client.config, assetRequest, event, client.AssetPath(nil))
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
-
-	err = req.setJSONBody(map[string]interface{}{"asset": asset})
-	if err != nil {
-		return newShopifyResponse(req, nil, err)
-	}
-
+	req := newShopifyRequest(client.config, assetRequest, event, client.AssetPath(nil))
+	req.setJSONBody(map[string]interface{}{"asset": asset})
 	req.Header.Add("If-Unmodified-Since", version)
 
 	resp, err := client.sendRequest(req)

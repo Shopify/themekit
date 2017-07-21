@@ -9,48 +9,51 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestReleaseIsValid(t *testing.T) {
+func TestRelease_IsValid(t *testing.T) {
 	r := release{}
-	assert.Equal(t, false, r.IsValid())
+	assert.False(t, r.IsValid())
 
 	r.Platforms = []platform{{Name: "test"}}
-	assert.Equal(t, true, r.IsValid())
+	assert.True(t, r.IsValid())
 }
 
-func TestReleaseIsApplicable(t *testing.T) {
+func TestRelease_IsApplicable(t *testing.T) {
 	r := release{Version: "20.0.0"}
-	assert.Equal(t, true, r.IsApplicable())
+	assert.True(t, r.IsApplicable())
 
 	r = release{Version: "0.0.0"}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
 
 	r = release{Version: ThemeKitVersion.String()}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
 
 	segs := ThemeKitVersion.Segments()
 	ver := fmt.Sprintf("v%v.%v.%v", segs[0], segs[1], segs[2])
 	r = release{Version: ver}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
 
 	segs = ThemeKitVersion.Segments()
 	ver = fmt.Sprintf("v%v.%v.%v", segs[0], segs[1], segs[2]+1)
-	println(ver)
+
 	r = release{Version: ver}
-	assert.Equal(t, true, r.IsApplicable())
+	assert.True(t, r.IsApplicable())
 
 	r = release{Version: ver + "-beta"}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
 
 	r = release{Version: ver + "+prerelease"}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
+
+	r = release{Version: "this_is_not_a_version"}
+	assert.False(t, r.IsApplicable())
 }
 
-func TestReleaseGetVersion(t *testing.T) {
+func TestRelease_GetVersion(t *testing.T) {
 	r := release{Version: "20.0.0"}
 	assert.Equal(t, "20.0.0", r.GetVersion().String())
 }
 
-func TestReleaseForCurrentPlatform(t *testing.T) {
+func TestRelease_ForCurrentPlatform(t *testing.T) {
 	thisSystem := runtime.GOOS + "-" + runtime.GOARCH
 
 	r := release{Version: "20.0.0", Platforms: []platform{
@@ -67,10 +70,9 @@ func TestReleaseForCurrentPlatform(t *testing.T) {
 	assert.Equal(t, "", r.ForCurrentPlatform().Name)
 }
 
-func TestReleasesListGet(t *testing.T) {
+func TestReleasesList_Get(t *testing.T) {
 	var releases releasesList
-	resp := jsonFixture("responses/all_releases")
-	json.Unmarshal([]byte(resp), &releases)
+	json.Unmarshal([]byte(`[{"version":"0.4.4"},{"version":"0.4.7"}]`), &releases)
 
 	r := releases.Get("latest")
 	assert.Equal(t, "0.4.7", r.Version)

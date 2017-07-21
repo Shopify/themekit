@@ -19,19 +19,7 @@ func TestDownload(t *testing.T) {
 	client, err := getClient()
 	if assert.Nil(t, err) {
 		assert.Nil(t, download(client, []string{"assets/hello.txt"}))
-	}
-}
 
-func TestDownloadWithFile(t *testing.T) {
-	server := kittest.NewTestServer()
-	defer server.Close()
-	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
-	defer kittest.Cleanup()
-	defer resetArbiter()
-
-	client, err := getClient()
-
-	if assert.Nil(t, err) {
 		err := downloadFile(client, "assets/hello.txt")
 		assert.Nil(t, err)
 

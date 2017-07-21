@@ -1,18 +1,12 @@
 package kit
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Shopify/themekit/kittest"
 )
 
 func TestNewHttpClient(t *testing.T) {
@@ -28,51 +22,44 @@ func TestNewHttpClient(t *testing.T) {
 	assert.NotNil(t, client.client.Transport)
 }
 
-func TestAdminURL(t *testing.T) {
-	client := newTestHTTPClient()
-	assert.Equal(t,
-		fmt.Sprintf("https://%s/admin/themes/%v", client.config.Domain, client.config.ThemeID),
-		client.AdminURL())
+func TestHttpClient_AdminURL(t *testing.T) {
+	client, _ := newHTTPClient(&Configuration{Domain: "domain", ThemeID: "123"})
+	assert.Equal(t, "https://domain/admin/themes/123", client.AdminURL())
 	client.config.ThemeID = "live"
-	assert.Equal(t, fmt.Sprintf("https://%s/admin", client.config.Domain), client.AdminURL())
+	assert.Equal(t, "https://domain/admin", client.AdminURL())
+	client, _ = newHTTPClient(&Configuration{Domain: "domain", ThemeID: "themeid"})
+	assert.Equal(t, "https://domain/admin", client.AdminURL())
 }
 
-func TestAssetPath(t *testing.T) {
-	client := newTestHTTPClient()
-	assert.Equal(t, fmt.Sprintf("%s/assets.json", client.AdminURL()), client.AssetPath(nil))
+func TestHttpClient_AssetPath(t *testing.T) {
+	client, _ := newHTTPClient(&Configuration{Domain: "domain", ThemeID: "live"})
+	assert.Equal(t, "https://domain/admin/assets.json", client.AssetPath(nil))
 }
 
-func TestThemesPath(t *testing.T) {
-	client := newTestHTTPClient()
-	assert.Equal(t, fmt.Sprintf("%s/themes.json", client.AdminURL()), client.ThemesPath())
+func TestHttpClient_ThemesPath(t *testing.T) {
+	client, _ := newHTTPClient(&Configuration{Domain: "domain", ThemeID: "live"})
+	assert.Equal(t, "https://domain/admin/themes.json", client.ThemesPath())
 }
 
-func TestThemePath(t *testing.T) {
-	client := newTestHTTPClient()
-	assert.Equal(t, fmt.Sprintf("%s/themes/456.json", client.AdminURL()), client.ThemePath(456))
+func TestHttpClient_ThemePath(t *testing.T) {
+	client, _ := newHTTPClient(&Configuration{Domain: "domain", ThemeID: "live"})
+	assert.Equal(t, "https://domain/admin/themes/456.json", client.ThemePath(456))
 }
 
-func TestAssetList(t *testing.T) {
-	server, client := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "fields="+url.QueryEscape(assetDataFields), r.URL.RawQuery)
-		fmt.Fprintf(w, jsonFixture("responses/assets"))
-	})
+func TestHttpClient_AssetList(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-
+	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
 	resp, err := client.AssetList()
 	assert.Nil(t, err)
 	assert.Equal(t, listRequest, resp.Type)
 	assert.Equal(t, 2, len(resp.Assets))
 }
 
-func TestGetAsset(t *testing.T) {
-	server, client := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "asset%5Bkey%5D=file.txt", r.URL.RawQuery)
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
+func TestHttpClient_GetAsset(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
+	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
 
 	resp, err := client.GetAsset("file.txt")
 	assert.Nil(t, err)
@@ -80,124 +67,70 @@ func TestGetAsset(t *testing.T) {
 	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
 }
 
-func TestNewTheme(t *testing.T) {
-	server, client := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "POST", r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var theme map[string]Theme
-		decoder.Decode(&theme)
-		defer r.Body.Close()
-
-		assert.Equal(t, Theme{Name: "name", Source: "source", Role: "unpublished"}, theme["theme"])
-		fmt.Fprintf(w, jsonFixture("responses/theme"))
-	})
+func TestHttpClient_NewTheme(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
+	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
 	resp, err := client.NewTheme("name", "source")
 	assert.Nil(t, err)
 	assert.Equal(t, themeRequest, resp.Type)
 	assert.Equal(t, "timberland", resp.Theme.Name)
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "POST", server.Requests[0].Method)
 }
 
-func TestGetTheme(t *testing.T) {
-	server, client := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "GET", r.Method)
-		fmt.Fprintf(w, jsonFixture("responses/theme"))
-	})
+func TestHttpClient_GetTheme(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
 	resp, err := client.GetTheme(123)
 	assert.Nil(t, err)
 	assert.Equal(t, themeRequest, resp.Type)
 	assert.Equal(t, "timberland", resp.Theme.Name)
-	server.Close()
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "GET", server.Requests[0].Method)
 }
 
-func TestAssetAction(t *testing.T) {
-	server, client := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "PUT", r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var theme map[string]Asset
-		decoder.Decode(&theme)
-		defer r.Body.Close()
-
-		assert.Equal(t, Asset{Key: "key", Value: "value"}, theme["asset"])
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
+func TestHttpClient_AssetAction(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
+	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
 	resp, err := client.AssetAction(Update, Asset{Key: "key", Value: "value"})
 	assert.Nil(t, err)
 	assert.Equal(t, assetRequest, resp.Type)
 	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "PUT", server.Requests[0].Method)
 }
 
-func TestAssetActionStrict(t *testing.T) {
-	server, client := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "PUT", r.Method)
-		assert.Equal(t, r.Header.Get("If-Unmodified-Since"), "version")
-
-		decoder := json.NewDecoder(r.Body)
-		var theme map[string]Asset
-		decoder.Decode(&theme)
-		defer r.Body.Close()
-
-		assert.Equal(t, Asset{Key: "key", Value: "value"}, theme["asset"])
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
+func TestHttpClient_AssetActionStrict(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
+	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
 	resp, err := client.AssetActionStrict(Update, Asset{Key: "key", Value: "value"}, "version")
 	assert.Nil(t, err)
 	assert.Equal(t, assetRequest, resp.Type)
 	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "PUT", server.Requests[0].Method)
+	assert.Equal(t, server.Requests[0].Header.Get("If-Unmodified-Since"), "version")
+
+	_, err = client.AssetActionStrict(Update, Asset{Key: "nope", Value: "value"}, "version")
+	assert.NotNil(t, err)
 }
 
-func TestSendRequest(t *testing.T) {
-	server, client := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "PUT", r.Method)
-
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(r.Body)
-
-		assert.Equal(t, "my string", buf.String())
-	})
+func TestHttpClient_SendRequest(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-	req, _ := newShopifyRequest(client.config, assetRequest, Update, server.URL)
-	req.setBody(bytes.NewBufferString("my string"))
+	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	req := newShopifyRequest(client.config, assetRequest, Update, client.AssetPath(map[string]string{"asset[key]": "test"}))
 	resp, err := client.sendRequest(req)
 	assert.Nil(t, err)
 	assert.Equal(t, assetRequest, resp.Type)
-}
+	assert.Equal(t, "PUT", server.Requests[0].Method)
 
-func newTestConfig() *Configuration {
-	config, _ := NewConfiguration()
-	config.Environment = "test"
-	config.Domain = "test.myshopify.com"
-	config.ThemeID = "123"
-	config.Password = "sharknado"
-	return config
-}
-
-func newTestHTTPClient() *httpClient {
-	client, _ := newHTTPClient(newTestConfig())
-	return client
-}
-
-func newTestServer(handler http.HandlerFunc) (*httptest.Server, *httpClient) {
-	client := newTestHTTPClient()
-	server := httptest.NewServer(handler)
-	client.config.Domain = server.URL
-	return server, client
-}
-
-func fileFixture(name string) *os.File {
-	path := fmt.Sprintf("../fixtures/%s.json", name)
-	file, _ := os.Open(path)
-	return file
-}
-
-func jsonFixture(name string) string {
-	bytes, err := ioutil.ReadAll(fileFixture(name))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(bytes)
+	client.config.ReadOnly = true
+	_, err = client.sendRequest(req)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "Theme is read only"))
 }

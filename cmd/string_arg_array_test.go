@@ -6,14 +6,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestString(t *testing.T) {
+func TestStringArgArray_String(t *testing.T) {
 	saa := stringArgArray{
 		values: []string{"beedrill", "pikachu"},
 	}
 	assert.Equal(t, "beedrill,pikachu", saa.String())
 }
 
-func TestSet(t *testing.T) {
+func TestStringArgArray_Set(t *testing.T) {
 	saa := stringArgArray{
 		values: []string{"vaporeon"},
 	}
@@ -23,14 +23,14 @@ func TestSet(t *testing.T) {
 	assert.Equal(t, "vaporeon,drowzee", saa.String())
 }
 
-func TestType(t *testing.T) {
+func TestStringArgArray_Type(t *testing.T) {
 	saa := stringArgArray{
 		values: []string{},
 	}
 	assert.Equal(t, "string", saa.Type())
 }
 
-func TestValue(t *testing.T) {
+func TestStringArgArray_Value(t *testing.T) {
 	saa := stringArgArray{
 		values: []string{},
 	}
