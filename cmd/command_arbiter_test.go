@@ -10,6 +10,24 @@ import (
 	"github.com/Shopify/themekit/kittest"
 )
 
+func init() {
+	resetArbiter()
+}
+
+func resetArbiter() {
+	arbiter = newCommandArbiter()
+	arbiter.verbose = true
+	arbiter.setFlagConfig()
+	resetLog()
+}
+
+func getClient() (kit.ThemeClient, error) {
+	if err := arbiter.generateThemeClients(nil, []string{}); err != nil {
+		return kit.ThemeClient{}, err
+	}
+	return arbiter.activeThemeClients[0], nil
+}
+
 func TestNewCommandArbiter(t *testing.T) {
 	arb := newCommandArbiter()
 	assert.NotNil(t, arb)
