@@ -1,263 +1,165 @@
 package kit
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"sort"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
+
+	"github.com/Shopify/themekit/kittest"
 )
 
-type ThemeClientTestSuite struct {
-	suite.Suite
-	config *Configuration
-	client ThemeClient
+func TestNewThemeClient(t *testing.T) {
+	config := &Configuration{}
+	client, err := NewThemeClient(config)
+	assert.Nil(t, err)
+	assert.NotNil(t, client)
+	assert.NotNil(t, client.httpClient)
+	assert.NotNil(t, client.filter)
+	assert.Equal(t, config, client.Config)
+	_, err = NewThemeClient(&Configuration{Proxy: "://foo.com"})
+	assert.NotNil(t, err)
+	_, err = NewThemeClient(&Configuration{Ignores: []string{"nope"}})
+	assert.NotNil(t, err)
 }
 
-func (suite *ThemeClientTestSuite) SetupTest() {
-	suite.config = newTestConfig()
-	suite.config.Directory = "../fixtures/project"
-	suite.config.IgnoredFiles = []string{"fookeybee"}
-	suite.client, _ = NewThemeClient(suite.config)
+func TestNewFileWatcher(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
+	watcher, err := client.NewFileWatcher("", func(ThemeClient, Asset, EventType) {})
+	assert.Nil(t, err)
+	assert.NotNil(t, watcher)
 }
 
-func (suite *ThemeClientTestSuite) TestNewThemeClient() {
-	client, err := NewThemeClient(suite.config)
-	assert.Nil(suite.T(), err)
-	assert.NotNil(suite.T(), client)
-	assert.NotNil(suite.T(), client.httpClient)
-	assert.NotNil(suite.T(), client.filter)
-	assert.Equal(suite.T(), suite.config, client.Config)
-}
-
-func (suite *ThemeClientTestSuite) TestNewThemeClientError() {
-	suite.config.Proxy = "://foo.com"
-	_, err := NewThemeClient(suite.config)
-	assert.NotNil(suite.T(), err)
-
-	suite.config.Proxy = ""
-	suite.config.Ignores = []string{"nope"}
-	_, err = NewThemeClient(suite.config)
-	assert.NotNil(suite.T(), err)
-}
-
-func (suite *ThemeClientTestSuite) TestNewFileWatcher() {
-	watcher, err := suite.client.NewFileWatcher("", func(ThemeClient, Asset, EventType) {})
-	assert.Nil(suite.T(), err)
-	assert.NotNil(suite.T(), watcher)
-}
-
-func (suite *ThemeClientTestSuite) TestAssetList() {
-	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(suite.T(), "GET", r.Method)
-		assert.Equal(suite.T(), "fields="+url.QueryEscape(assetDataFields), r.URL.RawQuery)
-		fmt.Fprintf(w, jsonFixture("responses/assets_raw"))
-	})
+func TestClientAssetList(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-
-	expected := map[string][]Asset{}
-	bytes := []byte(jsonFixture("responses/assets_filtered"))
-	json.Unmarshal(bytes, &expected)
-	sort.Slice(expected["assets"], func(i, j int) bool {
-		return expected["assets"][i].Key < expected["assets"][j].Key
-	})
-
-	assets, err := suite.client.AssetList()
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), expected["assets"], assets)
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	assets, err := client.AssetList()
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(assets))
 }
 
-func (suite *ThemeClientTestSuite) TestAsset() {
-	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(suite.T(), "GET", r.Method)
-		assert.Equal(suite.T(), "asset%5Bkey%5D=file.txt", r.URL.RawQuery)
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
+func TestAsset(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-	asset, err := suite.client.Asset("file.txt")
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "assets/hello.txt", asset.Key)
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	asset, err := client.Asset("file.txt")
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/hello.txt", asset.Key)
 }
 
-func (suite *ThemeClientTestSuite) TestLocalAssetsWithoutFilenames() {
-	assets, err := suite.client.LocalAssets()
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 7, len(assets))
-
-	suite.client.Config.Directory = "./nope"
-	_, err = suite.client.LocalAssets()
-	assert.NotNil(suite.T(), err)
+func TestLocalAssetsWithoutFilenames(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
+	assets, err := client.LocalAssets()
+	assert.Nil(t, err)
+	assert.Equal(t, 7, len(assets))
+	client.Config.Directory = "./nope"
+	_, err = client.LocalAssets()
+	assert.NotNil(t, err)
 }
 
-func (suite *ThemeClientTestSuite) TestLocalAssetsWithFilenames() {
-	assets, err := suite.client.LocalAssets("assets", "config/settings_data.json")
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 3, len(assets))
+func TestLocalAssetsWithFilenames(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
+	assets, err := client.LocalAssets("assets", "config/settings_data.json")
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(assets))
 }
 
-func (suite *ThemeClientTestSuite) TestLocalAsset() {
-	asset, err := suite.client.LocalAsset("assets/application.js")
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "assets/application.js", asset.Key)
-
-	_, err = suite.client.LocalAsset("snippets/npe.txt")
-	assert.NotNil(suite.T(), err)
+func TestLocalAsset(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
+	asset, err := client.LocalAsset("assets/application.js")
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/application.js", asset.Key)
+	_, err = client.LocalAsset("snippets/npe.txt")
+	assert.NotNil(t, err)
 }
 
-func (suite *ThemeClientTestSuite) TestCreateTheme() {
-	responses := 0
-	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			fmt.Fprintf(w, jsonFixture("responses/theme"))
-		} else if r.Method == "POST" {
-			if responses < 3 {
-				fmt.Fprintf(w, jsonFixture("responses/theme_error"))
-			} else {
-				fmt.Fprintf(w, jsonFixture("responses/theme"))
-			}
-		}
-		responses++
-	})
+func TestCreateTheme(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
+	flagConfig = Configuration{Domain: server.URL, ThemeID: "123"}
+	defer resetConfig()
 
 	client, theme, err := CreateTheme("name", "source")
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Invalid options: missing store domain,missing password", err.Error())
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "Invalid options: missing password", err.Error())
 	}
 
-	suite.config.Ignores = []string{"nope"}
-	SetFlagConfig(*suite.config)
+	flagConfig = Configuration{Domain: server.URL, ThemeID: "123", Ignores: []string{"nope"}}
 	client, theme, err = CreateTheme("name", "source")
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(t, err)
 
-	suite.config.Ignores = []string{}
-	suite.config.Domain = server.URL
-
-	SetFlagConfig(*suite.config)
-	client, theme, err = CreateTheme("name", "source")
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "Cannot create a theme. Last error was"))
-	}
+	flagConfig = Configuration{Domain: server.URL, ThemeID: "123", Password: "test"}
+	client, theme, err = CreateTheme("nope", "source")
+	assert.Equal(t, true, strings.Contains(err.Error(), "Cannot create a theme. Last error was"))
 
 	client, theme, err = CreateTheme("name", "source")
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "timberland", theme.Name)
-	assert.Equal(suite.T(), fmt.Sprintf("%d", theme.ID), client.Config.ThemeID)
+	assert.Nil(t, err)
+	assert.Equal(t, "timberland", theme.Name)
+	assert.Equal(t, fmt.Sprintf("%d", theme.ID), client.Config.ThemeID)
 }
 
-func (suite *ThemeClientTestSuite) TestCreateAsset() {
-	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(suite.T(), "PUT", r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var t map[string]Asset
-		decoder.Decode(&t)
-		defer r.Body.Close()
-
-		assert.Equal(suite.T(), Asset{Key: "createkey", Value: "value"}, t["asset"])
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
+func TestCreateAsset(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-
-	suite.client.CreateAsset(Asset{Key: "createkey", Value: "value"})
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	resp, err := client.CreateAsset(Asset{Key: "createkey", Value: "value"})
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "PUT", server.Requests[0].Method)
 }
 
-func (suite *ThemeClientTestSuite) TestUpdateAsset() {
-	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(suite.T(), "PUT", r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var t map[string]Asset
-		decoder.Decode(&t)
-		defer r.Body.Close()
-
-		assert.Equal(suite.T(), Asset{Key: "updatekey", Value: "value"}, t["asset"])
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
+func TestUpdateAsset(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-
-	suite.client.UpdateAsset(Asset{Key: "updatekey", Value: "value"})
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	resp, err := client.UpdateAsset(Asset{Key: "updatekey", Value: "value"})
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "PUT", server.Requests[0].Method)
 }
 
-func (suite *ThemeClientTestSuite) TestDeleteAsset() {
-	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(suite.T(), "DELETE", r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var t map[string]Asset
-		decoder.Decode(&t)
-		defer r.Body.Close()
-
-		assert.Equal(suite.T(), Asset{Key: "deletekey", Value: "value"}, t["asset"])
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
+func TestDeleteAsset(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-
-	suite.client.DeleteAsset(Asset{Key: "deletekey", Value: "value"})
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	resp, err := client.DeleteAsset(Asset{Key: "deletekey", Value: "value"})
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "DELETE", server.Requests[0].Method)
 }
 
-func (suite *ThemeClientTestSuite) TestPerform() {
-	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(suite.T(), "POST", r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var t map[string]Asset
-		decoder.Decode(&t)
-		defer r.Body.Close()
-
-		assert.Equal(suite.T(), Asset{Key: "fookey", Value: "value"}, t["asset"])
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
+func TestPerform(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-
-	_, err := suite.client.Perform(Asset{Key: "fookey", Value: "value"}, Create)
-	assert.Nil(suite.T(), err)
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	resp, err := client.Perform(Asset{Key: "fookey", Value: "value"}, Create)
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "POST", server.Requests[0].Method)
 }
 
-func (suite *ThemeClientTestSuite) TestUploadingACompiledAsset() {
-	type expectsStruct struct {
-		Method string
-		Key    string
-		JSON   string
-		Code   int
-	}
-	respChan := make(chan expectsStruct, 3)
-	respChan <- expectsStruct{Method: "PUT", Key: "templates/template.html", JSON: "{\"errors\":{\"asset\":[\"Cannot overwrite generated asset 'assets/ajax-cart.js'.\"]}}", Code: 422}
-	respChan <- expectsStruct{Method: "DELETE", Key: "templates/template.html.liquid", JSON: "{}", Code: 200}
-	respChan <- expectsStruct{Method: "PUT", Key: "templates/template.html", JSON: "{}", Code: 200}
-
-	server := suite.NewTestServer(func(w http.ResponseWriter, r *http.Request) {
-		expected := <-respChan
-		assert.Equal(suite.T(), expected.Method, r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var t map[string]Asset
-		decoder.Decode(&t)
-		defer r.Body.Close()
-
-		assert.Equal(suite.T(), expected.Key, t["asset"].Key)
-		w.WriteHeader(expected.Code)
-		fmt.Fprintf(w, expected.JSON)
-	})
+func TestAfterHooks(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-
-	_, err := suite.client.Perform(Asset{Key: "templates/template.html", Value: "value();"}, Update)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(respChan))
-}
-
-func (suite *ThemeClientTestSuite) NewTestServer(handler http.HandlerFunc) *httptest.Server {
-	server := httptest.NewServer(handler)
-	suite.client.httpClient.config.Domain = server.URL
-	return server
-}
-
-func TestThemeClientTestSuite(t *testing.T) {
-	suite.Run(t, new(ThemeClientTestSuite))
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	_, err := client.Perform(Asset{Key: "templates/template.html", Value: "value();"}, Update)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(server.Requests))
+	assert.Equal(t, "PUT", server.Requests[0].Method)
+	assert.Equal(t, "DELETE", server.Requests[1].Method)
+	assert.Equal(t, "PUT", server.Requests[2].Method)
 }

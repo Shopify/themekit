@@ -2,137 +2,119 @@ package kit
 
 import (
 	"encoding/base64"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
+
+	"github.com/Shopify/themekit/kittest"
 )
 
-type LoadAssetSuite struct {
-	suite.Suite
-	allocatedFiles []string
-}
-
-func (s *LoadAssetSuite) TearDownTest() {
-	os.RemoveAll("../fixtures/output")
-	os.RemoveAll("../fixtures/download")
-}
-
-func (s *LoadAssetSuite) TestIsValid() {
+func TestIsValid(t *testing.T) {
 	asset := Asset{Key: "test.txt", Value: "one"}
-	assert.Equal(s.T(), true, asset.IsValid())
+	assert.Equal(t, true, asset.IsValid())
 	asset = Asset{Key: "test.txt", Attachment: "one"}
-	assert.Equal(s.T(), true, asset.IsValid())
+	assert.Equal(t, true, asset.IsValid())
 	asset = Asset{Value: "one"}
-	assert.Equal(s.T(), false, asset.IsValid())
+	assert.Equal(t, false, asset.IsValid())
 	asset = Asset{Key: "test.txt"}
-	assert.Equal(s.T(), false, asset.IsValid())
+	assert.Equal(t, false, asset.IsValid())
 }
 
-func (s *LoadAssetSuite) TestSize() {
+func TestSize(t *testing.T) {
 	asset := Asset{Value: "one"}
-	assert.Equal(s.T(), 3, asset.Size())
+	assert.Equal(t, 3, asset.Size())
 	asset = Asset{Attachment: "other"}
-	assert.Equal(s.T(), 5, asset.Size())
+	assert.Equal(t, 5, asset.Size())
 }
 
-func (s *LoadAssetSuite) TestWrite() {
+func TestWrite(t *testing.T) {
+	kittest.Setup()
+	defer kittest.Cleanup()
 	asset := Asset{Key: "output/blah.txt", Value: "this is content"}
-
-	err := asset.Write("../nope")
-	assert.NotNil(s.T(), err)
-
-	err = asset.Write("../fixtures")
-	assert.Nil(s.T(), err)
+	assert.NotNil(t, asset.Write("./does/not/exist"))
+	assert.Nil(t, asset.Write(kittest.FixtureProjectPath))
 }
 
-func (s *LoadAssetSuite) TestContents() {
+func TestContents(t *testing.T) {
 	asset := Asset{Value: "this is content"}
 	data, err := asset.Contents()
-	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), 15, len(data))
+	assert.Nil(t, err)
+	assert.Equal(t, 15, len(data))
 
 	asset = Asset{Attachment: "this is bad content"}
 	data, err = asset.Contents()
-	assert.NotNil(s.T(), err)
+	assert.NotNil(t, err)
 
 	asset = Asset{Attachment: base64.StdEncoding.EncodeToString([]byte("this is bad content"))}
 	data, err = asset.Contents()
-	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), 19, len(data))
-	assert.Equal(s.T(), []byte("this is bad content"), data)
+	assert.Nil(t, err)
+	assert.Equal(t, 19, len(data))
+	assert.Equal(t, []byte("this is bad content"), data)
 
 	asset = Asset{Key: "test.json", Value: "{\"test\":\"one\"}"}
 	data, err = asset.Contents()
-	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), 19, len(data))
-	assert.Equal(s.T(), `{
+	assert.Nil(t, err)
+	assert.Equal(t, 19, len(data))
+	assert.Equal(t, `{
   "test": "one"
 }`, string(data))
 }
 
-func (s *LoadAssetSuite) TestFindAllFiles() {
-	files, err := findAllFiles("../fixtures/project/valid_patterns")
-	assert.Equal(s.T(), "Path is not a directory", err.Error())
-	files, err = findAllFiles("../fixtures/project")
-	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), []string{
-		clean("../fixtures/project/assets/application.js"),
-		clean("../fixtures/project/assets/pixel.png"),
-		clean("../fixtures/project/config/settings_data.json"),
-		clean("../fixtures/project/config.json"),
-		clean("../fixtures/project/invalid_config.yml"),
-		clean("../fixtures/project/layout/.gitkeep"),
-		clean("../fixtures/project/locales/en.json"),
-		clean("../fixtures/project/snippets/snippet.js"),
-		clean("../fixtures/project/templates/customers/test.liquid"),
-		clean("../fixtures/project/templates/template.liquid"),
-		clean("../fixtures/project/valid_config.yml"),
-		clean("../fixtures/project/valid_patterns"),
-		clean("../fixtures/project/whatever.txt"),
-	}, files)
+func TestFindAllFiles(t *testing.T) {
+	kittest.Setup()
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	files, err := findAllFiles(kittest.ProjectFiles[0])
+	assert.Equal(t, "Path is not a directory", err.Error())
+	files, err = findAllFiles(kittest.FixtureProjectPath)
+	assert.Nil(t, err)
+	assert.Equal(t, len(kittest.ProjectFiles), len(files))
 }
 
-func (s *LoadAssetSuite) TestLoadAssetsFromDirectory() {
-	assets, err := loadAssetsFromDirectory(clean("../fixtures/project/valid_patterns"), "", func(path string) bool { return false })
-	assert.Equal(s.T(), "Path is not a directory", err.Error())
-	assets, err = loadAssetsFromDirectory(clean("../fixtures/project"), "", func(path string) bool {
+func TestLoadAssetsFromDirectory(t *testing.T) {
+	kittest.Setup()
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+
+	assets, err := loadAssetsFromDirectory(kittest.ProjectFiles[0], "", func(path string) bool { return false })
+	assert.Equal(t, "Path is not a directory", err.Error())
+	assets, err = loadAssetsFromDirectory(kittest.FixtureProjectPath, "", func(path string) bool {
 		return path != "assets/application.js"
 	})
-	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), []Asset{{
+	assert.Nil(t, err)
+	assert.Equal(t, []Asset{{
 		Key:   "assets/application.js",
-		Value: "//this is js\n",
+		Value: "this is js content",
 	}}, assets)
+
+	kittest.Setup()
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	assets, err = loadAssetsFromDirectory(kittest.FixtureProjectPath, "assets", func(path string) bool { return false })
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(assets))
 }
 
-func (s *LoadAssetSuite) TestLoadAssetsFromDirectoryWithSubdir() {
-	assets, err := loadAssetsFromDirectory(clean("../fixtures/project"), "assets", func(path string) bool { return false })
-	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), 2, len(assets))
-}
+func TestLoadAsset(t *testing.T) {
+	kittest.Setup()
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
 
-func (s *LoadAssetSuite) TestLoadAsset() {
-	asset, err := loadAsset(clean("../fixtures/project"), "assets/application.js")
-	assert.Equal(s.T(), "assets/application.js", asset.Key)
-	assert.Equal(s.T(), true, asset.IsValid())
-	assert.Equal(s.T(), "//this is js\n", asset.Value)
-	assert.Nil(s.T(), err)
+	asset, err := loadAsset(kittest.FixtureProjectPath, kittest.ProjectFiles[0])
+	assert.Equal(t, kittest.ProjectFiles[0], asset.Key)
+	assert.Equal(t, true, asset.IsValid())
+	assert.Equal(t, "this is js content", asset.Value)
+	assert.Nil(t, err)
 
-	asset, err = loadAsset(clean("../fixtures/project"), "nope.txt")
-	assert.NotNil(s.T(), err)
+	asset, err = loadAsset(kittest.FixtureProjectPath, "nope.txt")
+	assert.NotNil(t, err)
 
-	asset, err = loadAsset(clean("../fixtures/project"), "templates")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), ErrAssetIsDir, err)
+	asset, err = loadAsset(kittest.FixtureProjectPath, "templates")
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrAssetIsDir, err)
 
-	asset, err = loadAsset(clean("../fixtures/project"), "assets/pixel.png")
-	assert.Nil(s.T(), err)
-	assert.True(s.T(), len(asset.Attachment) > 0)
-	assert.True(s.T(), asset.IsValid())
-}
-
-func TestLoadAssetSuite(t *testing.T) {
-	suite.Run(t, new(LoadAssetSuite))
+	asset, err = loadAsset(kittest.FixtureProjectPath, "assets/pixel.png")
+	assert.Nil(t, err)
+	assert.True(t, len(asset.Attachment) > 0)
+	assert.True(t, asset.IsValid())
 }

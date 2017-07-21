@@ -1,12 +1,14 @@
 package kittest
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"path/filepath"
+	"runtime"
 	"sync"
 
 	"github.com/ryanuber/go-glob"
@@ -17,31 +19,56 @@ var (
 	FixturesPath = filepath.Join(".", "fixtures")
 	// FixtureProjectPath is a directory where any projects files will be put
 	FixtureProjectPath = filepath.Join(FixturesPath, "project")
+	// UpdateFilePath is the file for testing updating themekit
+	UpdateFilePath = filepath.Join(FixturesPath, "updateme")
+	// NewUpdateFile is the file that is sent for updating themekit
+	NewUpdateFile = []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+	// NewUpdateFileChecksum is the checksum for newupdatefile
+	NewUpdateFileChecksum = md5.Sum(NewUpdateFile)
 )
 
 type (
-	// TestRequest encapsulates a request made to the test server
-	TestRequest struct {
-		Method string
-		URL    *url.URL
-	}
 	// Server is a test server that will record requests and server shopify responses
 	Server struct {
+		deletedCompiledFile bool
 		*httptest.Server
 		sync.Mutex
-		Requests []TestRequest
+		Requests []*http.Request
 	}
 )
 
 func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	server.Lock()
 	defer server.Unlock()
-	server.Requests = append(server.Requests, TestRequest{
-		Method: r.Method,
-		URL:    r.URL,
-	})
+	server.Requests = append(server.Requests, r)
 	if r.URL.Path == "/themekit_update" {
 		fmt.Fprintf(w, themekitUpdateFeed)
+	} else if r.URL.Path == "/themekit_system_update" {
+		type platform struct {
+			Name       string `json:"name"`
+			URL        string `json:"url"`
+			Digest     string `json:"digest"`
+			TargetPath string `json:"TargetPath"` // used for testing updating
+		}
+		out, _ := json.Marshal([]struct {
+			Version   string     `json:"version"`
+			Platforms []platform `json:"platforms"`
+		}{
+			{
+				Version: "20.0.0",
+				Platforms: []platform{
+					{
+						Name:       runtime.GOOS + "-" + runtime.GOARCH,
+						URL:        server.URL + "/release_download",
+						Digest:     hex.EncodeToString(NewUpdateFileChecksum[:]),
+						TargetPath: UpdateFilePath,
+					},
+				},
+			},
+		})
+		fmt.Fprintf(w, string(out))
+	} else if r.URL.Path == "/release_download" {
+		fmt.Fprintf(w, string(NewUpdateFile))
 	} else if r.URL.Path == "/feed" {
 		fmt.Fprintf(w, releaseAtom)
 	} else if r.URL.Path == "/admin/themes.json" {
@@ -67,6 +94,13 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w, "not found")
 			} else if ok && asset.Key == "empty" {
 				fmt.Fprintf(w, "{\"asset\": {\"key\":\"\"}")
+			} else if ok && asset.Key == "templates/template.html" && r.Method == "PUT" && !server.deletedCompiledFile {
+				w.WriteHeader(422)
+				fmt.Fprintf(w, `{"errors":{"asset":["Cannot overwrite generated asset"]}}`)
+			} else if ok && asset.Key == "templates/template.html.liquid" && r.Method == "DELETE" && !server.deletedCompiledFile {
+				server.deletedCompiledFile = true
+				w.WriteHeader(200)
+				fmt.Fprintf(w, assetResponse)
 			} else {
 				fmt.Fprintf(w, assetResponse)
 			}
@@ -74,9 +108,25 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, assetsReponse)
 		}
 	} else if glob.Glob("/admin/themes/*.json", r.URL.Path) {
-		fmt.Fprintf(w, themeResponse)
+		if r.Method == "GET" {
+			fmt.Fprintf(w, themeResponse)
+		} else if r.Method == "POST" {
+			decoder := json.NewDecoder(r.Body)
+			var theme map[string]struct {
+				Name string
+			}
+			decoder.Decode(&theme)
+			defer r.Body.Close()
+
+			if asset, ok := theme["theme"]; ok && asset.Name == "nope" {
+				fmt.Fprintf(w, themeErrorResponse)
+			} else {
+				fmt.Fprintf(w, themeResponse)
+			}
+		}
+	} else if r.URL.Path == "/not_json" {
+		fmt.Fprintf(w, "this is not json")
 	} else {
-		println("bad request", r.URL.Path)
 		w.WriteHeader(404)
 		fmt.Fprintf(w, "bad request")
 	}
@@ -86,14 +136,14 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (server *Server) Reset() {
 	server.Lock()
 	defer server.Unlock()
-	server.Requests = []TestRequest{}
+	server.Requests = []*http.Request{}
 }
 
 // NewTestServer is test server setup to act like the shopify API so that we can
 // test against it for different responses
 func NewTestServer() *Server {
 	testServer := &Server{
-		Requests: []TestRequest{},
+		Requests: []*http.Request{},
 	}
 	testServer.Server = httptest.NewServer(testServer)
 	return testServer

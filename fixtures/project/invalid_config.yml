@@ -1,7 +1,0 @@
-development:
-  store: example.myshopify.com
-  access_token: abracadabra
-  ignore_files:
-    - hello
-    - *.jpg
-    - *.png

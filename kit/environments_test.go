@@ -5,76 +5,73 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
+
+	"github.com/Shopify/themekit/kittest"
 )
 
-const (
-	goodEnvirontmentPath   = "../fixtures/project/valid_config.yml"
-	badEnvirontmentPath    = "../fixtures/project/invalid_config.yml"
-	outputEnvirontmentPath = "../fixtures/project/output.yml"
-)
+func TestLoadEnvironments(t *testing.T) {
+	defer kittest.Cleanup()
 
-type EnvironmentsTestSuite struct {
-	suite.Suite
-	environments Environments
-	errors       error
+	kittest.GenerateConfig("example.myshopify.io", true)
+	envs, err := LoadEnvironments("config.yml")
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(envs))
+
+	kittest.GenerateConfig("example.myshopify.io", false)
+	_, err = LoadEnvironments("config.yml")
+	assert.NotNil(t, err)
+
+	_, err = LoadEnvironments("nope.yml")
+	assert.NotNil(t, err)
 }
 
-func (suite *EnvironmentsTestSuite) SetupTest() {
-	suite.environments, suite.errors = LoadEnvironments(goodEnvirontmentPath)
+func TestSearchConfigPath(t *testing.T) {
+	defer kittest.Cleanup()
+	kittest.GenerateConfig("example.myshopify.io", true)
+
+	_, ext, err := searchConfigPath("config.yml")
+	assert.Nil(t, err)
+	assert.Equal(t, "yml", ext)
+
+	kittest.Cleanup()
+	kittest.GenerateJSONConfig("example.myshopify.io")
+	_, ext, err = searchConfigPath("config.json")
+	assert.Nil(t, err)
+	assert.Equal(t, "json", ext)
+
+	_, _, err = searchConfigPath("not_there.yml")
+	assert.NotNil(t, err)
+	assert.Equal(t, os.ErrNotExist, err)
 }
 
-func (suite *EnvironmentsTestSuite) TearDownTest() {
-	os.Remove(outputEnvirontmentPath)
-}
-
-func (suite *EnvironmentsTestSuite) TestLoadEnvironments() {
-	assert.NoError(suite.T(), suite.errors, "An error should not have been raised")
-	assert.Equal(suite.T(), 3, len(suite.environments))
-
-	_, err := LoadEnvironments(badEnvirontmentPath)
-	assert.NotNil(suite.T(), err)
-
-	_, err = LoadEnvironments(clean("./not/there.yml"))
-	assert.NotNil(suite.T(), err)
-}
-
-func (suite *EnvironmentsTestSuite) TestSearchConfigPath() {
-	_, ext, err := searchConfigPath(goodEnvirontmentPath)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "yml", ext)
-
-	_, ext, err = searchConfigPath(clean("../fixtures/project/config.json"))
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "json", ext)
-
-	_, _, err = searchConfigPath(clean("./not/there.yml"))
-	assert.NotNil(suite.T(), err)
-	assert.Equal(suite.T(), os.ErrNotExist, err)
-}
-
-func (suite *EnvironmentsTestSuite) TestSetConfiguration() {
+func TestSetConfiguration(t *testing.T) {
+	defer kittest.Cleanup()
+	kittest.GenerateConfig("example.myshopify.io", true)
+	envs, err := LoadEnvironments("config.yml")
+	assert.Nil(t, err)
 	newConfig, _ := NewConfiguration()
-	suite.environments.SetConfiguration("test", newConfig)
-	assert.Equal(suite.T(), newConfig, suite.environments["test"])
+	envs.SetConfiguration("test", newConfig)
+	assert.Equal(t, newConfig, envs["test"])
 }
 
-func (suite *EnvironmentsTestSuite) TestGetConfiguration() {
-	_, err := suite.environments.GetConfiguration("development")
-	assert.Nil(suite.T(), err)
-	_, err = suite.environments.GetConfiguration("nope")
-	assert.NotNil(suite.T(), err)
+func TestGetConfiguration(t *testing.T) {
+	defer kittest.Cleanup()
+	kittest.GenerateConfig("example.myshopify.io", true)
+	envs, err := LoadEnvironments("config.yml")
+	assert.Nil(t, err)
+	_, err = envs.GetConfiguration("development")
+	assert.Nil(t, err)
+	_, err = envs.GetConfiguration("nope")
+	assert.NotNil(t, err)
 }
 
-func (suite *EnvironmentsTestSuite) TestSave() {
-	err := suite.environments.Save(outputEnvirontmentPath)
-	assert.Nil(suite.T(), err)
-	_, err = os.Stat(outputEnvirontmentPath)
-	assert.Nil(suite.T(), err)
-	err = suite.environments.Save(clean("./no/where/path"))
-	assert.NotNil(suite.T(), err)
-}
-
-func TestEnvironmentsTestSuite(t *testing.T) {
-	suite.Run(t, new(EnvironmentsTestSuite))
+func TestSave(t *testing.T) {
+	defer kittest.Cleanup()
+	kittest.GenerateConfig("example.myshopify.io", true)
+	envs, err := LoadEnvironments("config.yml")
+	assert.Nil(t, err)
+	assert.Nil(t, envs.Save("config.json"))
+	_, err = os.Stat("config.json")
+	assert.Nil(t, err)
+	assert.NotNil(t, envs.Save("./no/where/path"))
 }

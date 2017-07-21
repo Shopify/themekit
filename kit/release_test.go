@@ -69,8 +69,7 @@ func TestReleaseForCurrentPlatform(t *testing.T) {
 
 func TestReleasesListGet(t *testing.T) {
 	var releases releasesList
-	resp := jsonFixture("responses/all_releases")
-	json.Unmarshal([]byte(resp), &releases)
+	json.Unmarshal([]byte(`[{"version":"0.4.4"},{"version":"0.4.7"}]`), &releases)
 
 	r := releases.Get("latest")
 	assert.Equal(t, "0.4.7", r.Version)

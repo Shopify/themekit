@@ -2,121 +2,110 @@ package kit
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
-type ShopifyResponseTestSuite struct {
-	suite.Suite
-}
-
-func (suite *ShopifyResponseTestSuite) TestRequestError() {
+func TestRequestError(t *testing.T) {
 	errorMessage := "something went wrong"
 	badErr := fmt.Errorf(errorMessage)
-	req, _ := newShopifyRequest(newTestConfig(), themeRequest, Create, "")
+	req, _ := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
 	resp, err := newShopifyResponse(req, nil, badErr)
-	assert.NotNil(suite.T(), resp)
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(t, resp)
+	assert.NotNil(t, err)
 }
 
-func (suite *ShopifyResponseTestSuite) TestNoBody() {
+func TestNoBody(t *testing.T) {
 	mock := &http.Response{
 		Request: &http.Request{URL: &url.URL{}},
-		Body:    fileFixture("responses/general_error"),
+		Body:    ioutil.NopCloser(strings.NewReader("")),
 	}
 	mock.Body.Close()
-	req, _ := newShopifyRequest(newTestConfig(), themeRequest, Create, "")
+	req, _ := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
 	resp, err := newShopifyResponse(req, mock, nil)
-	assert.NotNil(suite.T(), resp)
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(t, resp)
+	assert.NotNil(t, err)
 }
 
-func (suite *ShopifyResponseTestSuite) TestErrorResponse() {
-	resp, err := suite.shopifyResp("responses/general_error")
-	assert.NotNil(suite.T(), resp)
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "[API] Invalid API key or access token (unrecognized login or wrong password)", resp.Errors.Error())
+func TestErrorResponse(t *testing.T) {
+	resp, err := mockShopifyResp(`{"errors": "this is api error"}`)
+	assert.NotNil(t, resp)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "this is api error", resp.Errors.Error())
 	}
 }
 
-func (suite *ShopifyResponseTestSuite) TestThemeResponse() {
-	resp, err := suite.shopifyResp("responses/theme")
-	assert.NotNil(suite.T(), resp)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "timberland", resp.Theme.Name)
+func TestThemeResponse(t *testing.T) {
+	resp, err := mockShopifyResp(`{"theme":{"name":"timberland"}}`)
+	assert.NotNil(t, resp)
+	assert.Nil(t, err)
+	assert.Equal(t, "timberland", resp.Theme.Name)
 }
 
-func (suite *ShopifyResponseTestSuite) TestThemeErrorResponse() {
-	resp, err := suite.shopifyResp("responses/theme_error")
-	assert.NotNil(suite.T(), resp)
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "is empty", resp.Errors.Error())
+func TestThemeErrorResponse(t *testing.T) {
+	resp, err := mockShopifyResp(`{"errors":{"src":["is empty"]}}`)
+	assert.NotNil(t, resp)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "is empty", resp.Errors.Error())
 	}
 }
 
-func (suite *ShopifyResponseTestSuite) TestAssetResponse() {
-	resp, err := suite.shopifyResp("responses/asset")
-	assert.NotNil(suite.T(), resp)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "assets/hello.txt", resp.Asset.Key)
+func TestAssetResponse(t *testing.T) {
+	resp, err := mockShopifyResp(`{"asset":{"key": "assets/hello.txt"}}`)
+	assert.NotNil(t, resp)
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
 }
 
-func (suite *ShopifyResponseTestSuite) TestAssetErrorResponse() {
-	resp, err := suite.shopifyResp("responses/asset_error")
-	assert.NotNil(suite.T(), resp)
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Liquid syntax error (line 10): 'comment' tag was never closed", resp.Errors.Error())
+func TestAssetErrorResponse(t *testing.T) {
+	resp, err := mockShopifyResp(`{"errors":{"asset":["this is asset error"]}}`)
+	assert.NotNil(t, resp)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "this is asset error", resp.Errors.Error())
 	}
 }
 
-func (suite *ShopifyResponseTestSuite) TestListResponse() {
-	resp, err := suite.shopifyResp("responses/assets")
-	assert.NotNil(suite.T(), resp)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 2, len(resp.Assets))
-	assert.Equal(suite.T(), "assets/goodbye.txt", resp.Assets[1].Key)
+func TestListResponse(t *testing.T) {
+	resp, err := mockShopifyResp(`{"assets":[{"key":"assets/hello.txt"},{"key":"assets/goodbye.txt"}]}`)
+	assert.NotNil(t, resp)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(resp.Assets))
+	assert.Equal(t, "assets/goodbye.txt", resp.Assets[1].Key)
 }
 
-func (suite *ShopifyResponseTestSuite) TestSuccessful() {
+func TestSuccessful(t *testing.T) {
 	resp := ShopifyResponse{Code: 200}
-	assert.Equal(suite.T(), true, resp.Successful())
+	assert.Equal(t, true, resp.Successful())
 	resp = ShopifyResponse{Code: 500}
-	assert.Equal(suite.T(), false, resp.Successful())
+	assert.Equal(t, false, resp.Successful())
 	resp = ShopifyResponse{Code: 200, Errors: requestError{Other: []string{"nope"}}}
-	assert.Equal(suite.T(), false, resp.Successful())
+	assert.Equal(t, false, resp.Successful())
 }
 
-func (suite *ShopifyResponseTestSuite) TestError() {
+func TestError(t *testing.T) {
 	resp := ShopifyResponse{Code: 200}
-	assert.Nil(suite.T(), resp.Error())
+	assert.Nil(t, resp.Error())
 	resp = ShopifyResponse{Code: 500, Type: themeRequest}
-	assert.IsType(suite.T(), themeError{}, resp.Error())
+	assert.IsType(t, themeError{}, resp.Error())
 	resp = ShopifyResponse{Code: 500, Type: assetRequest}
-	assert.IsType(suite.T(), assetError{}, resp.Error())
+	assert.IsType(t, assetError{}, resp.Error())
 	resp = ShopifyResponse{Code: 500, Type: listRequest}
-	assert.IsType(suite.T(), listError{}, resp.Error())
+	assert.IsType(t, listError{}, resp.Error())
 	resp = ShopifyResponse{Code: 500, Type: 20}
-	assert.IsType(suite.T(), kitError{}, resp.Error())
+	assert.IsType(t, kitError{}, resp.Error())
 }
 
-func (suite *ShopifyResponseTestSuite) shopifyResp(path string) (*ShopifyResponse, Error) {
-	req, _ := newShopifyRequest(newTestConfig(), themeRequest, Create, "")
-	return newShopifyResponse(req, suite.respFixture(path), nil)
-}
-
-func (suite *ShopifyResponseTestSuite) respFixture(path string) *http.Response {
-	return &http.Response{
+func mockShopifyResp(body string) (*ShopifyResponse, Error) {
+	req, _ := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
+	return newShopifyResponse(req, &http.Response{
 		Status:     "200 OK",
 		StatusCode: 200,
 		Request:    &http.Request{URL: &url.URL{}},
-		Body:       fileFixture(path),
-	}
-}
-
-func TestShopifyResponseTestSuite(t *testing.T) {
-	suite.Run(t, new(ShopifyResponseTestSuite))
+		Body:       ioutil.NopCloser(strings.NewReader(body)),
+	}, nil)
 }

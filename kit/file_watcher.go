@@ -63,6 +63,7 @@ func newFileWatcher(client ThemeClient, notifyFile string, recur bool, filter fi
 func (watcher *FileWatcher) watch() error {
 	root, symlinkErr := filepath.EvalSymlinks(filepath.Clean(watcher.client.Config.Directory))
 	if symlinkErr != nil {
+		println(watcher.client.Config.Directory, symlinkErr.Error())
 		return symlinkErr
 	}
 

@@ -3,61 +3,59 @@ package kit
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
+
+	"github.com/Shopify/themekit/kittest"
 )
 
-var (
-	watchFixturePath   = filepath.Join("..", "fixtures", "project")
-	textFixturePath    = filepath.Join(watchFixturePath, "assets", "application.js")
-	symlinkFixturePath = filepath.Join("..", "fixtures", "symlink_project")
-)
-
-type FileWatcherTestSuite struct {
-	suite.Suite
-	watcher *FileWatcher
-}
-
-func (suite *FileWatcherTestSuite) TestNewFileReader() {
-	client := ThemeClient{Config: &Configuration{Directory: watchFixturePath}}
+func TestNewFileReader(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	client := ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}}
 	watcher, err := newFileWatcher(client, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), true, watcher.IsWatching())
+	assert.Nil(t, err)
+	assert.Equal(t, true, watcher.IsWatching())
 	watcher.StopWatching()
 }
 
-func (suite *FileWatcherTestSuite) TestWatchDirectory() {
-	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
+func TestWatchDirectory(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	filter, _ := newFileFilter(kittest.FixtureProjectPath, []string{}, []string{})
 	w, _ := fsnotify.NewWatcher()
 	newWatcher := &FileWatcher{
 		filter:      filter,
 		mainWatcher: w,
-		client:      ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
+		client:      ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}},
 	}
 	newWatcher.watch()
-	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(filepath.Join(watchFixturePath, "assets")))
+	assert.Nil(t, newWatcher.mainWatcher.Remove(filepath.Join(kittest.FixtureProjectPath, "assets")))
 }
 
-func (suite *FileWatcherTestSuite) TestWatchSymlinkDirectory() {
-	filter, _ := newFileFilter(symlinkFixturePath, []string{}, []string{})
+func TestWatchSymlinkDirectory(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	filter, _ := newFileFilter(kittest.SymlinkProjectPath, []string{}, []string{})
 	w, _ := fsnotify.NewWatcher()
 	newWatcher := &FileWatcher{
 		filter:      filter,
 		mainWatcher: w,
-		client:      ThemeClient{Config: &Configuration{Directory: symlinkFixturePath}},
+		client:      ThemeClient{Config: &Configuration{Directory: kittest.SymlinkProjectPath}},
 	}
-	newWatcher.watch()
-	assert.Nil(suite.T(), newWatcher.mainWatcher.Remove(filepath.Join(watchFixturePath, "assets")))
+	assert.Nil(t, newWatcher.watch())
+	assert.Nil(t, newWatcher.mainWatcher.Remove(filepath.Join(kittest.FixtureProjectPath, "assets")))
 }
 
-func (suite *FileWatcherTestSuite) TestWatchConfig() {
-	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
+func TestWatchConfig(t *testing.T) {
+	kittest.GenerateProject()
+	kittest.GenerateConfig("example.myshopify.com", true)
+	defer kittest.Cleanup()
+	filter, _ := newFileFilter(kittest.FixtureProjectPath, []string{}, []string{})
 	w, _ := fsnotify.NewWatcher()
 	newWatcher := &FileWatcher{
 		done:          make(chan bool),
@@ -66,30 +64,32 @@ func (suite *FileWatcherTestSuite) TestWatchConfig() {
 	}
 
 	err := newWatcher.WatchConfig("nope", make(chan bool))
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(t, err)
 
-	err = newWatcher.WatchConfig(goodEnvirontmentPath, make(chan bool))
-	assert.Nil(suite.T(), err)
+	err = newWatcher.WatchConfig("config.yml", make(chan bool))
+	assert.Nil(t, err)
 }
 
-func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
+func TestWatchFsEvents(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
 	assetChan := make(chan Asset, 100)
 	eventChan := make(chan fsnotify.Event)
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	filter, _ := newFileFilter(watchFixturePath, []string{}, []string{})
+	filter, _ := newFileFilter(kittest.FixtureProjectPath, []string{}, []string{})
 
 	newWatcher := &FileWatcher{
 		done:          make(chan bool),
 		filter:        filter,
 		mainWatcher:   &fsnotify.Watcher{Events: eventChan},
-		client:        ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
+		client:        ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}},
 		configWatcher: &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
 	}
 
 	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType) {
-		assert.Equal(suite.T(), Update, event)
+		assert.Equal(t, Update, event)
 		assetChan <- asset
 		wg.Done()
 	}
@@ -98,10 +98,10 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 
 	go func() {
 		writes := []fsnotify.Event{
-			{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write},
-			{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write},
-			{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write},
-			{Name: filepath.Join(watchFixturePath, "templates", "customers", "test.liquid"), Op: fsnotify.Write},
+			{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "template.liquid"), Op: fsnotify.Write},
+			{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "template.liquid"), Op: fsnotify.Write},
+			{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "template.liquid"), Op: fsnotify.Write},
+			{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "customers", "test.liquid"), Op: fsnotify.Write},
 		}
 		for _, fsEvent := range writes {
 			eventChan <- fsEvent
@@ -110,10 +110,13 @@ func (suite *FileWatcherTestSuite) TestWatchFsEvents() {
 
 	wg.Wait()
 	// test that the events are debounced
-	assert.Equal(suite.T(), 2, len(assetChan))
+	assert.Equal(t, 2, len(assetChan))
 }
 
-func (suite *FileWatcherTestSuite) TestReloadConfig() {
+func TestReloadConfig(t *testing.T) {
+	kittest.GenerateProject()
+	kittest.GenerateConfig("example.myshopify.com", true)
+	defer kittest.Cleanup()
 	reloadChan := make(chan bool, 100)
 
 	configWatcher, _ := fsnotify.NewWatcher()
@@ -124,28 +127,33 @@ func (suite *FileWatcherTestSuite) TestReloadConfig() {
 	}
 
 	newWatcher.callback = func(client ThemeClient, asset Asset, event EventType) {}
-	err := newWatcher.WatchConfig(goodEnvirontmentPath, reloadChan)
-	assert.Nil(suite.T(), err)
+	err := newWatcher.WatchConfig("config.yml", reloadChan)
+	assert.Nil(t, err)
 
 	go newWatcher.watchFsEvents()
-	configWatcher.Events <- fsnotify.Event{Name: goodEnvirontmentPath, Op: fsnotify.Write}
+	configWatcher.Events <- fsnotify.Event{Name: "config.yml", Op: fsnotify.Write}
 
 	_, ok := <-newWatcher.done
-	assert.False(suite.T(), ok)
-	assert.Equal(suite.T(), newWatcher.IsWatching(), false)
+	assert.False(t, ok)
+	assert.Equal(t, newWatcher.IsWatching(), false)
 }
 
-func (suite *FileWatcherTestSuite) TestStopWatching() {
-	client := ThemeClient{Config: &Configuration{Directory: watchFixturePath}}
+func TestStopWatching(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	client := ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}}
 	watcher, err := newFileWatcher(client, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), true, watcher.IsWatching())
+	assert.Nil(t, err)
+	assert.Equal(t, true, watcher.IsWatching())
 	watcher.StopWatching()
 	time.Sleep(50 * time.Millisecond)
-	assert.Equal(suite.T(), false, watcher.IsWatching())
+	assert.Equal(t, false, watcher.IsWatching())
 }
 
-func (suite *FileWatcherTestSuite) TestOnReload() {
+func TestOnReload(t *testing.T) {
+	kittest.GenerateProject()
+	kittest.GenerateConfig("example.myshopify.com", true)
+	defer kittest.Cleanup()
 	reloadChan := make(chan bool, 100)
 
 	configWatcher, _ := fsnotify.NewWatcher()
@@ -153,82 +161,77 @@ func (suite *FileWatcherTestSuite) TestOnReload() {
 		done:          make(chan bool),
 		mainWatcher:   &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
 		configWatcher: configWatcher,
-		client:        ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
+		client:        ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}},
 	}
 
-	err := newWatcher.WatchConfig(goodEnvirontmentPath, reloadChan)
-	assert.Nil(suite.T(), err)
+	err := newWatcher.WatchConfig("config.yml", reloadChan)
+	assert.Nil(t, err)
 	newWatcher.onReload()
 
-	assert.Equal(suite.T(), len(reloadChan), 1)
-	assert.Equal(suite.T(), newWatcher.IsWatching(), false)
+	assert.Equal(t, len(reloadChan), 1)
+	assert.Equal(t, newWatcher.IsWatching(), false)
 }
 
-func (suite *FileWatcherTestSuite) TestOnEvent() {
+func TestOnEvent(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
 	newWatcher := &FileWatcher{
 		waitNotify:     false,
 		recordedEvents: newEventMap(),
 		callback:       func(client ThemeClient, asset Asset, event EventType) {},
-		client:         ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
+		client:         ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}},
 	}
 
-	event1 := fsnotify.Event{Name: filepath.Join(watchFixturePath, "templates", "template.liquid"), Op: fsnotify.Write}
-	event2 := fsnotify.Event{Name: filepath.Join(watchFixturePath, "templates", "customers", "test.liquid"), Op: fsnotify.Write}
+	event1 := fsnotify.Event{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "template.liquid"), Op: fsnotify.Write}
+	event2 := fsnotify.Event{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "customers", "test.liquid"), Op: fsnotify.Write}
 
-	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 0)
+	assert.Equal(t, newWatcher.recordedEvents.Count(), 0)
 	newWatcher.onEvent(event1)
-	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
+	assert.Equal(t, newWatcher.recordedEvents.Count(), 1)
 	newWatcher.onEvent(event1)
-	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 1)
+	assert.Equal(t, newWatcher.recordedEvents.Count(), 1)
 	newWatcher.onEvent(event2)
-	assert.Equal(suite.T(), newWatcher.recordedEvents.Count(), 2)
+	assert.Equal(t, newWatcher.recordedEvents.Count(), 2)
 }
 
-func (suite *FileWatcherTestSuite) TestTouchNotifyFile() {
+func TestTouchNotifyFile(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
 	notifyPath := "notifyTestFile"
 	newWatcher := &FileWatcher{
 		notify: notifyPath,
 	}
-	assert.False(suite.T(), fileExists(notifyPath))
+	_, err := os.Stat(notifyPath)
+	assert.True(t, os.IsNotExist(err))
 	newWatcher.waitNotify = true
 	newWatcher.touchNotifyFile()
-	assert.True(suite.T(), fileExists(notifyPath))
-	assert.False(suite.T(), newWatcher.waitNotify)
+	_, err = os.Stat(notifyPath)
+	assert.False(t, os.IsNotExist(err))
+	assert.False(t, newWatcher.waitNotify)
 	os.Remove(notifyPath)
 }
 
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
-}
-
-func (suite *FileWatcherTestSuite) TestHandleEvent() {
+func TestHandleEvent(t *testing.T) {
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
 	writes := []struct {
 		Name          string
 		Event         fsnotify.Op
 		ExpectedEvent EventType
 	}{
-		{Name: textFixturePath, Event: fsnotify.Create, ExpectedEvent: Update},
-		{Name: textFixturePath, Event: fsnotify.Write, ExpectedEvent: Update},
-		{Name: textFixturePath, Event: fsnotify.Remove, ExpectedEvent: Remove},
-		{Name: textFixturePath, Event: fsnotify.Rename, ExpectedEvent: Remove},
+		{Name: filepath.Join(kittest.FixtureProjectPath, "assets", "application.js"), Event: fsnotify.Create, ExpectedEvent: Update},
+		{Name: filepath.Join(kittest.FixtureProjectPath, "assets", "application.js"), Event: fsnotify.Write, ExpectedEvent: Update},
+		{Name: filepath.Join(kittest.FixtureProjectPath, "assets", "application.js"), Event: fsnotify.Remove, ExpectedEvent: Remove},
+		{Name: filepath.Join(kittest.FixtureProjectPath, "assets", "application.js"), Event: fsnotify.Rename, ExpectedEvent: Remove},
 	}
 
 	for _, write := range writes {
 		watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType) {
-			assert.Equal(suite.T(), pathToProject(watchFixturePath, textFixturePath), asset.Key)
-			assert.Equal(suite.T(), write.ExpectedEvent, event)
+			assert.Equal(t, pathToProject(kittest.FixtureProjectPath, filepath.Join(kittest.FixtureProjectPath, "assets", "application.js")), asset.Key)
+			assert.Equal(t, write.ExpectedEvent, event)
 		},
-			client: ThemeClient{Config: &Configuration{Directory: watchFixturePath}},
+			client: ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}},
 		}
 		watcher.handleEvent(fsnotify.Event{Name: write.Name, Op: write.Event})
 	}
-}
-
-func TestFileWatcherTestSuite(t *testing.T) {
-	suite.Run(t, new(FileWatcherTestSuite))
-}
-
-func clean(path string) string {
-	return filepath.Join(strings.Split(filepath.Clean(path), "/")...)
 }

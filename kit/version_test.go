@@ -1,162 +1,72 @@
 package kit
 
 import (
-	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"os"
-	"runtime"
 	"testing"
 
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
+
+	"github.com/Shopify/themekit/kittest"
 )
 
-var (
-	updatePath      = clean("../fixtures/updateme")
-	oldFile         = []byte{0xDE, 0xAD, 0xBE, 0xEF}
-	newFile         = []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
-	newFileChecksum = md5.Sum(newFile)
-)
-
-type VersionTestSuite struct {
-	suite.Suite
-}
-
-func (suite *VersionTestSuite) SetupSuite() {
-	ThemeKitVersion, _ = version.NewVersion("0.5.0")
-}
-
-func (suite *VersionTestSuite) SetupTest() {
-	file, err := os.Create(updatePath)
-	if err == nil {
-		file.Close()
-	}
-}
-
-func (suite *VersionTestSuite) TearDownTest() {
-	os.Remove(updatePath)
-}
-
-func (suite *VersionTestSuite) TestIsNewUpdateAvailable() {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, jsonFixture("responses/all_releases"))
-	}))
-	ThemeKitReleasesURL = server.URL
+func TestIsNewUpdateAvailable(t *testing.T) {
+	kittest.Setup()
+	defer kittest.Cleanup()
+	server := kittest.NewTestServer()
 	defer server.Close()
+	ThemeKitReleasesURL = server.URL + "/themekit_update"
 	ThemeKitVersion, _ = version.NewVersion("20.0.0")
-	assert.Equal(suite.T(), false, IsNewUpdateAvailable())
-
+	assert.Equal(t, false, IsNewUpdateAvailable())
 	ThemeKitVersion, _ = version.NewVersion("0.0.0")
-	assert.Equal(suite.T(), true, IsNewUpdateAvailable())
+	assert.Equal(t, true, IsNewUpdateAvailable())
 }
 
-func (suite *VersionTestSuite) TestInstallThemeKitVersion() {
-	requests := 0
-	var server *httptest.Server
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if requests <= 1 {
-			fmt.Fprintf(w, jsonFixture("responses/all_releases"))
-		} else if requests == 2 {
-			out, _ := json.Marshal([]release{
-				{
-					Version: "20.0.0",
-					Platforms: []platform{
-						{
-							Name:       runtime.GOOS + "-" + runtime.GOARCH,
-							URL:        server.URL,
-							Digest:     hex.EncodeToString(newFileChecksum[:]),
-							TargetPath: updatePath,
-						},
-					},
-				},
-			})
-
-			fmt.Fprintf(w, string(out))
-		} else {
-			fmt.Fprintf(w, string(newFile))
-		}
-		requests++
-	}))
+func TestInstallThemeKitVersion(t *testing.T) {
+	kittest.Setup()
+	defer kittest.Cleanup()
+	server := kittest.NewTestServer()
 	defer server.Close()
-	ThemeKitReleasesURL = server.URL
-
+	ThemeKitReleasesURL = server.URL + "/themekit_update"
 	ThemeKitVersion, _ = version.NewVersion("0.4.7")
 	err := InstallThemeKitVersion("latest")
-	assert.Equal(suite.T(), "no applicable update available", err.Error())
-
+	assert.Equal(t, "no applicable update available", err.Error())
+	ThemeKitReleasesURL = server.URL + "/themekit_system_update"
 	ThemeKitVersion, _ = version.NewVersion("0.4.4")
 	err = InstallThemeKitVersion("0.0.0")
-	assert.Equal(suite.T(), "version 0.0.0 not found", err.Error())
-
-	ThemeKitVersion, _ = version.NewVersion("0.4.4")
-	err = InstallThemeKitVersion("latest")
-	assert.Nil(suite.T(), err)
+	assert.Equal(t, "version 0.0.0 not found", err.Error())
+	assert.Nil(t, InstallThemeKitVersion("latest"))
 }
 
-func (suite *VersionTestSuite) TestFetchReleases() {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, jsonFixture("responses/all_releases"))
-	}))
-	ThemeKitReleasesURL = server.URL
-
+func TestFetchReleases(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	ThemeKitReleasesURL = server.URL + "/themekit_update"
 	releases, err := fetchReleases()
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 4, len(releases))
-	server.Close()
-
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "this is not json")
-	}))
-	ThemeKitReleasesURL = server.URL
+	assert.Nil(t, err)
+	assert.Equal(t, 4, len(releases))
+	ThemeKitReleasesURL = server.URL + "/not_json"
 	_, err = fetchReleases()
-	assert.NotNil(suite.T(), err)
-	server.Close()
-
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "404")
-	}))
-	ThemeKitReleasesURL = server.URL
+	assert.NotNil(t, err)
+	ThemeKitReleasesURL = server.URL + "/doesntexist"
 	_, err = fetchReleases()
-	assert.NotNil(suite.T(), err)
-	server.Close()
+	assert.NotNil(t, err)
 }
 
-func (suite *VersionTestSuite) TestApplyUpdate() {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, string(newFile))
+func TestApplyUpdate(t *testing.T) {
+	kittest.Setup()
+	defer kittest.Cleanup()
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, applyUpdate(platform{
+		URL:        server.URL + "/release_download",
+		Digest:     hex.EncodeToString(kittest.NewUpdateFileChecksum[:]),
+		TargetPath: kittest.UpdateFilePath,
 	}))
-
-	err := applyUpdate(platform{
-		URL:        server.URL,
-		Digest:     hex.EncodeToString(newFileChecksum[:]),
-		TargetPath: updatePath,
-	})
-	assert.Nil(suite.T(), err)
-
-	buf, err := ioutil.ReadFile(updatePath)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), newFile, buf)
-	server.Close()
-
-	err = applyUpdate(platform{})
-	assert.NotNil(suite.T(), err)
-
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "404")
-	}))
-	err = applyUpdate(platform{URL: server.URL})
-	assert.NotNil(suite.T(), err)
-	server.Close()
-}
-
-func TestVersionTestSuite(t *testing.T) {
-	suite.Run(t, new(VersionTestSuite))
+	buf, err := ioutil.ReadFile(kittest.UpdateFilePath)
+	assert.Nil(t, err)
+	assert.Equal(t, kittest.NewUpdateFile, buf)
+	assert.NotNil(t, applyUpdate(platform{}))
+	assert.NotNil(t, applyUpdate(platform{URL: server.URL + "/doesntexist"}))
 }

@@ -5,21 +5,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
-type ErrorsTestSuite struct {
-	suite.Suite
-}
-
-func (suite *ErrorsTestSuite) TestKitError() {
+func TestKitError(t *testing.T) {
 	testErr := fmt.Errorf("testing error")
 	err := kitError{err: testErr}
-	assert.True(suite.T(), err.Fatal())
-	assert.Equal(suite.T(), err.Error(), testErr.Error())
+	assert.True(t, err.Fatal())
+	assert.Equal(t, err.Error(), testErr.Error())
 }
 
-func (suite *ErrorsTestSuite) TestThemeError() {
+func TestThemeError(t *testing.T) {
 	err := themeError{resp: ShopifyResponse{}}
 
 	tests := map[int]bool{
@@ -31,15 +26,15 @@ func (suite *ErrorsTestSuite) TestThemeError() {
 
 	for code, check := range tests {
 		err.resp.Code = code
-		assert.Equal(suite.T(), err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
+		assert.Equal(t, err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
 	}
 
 	err.resp.Errors = requestError{Other: []string{"nope"}}
 	err.resp.Code = 200
-	assert.True(suite.T(), err.Fatal())
+	assert.True(t, err.Fatal())
 }
 
-func (suite *ErrorsTestSuite) TestAssetError() {
+func TestAssetError(t *testing.T) {
 	err := assetError{resp: ShopifyResponse{}}
 
 	tests := map[int]bool{
@@ -52,15 +47,15 @@ func (suite *ErrorsTestSuite) TestAssetError() {
 
 	for code, check := range tests {
 		err.resp.Code = code
-		assert.Equal(suite.T(), err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
+		assert.Equal(t, err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
 	}
 
 	err.requestErr = requestError{Other: []string{"nope"}}
 	err.resp.Code = 200
-	assert.True(suite.T(), err.Fatal())
+	assert.True(t, err.Fatal())
 }
 
-func (suite *ErrorsTestSuite) TestListError() {
+func TestListError(t *testing.T) {
 	err := listError{resp: ShopifyResponse{}}
 
 	tests := map[int]bool{
@@ -74,17 +69,10 @@ func (suite *ErrorsTestSuite) TestListError() {
 
 	for code, check := range tests {
 		err.resp.Code = code
-		assert.Equal(suite.T(), err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
+		assert.Equal(t, err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
 	}
 
 	err.requestErr = requestError{Other: []string{"nope"}}
 	err.resp.Code = 200
-	assert.True(suite.T(), err.Fatal())
-}
-
-func (suite *ErrorsTestSuite) TestGeneralRequestError() {
-}
-
-func TestErrorsTestSuite(t *testing.T) {
-	suite.Run(t, new(ErrorsTestSuite))
+	assert.True(t, err.Fatal())
 }
