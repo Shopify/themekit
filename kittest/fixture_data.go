@@ -37,16 +37,7 @@ var (
     }
   ]
 }`
-	themeResponse = `{
-  "theme": {
-    "name": "timberland",
-    "source": "https://githubz.com/shopify/timberlands",
-    "role": "unpublished",
-    "previewable": true
-  }
-}`
-	themeErrorResponse = `{ "errors":{ "src":[ "is empty" ] } }`
-	assetsReponse      = `{
+	assetsReponse = `{
   "assets": [
     { "key": "assets/hello.txt", "value": "Hello World", "updated_at":"2012-07-06T02:04:21-11:00" },
     { "key": "assets/goodbye.txt", "value": "Goodbye", "updated_at":"2012-07-06T02:04:21-11:00" }

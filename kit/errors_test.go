@@ -2,6 +2,7 @@ package kit
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,6 +37,7 @@ func TestThemeError(t *testing.T) {
 
 func TestAssetError(t *testing.T) {
 	err := assetError{resp: ShopifyResponse{}}
+	assert.Equal(t, "none", err.requestErr.String())
 
 	tests := map[int]bool{
 		0:   true,
@@ -53,6 +55,21 @@ func TestAssetError(t *testing.T) {
 	err.requestErr = requestError{Other: []string{"nope"}}
 	err.resp.Code = 200
 	assert.True(t, err.Fatal())
+
+	err.resp.Code = 403
+	err.resp.EventType = Remove
+	err.generateHints()
+	assert.Equal(t, "This file is critical and removing it would cause your theme to become non-functional.", err.requestErr.Other[len(err.requestErr.Other)-1])
+
+	err.resp.Code = 404
+	err.resp.EventType = Update
+	err.generateHints()
+	assert.Equal(t, "This file is not part of your theme.", err.requestErr.Other[len(err.requestErr.Other)-1])
+
+	err.resp.Code = 409
+	err.resp.EventType = Update
+	err.generateHints()
+	assert.Equal(t, "There have been changes to this file made remotely.", err.requestErr.Other[len(err.requestErr.Other)-1])
 }
 
 func TestListError(t *testing.T) {
@@ -75,4 +92,5 @@ func TestListError(t *testing.T) {
 	err.requestErr = requestError{Other: []string{"nope"}}
 	err.resp.Code = 200
 	assert.True(t, err.Fatal())
+	assert.True(t, strings.Contains(err.Error(), "Assets Perform"))
 }

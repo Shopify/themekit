@@ -14,7 +14,7 @@ import (
 func TestRequestError(t *testing.T) {
 	errorMessage := "something went wrong"
 	badErr := fmt.Errorf(errorMessage)
-	req, _ := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
+	req := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
 	resp, err := newShopifyResponse(req, nil, badErr)
 	assert.NotNil(t, resp)
 	assert.NotNil(t, err)
@@ -26,7 +26,7 @@ func TestNoBody(t *testing.T) {
 		Body:    ioutil.NopCloser(strings.NewReader("")),
 	}
 	mock.Body.Close()
-	req, _ := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
+	req := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
 	resp, err := newShopifyResponse(req, mock, nil)
 	assert.NotNil(t, resp)
 	assert.NotNil(t, err)
@@ -101,7 +101,7 @@ func TestError(t *testing.T) {
 }
 
 func mockShopifyResp(body string) (*ShopifyResponse, Error) {
-	req, _ := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
+	req := newShopifyRequest(&Configuration{}, themeRequest, Create, "")
 	return newShopifyResponse(req, &http.Response{
 		Status:     "200 OK",
 		StatusCode: 200,

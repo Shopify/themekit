@@ -10,9 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-const (
-	debounceTimeout = 1100 * time.Millisecond
-)
+var debounceTimeout = 1100 * time.Millisecond
 
 // FileEventCallback is the callback that is called when there is an event from
 // a file watcher.
@@ -63,7 +61,6 @@ func newFileWatcher(client ThemeClient, notifyFile string, recur bool, filter fi
 func (watcher *FileWatcher) watch() error {
 	root, symlinkErr := filepath.EvalSymlinks(filepath.Clean(watcher.client.Config.Directory))
 	if symlinkErr != nil {
-		println(watcher.client.Config.Directory, symlinkErr.Error())
 		return symlinkErr
 	}
 
@@ -170,21 +167,27 @@ func (watcher *FileWatcher) watchForIdle() {
 	if watcher.waitNotify || watcher.notify == "" {
 		return
 	}
+	watcher.mutex.Lock()
+	defer watcher.mutex.Unlock()
 	watcher.waitNotify = true
-	go func() {
-		for {
-			select {
-			case <-time.Tick(debounceTimeout):
-				if watcher.recordedEvents.Count() == 0 {
-					watcher.touchNotifyFile()
-					return
-				}
+	go watcher.idleMonitor()
+}
+
+func (watcher *FileWatcher) idleMonitor() {
+	for {
+		select {
+		case <-time.Tick(debounceTimeout):
+			if watcher.recordedEvents.Count() == 0 {
+				watcher.touchNotifyFile()
+				return
 			}
 		}
-	}()
+	}
 }
 
 func (watcher *FileWatcher) touchNotifyFile() {
+	watcher.mutex.Lock()
+	defer watcher.mutex.Unlock()
 	os.Create(watcher.notify)
 	os.Chtimes(watcher.notify, time.Now(), time.Now())
 	watcher.waitNotify = false

@@ -31,6 +31,7 @@ type (
 	// Server is a test server that will record requests and server shopify responses
 	Server struct {
 		deletedCompiledFile bool
+		themePreviewable    bool
 		*httptest.Server
 		sync.Mutex
 		Requests []*http.Request
@@ -108,8 +109,11 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, assetsReponse)
 		}
 	} else if glob.Glob("/admin/themes/*.json", r.URL.Path) {
-		if r.Method == "GET" {
-			fmt.Fprintf(w, themeResponse)
+		if r.Method == "GET" && !server.themePreviewable {
+			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":false}}`)
+			server.themePreviewable = true
+		} else if r.Method == "GET" {
+			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":true}}`)
 		} else if r.Method == "POST" {
 			decoder := json.NewDecoder(r.Body)
 			var theme map[string]struct {
@@ -119,9 +123,9 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
 
 			if asset, ok := theme["theme"]; ok && asset.Name == "nope" {
-				fmt.Fprintf(w, themeErrorResponse)
+				fmt.Fprintf(w, `{"errors":{"src":["is empty"]}}`)
 			} else {
-				fmt.Fprintf(w, themeResponse)
+				fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":false}}`)
 			}
 		}
 	} else if r.URL.Path == "/not_json" {

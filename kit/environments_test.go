@@ -2,6 +2,7 @@ package kit
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,6 +23,10 @@ func TestLoadEnvironments(t *testing.T) {
 	assert.NotNil(t, err)
 
 	_, err = LoadEnvironments("nope.yml")
+	assert.NotNil(t, err)
+
+	kittest.TouchFixtureFile("config.json", ":this is not json")
+	_, err = LoadEnvironments(filepath.Join(kittest.FixtureProjectPath, "config.json"))
 	assert.NotNil(t, err)
 }
 
@@ -62,6 +67,9 @@ func TestGetConfiguration(t *testing.T) {
 	_, err = envs.GetConfiguration("development")
 	assert.Nil(t, err)
 	_, err = envs.GetConfiguration("nope")
+	assert.NotNil(t, err)
+	envs["test"] = nil
+	_, err = envs.GetConfiguration("test")
 	assert.NotNil(t, err)
 }
 

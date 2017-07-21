@@ -40,6 +40,9 @@ func TestClientAssetList(t *testing.T) {
 	assets, err := client.AssetList()
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(assets))
+	server.Close()
+	_, err = client.AssetList()
+	assert.NotNil(t, err)
 }
 
 func TestAsset(t *testing.T) {
@@ -49,9 +52,24 @@ func TestAsset(t *testing.T) {
 	asset, err := client.Asset("file.txt")
 	assert.Nil(t, err)
 	assert.Equal(t, "assets/hello.txt", asset.Key)
+	server.Close()
+	_, err = client.Asset("file.txt")
+	assert.NotNil(t, err)
 }
 
-func TestLocalAssetsWithoutFilenames(t *testing.T) {
+func TestAssetInfo(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	asset, err := client.AssetInfo("file.txt")
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/hello.txt", asset.Key)
+	server.Close()
+	_, err = client.AssetInfo("file.txt")
+	assert.NotNil(t, err)
+}
+
+func TestLocalAssets(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
@@ -61,21 +79,13 @@ func TestLocalAssetsWithoutFilenames(t *testing.T) {
 	client.Config.Directory = "./nope"
 	_, err = client.LocalAssets()
 	assert.NotNil(t, err)
-}
 
-func TestLocalAssetsWithFilenames(t *testing.T) {
-	kittest.GenerateProject()
-	defer kittest.Cleanup()
-	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
-	assets, err := client.LocalAssets("assets", "config/settings_data.json")
+	client, _ = NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
+	assets, err = client.LocalAssets("assets", "config/settings_data.json")
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(assets))
-}
 
-func TestLocalAsset(t *testing.T) {
-	kittest.GenerateProject()
-	defer kittest.Cleanup()
-	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
+	client, _ = NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
 	asset, err := client.LocalAsset("assets/application.js")
 	assert.Nil(t, err)
 	assert.Equal(t, "assets/application.js", asset.Key)
@@ -95,6 +105,10 @@ func TestCreateTheme(t *testing.T) {
 	}
 
 	flagConfig = Configuration{Domain: server.URL, ThemeID: "123", Ignores: []string{"nope"}}
+	client, theme, err = CreateTheme("name", "source")
+	assert.NotNil(t, err)
+
+	flagConfig = Configuration{Domain: server.URL, ThemeID: "123", Password: "test", Proxy: "://foo.com"}
 	client, theme, err = CreateTheme("name", "source")
 	assert.NotNil(t, err)
 
@@ -150,6 +164,18 @@ func TestPerform(t *testing.T) {
 	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
 	assert.Equal(t, 1, len(server.Requests))
 	assert.Equal(t, "POST", server.Requests[0].Method)
+}
+
+func TestPerformStrict(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
+	resp, err := client.PerformStrict(Asset{Key: "fookey", Value: "value"}, Create, "version")
+	assert.Nil(t, err)
+	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
+	assert.Equal(t, 1, len(server.Requests))
+	assert.Equal(t, "POST", server.Requests[0].Method)
+	assert.Equal(t, server.Requests[0].Header.Get("If-Unmodified-Since"), "version")
 }
 
 func TestAfterHooks(t *testing.T) {

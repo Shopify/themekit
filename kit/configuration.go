@@ -119,31 +119,6 @@ func (conf Configuration) IsLive() bool {
 	return strings.ToLower(strings.TrimSpace(conf.ThemeID)) == "live"
 }
 
-// String will return a formatted string with the information about this configuration
-func (conf Configuration) String() string {
-	return fmt.Sprintf(`
-Password     %v
-ThemeID      %v
-Domain       %v
-Directory    %v
-IgnoredFiles %v
-Proxy        %v
-Ignores      %v
-Timeout      %v
-ReadOnly     %v
-	`,
-		conf.Password,
-		conf.ThemeID,
-		conf.Domain,
-		conf.Directory,
-		conf.IgnoredFiles,
-		conf.Proxy,
-		conf.Ignores,
-		conf.Timeout,
-		conf.ReadOnly,
-	)
-}
-
 func (conf Configuration) asYAML() *Configuration {
 	if conf.Directory == defaultConfig.Directory {
 		conf.Directory = ""

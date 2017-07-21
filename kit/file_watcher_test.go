@@ -13,6 +13,10 @@ import (
 	"github.com/Shopify/themekit/kittest"
 )
 
+func init() {
+	debounceTimeout = time.Duration(1)
+}
+
 func TestNewFileReader(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
@@ -49,6 +53,14 @@ func TestWatchSymlinkDirectory(t *testing.T) {
 	}
 	assert.Nil(t, newWatcher.watch())
 	assert.Nil(t, newWatcher.mainWatcher.Remove(filepath.Join(kittest.FixtureProjectPath, "assets")))
+
+	os.Remove(kittest.SymlinkProjectPath)
+	os.Symlink("nope", kittest.SymlinkProjectPath)
+	_, err := newFileFilter(kittest.SymlinkProjectPath, []string{}, []string{})
+	assert.NotNil(t, err)
+
+	newWatcher.client.Config.Directory = kittest.SymlinkProjectPath
+	assert.NotNil(t, newWatcher.watch())
 }
 
 func TestWatchConfig(t *testing.T) {
@@ -98,8 +110,6 @@ func TestWatchFsEvents(t *testing.T) {
 
 	go func() {
 		writes := []fsnotify.Event{
-			{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "template.liquid"), Op: fsnotify.Write},
-			{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "template.liquid"), Op: fsnotify.Write},
 			{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "template.liquid"), Op: fsnotify.Write},
 			{Name: filepath.Join(kittest.FixtureProjectPath, "templates", "customers", "test.liquid"), Op: fsnotify.Write},
 		}
@@ -194,13 +204,29 @@ func TestOnEvent(t *testing.T) {
 	assert.Equal(t, newWatcher.recordedEvents.Count(), 2)
 }
 
+func TestWatchForIdle(t *testing.T) {
+	notifyPath := "notifyTestFile"
+	defer os.Remove(notifyPath)
+	watcher := &FileWatcher{notify: notifyPath, recordedEvents: newEventMap()}
+	watcher.watchForIdle()
+	assert.True(t, watcher.waitNotify)
+}
+
+func TestIdleMonitor(t *testing.T) {
+	notifyPath := "notifyTestFile"
+	defer os.Remove(notifyPath)
+	watcher := &FileWatcher{notify: notifyPath, recordedEvents: newEventMap()}
+	watcher.idleMonitor()
+	assert.False(t, watcher.waitNotify)
+}
+
 func TestTouchNotifyFile(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	notifyPath := "notifyTestFile"
-	newWatcher := &FileWatcher{
-		notify: notifyPath,
-	}
+	defer os.Remove(notifyPath)
+	newWatcher := &FileWatcher{notify: notifyPath}
+	os.Remove(notifyPath)
 	_, err := os.Stat(notifyPath)
 	assert.True(t, os.IsNotExist(err))
 	newWatcher.waitNotify = true
@@ -208,12 +234,12 @@ func TestTouchNotifyFile(t *testing.T) {
 	_, err = os.Stat(notifyPath)
 	assert.False(t, os.IsNotExist(err))
 	assert.False(t, newWatcher.waitNotify)
-	os.Remove(notifyPath)
 }
 
 func TestHandleEvent(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
+
 	writes := []struct {
 		Name          string
 		Event         fsnotify.Op
@@ -234,4 +260,9 @@ func TestHandleEvent(t *testing.T) {
 		}
 		watcher.handleEvent(fsnotify.Event{Name: write.Name, Op: write.Event})
 	}
+
+	// make sure no error is thrown
+	watcher := &FileWatcher{done: make(chan bool)}
+	close(watcher.done)
+	watcher.handleEvent(fsnotify.Event{})
 }

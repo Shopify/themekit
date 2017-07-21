@@ -18,9 +18,11 @@ func TestIsNewUpdateAvailable(t *testing.T) {
 	defer server.Close()
 	ThemeKitReleasesURL = server.URL + "/themekit_update"
 	ThemeKitVersion, _ = version.NewVersion("20.0.0")
-	assert.Equal(t, false, IsNewUpdateAvailable())
+	assert.False(t, IsNewUpdateAvailable())
 	ThemeKitVersion, _ = version.NewVersion("0.0.0")
-	assert.Equal(t, true, IsNewUpdateAvailable())
+	assert.True(t, IsNewUpdateAvailable())
+	server.Close()
+	assert.False(t, IsNewUpdateAvailable())
 }
 
 func TestInstallThemeKitVersion(t *testing.T) {
@@ -37,6 +39,8 @@ func TestInstallThemeKitVersion(t *testing.T) {
 	err = InstallThemeKitVersion("0.0.0")
 	assert.Equal(t, "version 0.0.0 not found", err.Error())
 	assert.Nil(t, InstallThemeKitVersion("latest"))
+	server.Close()
+	assert.NotNil(t, InstallThemeKitVersion("latest"))
 }
 
 func TestFetchReleases(t *testing.T) {
@@ -50,6 +54,9 @@ func TestFetchReleases(t *testing.T) {
 	_, err = fetchReleases()
 	assert.NotNil(t, err)
 	ThemeKitReleasesURL = server.URL + "/doesntexist"
+	_, err = fetchReleases()
+	assert.NotNil(t, err)
+	server.Close()
 	_, err = fetchReleases()
 	assert.NotNil(t, err)
 }
@@ -68,5 +75,6 @@ func TestApplyUpdate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, kittest.NewUpdateFile, buf)
 	assert.NotNil(t, applyUpdate(platform{}))
+	assert.NotNil(t, applyUpdate(platform{Digest: "abcde"}))
 	assert.NotNil(t, applyUpdate(platform{URL: server.URL + "/doesntexist"}))
 }

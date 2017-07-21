@@ -1,6 +1,7 @@
 package kit
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -106,7 +107,6 @@ func TestAssetActionStrict(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
-
 	resp, err := client.AssetActionStrict(Update, Asset{Key: "key", Value: "value"}, "version")
 	assert.Nil(t, err)
 	assert.Equal(t, assetRequest, resp.Type)
@@ -114,15 +114,23 @@ func TestAssetActionStrict(t *testing.T) {
 	assert.Equal(t, 1, len(server.Requests))
 	assert.Equal(t, "PUT", server.Requests[0].Method)
 	assert.Equal(t, server.Requests[0].Header.Get("If-Unmodified-Since"), "version")
+
+	_, err = client.AssetActionStrict(Update, Asset{Key: "nope", Value: "value"}, "version")
+	assert.NotNil(t, err)
 }
 
 func TestSendRequest(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
-	req, _ := newShopifyRequest(client.config, assetRequest, Update, client.AssetPath(map[string]string{"asset[key]": "test"}))
+	req := newShopifyRequest(client.config, assetRequest, Update, client.AssetPath(map[string]string{"asset[key]": "test"}))
 	resp, err := client.sendRequest(req)
 	assert.Nil(t, err)
 	assert.Equal(t, assetRequest, resp.Type)
 	assert.Equal(t, "PUT", server.Requests[0].Method)
+
+	client.config.ReadOnly = true
+	_, err = client.sendRequest(req)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "Theme is read only"))
 }

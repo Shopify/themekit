@@ -11,38 +11,41 @@ import (
 
 func TestReleaseIsValid(t *testing.T) {
 	r := release{}
-	assert.Equal(t, false, r.IsValid())
+	assert.False(t, r.IsValid())
 
 	r.Platforms = []platform{{Name: "test"}}
-	assert.Equal(t, true, r.IsValid())
+	assert.True(t, r.IsValid())
 }
 
 func TestReleaseIsApplicable(t *testing.T) {
 	r := release{Version: "20.0.0"}
-	assert.Equal(t, true, r.IsApplicable())
+	assert.True(t, r.IsApplicable())
 
 	r = release{Version: "0.0.0"}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
 
 	r = release{Version: ThemeKitVersion.String()}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
 
 	segs := ThemeKitVersion.Segments()
 	ver := fmt.Sprintf("v%v.%v.%v", segs[0], segs[1], segs[2])
 	r = release{Version: ver}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
 
 	segs = ThemeKitVersion.Segments()
 	ver = fmt.Sprintf("v%v.%v.%v", segs[0], segs[1], segs[2]+1)
-	println(ver)
+
 	r = release{Version: ver}
-	assert.Equal(t, true, r.IsApplicable())
+	assert.True(t, r.IsApplicable())
 
 	r = release{Version: ver + "-beta"}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
 
 	r = release{Version: ver + "+prerelease"}
-	assert.Equal(t, false, r.IsApplicable())
+	assert.False(t, r.IsApplicable())
+
+	r = release{Version: "this_is_not_a_version"}
+	assert.False(t, r.IsApplicable())
 }
 
 func TestReleaseGetVersion(t *testing.T) {
