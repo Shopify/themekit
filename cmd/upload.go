@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/spf13/cobra"
 	"github.com/vbauerster/mpb"
@@ -124,7 +123,7 @@ func uploadSettingsData(client kit.ThemeClient, files []string) error {
 		} else if _, found := actions[settingsDataKey]; !found {
 			return nil
 		}
-	} else if i := sort.Search(len(files), func(i int) bool { return files[i] == settingsDataKey }); i == len(files) {
+	} else if i := indexOf(len(files), func(i int) bool { return files[i] == settingsDataKey }); i == -1 {
 		return nil
 	}
 
@@ -133,4 +132,13 @@ func uploadSettingsData(client kit.ThemeClient, files []string) error {
 		return err
 	}
 	return perform(client, asset, kit.Update, nil)
+}
+
+func indexOf(count int, cb func(i int) bool) int {
+	for i := 0; i < count; i++ {
+		if cb(i) {
+			return i
+		}
+	}
+	return -1
 }
