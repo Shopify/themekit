@@ -79,7 +79,9 @@ func (watcher *FileWatcher) watch() error {
 }
 
 func (watcher *FileWatcher) watchFsEvents() {
+	watcher.mutex.Lock()
 	watcher.waitNotify = false
+	watcher.mutex.Unlock()
 	watcher.recordedEvents = newEventMap()
 
 	for {
@@ -164,11 +166,11 @@ func (watcher *FileWatcher) onEvent(event fsnotify.Event) {
 }
 
 func (watcher *FileWatcher) watchForIdle() {
+	watcher.mutex.Lock()
+	defer watcher.mutex.Unlock()
 	if watcher.waitNotify || watcher.notify == "" {
 		return
 	}
-	watcher.mutex.Lock()
-	defer watcher.mutex.Unlock()
 	watcher.waitNotify = true
 	go watcher.idleMonitor()
 }

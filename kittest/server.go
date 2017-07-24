@@ -1,4 +1,3 @@
-// +build !race
 package kittest
 
 import (
@@ -107,10 +106,10 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if glob.Glob("/admin/themes/*.json", r.URL.Path) {
 		if r.Method == "GET" && !server.themePreviewable {
-			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":false", source": "https://githubz.com/shopify/timberlands"}}`)
+			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":false,"source":"https://githubz.com/shopify/timberlands"}}`)
 			server.themePreviewable = true
 		} else if r.Method == "GET" {
-			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":true, "source": "https://githubz.com/shopify/timberlands"}}`)
+			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":true,"source":"https://githubz.com/shopify/timberlands"}}`)
 		} else if r.Method == "POST" {
 			decoder := json.NewDecoder(r.Body)
 			var theme map[string]struct {
