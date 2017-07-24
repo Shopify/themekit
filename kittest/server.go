@@ -1,3 +1,4 @@
+// +build !race
 package kittest
 
 import (
@@ -9,7 +10,6 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"runtime"
-	"sync"
 
 	"github.com/ryanuber/go-glob"
 )
@@ -33,14 +33,11 @@ type (
 		deletedCompiledFile bool
 		themePreviewable    bool
 		*httptest.Server
-		sync.Mutex
 		Requests []*http.Request
 	}
 )
 
 func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	server.Lock()
-	defer server.Unlock()
 	server.Requests = append(server.Requests, r)
 	if r.URL.Path == "/themekit_update" {
 		fmt.Fprintf(w, themekitUpdateFeed)
@@ -110,10 +107,10 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if glob.Glob("/admin/themes/*.json", r.URL.Path) {
 		if r.Method == "GET" && !server.themePreviewable {
-			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":false}}`)
+			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":false", source": "https://githubz.com/shopify/timberlands"}}`)
 			server.themePreviewable = true
 		} else if r.Method == "GET" {
-			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":true}}`)
+			fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":true, "source": "https://githubz.com/shopify/timberlands"}}`)
 		} else if r.Method == "POST" {
 			decoder := json.NewDecoder(r.Body)
 			var theme map[string]struct {
@@ -125,7 +122,7 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if asset, ok := theme["theme"]; ok && asset.Name == "nope" {
 				fmt.Fprintf(w, `{"errors":{"src":["is empty"]}}`)
 			} else {
-				fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":false}}`)
+				fmt.Fprintf(w, `{"theme":{"name":"timberland","role":"unpublished","previewable":false, "source":"https://githubz.com/shopify/timberlands"}}`)
 			}
 		}
 	} else if r.URL.Path == "/not_json" {
@@ -138,8 +135,6 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Reset will reset the request log
 func (server *Server) Reset() {
-	server.Lock()
-	defer server.Unlock()
 	server.Requests = []*http.Request{}
 }
 
