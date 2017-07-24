@@ -68,7 +68,11 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 	for env := range configEnvs {
 		config, err := configEnvs.GetConfiguration(env)
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				`[%s] Problem loading environment [%s] All environments are required to be valid so that asset versions can be validated`,
+				green(config.Environment),
+				yellow(err.Error()),
+			)
 		}
 		if arbiter.disableIgnore {
 			config.IgnoredFiles = []string{}
