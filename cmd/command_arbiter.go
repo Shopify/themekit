@@ -69,7 +69,7 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 		config, err := configEnvs.GetConfiguration(env)
 		if err != nil {
 			return fmt.Errorf(
-				`[%s] Problem loading environment [%s] All environments are required to be valid so that asset versions can be validated`,
+				`[%s] %s All environments are required to be valid so that asset versions can be validated`,
 				green(config.Environment),
 				yellow(err.Error()),
 			)
