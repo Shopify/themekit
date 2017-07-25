@@ -18,7 +18,7 @@ func TestNewFileManifest(t *testing.T) {
 	assert.Equal(t, store.store, s)
 }
 
-func TestGenerateRemote(t *testing.T) {
+func TestFileManifest_GenerateRemote(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
@@ -38,7 +38,7 @@ func TestGenerateRemote(t *testing.T) {
 	}
 }
 
-func TestPrune(t *testing.T) {
+func TestFileManifest_Prune(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
@@ -75,7 +75,7 @@ func TestParseTime(t *testing.T) {
 	assert.True(t, parseTime("").IsZero())
 }
 
-func TestDiffDates(t *testing.T) {
+func TestFileManifest_DiffDates(t *testing.T) {
 	manifest := &fileManifest{
 		local:  make(map[string]map[string]string),
 		remote: make(map[string]map[string]string),
@@ -92,7 +92,7 @@ func TestDiffDates(t *testing.T) {
 	assert.False(t, remote.IsZero())
 }
 
-func TestShould(t *testing.T) {
+func TestFileManifest_Should(t *testing.T) {
 	file, env, now, then := "asset.js", "development", "2017-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
 	manifest := &fileManifest{
 		local:  map[string]map[string]string{file: {env: then}},
@@ -127,7 +127,7 @@ func TestShould(t *testing.T) {
 	assert.False(t, manifest.Should(kit.EventType(25), file, env))
 }
 
-func TestFetchableFiles(t *testing.T) {
+func TestFileManifest_FetchableFiles(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
@@ -148,7 +148,7 @@ func TestFetchableFiles(t *testing.T) {
 	assert.Equal(t, filenames, []string{"templates/404.html", "assets/goodbye.txt"})
 }
 
-func TestDiff(t *testing.T) {
+func TestFileManifest_Diff(t *testing.T) {
 	dstenv, srcenv, now, then := "production", "development", "2017-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
 	manifest := &fileManifest{
 		local: map[string]map[string]string{
@@ -173,7 +173,7 @@ func TestDiff(t *testing.T) {
 	assert.Equal(t, 1, len(diff.Removed))
 }
 
-func TestManifestSet(t *testing.T) {
+func TestFileManifest_Set(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
@@ -193,7 +193,7 @@ func TestManifestSet(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestFileManifest_Delete(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
@@ -210,7 +210,7 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func TestGet(t *testing.T) {
+func TestFileManifest_Get(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))

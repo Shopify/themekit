@@ -36,13 +36,13 @@ func TestNewCommandArbiter(t *testing.T) {
 	assert.False(t, arb.configPath == "")
 }
 
-func TestGenerateManifest(t *testing.T) {
+func TestCommandArbiter_GenerateManifest(t *testing.T) {
 	defer resetArbiter()
 	assert.Nil(t, arbiter.generateManifest())
 	assert.NotNil(t, arbiter.manifest)
 }
 
-func TestGenerateThemeClients(t *testing.T) {
+func TestCommandArbiter_GenerateThemeClients(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 
@@ -81,7 +81,7 @@ func TestGenerateThemeClients(t *testing.T) {
 	assert.True(t, strings.Contains(stdOutOutput.String(), "Proxy URL detected from Configuration"))
 }
 
-func TestShouldUseEnvironment(t *testing.T) {
+func TestCommandArbiter_ShouldUseEnvironment(t *testing.T) {
 	defer resetArbiter()
 
 	arbiter.environments = stringArgArray{}
@@ -105,7 +105,7 @@ func TestShouldUseEnvironment(t *testing.T) {
 	assert.True(t, arbiter.shouldUseEnvironment("other"))
 }
 
-func TestForEachClient(t *testing.T) {
+func TestCommandArbiter_ForEachClient(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
@@ -122,7 +122,7 @@ func TestForEachClient(t *testing.T) {
 	}
 }
 
-func TestForSingleClient(t *testing.T) {
+func TestCommandArbiter_ForSingleClient(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
@@ -150,7 +150,7 @@ func TestForSingleClient(t *testing.T) {
 	}
 }
 
-func TestSetFlagConfig(t *testing.T) {
+func TestCommandArbiter_SetFlagConfig(t *testing.T) {
 	defer resetArbiter()
 	arbiter.flagConfig.Password = "foo"
 	arbiter.flagConfig.Domain = "bar.myshopify.com"
@@ -166,7 +166,7 @@ func TestSetFlagConfig(t *testing.T) {
 	assert.Equal(t, "123", config.ThemeID)
 }
 
-func TestNewProgressBar(t *testing.T) {
+func TestCommandArbiter_NewProgressBar(t *testing.T) {
 	defer resetArbiter()
 	arbiter.verbose = false
 	bar := arbiter.newProgressBar(1, "Dev")
@@ -177,7 +177,7 @@ func TestNewProgressBar(t *testing.T) {
 	assert.Equal(t, 1, arbiter.progress.BarCount())
 }
 
-func TestGenerateAssetActions(t *testing.T) {
+func TestCommandArbiter_GenerateAssetActions(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
@@ -197,7 +197,7 @@ func TestGenerateAssetActions(t *testing.T) {
 	}
 }
 
-func TestPreflightCheck(t *testing.T) {
+func TestCommandArbiter_PreflightCheck(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
