@@ -30,7 +30,7 @@ func TestSetFlagConfig(t *testing.T) {
 
 }
 
-func TestEnvConfig(t *testing.T) {
+func TestConfiguration_Env(t *testing.T) {
 	defer resetConfig()
 
 	config, _ := NewConfiguration()
@@ -51,7 +51,7 @@ func TestEnvConfig(t *testing.T) {
 	assert.Equal(t, environmentConfig, *config)
 }
 
-func TestConfigPrecedence(t *testing.T) {
+func TestConfiguration_Precedence(t *testing.T) {
 	defer resetConfig()
 
 	config := &Configuration{Password: "file"}
@@ -67,7 +67,7 @@ func TestConfigPrecedence(t *testing.T) {
 	assert.Equal(t, "flag", config.Password)
 }
 
-func TestValidate(t *testing.T) {
+func TestConfiguration_Validate(t *testing.T) {
 	defer resetConfig()
 
 	config := Configuration{Password: "file", ThemeID: "123", Domain: "test.myshopify.com"}
@@ -107,7 +107,7 @@ func TestValidate(t *testing.T) {
 	}
 }
 
-func TestIsLive(t *testing.T) {
+func TestConfiguration_IsLive(t *testing.T) {
 	defer resetConfig()
 
 	config := Configuration{ThemeID: "123"}
@@ -117,7 +117,7 @@ func TestIsLive(t *testing.T) {
 	assert.True(t, config.IsLive())
 }
 
-func TestAsYaml(t *testing.T) {
+func TestConfiguration_AsYaml(t *testing.T) {
 	defer resetConfig()
 
 	config := Configuration{Directory: defaultConfig.Directory}

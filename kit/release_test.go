@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestReleaseIsValid(t *testing.T) {
+func TestRelease_IsValid(t *testing.T) {
 	r := release{}
 	assert.False(t, r.IsValid())
 
@@ -17,7 +17,7 @@ func TestReleaseIsValid(t *testing.T) {
 	assert.True(t, r.IsValid())
 }
 
-func TestReleaseIsApplicable(t *testing.T) {
+func TestRelease_IsApplicable(t *testing.T) {
 	r := release{Version: "20.0.0"}
 	assert.True(t, r.IsApplicable())
 
@@ -48,12 +48,12 @@ func TestReleaseIsApplicable(t *testing.T) {
 	assert.False(t, r.IsApplicable())
 }
 
-func TestReleaseGetVersion(t *testing.T) {
+func TestRelease_GetVersion(t *testing.T) {
 	r := release{Version: "20.0.0"}
 	assert.Equal(t, "20.0.0", r.GetVersion().String())
 }
 
-func TestReleaseForCurrentPlatform(t *testing.T) {
+func TestRelease_ForCurrentPlatform(t *testing.T) {
 	thisSystem := runtime.GOOS + "-" + runtime.GOARCH
 
 	r := release{Version: "20.0.0", Platforms: []platform{
@@ -70,7 +70,7 @@ func TestReleaseForCurrentPlatform(t *testing.T) {
 	assert.Equal(t, "", r.ForCurrentPlatform().Name)
 }
 
-func TestReleasesListGet(t *testing.T) {
+func TestReleasesList_Get(t *testing.T) {
 	var releases releasesList
 	json.Unmarshal([]byte(`[{"version":"0.4.4"},{"version":"0.4.7"}]`), &releases)
 

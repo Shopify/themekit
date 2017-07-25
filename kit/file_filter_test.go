@@ -42,7 +42,7 @@ func TestNewEventFilter(t *testing.T) {
 	}
 }
 
-func TestFilterAssets(t *testing.T) {
+func TestFileFilter_FilterAssets(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	filter, err := newFileFilter(kittest.FixtureProjectPath, []string{".json", "*.txt", "*.gif", "*.ini", "*.bat"}, []string{})
@@ -54,7 +54,7 @@ func TestFilterAssets(t *testing.T) {
 	}
 }
 
-func TestMatchesFilter(t *testing.T) {
+func TestFileFilter_MatchesFilter(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	check := func(filter fileFilter, input []string, shouldOutput []string) {

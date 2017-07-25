@@ -9,7 +9,7 @@ import (
 	"github.com/Shopify/themekit/kittest"
 )
 
-func TestIsValid(t *testing.T) {
+func TestAsset_IsValid(t *testing.T) {
 	asset := Asset{Key: "test.txt", Value: "one"}
 	assert.Equal(t, true, asset.IsValid())
 	asset = Asset{Key: "test.txt", Attachment: "one"}
@@ -20,14 +20,14 @@ func TestIsValid(t *testing.T) {
 	assert.Equal(t, false, asset.IsValid())
 }
 
-func TestSize(t *testing.T) {
+func TestAsset_Size(t *testing.T) {
 	asset := Asset{Value: "one"}
 	assert.Equal(t, 3, asset.Size())
 	asset = Asset{Attachment: "other"}
 	assert.Equal(t, 5, asset.Size())
 }
 
-func TestWrite(t *testing.T) {
+func TestAsset_Write(t *testing.T) {
 	kittest.Setup()
 	defer kittest.Cleanup()
 	asset := Asset{Key: "output/blah.txt", Value: "this is content"}
@@ -35,7 +35,7 @@ func TestWrite(t *testing.T) {
 	assert.Nil(t, asset.Write(kittest.FixtureProjectPath))
 }
 
-func TestContents(t *testing.T) {
+func TestAsset_Contents(t *testing.T) {
 	asset := Asset{Value: "this is content"}
 	data, err := asset.Contents()
 	assert.Nil(t, err)

@@ -24,7 +24,7 @@ func TestNewThemeClient(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestNewFileWatcher(t *testing.T) {
+func TestThemeClient_NewFileWatcher(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
@@ -33,7 +33,7 @@ func TestNewFileWatcher(t *testing.T) {
 	assert.NotNil(t, watcher)
 }
 
-func TestClientAssetList(t *testing.T) {
+func TestThemeClient_AssetList(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -45,7 +45,7 @@ func TestClientAssetList(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestAsset(t *testing.T) {
+func TestThemeClient_Asset(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -57,7 +57,7 @@ func TestAsset(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestAssetInfo(t *testing.T) {
+func TestThemeClient_AssetInfo(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -69,7 +69,7 @@ func TestAssetInfo(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestLocalAssets(t *testing.T) {
+func TestThemeClient_LocalAssets(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
@@ -93,7 +93,7 @@ func TestLocalAssets(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestCreateTheme(t *testing.T) {
+func TestThemeClient_CreateTheme(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	flagConfig = Configuration{Domain: server.URL, ThemeID: "123"}
@@ -122,7 +122,7 @@ func TestCreateTheme(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%d", theme.ID), client.Config.ThemeID)
 }
 
-func TestCreateAsset(t *testing.T) {
+func TestThemeClient_CreateAsset(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -133,7 +133,7 @@ func TestCreateAsset(t *testing.T) {
 	assert.Equal(t, "PUT", server.Requests[0].Method)
 }
 
-func TestUpdateAsset(t *testing.T) {
+func TestThemeClient_UpdateAsset(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -144,7 +144,7 @@ func TestUpdateAsset(t *testing.T) {
 	assert.Equal(t, "PUT", server.Requests[0].Method)
 }
 
-func TestDeleteAsset(t *testing.T) {
+func TestThemeClient_DeleteAsset(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -155,7 +155,7 @@ func TestDeleteAsset(t *testing.T) {
 	assert.Equal(t, "DELETE", server.Requests[0].Method)
 }
 
-func TestPerform(t *testing.T) {
+func TestThemeClient_Perform(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -166,7 +166,7 @@ func TestPerform(t *testing.T) {
 	assert.Equal(t, "POST", server.Requests[0].Method)
 }
 
-func TestPerformStrict(t *testing.T) {
+func TestThemeClient_PerformStrict(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -178,7 +178,7 @@ func TestPerformStrict(t *testing.T) {
 	assert.Equal(t, server.Requests[0].Header.Get("If-Unmodified-Since"), "version")
 }
 
-func TestAfterHooks(t *testing.T) {
+func TestThemeClient_AfterHooks(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := NewThemeClient(&Configuration{Domain: server.URL, ThemeID: "123"})

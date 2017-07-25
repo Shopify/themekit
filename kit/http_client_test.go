@@ -22,7 +22,7 @@ func TestNewHttpClient(t *testing.T) {
 	assert.NotNil(t, client.client.Transport)
 }
 
-func TestAdminURL(t *testing.T) {
+func TestHttpClient_AdminURL(t *testing.T) {
 	client, _ := newHTTPClient(&Configuration{Domain: "domain", ThemeID: "123"})
 	assert.Equal(t, "https://domain/admin/themes/123", client.AdminURL())
 	client.config.ThemeID = "live"
@@ -31,22 +31,22 @@ func TestAdminURL(t *testing.T) {
 	assert.Equal(t, "https://domain/admin", client.AdminURL())
 }
 
-func TestAssetPath(t *testing.T) {
+func TestHttpClient_AssetPath(t *testing.T) {
 	client, _ := newHTTPClient(&Configuration{Domain: "domain", ThemeID: "live"})
 	assert.Equal(t, "https://domain/admin/assets.json", client.AssetPath(nil))
 }
 
-func TestThemesPath(t *testing.T) {
+func TestHttpClient_ThemesPath(t *testing.T) {
 	client, _ := newHTTPClient(&Configuration{Domain: "domain", ThemeID: "live"})
 	assert.Equal(t, "https://domain/admin/themes.json", client.ThemesPath())
 }
 
-func TestThemePath(t *testing.T) {
+func TestHttpClient_ThemePath(t *testing.T) {
 	client, _ := newHTTPClient(&Configuration{Domain: "domain", ThemeID: "live"})
 	assert.Equal(t, "https://domain/admin/themes/456.json", client.ThemePath(456))
 }
 
-func TestAssetList(t *testing.T) {
+func TestHttpClient_AssetList(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -56,7 +56,7 @@ func TestAssetList(t *testing.T) {
 	assert.Equal(t, 2, len(resp.Assets))
 }
 
-func TestGetAsset(t *testing.T) {
+func TestHttpClient_GetAsset(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -67,7 +67,7 @@ func TestGetAsset(t *testing.T) {
 	assert.Equal(t, "assets/hello.txt", resp.Asset.Key)
 }
 
-func TestNewTheme(t *testing.T) {
+func TestHttpClient_NewTheme(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -79,7 +79,7 @@ func TestNewTheme(t *testing.T) {
 	assert.Equal(t, "POST", server.Requests[0].Method)
 }
 
-func TestGetTheme(t *testing.T) {
+func TestHttpClient_GetTheme(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -91,7 +91,7 @@ func TestGetTheme(t *testing.T) {
 	assert.Equal(t, "GET", server.Requests[0].Method)
 }
 
-func TestAssetAction(t *testing.T) {
+func TestHttpClient_AssetAction(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -103,7 +103,7 @@ func TestAssetAction(t *testing.T) {
 	assert.Equal(t, "PUT", server.Requests[0].Method)
 }
 
-func TestAssetActionStrict(t *testing.T) {
+func TestHttpClient_AssetActionStrict(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})
@@ -119,7 +119,7 @@ func TestAssetActionStrict(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestSendRequest(t *testing.T) {
+func TestHttpClient_SendRequest(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	client, _ := newHTTPClient(&Configuration{Domain: server.URL, ThemeID: "123"})

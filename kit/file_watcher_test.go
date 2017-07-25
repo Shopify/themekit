@@ -13,7 +13,7 @@ import (
 	"github.com/Shopify/themekit/kittest"
 )
 
-func TestNewFileReader(t *testing.T) {
+func TestNewFileWatcher(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	client := ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}}
@@ -23,7 +23,7 @@ func TestNewFileReader(t *testing.T) {
 	watcher.StopWatching()
 }
 
-func TestWatchDirectory(t *testing.T) {
+func TestFileWatcher_WatchDirectory(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	filter, _ := newFileFilter(kittest.FixtureProjectPath, []string{}, []string{})
@@ -38,7 +38,7 @@ func TestWatchDirectory(t *testing.T) {
 	watcher.StopWatching()
 }
 
-func TestWatchSymlinkDirectory(t *testing.T) {
+func TestFileWatcher_WatchSymlinkDirectory(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	filter, _ := newFileFilter(kittest.SymlinkProjectPath, []string{}, []string{})
@@ -62,7 +62,7 @@ func TestWatchSymlinkDirectory(t *testing.T) {
 	watcher.StopWatching()
 }
 
-func TestWatchConfig(t *testing.T) {
+func TestFileWatcher_WatchConfig(t *testing.T) {
 	kittest.GenerateProject()
 	kittest.GenerateConfig("example.myshopify.com", true)
 	defer kittest.Cleanup()
@@ -81,7 +81,7 @@ func TestWatchConfig(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestWatchFsEvents(t *testing.T) {
+func TestFileWatcher_WatchFsEvents(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	assetChan := make(chan Asset, 100)
@@ -122,7 +122,7 @@ func TestWatchFsEvents(t *testing.T) {
 	assert.Equal(t, 2, len(assetChan))
 }
 
-func TestReloadConfig(t *testing.T) {
+func TestFileWatcher_ReloadConfig(t *testing.T) {
 	kittest.GenerateProject()
 	kittest.GenerateConfig("example.myshopify.com", true)
 	defer kittest.Cleanup()
@@ -147,7 +147,7 @@ func TestReloadConfig(t *testing.T) {
 	assert.Equal(t, watcher.IsWatching(), false)
 }
 
-func TestStopWatching(t *testing.T) {
+func TestFileWatcher_StopWatching(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	client := ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}}
@@ -159,7 +159,7 @@ func TestStopWatching(t *testing.T) {
 	assert.Equal(t, false, watcher.IsWatching())
 }
 
-func TestOnReload(t *testing.T) {
+func TestFileWatcher_OnReload(t *testing.T) {
 	kittest.GenerateProject()
 	kittest.GenerateConfig("example.myshopify.com", true)
 	defer kittest.Cleanup()
@@ -181,7 +181,7 @@ func TestOnReload(t *testing.T) {
 	assert.Equal(t, watcher.IsWatching(), false)
 }
 
-func TestOnEvent(t *testing.T) {
+func TestFileWatcher_OnEvent(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 
@@ -204,7 +204,7 @@ func TestOnEvent(t *testing.T) {
 	assert.Equal(t, watcher.recordedEvents.Count(), 2)
 }
 
-func TestWatchForIdle(t *testing.T) {
+func TestFileWatcher_WatchForIdle(t *testing.T) {
 	notifyPath := "notifyTestFile"
 	defer os.Remove(notifyPath)
 	watcher := &FileWatcher{notify: notifyPath, recordedEvents: newEventMap()}
@@ -215,7 +215,7 @@ func TestWatchForIdle(t *testing.T) {
 	assert.True(t, watcher.waitNotify)
 }
 
-func TestIdleMonitor(t *testing.T) {
+func TestFileWatcher_IdleMonitor(t *testing.T) {
 	notifyPath := "notifyTestFile"
 	defer os.Remove(notifyPath)
 	watcher := &FileWatcher{notify: notifyPath, recordedEvents: newEventMap()}
@@ -226,7 +226,7 @@ func TestIdleMonitor(t *testing.T) {
 	assert.False(t, watcher.waitNotify)
 }
 
-func TestTouchNotifyFile(t *testing.T) {
+func TestFileWatcher_TouchNotifyFile(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	notifyPath := "notifyTestFile"
@@ -242,7 +242,7 @@ func TestTouchNotifyFile(t *testing.T) {
 	assert.False(t, watcher.waitNotify)
 }
 
-func TestHandleEvent(t *testing.T) {
+func TestFileWatcher_HandleEvent(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 

@@ -49,7 +49,7 @@ func TestSearchConfigPath(t *testing.T) {
 	assert.Equal(t, os.ErrNotExist, err)
 }
 
-func TestSetConfiguration(t *testing.T) {
+func TestEnvironments_SetConfiguration(t *testing.T) {
 	defer kittest.Cleanup()
 	kittest.GenerateConfig("example.myshopify.io", true)
 	envs, err := LoadEnvironments("config.yml")
@@ -59,7 +59,7 @@ func TestSetConfiguration(t *testing.T) {
 	assert.Equal(t, newConfig, envs["test"])
 }
 
-func TestGetConfiguration(t *testing.T) {
+func TestEnvironments_GetConfiguration(t *testing.T) {
 	defer kittest.Cleanup()
 	kittest.GenerateConfig("example.myshopify.io", true)
 	envs, err := LoadEnvironments("config.yml")
@@ -73,7 +73,7 @@ func TestGetConfiguration(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestSave(t *testing.T) {
+func TestEnvironments_Save(t *testing.T) {
 	defer kittest.Cleanup()
 	kittest.GenerateConfig("example.myshopify.io", true)
 	envs, err := LoadEnvironments("config.yml")

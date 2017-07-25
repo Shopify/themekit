@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGet(t *testing.T) {
+func TestEventMap_Get(t *testing.T) {
 	eventMap := newEventMap()
 	eventMap.New("test")
 	_, ok := eventMap.Get("test")
@@ -16,7 +16,7 @@ func TestGet(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestDel(t *testing.T) {
+func TestEventMap_Del(t *testing.T) {
 	eventMap := newEventMap()
 	eventMap.New("test")
 	_, ok := eventMap.Get("test")
@@ -26,7 +26,7 @@ func TestDel(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestCount(t *testing.T) {
+func TestEventMap_Count(t *testing.T) {
 	eventMap := newEventMap()
 	eventMap.New("test")
 	eventMap.New("test2")
@@ -35,7 +35,7 @@ func TestCount(t *testing.T) {
 	assert.Equal(t, eventMap.Count(), 3)
 }
 
-func TestSet(t *testing.T) {
+func TestEventMap_Set(t *testing.T) {
 	eventMap := newEventMap()
 	myChan := make(chan fsnotify.Event)
 	eventMap.Set("test", myChan)
@@ -44,7 +44,7 @@ func TestSet(t *testing.T) {
 	assert.Equal(t, getChan, myChan)
 }
 
-func TestNew(t *testing.T) {
+func TestEventMap_New(t *testing.T) {
 	eventMap := newEventMap()
 	myChan := eventMap.New("test")
 	assert.Equal(t, eventMap.Count(), 1)
