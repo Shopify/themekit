@@ -94,3 +94,12 @@ func TestUploadSettingsData(t *testing.T) {
 		assert.Equal(t, 2, len(server.Requests))
 	}
 }
+
+func TestIndexOf(t *testing.T) {
+	array := []string{"one", "two", "three"}
+
+	assert.Equal(t, 0, indexOf(len(array), func(i int) bool { return array[i] == "one" }))
+	assert.Equal(t, 1, indexOf(len(array), func(i int) bool { return array[i] == "two" }))
+	assert.Equal(t, 2, indexOf(len(array), func(i int) bool { return array[i] == "three" }))
+	assert.Equal(t, -1, indexOf(len(array), func(i int) bool { return array[i] == "four" }))
+}
