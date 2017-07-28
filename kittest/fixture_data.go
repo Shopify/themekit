@@ -52,4 +52,5 @@ var (
   }
 }`
 	themekitUpdateFeed = `[{"version":"0.4.4"},{"version":"0.4.7", "platforms": [{}]},{"version":"0.4.6"},{"version":"0.4.5"}]`
+	themekitlatestFeed = `{"version":"0.4.7", "platforms": [{}]}`
 )

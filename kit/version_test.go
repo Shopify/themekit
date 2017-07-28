@@ -16,7 +16,7 @@ func TestIsNewUpdateAvailable(t *testing.T) {
 	defer kittest.Cleanup()
 	server := kittest.NewTestServer()
 	defer server.Close()
-	ThemeKitReleasesURL = server.URL + "/themekit_update"
+	ThemeKitLatestURL = server.URL + "/themekit_latest"
 	ThemeKitVersion, _ = version.NewVersion("20.0.0")
 	assert.False(t, IsNewUpdateAvailable())
 	ThemeKitVersion, _ = version.NewVersion("0.0.0")
@@ -31,33 +31,36 @@ func TestInstallThemeKitVersion(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	ThemeKitReleasesURL = server.URL + "/themekit_update"
+	ThemeKitLatestURL = server.URL + "/themekit_latest"
 	ThemeKitVersion, _ = version.NewVersion("0.4.7")
 	err := InstallThemeKitVersion("latest")
 	assert.Equal(t, "no applicable update available", err.Error())
 	ThemeKitReleasesURL = server.URL + "/themekit_system_update"
+	ThemeKitLatestURL = server.URL + "/themekit_latest_system_update"
 	ThemeKitVersion, _ = version.NewVersion("0.4.4")
 	err = InstallThemeKitVersion("0.0.0")
 	assert.Equal(t, "version 0.0.0 not found", err.Error())
 	assert.Nil(t, InstallThemeKitVersion("latest"))
 	server.Close()
 	assert.NotNil(t, InstallThemeKitVersion("latest"))
+	assert.NotNil(t, InstallThemeKitVersion("0.4.7"))
 }
 
 func TestFetchReleases(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
 	ThemeKitReleasesURL = server.URL + "/themekit_update"
-	releases, err := fetchReleases()
+	releases, err := FetchReleases()
 	assert.Nil(t, err)
 	assert.Equal(t, 4, len(releases))
 	ThemeKitReleasesURL = server.URL + "/not_json"
-	_, err = fetchReleases()
+	_, err = FetchReleases()
 	assert.NotNil(t, err)
 	ThemeKitReleasesURL = server.URL + "/doesntexist"
-	_, err = fetchReleases()
+	_, err = FetchReleases()
 	assert.NotNil(t, err)
 	server.Close()
-	_, err = fetchReleases()
+	_, err = FetchReleases()
 	assert.NotNil(t, err)
 }
 
@@ -66,7 +69,7 @@ func TestApplyUpdate(t *testing.T) {
 	defer kittest.Cleanup()
 	server := kittest.NewTestServer()
 	defer server.Close()
-	assert.Nil(t, applyUpdate(platform{
+	assert.Nil(t, applyUpdate(Platform{
 		URL:        server.URL + "/release_download",
 		Digest:     hex.EncodeToString(kittest.NewUpdateFileChecksum[:]),
 		TargetPath: kittest.UpdateFilePath,
@@ -74,7 +77,7 @@ func TestApplyUpdate(t *testing.T) {
 	buf, err := ioutil.ReadFile(kittest.UpdateFilePath)
 	assert.Nil(t, err)
 	assert.Equal(t, kittest.NewUpdateFile, buf)
-	assert.NotNil(t, applyUpdate(platform{}))
-	assert.NotNil(t, applyUpdate(platform{Digest: "abcde"}))
-	assert.NotNil(t, applyUpdate(platform{URL: server.URL + "/doesntexist"}))
+	assert.NotNil(t, applyUpdate(Platform{}))
+	assert.NotNil(t, applyUpdate(Platform{Digest: "abcde"}))
+	assert.NotNil(t, applyUpdate(Platform{URL: server.URL + "/doesntexist"}))
 }

@@ -1,4 +1,4 @@
-.PHONY: build clean zip help
+.PHONY: build clean help
 
 install: # Build and install the theme binary
 	@go install github.com/Shopify/themekit/cmd/theme;
@@ -14,12 +14,11 @@ lint: ## Lint all packages
 
 check: lint vet test # lint, vet and test the code
 
-dist: lint vet test clean  ## Build binaries for all platforms, zip, and upload to S3
+dist: lint vet test clean  ## Build binaries for all platforms and upload to S3
 	@$(MAKE) windows && \
 		$(MAKE) mac && \
 		$(MAKE) linux && \
-		$(MAKE) zip && \
-		$(MAKE) upload_to_s3 && \
+		tkrelease $(shell git tag --points-at HEAD) && \
 		echo "Dist complete to update the hombrew formula please use this sha" && \
 		$(MAKE) gen_sha;
 
@@ -49,15 +48,6 @@ mac: ## Build binaries for Mac OS X (64 bit)
 linux: ## Build binaries for Linux (32 and 64 bit)
 	@echo "building linux-64" && export GOOS=linux; $(MAKE) build64 && echo "linux-64 build complete";
 	@echo "building linux-32" && export GOOS=linux; $(MAKE) build32 && echo "linux-32 build complete";
-
-zip: ## Create zip file with distributable binaries
-	@echo "compressing releases" &&\
-		cd build/dist &&\
-		ls | grep -v '\.' | xargs -n 1 sh -c 'zip $${0}\.zip $${0}/*' &&\
-		echo "finished compressing";
-
-upload_to_s3: ## Upload zip file with binaries to S3
-	@echo "uploading to S3" && bundle exec ruby ./scripts/release && echo "upload complete";
 
 gen_sha: ## Generate sha256 for a darwin build for usage with homebrew
 	@shasum -a 256 ./build/dist/darwin-amd64/theme

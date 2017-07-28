@@ -40,6 +40,30 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	server.Requests = append(server.Requests, r)
 	if r.URL.Path == "/themekit_update" {
 		fmt.Fprintf(w, themekitUpdateFeed)
+	} else if r.URL.Path == "/themekit_latest" {
+		fmt.Fprintf(w, themekitlatestFeed)
+	} else if r.URL.Path == "/themekit_latest_system_update" {
+		type platform struct {
+			Name       string `json:"name"`
+			URL        string `json:"url"`
+			Digest     string `json:"digest"`
+			TargetPath string `json:"TargetPath"` // used for testing updating
+		}
+		out, _ := json.Marshal(struct {
+			Version   string     `json:"version"`
+			Platforms []platform `json:"platforms"`
+		}{
+			Version: "20.0.0",
+			Platforms: []platform{
+				{
+					Name:       runtime.GOOS + "-" + runtime.GOARCH,
+					URL:        server.URL + "/release_download",
+					Digest:     hex.EncodeToString(NewUpdateFileChecksum[:]),
+					TargetPath: UpdateFilePath,
+				},
+			},
+		})
+		fmt.Fprintf(w, string(out))
 	} else if r.URL.Path == "/themekit_system_update" {
 		type platform struct {
 			Name       string `json:"name"`
