@@ -1,14 +1,11 @@
 #!/usr/bin/python
-import os
-import urllib
-import json
-import sys
+import os, urllib, json, sys
 
 class Installer(object):
     LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
     ARCH_MAPPING = {
         "darwin x86_64": "darwin-amd64",
-        "darwin i386": "darwin-amd64",
+        "darwin i386": "darwin-386",
         "linux x86_64": "linux-amd64",
         "linux i686": "linux-386"
     }
