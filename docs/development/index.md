@@ -20,3 +20,8 @@ You can get started by getting the library with the following command:
 ```bash
 go get -u github.com/Shopify/themekit
 ```
+
+## JS/Gulp/Node Development
+
+Shopify uses themekit in a lot of our gulp processes so we wrote this [node-themekit](https://github.com/Shopify/node-themekit)
+library to interact with themekit from javascript.
