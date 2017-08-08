@@ -1,72 +1,47 @@
 package cmd
 
 import (
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"sync"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 
-	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/kittest"
 )
 
-type RemoveTestSuite struct {
-	suite.Suite
-}
-
-func (suite *RemoveTestSuite) TestRemove() {
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(suite.T(), "DELETE", r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var t map[string]kit.Asset
-		decoder.Decode(&t)
-		defer r.Body.Close()
-
-		assert.Equal(suite.T(), kit.Asset{Key: "templates/layout.liquid", Value: ""}, t["asset"])
-	})
+func TestRemove(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go remove(client, []string{"templates/layout.liquid"}, &wg)
-	wg.Wait()
-}
+	client, err := getClient()
+	server.Reset()
+	if assert.Nil(t, err) {
+		arbiter.force = true
+		err = remove(client, []string{"templates/layout.liquid"})
+		assert.True(t, os.IsNotExist(err))
+		if assert.Equal(t, 1, len(server.Requests)) {
+			assert.Equal(t, "DELETE", server.Requests[0].Method)
+		}
 
-func (suite *RemoveTestSuite) TestReadOnlyRemove() {
-	requested := false
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-		requested = true
-	})
-	defer server.Close()
+		arbiter.manifest.Set("templates/layout.liquid", "development", "2011-07-06T02:04:21-11:00")
+		arbiter.force = false
+		err = remove(client, []string{"templates/layout.liquid"})
+		assert.True(t, strings.Contains(err.Error(), "file was modified remotely"))
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	client.Config.ReadOnly = true
-	go remove(client, []string{"templates/layout.liquid"}, &wg)
-	wg.Wait()
+		client.Config.ReadOnly = true
+		err := remove(client, []string{"templates/layout.liquid"})
+		assert.True(t, strings.Contains(err.Error(), "environment is reaonly"))
 
-	assert.Equal(suite.T(), false, requested)
-}
+		client.Config.ReadOnly = false
+		err = remove(client, []string{})
+		assert.True(t, strings.Contains(err.Error(), "please specify file(s) to be removed"))
 
-func TestRemoveTestSuite(t *testing.T) {
-	suite.Run(t, new(RemoveTestSuite))
-}
-
-func newTestClient(domain string) kit.ThemeClient {
-	config, _ := kit.NewConfiguration()
-	config.Domain = domain
-	config.ThemeID = "123"
-	config.Password = "sharknado"
-	config.Directory = "../fixtures/project"
-	client, _ := kit.NewThemeClient(config)
-	return client
-}
-
-func newClientAndTestServer(handler http.HandlerFunc) (kit.ThemeClient, *httptest.Server) {
-	server := httptest.NewServer(handler)
-	return newTestClient(server.URL), server
+		arbiter.force = true
+		server.Close()
+		assert.Nil(t, remove(client, []string{"templates/layout.liquid"}))
+	}
 }

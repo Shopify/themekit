@@ -1,7 +1,0 @@
-{
-    "errors": {
-        "asset": [
-            "Liquid syntax error (line 10): 'comment' tag was never closed"
-        ]
-    }
-}

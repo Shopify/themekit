@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
-	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/vbauerster/mpb"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Shopify/themekit/kit"
 )
@@ -21,103 +18,58 @@ and write them to disk.
 
 For more documentation please see http://shopify.github.io/themekit/commands/#download
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		themeClients, err := generateThemeClients()
-		defer progress.Stop()
-		if err != nil {
-			return err
-		}
-		return download(themeClients[0], args)
-	},
+	PreRunE: arbiter.generateThemeClients,
+	RunE:    arbiter.forSingleClient(download),
 }
 
 func download(client kit.ThemeClient, filenames []string) error {
-	wg := sync.WaitGroup{}
-
-	if len(filenames) <= 0 {
-		kit.Printf("[%s] Fetching asset list from %s",
-			kit.GreenText(client.Config.Environment),
-			kit.YellowText(client.Config.Domain))
-		assets, err := client.AssetList()
-		if err != nil {
-			return err
-		}
-		for _, asset := range assets {
-			filenames = append(filenames, asset.Key)
-		}
-	} else {
-		var err error
-		filenames, err = expandWildcards(client, filenames)
-		if err != nil {
-			return err
-		}
-	}
-
-	bar := newProgressBar(len(filenames), client.Config.Environment)
+	var downloadGroup errgroup.Group
+	filenames = arbiter.manifest.FetchableFiles(filenames, client.Config.Environment)
+	bar := arbiter.newProgressBar(len(filenames), client.Config.Environment)
 	for _, filename := range filenames {
-		wg.Add(1)
-		go downloadFile(client, filename, bar, &wg)
+		filename := filename
+		downloadGroup.Go(func() error {
+			if err := downloadFile(client, filename); err != nil {
+				stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
+			}
+			incBar(bar)
+			return nil
+		})
 	}
-
-	wg.Wait()
-
-	return nil
+	return downloadGroup.Wait()
 }
 
-func downloadFile(client kit.ThemeClient, filename string, bar *mpb.Bar, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer incBar(bar)
+func downloadFile(client kit.ThemeClient, filename string) error {
+	if !arbiter.force && !arbiter.manifest.NeedsDownloading(filename, client.Config.Environment) {
+		if arbiter.verbose {
+			stdOut.Printf(
+				"[%s] skipping %s",
+				green(client.Config.Environment),
+				green(filename),
+			)
+		}
+		return nil
+	}
 
 	asset, err := client.Asset(filename)
 	if err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("error downloading asset: %v", err)
 	}
 
 	if err := asset.Write(client.Config.Directory); err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-		return
+		return fmt.Errorf("error writing asset: %v", err)
 	}
 
-	if verbose {
-		kit.Print(kit.GreenText(fmt.Sprintf("[%s] Successfully wrote %s to disk", client.Config.Environment, filename)))
-	}
-}
-
-func expandWildcards(client kit.ThemeClient, filenames []string) ([]string, error) {
-	outputFilenames := []string{}
-	wildCards := []string{}
-
-	for _, filename := range filenames {
-		if strings.Contains(filename, "*") {
-			wildCards = append(wildCards, filename)
-		} else {
-			outputFilenames = append(outputFilenames, filename)
-		}
+	if err := arbiter.manifest.Set(asset.Key, client.Config.Environment, asset.UpdatedAt); err != nil {
+		return fmt.Errorf("error updating manifest: %v", err)
 	}
 
-	if len(wildCards) == 0 {
-		return outputFilenames, nil
+	if arbiter.verbose {
+		stdOut.Printf(
+			"[%s] Successfully wrote %s to disk",
+			green(client.Config.Environment),
+			green(filename),
+		)
 	}
-
-	kit.Printf("[%s] Querying assets list from %s to match patterns",
-		kit.GreenText(client.Config.Environment),
-		kit.YellowText(client.Config.Domain))
-	assets, err := client.AssetList()
-	if err != nil {
-		return outputFilenames, err
-	}
-
-	for _, asset := range assets {
-		for _, wildcard := range wildCards {
-			if matched, err := filepath.Match(wildcard, asset.Key); matched && err == nil {
-				outputFilenames = append(outputFilenames, asset.Key)
-				break
-			} else if err != nil {
-				return outputFilenames, err
-			}
-		}
-	}
-
-	return outputFilenames, nil
+	return nil
 }

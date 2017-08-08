@@ -1,94 +1,45 @@
 package cmd
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
+
+	"github.com/Shopify/themekit/kittest"
 )
 
-const outputPath = "../fixtures/fomatted_output.json"
-
-type DownloadTestSuite struct {
-	suite.Suite
-}
-
-func (suite *DownloadTestSuite) TearDownTest() {
-	os.RemoveAll("../fixtures/output")
-	os.RemoveAll("../fixtures/download")
-}
-
-func (suite *DownloadTestSuite) TestDownloadWithFileNames() {
-	defer os.Remove("../fixtures/project/assets/hello.txt")
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-		if "asset[key]=assets/hello.txt" == r.URL.RawQuery {
-			fmt.Fprintf(w, jsonFixture("responses/asset"))
-		} else {
-			w.WriteHeader(404)
-			fmt.Fprintf(w, "404")
-		}
-	})
+func TestDownload(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
 
-	err := download(client, []string{"assets/hello.txt"})
-	assert.Nil(suite.T(), err)
+	client, err := getClient()
+	if assert.Nil(t, err) {
+		assert.Nil(t, download(client, []string{"assets/hello.txt"}))
 
-	client.Config.ReadOnly = true
-	err = download(client, []string{"output/nope.txt"})
-	assert.Nil(suite.T(), err)
-}
+		err := downloadFile(client, "assets/hello.txt")
+		assert.Nil(t, err)
 
-func (suite *DownloadTestSuite) TestDownloadAll() {
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, jsonFixture("responses/asset"))
-	})
-	defer server.Close()
+		arbiter.force = true
+		assert.Nil(t, downloadFile(client, "assets/hello.txt"))
 
-	client.Config.Directory = "../fixtures/download"
-	os.MkdirAll(client.Config.Directory, 7777)
-	defer os.Remove(client.Config.Directory)
+		err = downloadFile(client, "nope.txt")
+		assert.NotNil(t, err)
+		assert.True(t, strings.Contains(err.Error(), "error downloading asset:"))
 
-	assert.Nil(suite.T(), download(client, []string{}))
-}
+		oldDir := client.Config.Directory
+		client.Config.Directory = "nonexistant"
+		err = downloadFile(client, "assets/hello.txt")
+		assert.NotNil(t, err)
+		assert.True(t, strings.Contains(err.Error(), "error writing asset: "))
 
-func (suite *DownloadTestSuite) TestExpandWildcards() {
-	requestCount := make(chan int, 100)
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, jsonFixture("responses/assets"))
-		requestCount <- 1
-	})
-	defer server.Close()
-
-	filenames, err := expandWildcards(client, []string{"assets/hello.txt"})
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), len(requestCount), 0)
-	assert.Equal(suite.T(), filenames, []string{"assets/hello.txt"})
-
-	filenames, err = expandWildcards(client, []string{"assets/*"})
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), len(requestCount), 1)
-	assert.Equal(suite.T(), filenames, []string{"assets/goodbye.txt", "assets/hello.txt"})
-}
-
-func TestDownloadTestSuite(t *testing.T) {
-	suite.Run(t, new(DownloadTestSuite))
-}
-
-func fileFixture(name string) *os.File {
-	path := fmt.Sprintf("../fixtures/%s.json", name)
-	file, _ := os.Open(path)
-	return file
-}
-
-func jsonFixture(name string) string {
-	bytes, err := ioutil.ReadAll(fileFixture(name))
-	if err != nil {
-		log.Fatal(err)
+		client.Config.Directory = oldDir
+		client.Config.Environment = ""
+		err = downloadFile(client, "assets/hello.txt")
+		assert.NotNil(t, err)
+		assert.True(t, strings.Contains(err.Error(), "error updating manifest:"))
 	}
-	return string(bytes)
 }

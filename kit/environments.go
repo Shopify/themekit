@@ -71,8 +71,8 @@ func (e Environments) GetConfiguration(environmentName string) (*Configuration, 
 		return conf, fmt.Errorf(`environment %s was found but not defined.
 You may have incorrect indentation in your config.
 Please see %s for examples`,
-			YellowText(environmentName),
-			BlueText("http://shopify.github.io/themekit/configuration/#config-file"))
+			yellow(environmentName),
+			blue("http://shopify.github.io/themekit/configuration/#config-file"))
 	}
 	conf.Environment = environmentName
 	return conf.compile()

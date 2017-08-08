@@ -5,58 +5,49 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
-type EventMapTestSuite struct {
-	suite.Suite
-}
-
-func (suite *EventMapTestSuite) TestGet() {
+func TestEventMap_Get(t *testing.T) {
 	eventMap := newEventMap()
 	eventMap.New("test")
 	_, ok := eventMap.Get("test")
-	assert.True(suite.T(), ok)
+	assert.True(t, ok)
 	_, ok = eventMap.Get("nope")
-	assert.False(suite.T(), ok)
+	assert.False(t, ok)
 }
 
-func (suite *EventMapTestSuite) TestDel() {
+func TestEventMap_Del(t *testing.T) {
 	eventMap := newEventMap()
 	eventMap.New("test")
 	_, ok := eventMap.Get("test")
-	assert.True(suite.T(), ok)
+	assert.True(t, ok)
 	eventMap.Del("test")
 	_, ok = eventMap.Get("test")
-	assert.False(suite.T(), ok)
+	assert.False(t, ok)
 }
 
-func (suite *EventMapTestSuite) TestCount() {
+func TestEventMap_Count(t *testing.T) {
 	eventMap := newEventMap()
 	eventMap.New("test")
 	eventMap.New("test2")
 	eventMap.New("test")
 	eventMap.New("test3")
-	assert.Equal(suite.T(), eventMap.Count(), 3)
+	assert.Equal(t, eventMap.Count(), 3)
 }
 
-func (suite *EventMapTestSuite) TestSet() {
+func TestEventMap_Set(t *testing.T) {
 	eventMap := newEventMap()
 	myChan := make(chan fsnotify.Event)
 	eventMap.Set("test", myChan)
-	assert.Equal(suite.T(), eventMap.Count(), 1)
+	assert.Equal(t, eventMap.Count(), 1)
 	getChan, _ := eventMap.Get("test")
-	assert.Equal(suite.T(), getChan, myChan)
+	assert.Equal(t, getChan, myChan)
 }
 
-func (suite *EventMapTestSuite) TestNew() {
+func TestEventMap_New(t *testing.T) {
 	eventMap := newEventMap()
 	myChan := eventMap.New("test")
-	assert.Equal(suite.T(), eventMap.Count(), 1)
+	assert.Equal(t, eventMap.Count(), 1)
 	getChan, _ := eventMap.Get("test")
-	assert.Equal(suite.T(), getChan, myChan)
-}
-
-func TestEventMapTestSuite(t *testing.T) {
-	suite.Run(t, new(EventMapTestSuite))
+	assert.Equal(t, getChan, myChan)
 }

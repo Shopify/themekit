@@ -2,32 +2,23 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/Shopify/themekit/kit"
 )
 
-type OpenTestSuite struct {
-	suite.Suite
-}
+func TestOpen(t *testing.T) {
+	var wg sync.WaitGroup
+	var testURL string
 
-var (
-	testURL string
-	wg      sync.WaitGroup
-)
-
-func openStubFunc(url string) error {
-	fmt.Println("input url: ", url)
-	testURL = url
-	return nil
-}
-
-func (suite *OpenTestSuite) TestOpen() {
-	openFunc = openStubFunc
+	openFunc = func(url string) error {
+		testURL = url
+		return nil
+	}
 
 	config, _ := kit.NewConfiguration()
 	config.Domain = "my.test.domain"
@@ -35,27 +26,33 @@ func (suite *OpenTestSuite) TestOpen() {
 	client, _ := kit.NewThemeClient(config)
 	wg.Add(4)
 
-	preview(client, []string{}, &wg)
-	assert.Equal(suite.T(), "https://my.test.domain?preview_theme_id=123", testURL)
+	err := preview(client, []string{})
+	assert.Nil(t, err)
+	assert.Equal(t, "https://my.test.domain?preview_theme_id=123", testURL)
 
 	testURL = ""
 	openEdit = true
-	preview(client, []string{}, &wg)
-	assert.Equal(suite.T(), "https://my.test.domain/admin/themes/123/editor", testURL)
+	err = preview(client, []string{})
+	assert.Nil(t, err)
+	assert.Equal(t, "https://my.test.domain/admin/themes/123/editor", testURL)
 
 	testURL = ""
 	openEdit = false
 	config.ThemeID = "live"
-	preview(client, []string{}, &wg)
-	assert.Equal(suite.T(), "https://my.test.domain?preview_theme_id=", testURL)
+	err = preview(client, []string{})
+	assert.Nil(t, err)
+	assert.Equal(t, "https://my.test.domain?preview_theme_id=", testURL)
 
 	testURL = ""
 	openEdit = true
 	config.ThemeID = "live"
-	preview(client, []string{}, &wg)
-	assert.Equal(suite.T(), "", testURL)
-}
+	err = preview(client, []string{})
+	assert.True(t, strings.Contains(err.Error(), "cannot open editor for live theme without theme id"))
+	assert.Equal(t, "", testURL)
 
-func TestOpenTestSuite(t *testing.T) {
-	suite.Run(t, new(OpenTestSuite))
+	config.ThemeID = "123"
+	openEdit = false
+	openFunc = func(string) error { return fmt.Errorf("fake error") }
+	err = preview(client, []string{})
+	assert.True(t, strings.Contains(err.Error(), "Error opening:"))
 }

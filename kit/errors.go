@@ -4,6 +4,15 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/fatih/color"
+)
+
+var (
+	red    = color.New(color.FgRed).SprintFunc()
+	yellow = color.New(color.FgYellow).SprintFunc()
+	blue   = color.New(color.FgBlue).SprintFunc()
+	green  = color.New(color.FgGreen).SprintFunc()
 )
 
 // Error is an error that can be determined if it is fatal to the applications
@@ -42,10 +51,10 @@ func (err themeError) Error() string {
 	return fmt.Sprintf(`Theme request encountered status at host %s
 	Status: %s %s
 	Errors: %s`,
-		YellowText(err.resp.Host),
-		RedText(err.resp.Code),
-		RedText(http.StatusText(err.resp.Code)),
-		YellowText(err.requestErr),
+		yellow(err.resp.Host),
+		red(err.resp.Code),
+		red(http.StatusText(err.resp.Code)),
+		yellow(err.requestErr),
 	)
 }
 
@@ -72,18 +81,21 @@ func (err *assetError) generateHints() {
 	if err.resp.EventType == Update && err.resp.Code == 404 {
 		err.requestErr.AddS("This file is not part of your theme.")
 	}
+	if err.resp.EventType == Update && err.resp.Code == 409 {
+		err.requestErr.AddS("There have been changes to this file made remotely.")
+	}
 }
 
 func (err assetError) Error() string {
 	return fmt.Sprintf(`Asset Perform %s to %s at host %s
 	Status: %s %s
 	Errors: %s`,
-		YellowText(err.resp.EventType),
-		BlueText(err.resp.Asset.Key),
-		YellowText(err.resp.Host),
-		RedText(err.resp.Code),
-		RedText(http.StatusText(err.resp.Code)),
-		YellowText(err.requestErr),
+		yellow(err.resp.EventType),
+		blue(err.resp.Asset.Key),
+		yellow(err.resp.Host),
+		red(err.resp.Code),
+		red(http.StatusText(err.resp.Code)),
+		yellow(err.requestErr),
 	)
 }
 
@@ -104,11 +116,11 @@ func (err listError) Error() string {
 	return fmt.Sprintf(`Assets Perform %s at host <%s>
 	Status: %s %s
 	Errors: %s`,
-		YellowText(err.resp.EventType),
-		YellowText(err.resp.Host),
-		RedText(err.resp.Code),
-		RedText(http.StatusText(err.resp.Code)),
-		YellowText(err.requestErr),
+		yellow(err.resp.EventType),
+		yellow(err.resp.Host),
+		red(err.resp.Code),
+		red(http.StatusText(err.resp.Code)),
+		yellow(err.requestErr),
 	)
 }
 

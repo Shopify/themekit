@@ -1,106 +1,39 @@
 package cmd
 
 import (
-	"sync"
+	"bytes"
+	"log"
 	"testing"
 
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/kittest"
 )
 
-const (
-	goodEnvirontmentPath = "../fixtures/project/valid_config.yml"
-	badEnvirontmentPath  = "../fixtures/project/invalid_config.yml"
+var (
+	stdOutOutput *bytes.Buffer
+	stdErrOutput *bytes.Buffer
 )
 
-type ThemeTestSuite struct {
-	suite.Suite
+func resetLog() {
+	stdOutOutput = new(bytes.Buffer)
+	stdErrOutput = new(bytes.Buffer)
+	stdOut = log.New(stdOutOutput, "", 0)
+	stdErr = log.New(stdOutOutput, "", 0)
 }
 
-func (suite *ThemeTestSuite) TestGenerateThemeClients() {
-	configPath = goodEnvirontmentPath
-	clients, err := generateThemeClients()
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 1, len(clients))
+func TestThemePreRun(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	defer resetArbiter()
 
-	environments = stringArgArray{[]string{"nope"}}
-	clients, err = generateThemeClients()
-	assert.NotNil(suite.T(), err)
-	environments = stringArgArray{[]string{"development"}}
+	kit.ThemeKitReleasesURL = server.URL + "/themekit_update"
 
-	allenvs = true
-	clients, err = generateThemeClients()
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 3, len(clients))
-	allenvs = false
-
-	configPath = badEnvirontmentPath
-	_, err = generateThemeClients()
-	assert.NotNil(suite.T(), err)
+	// just making sure that it does not throw
+	ThemeCmd.PersistentPreRun(nil, []string{})
 }
 
-func (suite *ThemeTestSuite) TestUseEnvironment() {
-	environments = stringArgArray{}
-	assert.True(suite.T(), useEnvironment("development"))
-
-	environments = stringArgArray{[]string{"production"}}
-	assert.True(suite.T(), useEnvironment("production"))
-
-	allenvs = true
-	environments = stringArgArray{}
-	assert.True(suite.T(), useEnvironment("nope"))
-	allenvs = false
-
-	environments = stringArgArray{[]string{"p*"}}
-	assert.True(suite.T(), useEnvironment("production"))
-	assert.True(suite.T(), useEnvironment("prod"))
-	assert.True(suite.T(), useEnvironment("puddle"))
-	assert.False(suite.T(), useEnvironment("development"))
-
-	environments = stringArgArray{}
-	assert.False(suite.T(), useEnvironment("production"))
-}
-
-func (suite *ThemeTestSuite) TestForEachClient() {
-	configPath = goodEnvirontmentPath
-	allenvs = true
-	runtimes := make(chan int, 100)
-	callbacks := make(chan int, 100)
-	runner := forEachClient(func(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-		defer wg.Done()
-		runtimes <- 1
-	}, func(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-		callbacks <- 1
-	})
-	assert.NotNil(suite.T(), runner)
-
-	err := runner(&cobra.Command{}, []string{})
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 3, len(runtimes))
-	assert.Equal(suite.T(), 3, len(callbacks))
-
-	configPath = badEnvirontmentPath
-	err = runner(&cobra.Command{}, []string{})
-	assert.NotNil(suite.T(), err)
-
-	allenvs = false
-}
-
-func (suite *ThemeTestSuite) TestSetFlagConfig() {
-	flagConfig.Password = "foo"
-	flagConfig.Domain = "bar"
-	flagConfig.Directory = "my/dir/now"
-	setFlagConfig()
-
-	config, _ := kit.NewConfiguration()
-	assert.Equal(suite.T(), "foo", config.Password)
-	assert.Equal(suite.T(), "bar", config.Domain)
-	assert.Equal(suite.T(), "my/dir/now", config.Directory)
-}
-
-func TestThemeTestSuite(t *testing.T) {
-	suite.Run(t, new(ThemeTestSuite))
+func TestThemePostRun(t *testing.T) {
+	defer resetArbiter()
+	// just making sure that it does not throw
+	ThemeCmd.PersistentPostRun(nil, []string{})
 }

@@ -5,14 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
-type PathTestSuite struct {
-	suite.Suite
-}
-
-func (suite *PathTestSuite) TestPathToProject() {
+func TestPathToProject(t *testing.T) {
 	root := filepath.Join("long", "path", "to")
 	tests := map[string]string{
 		filepath.Join(root, "config.yml"):                            "",
@@ -27,11 +22,11 @@ func (suite *PathTestSuite) TestPathToProject() {
 		filepath.Join(root, "sections", "test.liquid"):               "sections/test.liquid",
 	}
 	for input, expected := range tests {
-		assert.Equal(suite.T(), expected, pathToProject(root, input))
+		assert.Equal(t, expected, pathToProject(root, input))
 	}
 }
 
-func (suite *PathTestSuite) TestDirInProject() {
+func TestDirInProject(t *testing.T) {
 	root := filepath.Join("long", "path", "to")
 	tests := map[string]bool{
 		"": false,
@@ -46,11 +41,11 @@ func (suite *PathTestSuite) TestDirInProject() {
 		filepath.Join(root, "sections"):            true,
 	}
 	for input, expected := range tests {
-		assert.Equal(suite.T(), expected, isProjectDirectory(root, input), input)
+		assert.Equal(t, expected, isProjectDirectory(root, input), input)
 	}
 }
 
-func (suite *PathTestSuite) TestPathInProject() {
+func TestPathInProject(t *testing.T) {
 	root := filepath.Join("long", "path", "to")
 	tests := map[string]bool{
 		"": false,
@@ -67,10 +62,6 @@ func (suite *PathTestSuite) TestPathInProject() {
 		filepath.Join(root, "sections", "test.liquid"):               true,
 	}
 	for input, expected := range tests {
-		assert.Equal(suite.T(), expected, pathInProject(root, input), input)
+		assert.Equal(t, expected, pathInProject(root, input), input)
 	}
-}
-
-func TestPathTestSuite(t *testing.T) {
-	suite.Run(t, new(PathTestSuite))
 }

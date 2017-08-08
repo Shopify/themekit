@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
@@ -17,26 +16,24 @@ var openCmd = &cobra.Command{
 	Short: "Open the preview for your store.",
 	Long: `Open will open the preview page in your browser as well as print out
 url for your reference`,
-	RunE: forEachClient(preview),
+	PreRunE: arbiter.generateThemeClients,
+	RunE:    arbiter.forSingleClient(preview),
 }
 
-func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func preview(client kit.ThemeClient, filenames []string) error {
 	themeID := client.Config.ThemeID
 
 	if openEdit && themeID == "live" {
-		kit.Printf(
-			"[%s] Cannot open editor for live theme without theme id.",
-			kit.GreenText(client.Config.Environment),
+		return fmt.Errorf(
+			"[%s] cannot open editor for live theme without theme id",
+			green(client.Config.Environment),
 		)
-		return
 	}
 
 	if themeID == "live" {
-		kit.Printf(
+		stdOut.Printf(
 			"[%s] This theme is live so preview is the same as your live shop.",
-			kit.GreenText(client.Config.Environment),
+			green(client.Config.Environment),
 		)
 		themeID = ""
 	}
@@ -49,17 +46,19 @@ func preview(client kit.ThemeClient, filenames []string, wg *sync.WaitGroup) {
 			client.Config.ThemeID)
 	}
 
-	kit.Printf(
+	stdOut.Printf(
 		"[%s] opening %s",
-		kit.GreenText(client.Config.Environment),
-		kit.GreenText(url),
+		green(client.Config.Environment),
+		green(url),
 	)
 
 	if err := openFunc(url); err != nil {
-		kit.LogErrorf(
+		return fmt.Errorf(
 			"[%s] Error opening: %s",
-			kit.GreenText(client.Config.Environment),
-			kit.RedText(err),
+			green(client.Config.Environment),
+			red(err),
 		)
 	}
+
+	return nil
 }

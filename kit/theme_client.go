@@ -49,7 +49,7 @@ func (t ThemeClient) NewFileWatcher(notifyFile string, callback FileEventCallbac
 // The assets returned will not have any data, only ID and filenames. This is because
 // fetching all the assets at one time is not a good idea.
 func (t ThemeClient) AssetList() ([]Asset, Error) {
-	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{})
+	resp, err := t.httpClient.AssetList()
 	if err != nil && err.Fatal() {
 		return []Asset{}, err
 	}
@@ -58,7 +58,16 @@ func (t ThemeClient) AssetList() ([]Asset, Error) {
 
 // Asset will load up a single remote asset from the remote shopify servers.
 func (t ThemeClient) Asset(filename string) (Asset, Error) {
-	resp, err := t.httpClient.AssetQuery(Retrieve, map[string]string{"asset[key]": filename})
+	resp, err := t.httpClient.GetAsset(filename)
+	if err != nil {
+		return Asset{}, err
+	}
+	return resp.Asset, nil
+}
+
+// AssetInfo will load up only the info for a single remote asset from the remote shopify servers.
+func (t ThemeClient) AssetInfo(filename string) (Asset, Error) {
+	resp, err := t.httpClient.GetAssetInfo(filename)
 	if err != nil {
 		return Asset{}, err
 	}
@@ -169,10 +178,17 @@ func (t ThemeClient) DeleteAsset(asset Asset) (*ShopifyResponse, Error) {
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
 func (t ThemeClient) Perform(asset Asset, event EventType) (*ShopifyResponse, Error) {
-	if t.filter.matchesFilter(asset.Key) {
-		return &ShopifyResponse{}, kitError{fmt.Errorf(YellowText(fmt.Sprintf("Asset %s filtered based on ignore patterns", asset.Key)))}
-	}
 	return t.afterHooks(t.httpClient.AssetAction(event, asset))
+}
+
+// PerformStrict will take in any asset and event type, and return after the request has taken
+// place
+// If there was an error, in the request then error will be defined otherwise the
+// response will have the appropropriate data for usage.
+// It will only update if the we are updating the expected version otherwise it will return
+// and error
+func (t ThemeClient) PerformStrict(asset Asset, event EventType, version string) (*ShopifyResponse, Error) {
+	return t.afterHooks(t.httpClient.AssetActionStrict(event, asset, version))
 }
 
 func (t ThemeClient) afterHooks(resp *ShopifyResponse, err Error) (*ShopifyResponse, Error) {

@@ -14,31 +14,23 @@ import (
 
 var (
 	// ThemeKitVersion is the version build of the library
-	ThemeKitVersion, _ = version.NewVersion("0.6.12")
-	releasesURL        = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
+	ThemeKitVersion, _ = version.NewVersion("0.7.0")
+	// ThemeKitReleasesURL is the url that fetches all versions of themekit used for.
+	// updating themekit. Change this for testing reasons.
+	ThemeKitReleasesURL = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
+	// ThemeKitLatestURL is the url that fetches new version of themekit. Change this
+	// for testing reasons.
+	ThemeKitLatestURL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
 )
-
-// LibraryInfo will return a string array with information about the library used
-// for logging.
-func LibraryInfo() string {
-	messageSeparator := "\n----------------------------------------------------------------\n"
-	info := fmt.Sprintf("\t%s %s", "ThemeKit - Shopify Theme Utilities", ThemeKitVersion.String())
-	return fmt.Sprintf("%s%s%s", messageSeparator, info, messageSeparator)
-}
-
-// PrintInfo will output the version banner for the themekit library.
-func PrintInfo() {
-	Print(GreenText(LibraryInfo()))
-}
 
 // IsNewUpdateAvailable will check if there is an update to the theme kit command
 // and if there is one it will return true. Otherwise it will return false.
 func IsNewUpdateAvailable() bool {
-	list, err := fetchReleases()
+	release, err := FetchLatest()
 	if err != nil {
 		return false
 	}
-	return list.Get("latest").IsApplicable()
+	return release.IsApplicable()
 }
 
 // InstallThemeKitVersion will take a semver string and parse it then check if that
@@ -46,34 +38,51 @@ func IsNewUpdateAvailable() bool {
 // the most current. If the string is latest and there is no update it will return an
 // error. An error will also be returned if the requested version does not exist.
 func InstallThemeKitVersion(ver string) error {
-	releases, err := fetchReleases()
+	if ver == "latest" {
+		release, err := FetchLatest()
+		if err != nil {
+			return err
+		}
+		if !release.IsApplicable() {
+			return fmt.Errorf("no applicable update available")
+		}
+		return applyUpdate(release.ForCurrentPlatform())
+	}
+
+	releases, err := FetchReleases()
 	if err != nil {
 		return err
 	}
 	requestedRelease := releases.Get(ver)
 	if !requestedRelease.IsValid() {
 		return fmt.Errorf("version %s not found", ver)
-	} else if ver == "latest" && !requestedRelease.IsApplicable() {
-		return fmt.Errorf("no applicable update available")
 	}
-	Printf("Updating from %s to %s", YellowText(ThemeKitVersion), YellowText(requestedRelease.Version))
-	err = applyUpdate(requestedRelease.ForCurrentPlatform())
-	if err == nil {
-		Printf(`
-Successfully updated to theme kit version %v,
-If you have troubles with this release please
-report them to https://github.com/Shopify/themekit/issues
-If your troubles are preventing you from working
-you can roll back to the previous version using
-the command 'theme update --version=v%s'
-`, GreenText(requestedRelease.Version), YellowText(ThemeKitVersion))
-	}
-	return err
+	return applyUpdate(requestedRelease.ForCurrentPlatform())
 }
 
-func fetchReleases() (releasesList, error) {
-	var releases releasesList
-	resp, err := http.Get(releasesURL)
+// FetchLatest fetches the most recently released version of themekit.
+//
+// Used for internal purposes but exposed for cross package functionality
+func FetchLatest() (Release, error) {
+	var latest Release
+	resp, err := http.Get(ThemeKitLatestURL)
+	if err != nil {
+		return latest, err
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err == nil {
+		err = json.Unmarshal(data, &latest)
+	}
+	return latest, err
+}
+
+// FetchReleases fetches all the versions of themekit ever released.
+//
+// Used for internal purposes but exposed for cross package functionality
+func FetchReleases() (ReleasesList, error) {
+	var releases ReleasesList
+	resp, err := http.Get(ThemeKitReleasesURL)
 	if err != nil {
 		return releases, err
 	}
@@ -85,7 +94,7 @@ func fetchReleases() (releasesList, error) {
 	return releases, err
 }
 
-func applyUpdate(platformRelease platform) error {
+func applyUpdate(platformRelease Platform) error {
 	checksum, err := hex.DecodeString(platformRelease.Digest)
 	if err != nil {
 		return err

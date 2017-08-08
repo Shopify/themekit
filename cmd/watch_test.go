@@ -1,79 +1,87 @@
 package cmd
 
 import (
-	"encoding/json"
-	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/kittest"
 )
 
-type WatchTestSuite struct {
-	suite.Suite
-}
-
-func (suite *WatchTestSuite) TestStartWatch() {
-	go func() {
-		signalChan <- os.Interrupt
-	}()
-	err := startWatch()
-	assert.NotNil(suite.T(), err)
-}
-
-func (suite *WatchTestSuite) TestWatch() {
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {})
+func TestStartWatch(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
-	go func() {
-		signalChan <- os.Interrupt
-	}()
-	watch([]kit.ThemeClient{client})
-}
 
-func (suite *WatchTestSuite) TestReadOnlyWatch() {
-	requested := false
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-		requested = true
-	})
-	defer server.Close()
-	client.Config.ReadOnly = true
-	watch([]kit.ThemeClient{client})
-	assert.Equal(suite.T(), false, requested)
-}
+	assert.NotNil(t, startWatch(nil, []string{}))
 
-func (suite *WatchTestSuite) TestHandleWatchReload() {
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {})
-	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+
 	go func() {
 		reloadSignal <- true
+		signalChan <- os.Interrupt
 	}()
-	err := watch([]kit.ThemeClient{client})
-	assert.Equal(suite.T(), err, errReload)
+	assert.Nil(t, startWatch(nil, []string{}))
 }
 
-func (suite *WatchTestSuite) TestHandleWatchEvent() {
-	requests := make(chan int, 1000)
-	client, server := newClientAndTestServer(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(suite.T(), "DELETE", r.Method)
-
-		decoder := json.NewDecoder(r.Body)
-		var t map[string]kit.Asset
-		decoder.Decode(&t)
-		defer r.Body.Close()
-
-		assert.Equal(suite.T(), kit.Asset{Key: "templates/layout.liquid", Value: ""}, t["asset"])
-		requests <- 1
-	})
+func TestWatch(t *testing.T) {
+	server := kittest.NewTestServer()
 	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
 
-	handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove)
+	_, err := getClient()
+	if assert.Nil(t, err) {
+		go func() { reloadSignal <- true }()
+		err := watch()
+		assert.Equal(t, errReload, err)
 
-	assert.Equal(suite.T(), 1, len(requests))
+		for _, client := range arbiter.activeThemeClients {
+			client.Config.ReadOnly = true
+		}
+		err = watch()
+		assert.Equal(t, err.Error(), "no valid configuration to start watch")
+		for _, client := range arbiter.activeThemeClients {
+			client.Config.ReadOnly = false
+		}
+
+		os.Remove("config.yml")
+		err = watch()
+		assert.True(t, strings.Contains(err.Error(), "no such file or directory"))
+
+		kittest.Cleanup()
+		err = watch()
+		assert.Equal(t, err.Error(), "lstat fixtures: no such file or directory")
+	}
 }
 
-func TestWatchTestSuite(t *testing.T) {
-	suite.Run(t, new(WatchTestSuite))
+func TestHandleWatchEvent(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
+
+	client, err := getClient()
+	if assert.Nil(t, err) {
+		server.Reset()
+		handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove)
+		assert.Equal(t, 1, len(server.Requests))
+		assert.Equal(t, "DELETE", server.Requests[0].Method)
+		assert.True(t, strings.Contains(stdOutOutput.String(), "Received"))
+		assert.True(t, strings.Contains(stdOutOutput.String(), "Successfully"))
+
+		server.Reset()
+		resetLog()
+		handleWatchEvent(client, kit.Asset{Key: "nope"}, kit.Update)
+		assert.Equal(t, 1, len(server.Requests))
+		assert.Equal(t, "PUT", server.Requests[0].Method)
+
+		assert.True(t, strings.Contains(stdOutOutput.String(), "Received"))
+		assert.True(t, strings.Contains(stdOutOutput.String(), "Conflict"))
+	}
 }

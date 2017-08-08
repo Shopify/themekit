@@ -2,7 +2,6 @@ package kit
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -25,12 +24,12 @@ type ShopifyResponse struct {
 	Errors    requestError `json:"errors"`
 }
 
-func newShopifyResponse(rtype requestType, event EventType, requestURL string, resp *http.Response, err error) (*ShopifyResponse, Error) {
-	parsedURL, _ := url.Parse(requestURL)
+func newShopifyResponse(req *shopifyRequest, resp *http.Response, err error) (*ShopifyResponse, Error) {
+	parsedURL, _ := url.Parse(req.url)
 
 	newResponse := &ShopifyResponse{
-		Type:      rtype,
-		EventType: event,
+		Type:      req.rtype,
+		EventType: req.event,
 		Host:      parsedURL.Host,
 		URL:       parsedURL,
 	}
@@ -60,24 +59,6 @@ func newShopifyResponse(rtype requestType, event EventType, requestURL string, r
 // errors were returned from the server.
 func (resp ShopifyResponse) Successful() bool {
 	return resp.Code >= 200 && resp.Code < 300 && !resp.Errors.Any()
-}
-
-func (resp ShopifyResponse) String() string {
-	return fmt.Sprintf(`[%s] Performed %s at %s
-	Request: %s
-	Theme: %s
-	Asset: %s
-	Assets: %s
-	Errors: %s`,
-		RedText(resp.Code),
-		YellowText(resp.EventType),
-		YellowText(resp.Host),
-		YellowText(resp.URL),
-		YellowText(resp.Theme),
-		YellowText(resp.Asset),
-		YellowText(resp.Assets),
-		resp.Errors,
-	)
 }
 
 func (resp ShopifyResponse) Error() Error {

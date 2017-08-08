@@ -6,21 +6,18 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
-type ConfigurationTestSuite struct {
-	suite.Suite
-}
-
-func (suite *ConfigurationTestSuite) TearDownTest() {
-	environmentConfig = Configuration{}
+func resetConfig() {
 	flagConfig = Configuration{}
+	environmentConfig = Configuration{}
 }
 
-func (suite *ConfigurationTestSuite) TestSetFlagConfig() {
+func TestSetFlagConfig(t *testing.T) {
+	defer resetConfig()
+
 	config, _ := NewConfiguration()
-	assert.Equal(suite.T(), defaultConfig, *config)
+	assert.Equal(t, defaultConfig, *config)
 
 	flagConfig := Configuration{
 		Directory: "my/dir/now",
@@ -29,12 +26,15 @@ func (suite *ConfigurationTestSuite) TestSetFlagConfig() {
 	SetFlagConfig(flagConfig)
 
 	config, _ = NewConfiguration()
-	assert.Equal(suite.T(), flagConfig, *config)
+	assert.Equal(t, flagConfig, *config)
+
 }
 
-func (suite *ConfigurationTestSuite) TestEnvConfig() {
+func TestConfiguration_Env(t *testing.T) {
+	defer resetConfig()
+
 	config, _ := NewConfiguration()
-	assert.Equal(suite.T(), defaultConfig, *config)
+	assert.Equal(t, defaultConfig, *config)
 
 	environmentConfig = Configuration{
 		Password:     "password",
@@ -48,69 +48,87 @@ func (suite *ConfigurationTestSuite) TestEnvConfig() {
 	}
 
 	config, _ = NewConfiguration()
-	assert.Equal(suite.T(), environmentConfig, *config)
+	assert.Equal(t, environmentConfig, *config)
 }
 
-func (suite *ConfigurationTestSuite) TestConfigPrecedence() {
+func TestConfiguration_Precedence(t *testing.T) {
+	defer resetConfig()
+
 	config := &Configuration{Password: "file"}
 	config, _ = config.compile()
-	assert.Equal(suite.T(), "file", config.Password)
+	assert.Equal(t, "file", config.Password)
 
 	environmentConfig = Configuration{Password: "environment"}
 	config, _ = config.compile()
-	assert.Equal(suite.T(), "environment", config.Password)
+	assert.Equal(t, "environment", config.Password)
 
 	flagConfig = Configuration{Password: "flag"}
 	config, _ = config.compile()
-	assert.Equal(suite.T(), "flag", config.Password)
+	assert.Equal(t, "flag", config.Password)
 }
 
-func (suite *ConfigurationTestSuite) TestValidate() {
+func TestConfiguration_Validate(t *testing.T) {
+	defer resetConfig()
+
 	config := Configuration{Password: "file", ThemeID: "123", Domain: "test.myshopify.com"}
-	assert.Nil(suite.T(), config.Validate())
+	assert.Nil(t, config.Validate())
 
 	config = Configuration{Password: "file", ThemeID: "live", Domain: "test.myshopify.com"}
-	assert.Nil(suite.T(), config.Validate())
+	assert.Nil(t, config.Validate())
 
 	config = Configuration{ThemeID: "123", Domain: "test.myshopify.com"}
 	err := config.Validate()
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "missing password"))
+	if assert.NotNil(t, err) {
+		assert.True(t, strings.Contains(err.Error(), "missing password"))
 	}
 
 	config = Configuration{Password: "test", ThemeID: "123", Domain: "test.nope.com"}
 	err = config.Validate()
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "invalid store domain"))
+	if assert.NotNil(t, err) {
+		assert.True(t, strings.Contains(err.Error(), "invalid store domain"))
 	}
 
 	config = Configuration{Password: "test", ThemeID: "123"}
 	err = config.Validate()
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "missing store domain"))
+	if assert.NotNil(t, err) {
+		assert.True(t, strings.Contains(err.Error(), "missing store domain"))
 	}
 
 	config = Configuration{Password: "file", Domain: "test.myshopify.com"}
 	err = config.Validate()
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "missing theme_id"))
+	if assert.NotNil(t, err) {
+		assert.True(t, strings.Contains(err.Error(), "missing theme_id"))
 	}
 
 	config = Configuration{Password: "file", ThemeID: "abc", Domain: "test.myshopify.com"}
 	err = config.Validate()
-	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), true, strings.Contains(err.Error(), "invalid theme_id"))
+	if assert.NotNil(t, err) {
+		assert.True(t, strings.Contains(err.Error(), "invalid theme_id"))
 	}
 }
 
-func (suite *ConfigurationTestSuite) TestIsLive() {
+func TestConfiguration_IsLive(t *testing.T) {
+	defer resetConfig()
+
 	config := Configuration{ThemeID: "123"}
-	assert.Equal(suite.T(), false, config.IsLive())
+	assert.False(t, config.IsLive())
 
 	config = Configuration{ThemeID: "live"}
-	assert.Equal(suite.T(), true, config.IsLive())
+	assert.True(t, config.IsLive())
 }
 
-func TestConfigurationTestSuite(t *testing.T) {
-	suite.Run(t, new(ConfigurationTestSuite))
+func TestConfiguration_AsYaml(t *testing.T) {
+	defer resetConfig()
+
+	config := Configuration{Directory: defaultConfig.Directory}
+	assert.Equal(t, "", config.asYAML().Directory)
+
+	config = Configuration{Directory: "nope"}
+	assert.Equal(t, "nope", config.asYAML().Directory)
+
+	config = Configuration{Timeout: defaultConfig.Timeout}
+	assert.Equal(t, time.Duration(0), config.asYAML().Timeout)
+
+	config = Configuration{Timeout: 42}
+	assert.Equal(t, time.Duration(42), config.asYAML().Timeout)
 }

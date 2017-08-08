@@ -2,24 +2,20 @@ package kit
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
-type ErrorsTestSuite struct {
-	suite.Suite
-}
-
-func (suite *ErrorsTestSuite) TestKitError() {
+func TestKitError(t *testing.T) {
 	testErr := fmt.Errorf("testing error")
 	err := kitError{err: testErr}
-	assert.True(suite.T(), err.Fatal())
-	assert.Equal(suite.T(), err.Error(), testErr.Error())
+	assert.True(t, err.Fatal())
+	assert.Equal(t, err.Error(), testErr.Error())
 }
 
-func (suite *ErrorsTestSuite) TestThemeError() {
+func TestThemeError(t *testing.T) {
 	err := themeError{resp: ShopifyResponse{}}
 
 	tests := map[int]bool{
@@ -31,16 +27,17 @@ func (suite *ErrorsTestSuite) TestThemeError() {
 
 	for code, check := range tests {
 		err.resp.Code = code
-		assert.Equal(suite.T(), err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
+		assert.Equal(t, err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
 	}
 
 	err.resp.Errors = requestError{Other: []string{"nope"}}
 	err.resp.Code = 200
-	assert.True(suite.T(), err.Fatal())
+	assert.True(t, err.Fatal())
 }
 
-func (suite *ErrorsTestSuite) TestAssetError() {
+func TestAssetError(t *testing.T) {
 	err := assetError{resp: ShopifyResponse{}}
+	assert.Equal(t, "none", err.requestErr.String())
 
 	tests := map[int]bool{
 		0:   true,
@@ -52,15 +49,30 @@ func (suite *ErrorsTestSuite) TestAssetError() {
 
 	for code, check := range tests {
 		err.resp.Code = code
-		assert.Equal(suite.T(), err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
+		assert.Equal(t, err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
 	}
 
 	err.requestErr = requestError{Other: []string{"nope"}}
 	err.resp.Code = 200
-	assert.True(suite.T(), err.Fatal())
+	assert.True(t, err.Fatal())
+
+	err.resp.Code = 403
+	err.resp.EventType = Remove
+	err.generateHints()
+	assert.Equal(t, "This file is critical and removing it would cause your theme to become non-functional.", err.requestErr.Other[len(err.requestErr.Other)-1])
+
+	err.resp.Code = 404
+	err.resp.EventType = Update
+	err.generateHints()
+	assert.Equal(t, "This file is not part of your theme.", err.requestErr.Other[len(err.requestErr.Other)-1])
+
+	err.resp.Code = 409
+	err.resp.EventType = Update
+	err.generateHints()
+	assert.Equal(t, "There have been changes to this file made remotely.", err.requestErr.Other[len(err.requestErr.Other)-1])
 }
 
-func (suite *ErrorsTestSuite) TestListError() {
+func TestListError(t *testing.T) {
 	err := listError{resp: ShopifyResponse{}}
 
 	tests := map[int]bool{
@@ -74,17 +86,11 @@ func (suite *ErrorsTestSuite) TestListError() {
 
 	for code, check := range tests {
 		err.resp.Code = code
-		assert.Equal(suite.T(), err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
+		assert.Equal(t, err.Fatal(), check, fmt.Sprintf("code: %v, check: %v", code, check))
 	}
 
 	err.requestErr = requestError{Other: []string{"nope"}}
 	err.resp.Code = 200
-	assert.True(suite.T(), err.Fatal())
-}
-
-func (suite *ErrorsTestSuite) TestGeneralRequestError() {
-}
-
-func TestErrorsTestSuite(t *testing.T) {
-	suite.Run(t, new(ErrorsTestSuite))
+	assert.True(t, err.Fatal())
+	assert.True(t, strings.Contains(err.Error(), "Assets Perform"))
 }

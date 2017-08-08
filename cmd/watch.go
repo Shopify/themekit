@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"os"
 	"os/signal"
 
@@ -25,29 +27,29 @@ run 'theme watch' while you are editing and it will detect create, update and de
 
 For more documentation please see http://shopify.github.io/themekit/commands/#watch
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return startWatch()
-	},
+	RunE: startWatch,
 }
 
-func startWatch() error {
-	themeClients, err := generateThemeClients()
-	if err != nil {
+func startWatch(cmd *cobra.Command, args []string) error {
+	stdOut.SetFlags(log.Ltime)
+	arbiter.verbose = true
+	if err := arbiter.generateThemeClients(cmd, args); err != nil {
 		return err
 	}
-	err = watch(themeClients)
-	if err == errReload {
-		kit.Print("Reloading because of config changes")
-		return startWatch()
+	if err := watch(); err == errReload {
+		stdOut.Print("Reloading because of config changes")
+		return startWatch(cmd, args)
+	} else if err != nil {
+		return err
 	}
-	return err
+	return nil
 }
 
-func watch(themeClients []kit.ThemeClient) error {
+func watch() error {
 	watchers := []*kit.FileWatcher{}
 	defer func() {
 		if len(watchers) > 0 {
-			kit.Print("Cleaning up watchers")
+			stdOut.Print("Cleaning up watchers")
 			for _, watcher := range watchers {
 				// This is half assed because fsnotify sometimes deadlocks
 				// if it finishes before exit great if not garbage collection will do it.
@@ -56,53 +58,50 @@ func watch(themeClients []kit.ThemeClient) error {
 		}
 	}()
 
-	for _, client := range themeClients {
+	for _, client := range arbiter.activeThemeClients {
 		if client.Config.ReadOnly {
-			kit.LogErrorf("[%s]environment is reaonly", kit.GreenText(client.Config.Environment))
+			stdErr.Printf("[%s] environment is reaonly", green(client.Config.Environment))
 			continue
 		}
 
-		kit.Printf("[%s] Watching for file changes on host %s ", kit.GreenText(client.Config.Environment), kit.YellowText(client.Config.Domain))
-		watcher, err := client.NewFileWatcher(notifyFile, handleWatchEvent)
+		stdOut.Printf(
+			"[%s] Watching for file changes on host %s ",
+			green(client.Config.Environment),
+			yellow(client.Config.Domain),
+		)
+		watcher, err := client.NewFileWatcher(arbiter.notifyFile, handleWatchEvent)
 		if err != nil {
 			return err
 		}
-		err = watcher.WatchConfig(configPath, reloadSignal)
+		err = watcher.WatchConfig(arbiter.configPath, reloadSignal)
 		if err != nil {
 			return err
 		}
 		watchers = append(watchers, watcher)
 	}
 
-	if len(watchers) > 0 {
-		signal.Notify(signalChan, os.Interrupt)
-		select {
-		case <-signalChan:
-		case <-reloadSignal:
-			return errReload
-		}
+	if len(watchers) == 0 {
+		return fmt.Errorf("no valid configuration to start watch")
+	}
+
+	signal.Notify(signalChan, os.Interrupt)
+	select {
+	case <-signalChan:
+	case <-reloadSignal:
+		return errReload
 	}
 
 	return nil
 }
 
 func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventType) {
-	kit.Printf(
+	stdOut.Printf(
 		"[%s] Received %s event on %s",
-		kit.GreenText(client.Config.Environment),
-		kit.GreenText(event),
-		kit.BlueText(asset.Key),
+		green(client.Config.Environment),
+		green(event),
+		blue(asset.Key),
 	)
-	resp, err := client.Perform(asset, event)
-	if err != nil {
-		kit.LogErrorf("[%s]%s", kit.GreenText(client.Config.Environment), err)
-	} else {
-		kit.Printf(
-			"[%s] Successfully performed %s operation for file %s to %s",
-			kit.GreenText(client.Config.Environment),
-			kit.GreenText(resp.EventType),
-			kit.BlueText(resp.Asset.Key),
-			kit.YellowText(resp.Host),
-		)
+	if err := perform(client, asset, event, nil); err != nil {
+		stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
 	}
 }
