@@ -1,5 +1,14 @@
-# [Theme Kit](https://shopify.github.io/themekit/) [![Go Report Card](https://goreportcard.com/badge/github.com/shopify/themekit)](https://goreportcard.com/report/github.com/shopify/themekit) [![Build Status](https://circleci.com/gh/Shopify/themekit.png?circle-token=ac951910873cafaaf9c1be6049d2b9d3276eb2d4)](https://circleci.com/gh/Shopify/themekit)[![GoDoc](https://godoc.org/github.com/Shopify/themekit?status.svg)](http://godoc.org/github.com/Shopify/themekit)
-## Shopify Theme Manipulation CLI
+<p align="center">
+  <a href="https://shopify.github.io/themekit/"><h3 align="center">Theme Kit</h3></a>
+  <p align="center">Shopify Theme Manipulation CLI</p>
+  <p align="center">
+    <a href="https://goreportcard.com/report/github.com/shopify/themekit"><img src="https://goreportcard.com/badge/github.com/shopify/themekit"></a>
+    <a href="https://circleci.com/gh/Shopify/themekit"><img src="https://circleci.com/gh/Shopify/themekit.png?circle-token=ac951910873cafaaf9c1be6049d2b9d3276eb2d4"></a>
+    <a href="http://godoc.org/github.com/Shopify/themekit"><img src="https://godoc.org/github.com/Shopify/themekit?status.svg"></a>
+  </p>
+</p>
+
+---
 
 Theme Kit is a cross-platform tool for building Shopify Themes. Theme Kit is a single binary that has no dependencies.
 
