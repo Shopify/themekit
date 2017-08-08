@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-// Platform contains information for a release for a single architechture and
+// Platform contains information for a release for a single architecture and
 // operating system. It contains all the information needed to fetch it.
 //
 // Used for internal purposes but exposed for cross package functionality

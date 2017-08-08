@@ -133,13 +133,13 @@ func TestWriteAndReadEmpty(t *testing.T) {
 		t.Error("Read: Allowed read of empty resource", err.Error())
 	}
 	if _, err := store.Read(collection, "nope"); err == nil {
-		t.Error("Read: Allowed read of non existant collection", err.Error())
+		t.Error("Read: Allowed read of non existent collection", err.Error())
 	}
 	if _, err := store.ReadAll(""); err == nil {
 		t.Error("ReadAll: Allowed read of empty resource", err.Error())
 	}
 	if _, err := store.ReadAll("nope"); err == nil {
-		t.Error("ReadAll: Allowed read of non existant collection", err.Error())
+		t.Error("ReadAll: Allowed read of non existent collection", err.Error())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Allowed empty key to delete: %v", err)
 	}
 	if err := store.Delete("nope", "development"); err == nil {
-		t.Errorf("Allowed delete on non existant collection: %v", err)
+		t.Errorf("Allowed delete on non existent collection: %v", err)
 	}
 	if _, err := store.Read(collection, "development"); err == nil {
 		t.Error("Expected nothing, got value")

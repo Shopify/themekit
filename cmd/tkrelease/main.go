@@ -87,7 +87,7 @@ func removeRelease(ver string) {
 func updateRelease(ver string) {
 	if !force {
 		requestedVersion, _ := version.NewVersion(ver)
-		assert(requestedVersion.Equal(kit.ThemeKitVersion), "Deploy version does not match themekit verison")
+		assert(requestedVersion.Equal(kit.ThemeKitVersion), "Deploy version does not match themekit version")
 	}
 
 	_, err := os.Stat(distDir)
