@@ -12,13 +12,12 @@
 
 Theme Kit is a cross-platform tool for building Shopify Themes. Theme Kit is a single binary that has no dependencies.
 
-**Features**
+## Features
 - Upload Themes to Multiple Environments
 - Fast Uploads and Downloads
 - Watch for local changes and upload automatically to Shopify
+- Prevent overwriting changes made in the online editor.
 - Works on Windows, Linux and macOS
-
-[Read more about it on the website](https://shopify.github.io/themekit/)
 
 ## Installation
 
@@ -34,5 +33,5 @@ Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob
 
 ## Authors
 
-[Chris Saunders](https://github.com/csaunders), [Tim Anema](https://github.com/tanema),
+[Tim Anema](https://github.com/tanema), [Chris Saunders](https://github.com/csaunders),
 [Chris Butcher](https://github.com/chrisbutcher), [Jakob Külzer](https://github.com/ilikeorangutans)
