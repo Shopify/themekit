@@ -62,8 +62,11 @@ func (e Environments) SetConfiguration(environmentName string, conf *Configurati
 }
 
 // GetConfiguration will return the configuration for the environment. An error will
-// be returned if the environment does not exist or the configuration is invalid.
-func (e Environments) GetConfiguration(environmentName string) (*Configuration, error) {
+// be returned if the environment does not exist or the configuration is invalid. The
+// active parameter indicates if the configuration should take configuration values from
+// environment and flags. This is considered active because passive configurations only
+// take configuration from the config file and defaults.
+func (e Environments) GetConfiguration(environmentName string, active bool) (*Configuration, error) {
 	conf, exists := e[environmentName]
 	if !exists {
 		return conf, fmt.Errorf("%s does not exist in this environments list", environmentName)
@@ -75,7 +78,7 @@ Please see %s for examples`,
 			blue("http://shopify.github.io/themekit/configuration/#config-file"))
 	}
 	conf.Environment = environmentName
-	return conf.compile()
+	return conf.compile(active)
 }
 
 // Save will write out the environment to a file.

@@ -55,16 +55,20 @@ func TestConfiguration_Precedence(t *testing.T) {
 	defer resetConfig()
 
 	config := &Configuration{Password: "file"}
-	config, _ = config.compile()
+	config, _ = config.compile(true)
 	assert.Equal(t, "file", config.Password)
 
 	environmentConfig = Configuration{Password: "environment"}
-	config, _ = config.compile()
+	config, _ = config.compile(true)
 	assert.Equal(t, "environment", config.Password)
 
 	flagConfig = Configuration{Password: "flag"}
-	config, _ = config.compile()
+	config, _ = config.compile(true)
 	assert.Equal(t, "flag", config.Password)
+
+	config = &Configuration{Password: "file"}
+	config, _ = config.compile(false)
+	assert.Equal(t, "file", config.Password)
 }
 
 func TestConfiguration_Validate(t *testing.T) {
