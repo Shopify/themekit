@@ -15,6 +15,7 @@ func TestNewFileManifest(t *testing.T) {
 	store, err := newFileManifest("", []kit.ThemeClient{})
 	assert.Nil(t, err)
 	s, _ := ystore.New(storeName)
+	defer s.Drop()
 	assert.Equal(t, store.store, s)
 }
 
@@ -38,6 +39,32 @@ func TestFileManifest_GenerateRemote(t *testing.T) {
 	}
 }
 
+func TestFileManifest_backfillLocal(t *testing.T) {
+	server := kittest.NewTestServer()
+	defer server.Close()
+	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
+	defer kittest.Cleanup()
+	defer resetArbiter()
+
+	file, env1, env2, now, then := "asset.js", "development", "production", "2017-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
+	store, _ := ystore.New(storeName)
+	defer store.Drop()
+	store.Write(file, env1, then)
+	store.Write(file, "other", then)
+	manifest := &fileManifest{
+		store:  store,
+		local:  map[string]map[string]string{file: {env1: then, "other": then}},
+		remote: map[string]map[string]string{file: {env1: now, env2: now}},
+	}
+
+	_, ok := manifest.local[file][env2]
+	assert.False(t, ok)
+	assert.Nil(t, manifest.backfillLocal())
+	assert.Equal(t, then, manifest.local[file][env1])
+	assert.Equal(t, then, manifest.local[file]["other"])
+	assert.Equal(t, now, manifest.local[file][env2])
+}
+
 func TestFileManifest_Prune(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
@@ -48,6 +75,7 @@ func TestFileManifest_Prune(t *testing.T) {
 
 	file, env, now := "asset.js", "development", "2017-07-06T02:04:21-11:00"
 	store, _ := ystore.New(storeName)
+	defer store.Drop()
 	manifest := &fileManifest{
 		store:  store,
 		local:  map[string]map[string]string{file: {env: now, "other": now}},

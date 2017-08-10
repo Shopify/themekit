@@ -44,6 +44,10 @@ func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, err
 		return nil, err
 	}
 
+	if err := manifest.backfillLocal(); err != nil {
+		return nil, err
+	}
+
 	return manifest, manifest.prune(clients)
 }
 
@@ -71,6 +75,29 @@ func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 	}
 
 	return requestGroup.Wait()
+}
+
+func (manifest *fileManifest) backfillLocal() (err error) {
+	batch := manifest.store.Batch()
+
+	for filename, remoteEnvs := range manifest.remote {
+		if localEnvs, found := manifest.local[filename]; found {
+			for env, version := range remoteEnvs {
+				if _, hasLocal := localEnvs[env]; !hasLocal {
+					if err = batch.Write(filename, env, version); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	if err = batch.Commit(); err != nil {
+		return err
+	}
+
+	manifest.local, err = manifest.store.Dump()
+	return err
 }
 
 func (manifest *fileManifest) prune(clients []kit.ThemeClient) error {

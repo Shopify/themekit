@@ -1,6 +1,7 @@
 package kittest
 
 import (
+	"io/ioutil"
 	"os"
 	"text/template"
 )
@@ -34,15 +35,25 @@ production:
   - squirtle
 `))
 
-var invalidConfig = template.Must(template.New("invalidConfig").Parse(`development:
-  store: {{ .Domain }}
-  directory: {{ .Directory }}
+const (
+	badOtherEnvConfig = `development:
+  password: abracadabra
+  theme_id: "1"
+  store: store.myshopify.com
+production:
+  password: abracadabra
+  store: store.myshopify.com
+`
+
+	invalidConfig = `development:
+  store: store.myshopify.com
   access_token: abracadabra
   ignore_files:
     - hello
     - *.jpg
     - *.png
-`))
+`
+)
 
 var proxyConfig = template.Must(template.New("proxyConfig").Parse(`development:
   password: foo
@@ -71,25 +82,23 @@ var jsonConfig = template.Must(template.New("jsonConfig").Parse(`{
 // config pass false to valid.
 func GenerateConfig(domain string, valid bool) error {
 	Setup()
-	f, err := os.OpenFile("config.yml", os.O_CREATE|os.O_WRONLY, 0777)
-	if err != nil {
-		return err
-	}
-	data := struct{ Domain, Directory string }{domain, FixtureProjectPath}
 	if valid {
+		f, err := os.OpenFile("config.yml", os.O_CREATE|os.O_WRONLY, 0777)
+		if err != nil {
+			return err
+		}
+		data := struct{ Domain, Directory string }{domain, FixtureProjectPath}
 		if err = validConfig.Execute(f, data); err != nil {
 			return err
 		}
 	} else {
-		if err = invalidConfig.Execute(f, data); err != nil {
-			return err
-		}
+		return ioutil.WriteFile("config.yml", []byte(invalidConfig), 0777)
 	}
 	return nil
 }
 
 // GenerateProxyConfig will generate a config using the passed domain with proxy config.
-func GenerateProxyConfig(domain string, valid bool) error {
+func GenerateProxyConfig(domain string) error {
 	Setup()
 	f, err := os.OpenFile("config.yml", os.O_CREATE|os.O_WRONLY, 0777)
 	if err != nil {
@@ -97,6 +106,12 @@ func GenerateProxyConfig(domain string, valid bool) error {
 	}
 	data := struct{ Domain, Directory string }{domain, FixtureProjectPath}
 	return proxyConfig.Execute(f, data)
+}
+
+// GenerateBadMultiConfig will generate a config using the passed domain with proxy config,
+// but with one invalid environment
+func GenerateBadMultiConfig(domain string) error {
+	return ioutil.WriteFile("config.yml", []byte(badOtherEnvConfig), 0777)
 }
 
 // GenerateJSONConfig will generate and write a valid json config for testing
