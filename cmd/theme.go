@@ -18,6 +18,7 @@ var (
 	bootstrapName    string
 	setThemeID       bool
 	openEdit         bool
+	openWith         string
 	updateVersion    string
 	noUpdateNotifier bool
 
@@ -94,6 +95,7 @@ func init() {
 	updateCmd.Flags().StringVar(&updateVersion, "version", "latest", "version of themekit to install")
 
 	openCmd.Flags().BoolVarP(&openEdit, "edit", "E", false, "open the web editor for the theme.")
+	openCmd.Flags().StringVarP(&openWith, "browser", "b", "", "name of the browser to open the url. the name should match the name of browser on your system.")
 
 	ThemeCmd.AddCommand(
 		bootstrapCmd,
