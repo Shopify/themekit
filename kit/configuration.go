@@ -58,13 +58,15 @@ func SetFlagConfig(config Configuration) {
 // formatted configuration along with any validation errors. The config precedence
 // is flags, environment variables, then the config file.
 func NewConfiguration() (*Configuration, error) {
-	return (&Configuration{}).compile()
+	return (&Configuration{}).compile(true)
 }
 
-func (conf *Configuration) compile() (*Configuration, error) {
+func (conf *Configuration) compile(active bool) (*Configuration, error) {
 	newConfig := &Configuration{}
-	mergo.Merge(newConfig, &flagConfig)
-	mergo.Merge(newConfig, &environmentConfig)
+	if active {
+		mergo.Merge(newConfig, &flagConfig)
+		mergo.Merge(newConfig, &environmentConfig)
+	}
 	mergo.Merge(newConfig, conf)
 	mergo.Merge(newConfig, &defaultConfig)
 	return newConfig, newConfig.Validate()

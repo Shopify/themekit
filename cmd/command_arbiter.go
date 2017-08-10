@@ -66,7 +66,8 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 	}
 
 	for env := range configEnvs {
-		config, err := configEnvs.GetConfiguration(env)
+		isActive := arbiter.shouldUseEnvironment(env)
+		config, err := configEnvs.GetConfiguration(env, isActive)
 		if err != nil {
 			return fmt.Errorf(
 				`[%s] %s All environments are required to be valid so that asset versions can be validated`,
@@ -91,7 +92,7 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 			return err
 		}
 
-		if arbiter.shouldUseEnvironment(env) {
+		if isActive {
 			arbiter.activeThemeClients = append(arbiter.activeThemeClients, client)
 		}
 		arbiter.allThemeClients = append(arbiter.allThemeClients, client)
