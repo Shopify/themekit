@@ -9,7 +9,12 @@ import (
 	"github.com/Shopify/themekit/kit"
 )
 
-var openFunc = open.Run
+var openFunc = func(url string) error {
+	if openWith == "" {
+		return open.Run(url)
+	}
+	return open.RunWith(url, openWith)
+}
 
 var openCmd = &cobra.Command{
 	Use:   "open",
