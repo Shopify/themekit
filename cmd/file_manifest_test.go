@@ -166,10 +166,14 @@ func TestFileManifest_FetchableFiles(t *testing.T) {
 		remote: map[string]map[string]string{
 			"assets/goodbye.txt": {env: now},
 			"assets/hello.txt":   {env: now},
+			"assets/no.txt":      {"other": now},
 		},
 	}
 
-	filenames := manifest.FetchableFiles([]string{"assets/hello.txt"}, env)
+	filenames := manifest.FetchableFiles([]string{}, env)
+	assert.Equal(t, len(filenames), 2)
+
+	filenames = manifest.FetchableFiles([]string{"assets/hello.txt"}, env)
 	assert.Equal(t, len(filenames), 1)
 
 	filenames = manifest.FetchableFiles([]string{"assets/goodbye*", "templates/404.html"}, env)

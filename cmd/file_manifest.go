@@ -179,8 +179,10 @@ func (manifest *fileManifest) Should(event kit.EventType, filename, environment 
 func (manifest *fileManifest) FetchableFiles(filenames []string, env string) []string {
 	fetchableFilenames := []string{}
 	if len(filenames) <= 0 {
-		for assetName := range manifest.remote {
-			fetchableFilenames = append(fetchableFilenames, assetName)
+		for assetName, envs := range manifest.remote {
+			if _, ok := envs[env]; ok {
+				fetchableFilenames = append(fetchableFilenames, assetName)
+			}
 		}
 	} else {
 		wildCards := []string{}
