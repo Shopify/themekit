@@ -91,12 +91,11 @@ func (asset Asset) Contents() ([]byte, error) {
 
 // CheckSum will return the checksum of this asset
 func (asset Asset) CheckSum() (string, error) {
-	if !asset.IsValid() {
-		return "", fmt.Errorf("asset is not valid")
-	}
 	data, err := asset.Contents()
 	if err != nil {
 		return "", err
+	} else if len(data) == 0 {
+		return "", fmt.Errorf("asset has no content")
 	}
 	return fmt.Sprintf("%x", md5.Sum(data)), nil
 }
