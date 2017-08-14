@@ -60,6 +60,26 @@ func TestAsset_Contents(t *testing.T) {
 }`, string(data))
 }
 
+func TestAsset_CheckSum(t *testing.T) {
+	asset := Asset{Value: "this is content"}
+	checksum, err := asset.CheckSum()
+	assert.NotNil(t, err)
+
+	asset = Asset{Key: "asset/name.txt", Value: "this is content"}
+	checksum, err = asset.CheckSum()
+	assert.Nil(t, err)
+	assert.Equal(t, "b7fcef7fe745f2a95560ff5f550e3b8f", checksum)
+
+	asset = Asset{Key: "asset/name.txt", Attachment: "this is bad content"}
+	checksum, err = asset.CheckSum()
+	assert.NotNil(t, err)
+
+	asset = Asset{Key: "asset/name.txt", Attachment: base64.StdEncoding.EncodeToString([]byte("this is bad content"))}
+	checksum, err = asset.CheckSum()
+	assert.Nil(t, err)
+	assert.Equal(t, "04c9d416fc81a9dcb5460c560b532634", checksum)
+}
+
 func TestFindAllFiles(t *testing.T) {
 	kittest.Setup()
 	kittest.GenerateProject()
