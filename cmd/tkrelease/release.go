@@ -26,7 +26,7 @@ var (
 func buildRelease(ver string, uploader *s3Uploader) (kit.Release, error) {
 	var wg sync.WaitGroup
 	wg.Add(len(builds))
-	newRelease := kit.Release{Version: ver, Platforms: make([]kit.Platform, len(builds))}
+	newRelease := kit.Release{Version: ver, Platforms: []kit.Platform{}}
 	finished := make(chan bool, 1)
 	errChan := make(chan error)
 	platformChan := make(chan kit.Platform)
