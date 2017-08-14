@@ -60,12 +60,7 @@ func downloadFile(client kit.ThemeClient, filename string) error {
 		return fmt.Errorf("error writing asset: %v", err)
 	}
 
-	checksum, sumerr := asset.CheckSum()
-	content, _ := asset.Contents()
-	println(checksum, asset.Key, content)
-	if sumerr != nil {
-		println(sumerr.Error())
-	}
+	checksum, _ := asset.CheckSum()
 	if err := arbiter.manifest.Set(asset.Key, client.Config.Environment, asset.UpdatedAt, checksum); err != nil {
 		return fmt.Errorf("error updating manifest: %v", err)
 	}
