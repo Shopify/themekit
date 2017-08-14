@@ -61,7 +61,7 @@ func TestAsset_Contents(t *testing.T) {
 }
 
 func TestAsset_CheckSum(t *testing.T) {
-	asset := Asset{Value: "this is content"}
+	asset := Asset{}
 	checksum, err := asset.CheckSum()
 	assert.NotNil(t, err)
 
