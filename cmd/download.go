@@ -45,7 +45,7 @@ func downloadFile(client kit.ThemeClient, filename string) error {
 			stdOut.Printf(
 				"[%s] skipping %s",
 				green(client.Config.Environment),
-				green(filename),
+				blue(filename),
 			)
 		}
 		return nil
@@ -68,7 +68,7 @@ func downloadFile(client kit.ThemeClient, filename string) error {
 		stdOut.Printf(
 			"[%s] Successfully wrote %s to disk",
 			green(client.Config.Environment),
-			green(filename),
+			blue(filename),
 		)
 	}
 	return nil

@@ -53,7 +53,7 @@ func deploy(destructive bool) arbitratedCmd {
 						"[%s] skipping %s of %s",
 						green(client.Config.Environment),
 						yellow(action.event),
-						green(action.asset.Key),
+						blue(action.asset.Key),
 					)
 				}
 
@@ -100,7 +100,7 @@ func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *
 			"[%s] Successfully performed %s on file %s from %s",
 			green(client.Config.Environment),
 			green(resp.EventType),
-			green(resp.Asset.Key),
+			blue(resp.Asset.Key),
 			yellow(resp.Host),
 		)
 	}
