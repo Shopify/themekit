@@ -102,16 +102,16 @@ func (manifest *fileManifest) backfillLocal() (err error) {
 }
 
 func (manifest *fileManifest) prune(clients []kit.ThemeClient) error {
-	// prune files that no longer exist
+	// prune files that are no longer on disk
 	for filename := range manifest.local {
-		if _, found := manifest.remote[filename]; !found {
-			if i := indexOf(len(clients), func(i int) bool {
-				info, err := os.Stat(filepath.ToSlash(filepath.Join(clients[i].Config.Directory, filename)))
-				return err == nil && !info.IsDir()
-			}); i == -1 {
-				if err := manifest.store.DeleteCollection(filename); err != nil {
-					return err
-				}
+		onDisk := indexOf(len(clients), func(i int) bool {
+			info, err := os.Stat(filepath.ToSlash(filepath.Join(clients[i].Config.Directory, filename)))
+			return err == nil && !info.IsDir()
+		}) != -1
+
+		if !onDisk {
+			if err := manifest.store.DeleteCollection(filename); err != nil {
+				return err
 			}
 		}
 	}
