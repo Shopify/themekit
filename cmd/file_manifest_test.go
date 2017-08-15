@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -121,38 +122,48 @@ func TestFileManifest_DiffDates(t *testing.T) {
 }
 
 func TestFileManifest_Should(t *testing.T) {
-	file, env, now, then := "asset.js", "development", "2017-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
+	asset := kit.Asset{
+		Key:   "asset.js",
+		Value: "// this is content",
+	}
+	checksum, _ := asset.CheckSum()
+	println(checksum)
+
+	env, now, then := "development", "2017-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
 	manifest := &fileManifest{
-		local:  map[string]map[string]string{file: {env: then}},
-		remote: map[string]map[string]string{file: {env: then}},
+		local:  map[string]map[string]string{asset.Key: {env: strings.Join([]string{then, "e22eb25ed76d48248d849e3107754642"}, versionSeparator)}},
+		remote: map[string]map[string]string{asset.Key: {env: then}},
 	}
 
-	assert.False(t, manifest.Should(kit.Update, file, env))
-	assert.False(t, manifest.Should(kit.Remove, file, env))
-	assert.False(t, manifest.Should(kit.Retrieve, file, env))
+	assert.False(t, manifest.Should(kit.Update, asset, env))
+	assert.False(t, manifest.Should(kit.Remove, asset, env))
+	assert.False(t, manifest.Should(kit.Retrieve, asset, env))
 
-	manifest.local[file][env] = now
-	assert.True(t, manifest.Should(kit.Update, file, env))
-	assert.True(t, manifest.Should(kit.Remove, file, env))
-	assert.False(t, manifest.Should(kit.Retrieve, file, env))
+	manifest.local[asset.Key][env] = now
+	assert.True(t, manifest.Should(kit.Update, asset, env))
+	assert.True(t, manifest.Should(kit.Remove, asset, env))
+	assert.False(t, manifest.Should(kit.Retrieve, asset, env))
 
-	manifest.local[file][env] = then
-	manifest.remote[file][env] = now
-	assert.False(t, manifest.Should(kit.Update, file, env))
-	assert.False(t, manifest.Should(kit.Remove, file, env))
-	assert.True(t, manifest.Should(kit.Retrieve, file, env))
+	manifest.local[asset.Key][env] = strings.Join([]string{then, "e22eb25ed76d48248d849e3107754642"}, versionSeparator)
+	manifest.remote[asset.Key][env] = now
+	assert.False(t, manifest.Should(kit.Update, asset, env))
+	assert.False(t, manifest.Should(kit.Remove, asset, env))
+	assert.True(t, manifest.Should(kit.Retrieve, asset, env))
 
-	delete(manifest.remote[file], env)
-	assert.True(t, manifest.Should(kit.Update, file, env))
-	assert.True(t, manifest.Should(kit.Remove, file, env))
-	assert.False(t, manifest.Should(kit.Retrieve, file, env))
+	manifest.local[asset.Key][env] = strings.Join([]string{then, "nope"}, versionSeparator)
+	assert.True(t, manifest.Should(kit.Update, asset, env))
 
-	delete(manifest.local[file], env)
-	assert.True(t, manifest.Should(kit.Update, file, env))
-	assert.True(t, manifest.Should(kit.Remove, file, env))
-	assert.True(t, manifest.Should(kit.Retrieve, file, env))
+	delete(manifest.remote[asset.Key], env)
+	assert.True(t, manifest.Should(kit.Update, asset, env))
+	assert.True(t, manifest.Should(kit.Remove, asset, env))
+	assert.False(t, manifest.Should(kit.Retrieve, asset, env))
 
-	assert.False(t, manifest.Should(kit.EventType(25), file, env))
+	delete(manifest.local[asset.Key], env)
+	assert.True(t, manifest.Should(kit.Update, asset, env))
+	assert.True(t, manifest.Should(kit.Remove, asset, env))
+	assert.True(t, manifest.Should(kit.Retrieve, asset, env))
+
+	assert.False(t, manifest.Should(kit.EventType(25), asset, env))
 }
 
 func TestFileManifest_FetchableFiles(t *testing.T) {
@@ -219,7 +230,7 @@ func TestFileManifest_Set(t *testing.T) {
 
 		_, err = os.Stat(storeName)
 		assert.Nil(t, err)
-		assert.Nil(t, manifest.Set("test", "development", "test"))
+		assert.Nil(t, manifest.Set("test", "development", "test", "akjblksb1242ljhbl243"))
 		_, err = os.Stat(storeName)
 		assert.Nil(t, err)
 	}
@@ -237,7 +248,7 @@ func TestFileManifest_Delete(t *testing.T) {
 		manifest, err := newFileManifest("", []kit.ThemeClient{client})
 		assert.Nil(t, err)
 		assert.NotNil(t, manifest.Delete("test.txt", "development"))
-		assert.Nil(t, manifest.Set("test.txt", "development", "123456"))
+		assert.Nil(t, manifest.Set("test.txt", "development", "123456", "123456"))
 		assert.Nil(t, manifest.Delete("test.txt", "development"))
 	}
 }
@@ -253,13 +264,14 @@ func TestFileManifest_Get(t *testing.T) {
 	if assert.Nil(t, err) {
 		manifest, err := newFileManifest("", []kit.ThemeClient{client})
 		assert.Nil(t, err)
-		_, err = manifest.Get("test.txt", "development")
+		_, _, err = manifest.Get("test.txt", "development")
 		assert.Nil(t, err)
-		_, err = manifest.Get("", "development")
+		_, _, err = manifest.Get("", "development")
 		assert.NotNil(t, err)
-		assert.Nil(t, manifest.Set("test.txt", "development", "123456"))
-		version, err := manifest.Get("test.txt", "development")
+		assert.Nil(t, manifest.Set("test.txt", "development", "123456", "123sum456"))
+		version, sum, err := manifest.Get("test.txt", "development")
 		assert.Nil(t, err)
 		assert.Equal(t, version, "123456")
+		assert.Equal(t, sum, "123sum456")
 	}
 }

@@ -45,7 +45,7 @@ func deploy(destructive bool) arbitratedCmd {
 		var deployGroup errgroup.Group
 		bar := arbiter.newProgressBar(len(actions), client.Config.Environment)
 		for key, action := range actions {
-			shouldPerform := arbiter.force || arbiter.manifest.Should(action.event, action.asset.Key, client.Config.Environment)
+			shouldPerform := arbiter.force || arbiter.manifest.Should(action.event, action.asset, client.Config.Environment)
 			// pretend we did the settings data and we will do it last
 			if !shouldPerform || key == settingsDataKey {
 				if arbiter.verbose {
@@ -89,7 +89,7 @@ func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *
 
 	if arbiter.force {
 		resp, err = client.Perform(asset, event)
-	} else if version, err = arbiter.manifest.Get(asset.Key, client.Config.Environment); err == nil {
+	} else if version, _, err = arbiter.manifest.Get(asset.Key, client.Config.Environment); err == nil {
 		resp, err = client.PerformStrict(asset, event, version)
 	}
 
@@ -109,8 +109,11 @@ func perform(client kit.ThemeClient, asset kit.Asset, event kit.EventType, bar *
 		if err := arbiter.manifest.Delete(resp.Asset.Key, client.Config.Environment); err != nil && err != ystore.ErrorCollectionNotFound {
 			return err
 		}
-	} else if err := arbiter.manifest.Set(resp.Asset.Key, client.Config.Environment, resp.Asset.UpdatedAt); err != nil {
-		return err
+	} else {
+		checksum, _ := asset.CheckSum()
+		if err := arbiter.manifest.Set(resp.Asset.Key, client.Config.Environment, resp.Asset.UpdatedAt, checksum); err != nil {
+			return err
+		}
 	}
 
 	return nil

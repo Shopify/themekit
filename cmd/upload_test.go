@@ -64,8 +64,6 @@ func TestPerform(t *testing.T) {
 		assert.Nil(t, perform(client, kit.Asset{Key: "asset.js"}, kit.Update, nil))
 		assert.Nil(t, perform(client, kit.Asset{Key: "asset.js"}, kit.Remove, nil))
 
-		err = perform(client, kit.Asset{Key: "empty"}, kit.Update, nil)
-		assert.True(t, strings.Contains(err.Error(), "No value provided"))
 		client.Config.Environment = ""
 		err = perform(client, kit.Asset{Key: "empty"}, kit.Remove, nil)
 		assert.True(t, strings.Contains(err.Error(), "No key name provided"))

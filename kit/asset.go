@@ -2,6 +2,7 @@ package kit
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -86,6 +87,17 @@ func (asset Asset) Contents() ([]byte, error) {
 		}
 	}
 	return data, nil
+}
+
+// CheckSum will return the checksum of this asset
+func (asset Asset) CheckSum() (string, error) {
+	data, err := asset.Contents()
+	if err != nil {
+		return "", err
+	} else if len(data) == 0 {
+		return "", fmt.Errorf("asset has no content")
+	}
+	return fmt.Sprintf("%x", md5.Sum(data)), nil
 }
 
 func findAllFiles(dir string) ([]string, error) {
