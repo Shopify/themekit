@@ -151,7 +151,7 @@ func (arbiter *commandArbiter) setFlagConfig() {
 
 func (arbiter *commandArbiter) newProgressBar(count int, name string) *mpb.Bar {
 	var bar *mpb.Bar
-	if !arbiter.verbose {
+	if !arbiter.verbose && count > 0 {
 		bar = arbiter.progress.AddBar(int64(count)).
 			PrependName(fmt.Sprintf("[%s]: ", name), 0).
 			AppendPercentage().
