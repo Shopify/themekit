@@ -5,6 +5,7 @@
     <a href="https://goreportcard.com/report/github.com/shopify/themekit"><img src="https://goreportcard.com/badge/github.com/shopify/themekit"></a>
     <a href="https://circleci.com/gh/Shopify/themekit"><img src="https://circleci.com/gh/Shopify/themekit.png?circle-token=ac951910873cafaaf9c1be6049d2b9d3276eb2d4"></a>
     <a href="http://godoc.org/github.com/Shopify/themekit"><img src="https://godoc.org/github.com/Shopify/themekit?status.svg"></a>
+    <a href="https://github.com/Shopify/themekit/releases/latest"><img src="http://github-release-version.herokuapp.com/github/Shopify/themekit/release.svg?style=flat"></a>
   </p>
 </p>
 
