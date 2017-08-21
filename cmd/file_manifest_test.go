@@ -136,7 +136,7 @@ func TestFileManifest_Should(t *testing.T) {
 	}
 
 	assert.False(t, manifest.Should(kit.Update, asset, env))
-	assert.False(t, manifest.Should(kit.Remove, asset, env))
+	assert.True(t, manifest.Should(kit.Remove, asset, env))
 	assert.False(t, manifest.Should(kit.Retrieve, asset, env))
 
 	manifest.local[asset.Key][env] = now
