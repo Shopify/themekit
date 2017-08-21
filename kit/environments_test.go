@@ -39,7 +39,6 @@ func TestSearchConfigPath(t *testing.T) {
 	assert.Equal(t, "yml", ext)
 
 	kittest.Cleanup()
-	os.Remove("config.yml")
 	kittest.GenerateJSONConfig("example.myshopify.io")
 	_, ext, err = searchConfigPath("config.json")
 	assert.Nil(t, err)

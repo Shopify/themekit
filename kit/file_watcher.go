@@ -70,7 +70,6 @@ func (watcher *FileWatcher) watch() error {
 		}
 
 		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != root {
-			println("watching", path)
 			if err := watcher.mainWatcher.Add(path); err != nil {
 				return fmt.Errorf("Could not watch directory %s: %s", path, err)
 			}

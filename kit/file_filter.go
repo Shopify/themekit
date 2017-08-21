@@ -109,19 +109,16 @@ func (e fileFilter) filterAssets(assets []Asset) []Asset {
 
 func (e fileFilter) matchesFilter(filename string) bool {
 	if len(filename) == 0 || !pathInProject(e.rootDir, filename) {
-		println("match first")
 		return true
 	}
 
 	for _, regexp := range e.filters {
 		if regexp.MatchString(filename) {
-			println("match regex")
 			return true
 		}
 	}
 	for _, pattern := range e.globs {
 		if glob.Glob(pattern, filename) || glob.Glob(pattern, e.rootDir+filename) {
-			println("match glob")
 			return true
 		}
 	}
