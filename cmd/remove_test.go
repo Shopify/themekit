@@ -27,7 +27,11 @@ func TestRemove(t *testing.T) {
 			assert.Equal(t, "DELETE", server.Requests[0].Method)
 		}
 
-		arbiter.manifest.Set("templates/layout.liquid", "development", "2011-07-06T02:04:21-11:00", "123sum456")
+		asset, env, then, now := "templates/layout.liquid", "development", "2011-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
+		arbiter.manifest = &fileManifest{
+			local:  map[string]map[string]string{asset: {env: then}},
+			remote: map[string]map[string]string{asset: {env: now}},
+		}
 		arbiter.force = false
 		err = remove(client, []string{"templates/layout.liquid"})
 		assert.True(t, strings.Contains(err.Error(), "file was modified remotely"))

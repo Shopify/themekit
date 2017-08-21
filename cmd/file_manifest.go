@@ -164,7 +164,7 @@ func (manifest *fileManifest) ShouldUpload(asset kit.Asset, environment string) 
 
 func (manifest *fileManifest) ShouldRemove(filename, environment string) bool {
 	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
-	return remoteTime.Before(localTime) || localTime.IsZero()
+	return remoteTime.Before(localTime) || remoteTime.Equal(localTime) || localTime.IsZero()
 }
 
 func (manifest *fileManifest) Should(event kit.EventType, asset kit.Asset, environment string) bool {
