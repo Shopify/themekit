@@ -14,7 +14,7 @@ import (
 
 var (
 	// ThemeKitVersion is the version build of the library
-	ThemeKitVersion, _ = version.NewVersion("0.7.1")
+	ThemeKitVersion, _ = version.NewVersion("0.7.2")
 	// ThemeKitReleasesURL is the url that fetches all versions of themekit used for.
 	// updating themekit. Change this for testing reasons.
 	ThemeKitReleasesURL = "https://shopify-themekit.s3.amazonaws.com/releases/all.json"
