@@ -2,6 +2,7 @@ package kit
 
 import (
 	"encoding/base64"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -99,7 +100,7 @@ func TestLoadAssetsFromDirectory(t *testing.T) {
 	assets, err := loadAssetsFromDirectory(kittest.ProjectFiles[0], "", func(path string) bool { return false })
 	assert.Equal(t, "Path is not a directory", err.Error())
 	assets, err = loadAssetsFromDirectory(kittest.FixtureProjectPath, "", func(path string) bool {
-		return path != "assets/application.js"
+		return path != filepath.Join("assets","application.js")
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, []Asset{{
@@ -121,7 +122,7 @@ func TestLoadAsset(t *testing.T) {
 	defer kittest.Cleanup()
 
 	asset, err := loadAsset(kittest.FixtureProjectPath, kittest.ProjectFiles[0])
-	assert.Equal(t, kittest.ProjectFiles[0], asset.Key)
+	assert.Equal(t, filepath.ToSlash(kittest.ProjectFiles[0]), asset.Key)
 	assert.Equal(t, true, asset.IsValid())
 	assert.Equal(t, "this is js content", asset.Value)
 	assert.Nil(t, err)
