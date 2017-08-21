@@ -49,7 +49,7 @@ func searchConfigPath(configPath string) (string, string, error) {
 	name := filename[0 : len(filename)-len(filepath.Ext(filename))]
 	for _, ext := range supportedExts {
 		foundPath := filepath.Join(dir, name+"."+ext)
-		if _, err := os.Stat(foundPath); err == nil {
+		if _, err := os.Stat(foundPath); err == nil && "."+ext == filepath.Ext(filename) {
 			return foundPath, ext, nil
 		}
 	}

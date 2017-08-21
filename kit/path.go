@@ -25,7 +25,7 @@ func pathInProject(root, filename string) bool {
 func isProjectDirectory(root, filename string) bool {
 	filename = strings.TrimPrefix(
 		filepath.ToSlash(filepath.Clean(filename)),
-		filepath.Clean(root)+"/",
+		filepath.ToSlash(filepath.Clean(root)+"/"),
 	)
 
 	for _, dir := range assetLocations {
@@ -40,7 +40,7 @@ func isProjectDirectory(root, filename string) bool {
 func pathToProject(root, filename string) string {
 	filename = strings.TrimPrefix(
 		filepath.ToSlash(filepath.Clean(filename)),
-		filepath.Clean(root)+"/",
+		filepath.ToSlash(filepath.Clean(root)+"/"),
 	)
 
 	for _, dir := range assetLocations {
