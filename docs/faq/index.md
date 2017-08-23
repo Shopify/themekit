@@ -5,7 +5,7 @@ layout: default
 
 ## How can I reload the page when I make changes
 
-You will need to use another tool to do this however there are many options available
+You will need to use another tool to do this, however there are many options available
 to you to suit all use cases.
 
 - [Prepros](https://prepros.io/)
@@ -25,7 +25,7 @@ file to touch whenever a change has been completed.
 theme watch --notify=/var/tmp/theme_ready
 ```
 
-If this file does not exist, already themekit will create it when the first change
+If this file does not exist, themekit will create it when the first change
 happens. Then on subsequent events the file will be touched. This file is touched
 only after the request to shopify has been completed and not after saving the file.
 You can then provide this file path to your reloading program to trigger your browser
