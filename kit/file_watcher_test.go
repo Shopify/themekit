@@ -17,7 +17,7 @@ func TestNewFileWatcher(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	client := ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}}
-	watcher, err := newFileWatcher(client, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
+	watcher, err := newFileWatcher(client, "", true, fileFilter{}, func(ThemeClient, Asset, EventType, error) {})
 	assert.Nil(t, err)
 	assert.Equal(t, true, watcher.IsWatching())
 	watcher.StopWatching()
@@ -99,7 +99,7 @@ func TestFileWatcher_WatchFsEvents(t *testing.T) {
 		configWatcher: &fsnotify.Watcher{Events: make(chan fsnotify.Event)},
 	}
 
-	watcher.callback = func(client ThemeClient, asset Asset, event EventType) {
+	watcher.callback = func(client ThemeClient, asset Asset, event EventType, err error) {
 		assert.Equal(t, Update, event)
 		assetChan <- asset
 		wg.Done()
@@ -135,7 +135,7 @@ func TestFileWatcher_ReloadConfig(t *testing.T) {
 		configWatcher: configWatcher,
 	}
 
-	watcher.callback = func(client ThemeClient, asset Asset, event EventType) {}
+	watcher.callback = func(client ThemeClient, asset Asset, event EventType, err error) {}
 	err := watcher.WatchConfig("config.yml", reloadChan)
 	assert.Nil(t, err)
 
@@ -151,7 +151,7 @@ func TestFileWatcher_StopWatching(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	client := ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}}
-	watcher, err := newFileWatcher(client, "", true, fileFilter{}, func(ThemeClient, Asset, EventType) {})
+	watcher, err := newFileWatcher(client, "", true, fileFilter{}, func(ThemeClient, Asset, EventType, error) {})
 	assert.Nil(t, err)
 	assert.Equal(t, true, watcher.IsWatching())
 	watcher.StopWatching()
@@ -188,7 +188,7 @@ func TestFileWatcher_OnEvent(t *testing.T) {
 	watcher := &FileWatcher{
 		waitNotify:     false,
 		recordedEvents: newEventMap(),
-		callback:       func(client ThemeClient, asset Asset, event EventType) {},
+		callback:       func(client ThemeClient, asset Asset, event EventType, err error) {},
 		client:         ThemeClient{Config: &Configuration{Directory: kittest.FixtureProjectPath}},
 	}
 
@@ -258,7 +258,7 @@ func TestFileWatcher_HandleEvent(t *testing.T) {
 	}
 
 	for _, write := range writes {
-		watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType) {
+		watcher := &FileWatcher{callback: func(client ThemeClient, asset Asset, event EventType, err error) {
 			assert.Equal(t, pathToProject(kittest.FixtureProjectPath, filepath.Join(kittest.FixtureProjectPath, "assets", "application.js")), asset.Key)
 			assert.Equal(t, write.ExpectedEvent, event)
 		},

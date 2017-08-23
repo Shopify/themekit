@@ -69,7 +69,7 @@ func TestHandleWatchEvent(t *testing.T) {
 	client, err := getClient()
 	if assert.Nil(t, err) {
 		server.Reset()
-		handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove)
+		handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove, nil)
 		assert.Equal(t, 1, len(server.Requests))
 		assert.Equal(t, "DELETE", server.Requests[0].Method)
 		assert.True(t, strings.Contains(stdOutOutput.String(), "Received"))
@@ -77,7 +77,7 @@ func TestHandleWatchEvent(t *testing.T) {
 
 		server.Reset()
 		resetLog()
-		handleWatchEvent(client, kit.Asset{Key: "nope"}, kit.Update)
+		handleWatchEvent(client, kit.Asset{Key: "nope"}, kit.Update, nil)
 		assert.Equal(t, 1, len(server.Requests))
 		assert.Equal(t, "PUT", server.Requests[0].Method)
 
