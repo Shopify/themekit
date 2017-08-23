@@ -58,11 +58,6 @@ func TestCommandArbiter_GenerateThemeClients(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Invalid yaml found"))
 
-	assert.Nil(t, kittest.GenerateBadMultiConfig(server.URL))
-	err = arbiter.generateThemeClients(nil, []string{})
-	assert.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "environments are required to be valid"))
-
 	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
 
 	arbiter.environments = stringArgArray{[]string{"nope"}}
