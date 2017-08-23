@@ -3,6 +3,34 @@ layout: default
 ---
 # FAQ
 
+## How can I reload the page when I make changes
+
+You will need to use another tool to do this, however there are many options available
+to you to suit all use cases.
+
+- [Prepros](https://prepros.io/)
+- [LivePage Chrome Plugin](https://chrome.google.com/webstore/detail/livepage/pilnojpmdoofaelbinaeodfpjheijkbh?hl=en-US)
+- [BrowserSync](https://www.browsersync.io/)
+- [LiveReload](http://livereload.com/)
+
+## How can I use LiveReload/Prepros/Browsersync/LivePage
+
+You can find a guide to setup [Prepros on the shopify blog](https://www.shopify.com/partners/blog/live-reload-shopify-sass)
+that can apply to many other tools as well.
+
+In general though while running the `theme watch` command you can provide it with a
+file to touch whenever a change has been completed.
+
+```
+theme watch --notify=/var/tmp/theme_ready
+```
+
+If this file does not exist, themekit will create it when the first change
+happens. Then on subsequent events the file will be touched. This file is touched
+only after the request to shopify has been completed and not after saving the file.
+You can then provide this file path to your reloading program to trigger your browser
+refresh.
+
 ## How do I remove Theme Kit?
 
 You can easily remove Theme Kit from your command line by running the following
