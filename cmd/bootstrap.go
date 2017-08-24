@@ -156,6 +156,15 @@ func saveConfiguration(config *kit.Configuration) error {
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	env.SetConfiguration(kit.DefaultEnvironment, config)
+
+	flagEnvs := arbiter.environments.Value()
+	if len(flagEnvs) == 0 {
+		env.SetConfiguration(kit.DefaultEnvironment, config)
+	} else {
+		for _, envName := range flagEnvs {
+			env.SetConfiguration(envName, config)
+		}
+	}
+
 	return env.Save(arbiter.configPath)
 }
