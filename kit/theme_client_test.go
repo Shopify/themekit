@@ -28,7 +28,7 @@ func TestThemeClient_NewFileWatcher(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	client, _ := NewThemeClient(&Configuration{Directory: kittest.FixtureProjectPath})
-	watcher, err := client.NewFileWatcher("", func(ThemeClient, Asset, EventType) {})
+	watcher, err := client.NewFileWatcher("", func(ThemeClient, Asset, EventType, error) {})
 	assert.Nil(t, err)
 	assert.NotNil(t, watcher)
 }

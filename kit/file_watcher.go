@@ -14,7 +14,7 @@ var debounceTimeout = 1100 * time.Millisecond
 
 // FileEventCallback is the callback that is called when there is an event from
 // a file watcher.
-type FileEventCallback func(ThemeClient, Asset, EventType)
+type FileEventCallback func(ThemeClient, Asset, EventType, error)
 
 // FileWatcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
@@ -218,6 +218,7 @@ func (watcher *FileWatcher) handleEvent(event fsnotify.Event) {
 	}
 
 	root := watcher.client.Config.Directory
-	asset, _ := loadAsset(root, pathToProject(root, event.Name))
-	watcher.callback(watcher.client, asset, eventType)
+	asset, err := loadAsset(root, pathToProject(root, event.Name))
+
+	watcher.callback(watcher.client, asset, eventType, err)
 }

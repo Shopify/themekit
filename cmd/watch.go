@@ -94,7 +94,12 @@ func watch() error {
 	return nil
 }
 
-func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventType) {
+func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventType, err error) {
+	if err != nil {
+		stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
+		return
+	}
+
 	stdOut.Printf(
 		"[%s] Received %s event on %s",
 		green(client.Config.Environment),

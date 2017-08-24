@@ -89,7 +89,7 @@ func (t ThemeClient) LocalAssets(paths ...string) (assets []Asset, err error) {
 		assets = []Asset{}
 		for _, path := range paths {
 			asset, err := t.LocalAsset(path)
-			if err == ErrAssetIsDir {
+			if err != nil && strings.Contains(err.Error(), "is a directory") {
 				dirAssets, err := loadAssetsFromDirectory(t.Config.Directory, path, t.filter.matchesFilter)
 				if err != nil {
 					return assets, err
