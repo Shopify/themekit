@@ -157,7 +157,7 @@ func loadAsset(root, filename string) (asset Asset, err error) {
 	}
 
 	if info.IsDir() {
-		return asset, ErrAssetIsDir
+		return asset, fmt.Errorf("loadAsset: File %s is a directory", filename)
 	}
 
 	buffer, err := ioutil.ReadAll(file)
