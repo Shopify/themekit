@@ -212,8 +212,9 @@ func TestCommandArbiter_PreflightCheck(t *testing.T) {
 			"assets/hello.txt": {event: kit.Remove},
 		}, true)
 
-		assert.NotNil(t, err)
-		assert.True(t, strings.Contains(err.Error(), "Diff"))
+		if assert.NotNil(t, err) {
+			assert.True(t, strings.Contains(err.Error(), "Diff"))
+		}
 
 		assert.Nil(t, arbiter.preflightCheck(map[string]assetAction{
 			"assets/hello.txt": {event: kit.Update},

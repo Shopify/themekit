@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"log"
+	"sync"
 	"testing"
 
 	"github.com/Shopify/themekit/kit"
@@ -12,9 +13,12 @@ import (
 var (
 	stdOutOutput *bytes.Buffer
 	stdErrOutput *bytes.Buffer
+	logLock      sync.Mutex
 )
 
 func resetLog() {
+	logLock.Lock()
+	defer logLock.Unlock()
 	stdOutOutput = new(bytes.Buffer)
 	stdErrOutput = new(bytes.Buffer)
 	stdOut = log.New(stdOutOutput, "", 0)
