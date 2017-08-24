@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,7 +62,14 @@ func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 		requestGroup.Go(func() error {
 			assets, err := client.AssetList()
 			if err != nil {
-				return err
+				return fmt.Errorf(
+					"[%s] Error while fetching manifest info for environment %s from shopify,\n"+
+						"Please check that your config file has the correct config for %s\n%v",
+					yellow("WARN"),
+					green(client.Config.Environment),
+					green(client.Config.Environment),
+					err,
+				)
 			}
 			for _, asset := range assets {
 				manifest.mutex.Lock()
