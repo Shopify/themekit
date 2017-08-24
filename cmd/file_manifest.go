@@ -157,6 +157,9 @@ func (manifest *fileManifest) NeedsDownloading(filename, environment string) boo
 
 func (manifest *fileManifest) ShouldUpload(asset kit.Asset, environment string) bool {
 	localTime, remoteTime := manifest.diffDates(asset.Key, environment, environment)
+
+	manifest.mutex.Lock()
+	defer manifest.mutex.Unlock()
 	manifestChecksum := append(strings.Split(manifest.local[asset.Key][environment], versionSeparator), "")[1]
 	assetChecksum, _ := asset.CheckSum()
 	return remoteTime.Before(localTime) || manifestChecksum != assetChecksum || remoteTime.IsZero() || localTime.IsZero()
@@ -276,6 +279,9 @@ func (manifest *fileManifest) Delete(filename, environment string) error {
 }
 
 func (manifest *fileManifest) Get(filename, environment string) (string, string, error) {
+	manifest.mutex.Lock()
+	defer manifest.mutex.Unlock()
+
 	data, err := manifest.store.Read(filename, environment)
 	if err != nil && err != ystore.ErrorCollectionNotFound && err != ystore.ErrorKeyNotFound {
 		return "", "", err
