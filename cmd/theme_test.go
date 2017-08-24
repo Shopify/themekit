@@ -12,7 +12,6 @@ import (
 var (
 	stdOutOutput *bytes.Buffer
 	stdErrOutput *bytes.Buffer
-	logLock      sync.Mutex
 )
 
 func resetLog() {
