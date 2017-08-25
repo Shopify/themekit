@@ -154,7 +154,7 @@ func TestCommandArbiter_SetFlagConfig(t *testing.T) {
 	defer resetArbiter()
 	arbiter.flagConfig.Password = "foo"
 	arbiter.flagConfig.Domain = "bar.myshopify.com"
-	arbiter.flagConfig.Directory = "my/dir/now"
+	arbiter.flagConfig.Directory = "../kit"
 	arbiter.flagConfig.ThemeID = "123"
 	arbiter.setFlagConfig()
 
@@ -162,7 +162,7 @@ func TestCommandArbiter_SetFlagConfig(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "foo", config.Password)
 	assert.Equal(t, "bar.myshopify.com", config.Domain)
-	assert.Equal(t, "my/dir/now", config.Directory)
+	assert.Equal(t, "../kit", config.Directory)
 	assert.Equal(t, "123", config.ThemeID)
 }
 

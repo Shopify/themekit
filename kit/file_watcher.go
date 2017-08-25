@@ -59,17 +59,12 @@ func newFileWatcher(client ThemeClient, notifyFile string, recur bool, filter fi
 }
 
 func (watcher *FileWatcher) watch() error {
-	root, symlinkErr := filepath.EvalSymlinks(filepath.Clean(watcher.client.Config.Directory))
-	if symlinkErr != nil {
-		return symlinkErr
-	}
-
-	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(watcher.client.Config.Directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != root {
+		if info.IsDir() && !watcher.filter.matchesFilter(path) && path != watcher.client.Config.Directory {
 			if err := watcher.mainWatcher.Add(path); err != nil {
 				return fmt.Errorf("Could not watch directory %s: %s", path, err)
 			}

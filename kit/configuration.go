@@ -3,6 +3,7 @@ package kit
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -74,7 +75,7 @@ func (conf *Configuration) compile(active bool) (*Configuration, error) {
 
 // Validate will check the configuration for any problems that will cause theme kit
 // to function incorrectly.
-func (conf Configuration) Validate() error {
+func (conf *Configuration) Validate() error {
 	errors := []string{}
 
 	if conf.ThemeID == "" {
@@ -92,10 +93,11 @@ func (conf Configuration) Validate() error {
 	if len(errors) > 0 {
 		return fmt.Errorf("Invalid configuration: %v", strings.Join(errors, ","))
 	}
+
 	return nil
 }
 
-func (conf Configuration) validateNoThemeID() error {
+func (conf *Configuration) validateNoThemeID() error {
 	errors := []string{}
 
 	if len(conf.Domain) == 0 {
@@ -108,6 +110,12 @@ func (conf Configuration) validateNoThemeID() error {
 
 	if len(conf.Password) == 0 {
 		errors = append(errors, "missing password")
+	}
+
+	var symlinkErr error
+	conf.Directory, symlinkErr = filepath.EvalSymlinks(filepath.Clean(conf.Directory))
+	if symlinkErr != nil {
+		errors = append(errors, fmt.Sprintf("invalid project directory: %s", symlinkErr.Error()))
 	}
 
 	if len(errors) > 0 {
