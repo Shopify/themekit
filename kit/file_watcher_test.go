@@ -42,23 +42,23 @@ func TestFileWatcher_WatchSymlinkDirectory(t *testing.T) {
 	kittest.GenerateProject()
 	defer kittest.Cleanup()
 	filter, _ := newFileFilter(kittest.SymlinkProjectPath, []string{}, []string{})
+	config, err := (&Configuration{
+		ThemeID:   "123",
+		Password:  "abc123",
+		Domain:    "test.myshopify.com",
+		Directory: kittest.SymlinkProjectPath,
+	}).compile(true)
+	assert.Nil(t, err)
+	println(config.Directory)
+
 	w, _ := fsnotify.NewWatcher()
 	watcher := &FileWatcher{
 		filter:      filter,
 		mainWatcher: w,
-		client:      ThemeClient{Config: &Configuration{Directory: kittest.SymlinkProjectPath}},
+		client:      ThemeClient{Config: config},
 	}
 	assert.Nil(t, watcher.watch())
 	assert.Nil(t, watcher.mainWatcher.Remove(filepath.Join(kittest.FixtureProjectPath, "assets")))
-	watcher.StopWatching()
-
-	os.Remove(kittest.SymlinkProjectPath)
-	os.Symlink("nope", kittest.SymlinkProjectPath)
-	_, err := newFileFilter(kittest.SymlinkProjectPath, []string{}, []string{})
-	assert.NotNil(t, err)
-
-	watcher.client.Config.Directory = kittest.SymlinkProjectPath
-	assert.NotNil(t, watcher.watch())
 	watcher.StopWatching()
 }
 

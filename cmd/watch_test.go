@@ -55,7 +55,7 @@ func TestWatch(t *testing.T) {
 
 		kittest.Cleanup()
 		err = watch()
-		assert.Equal(t, err.Error(), "lstat fixtures: no such file or directory")
+		assert.Equal(t, err.Error(), "lstat fixtures/project: no such file or directory")
 	}
 }
 

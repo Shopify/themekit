@@ -1,11 +1,14 @@
 package kit
 
 import (
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Shopify/themekit/kittest"
 )
 
 func resetConfig() {
@@ -20,14 +23,12 @@ func TestSetFlagConfig(t *testing.T) {
 	assert.Equal(t, defaultConfig, *config)
 
 	flagConfig := Configuration{
-		Directory: "my/dir/now",
-		Timeout:   DefaultTimeout,
+		Timeout: 2000000,
 	}
 	SetFlagConfig(flagConfig)
 
 	config, _ = NewConfiguration()
-	assert.Equal(t, flagConfig, *config)
-
+	assert.Equal(t, flagConfig.Timeout, config.Timeout)
 }
 
 func TestConfiguration_Env(t *testing.T) {
@@ -40,7 +41,7 @@ func TestConfiguration_Env(t *testing.T) {
 		Password:     "password",
 		ThemeID:      "themeid",
 		Domain:       "nope.myshopify.com",
-		Directory:    "my/dir",
+		Directory:    "../kit",
 		IgnoredFiles: []string{"one", "two", "three"},
 		Proxy:        ":3000",
 		Ignores:      []string{"four", "five", "six"},
@@ -109,6 +110,21 @@ func TestConfiguration_Validate(t *testing.T) {
 	if assert.NotNil(t, err) {
 		assert.True(t, strings.Contains(err.Error(), "invalid theme_id"))
 	}
+
+	kittest.GenerateProject()
+	defer kittest.Cleanup()
+	config = Configuration{ThemeID: "123", Password: "abc123", Domain: "test.myshopify.com", Directory: kittest.SymlinkProjectPath}
+	assert.Nil(t, config.Validate())
+	assert.Equal(t, kittest.FixtureProjectPath, config.Directory)
+
+	config = Configuration{ThemeID: "123", Password: "abc123", Domain: "test.myshopify.com", Directory: kittest.SymlinkProjectPath}
+	os.Remove(kittest.SymlinkProjectPath)
+	os.Symlink("nope", kittest.SymlinkProjectPath)
+	assert.NotNil(t, config.Validate())
+
+	config = Configuration{ThemeID: "123", Password: "abc123", Domain: "test.myshopify.com", Directory: kittest.SymlinkProjectPath}
+	os.Remove(kittest.SymlinkProjectPath)
+	assert.NotNil(t, config.Validate())
 }
 
 func TestConfiguration_IsLive(t *testing.T) {
