@@ -100,7 +100,7 @@ func TestLoadAssetsFromDirectory(t *testing.T) {
 	assets, err := loadAssetsFromDirectory(kittest.ProjectFiles[0], "", func(path string) bool { return false })
 	assert.Equal(t, "Path is not a directory", err.Error())
 	assets, err = loadAssetsFromDirectory(kittest.FixtureProjectPath, "", func(path string) bool {
-		return path != filepath.Join("assets","application.js")
+		return path != filepath.Join("assets", "application.js")
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, []Asset{{
