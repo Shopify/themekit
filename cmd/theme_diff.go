@@ -32,9 +32,9 @@ Diff:
 		{{- end }}
 {{- end }}
 
-You can solve this by running theme download and merging the remote changes
-using your favourite diff tool or if you are certain about what you are doing
-then use the --force flag
+You can solve this by running theme download to get the most recent copy of this file. This will overwrite any local changes you have made
+
+f you are certain about what you are doing then use the --force flag
 `))
 
 func newDiff() *themeDiff {
