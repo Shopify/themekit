@@ -33,8 +33,8 @@ Diff:
 {{- end }}
 
 You can solve this by running 'theme download' to get the most recent copy of these files.
-Running 'theme download' will overwrite any changes you have made so make your work is
-commit to your VCS before doing so.
+Running 'theme download' will overwrite any changes you have made so make sure your work is
+commited to your VCS before doing so.
 
 If you are certain that you want to overwrite any changes then use the --force flag
 `))
