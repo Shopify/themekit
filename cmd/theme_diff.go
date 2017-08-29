@@ -32,9 +32,11 @@ Diff:
 		{{- end }}
 {{- end }}
 
-You can solve this by running theme download to get the most recent copy of this file. This will overwrite any local changes you have made
+You can solve this by running 'theme download' to get the most recent copy of these files.
+Running 'theme download' will overwrite any changes you have made so make your work is
+commit to your VCS before doing so.
 
-f you are certain about what you are doing then use the --force flag
+If you are certain that you want to overwrite any changes then use the --force flag
 `))
 
 func newDiff() *themeDiff {
