@@ -32,9 +32,11 @@ Diff:
 		{{- end }}
 {{- end }}
 
-You can solve this by running theme download and merging the remote changes
-using your favourite diff tool or if you are certain about what you are doing
-then use the --force flag
+You can solve this by running 'theme download' to get the most recent copy of these files.
+Running 'theme download' will overwrite any changes you have made so make sure your work is
+commited to your VCS before doing so.
+
+If you are certain that you want to overwrite any changes then use the --force flag
 `))
 
 func newDiff() *themeDiff {
