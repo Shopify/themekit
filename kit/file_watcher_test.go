@@ -47,7 +47,7 @@ func TestFileWatcher_WatchSymlinkDirectory(t *testing.T) {
 		Password:  "abc123",
 		Domain:    "test.myshopify.com",
 		Directory: kittest.SymlinkProjectPath,
-	}).compile(true)
+	}).compile()
 	assert.Nil(t, err)
 	println(config.Directory)
 
