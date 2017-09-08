@@ -69,8 +69,6 @@ func TestCommandArbiter_GenerateThemeClients(t *testing.T) {
 	arbiter.disableIgnore = true
 	assert.Nil(t, arbiter.generateThemeClients(nil, []string{}))
 	assert.Equal(t, 1, len(arbiter.activeThemeClients))
-	assert.Equal(t, 3, len(arbiter.allThemeClients))
-	assert.Equal(t, 0, len(arbiter.allThemeClients[0].Config.IgnoredFiles))
 
 	arbiter.environments = stringArgArray{[]string{}}
 	assert.Nil(t, arbiter.generateThemeClients(nil, []string{}))

@@ -126,11 +126,11 @@ func TestSaveConfiguration(t *testing.T) {
 
 	kittest.GenerateConfig("example.myshopify.io", true)
 	env, _ := kit.LoadEnvironments("config.yml")
-	config, _ := env.GetConfiguration(kit.DefaultEnvironment, true)
+	config, _ := env.GetConfiguration(kit.DefaultEnvironment)
 	assert.Nil(t, saveConfiguration(config))
 
 	kittest.GenerateConfig("example.myshopify.io", false)
 	env, _ = kit.LoadEnvironments("config.yml")
-	config, _ = env.GetConfiguration(kit.DefaultEnvironment, true)
+	config, _ = env.GetConfiguration(kit.DefaultEnvironment)
 	assert.NotNil(t, saveConfiguration(config))
 }
