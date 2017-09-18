@@ -66,7 +66,7 @@ func (e Environments) SetConfiguration(environmentName string, conf *Configurati
 // active parameter indicates if the configuration should take configuration values from
 // environment and flags. This is considered active because passive configurations only
 // take configuration from the config file and defaults.
-func (e Environments) GetConfiguration(environmentName string, active bool) (*Configuration, error) {
+func (e Environments) GetConfiguration(environmentName string) (*Configuration, error) {
 	conf, exists := e[environmentName]
 	if !exists {
 		return conf, fmt.Errorf("%s does not exist in this environments list", environmentName)
@@ -78,7 +78,7 @@ Please see %s for examples`,
 			blue("http://shopify.github.io/themekit/configuration/#config-file"))
 	}
 	conf.Environment = environmentName
-	return conf.compile(active)
+	return conf.compile()
 }
 
 // Save will write out the environment to a file.

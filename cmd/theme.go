@@ -82,11 +82,6 @@ func init() {
 	replaceCmd.Flags().BoolVarP(&arbiter.force, "force", "f", false, "disable version checking and force all changes")
 	uploadCmd.Flags().BoolVarP(&arbiter.force, "force", "f", false, "disable version checking and force all changes")
 
-	watchCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "The destination from which all changes will be applied")
-	removeCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "The destination from which all changes will be applied")
-	replaceCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "The destination from which all changes will be applied")
-	uploadCmd.Flags().StringVarP(&arbiter.master, "master", "m", kit.DefaultEnvironment, "The destination from which all changes will be applied")
-
 	bootstrapCmd.Flags().StringVar(&bootstrapVersion, "version", latestRelease, "version of Shopify Timber to use")
 	bootstrapCmd.Flags().StringVar(&bootstrapPrefix, "prefix", "", "prefix to the Timber theme being created")
 	bootstrapCmd.Flags().StringVar(&bootstrapURL, "url", "", "a url to pull a project theme zip file from.")

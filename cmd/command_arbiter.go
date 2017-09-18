@@ -18,7 +18,6 @@ type (
 		progress           *mpb.Progress
 		verbose            bool
 		force              bool
-		master             string
 		configPath         string
 		allenvs            bool
 		environments       stringArgArray
@@ -28,7 +27,6 @@ type (
 		ignoredFiles       stringArgArray
 		ignores            stringArgArray
 		activeThemeClients []kit.ThemeClient
-		allThemeClients    []kit.ThemeClient
 		manifest           *fileManifest
 	}
 	cobraCmdE     func(*cobra.Command, []string) error
@@ -50,13 +48,12 @@ func newCommandArbiter() *commandArbiter {
 
 func (arbiter *commandArbiter) generateManifest() error {
 	var err error
-	arbiter.manifest, err = newFileManifest(filepath.Dir(arbiter.configPath), arbiter.allThemeClients)
+	arbiter.manifest, err = newFileManifest(filepath.Dir(arbiter.configPath), arbiter.activeThemeClients)
 	return err
 }
 
 func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []string) error {
 	arbiter.activeThemeClients = []kit.ThemeClient{}
-	arbiter.allThemeClients = []kit.ThemeClient{}
 	configEnvs, err := kit.LoadEnvironments(arbiter.configPath)
 
 	if err != nil && os.IsNotExist(err) {
@@ -66,8 +63,11 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 	}
 
 	for env := range configEnvs {
-		isActive := arbiter.shouldUseEnvironment(env)
-		config, err := configEnvs.GetConfiguration(env, isActive)
+		if !arbiter.shouldUseEnvironment(env) {
+			continue
+		}
+
+		config, err := configEnvs.GetConfiguration(env)
 		if err != nil {
 			continue
 		}
@@ -88,10 +88,7 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 			return err
 		}
 
-		if isActive {
-			arbiter.activeThemeClients = append(arbiter.activeThemeClients, client)
-		}
-		arbiter.allThemeClients = append(arbiter.allThemeClients, client)
+		arbiter.activeThemeClients = append(arbiter.activeThemeClients, client)
 	}
 
 	if len(arbiter.activeThemeClients) == 0 {
@@ -185,7 +182,7 @@ func (arbiter *commandArbiter) preflightCheck(actions map[string]assetAction, de
 	}
 
 	for _, client := range arbiter.activeThemeClients {
-		diff := arbiter.manifest.Diff(actions, client.Config.Environment, arbiter.master)
+		diff := arbiter.manifest.Diff(actions, client.Config.Environment)
 		if diff.Any(destructive) {
 			return diff
 		}

@@ -40,32 +40,6 @@ func TestFileManifest_GenerateRemote(t *testing.T) {
 	}
 }
 
-func TestFileManifest_backfillLocal(t *testing.T) {
-	server := kittest.NewTestServer()
-	defer server.Close()
-	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
-	defer kittest.Cleanup()
-	defer resetArbiter()
-
-	file, env1, env2, now, then := "asset.js", "development", "production", "2017-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
-	store, _ := ystore.New(storeName)
-	defer store.Drop()
-	store.Write(file, env1, then)
-	store.Write(file, "other", then)
-	manifest := &fileManifest{
-		store:  store,
-		local:  map[string]map[string]string{file: {env1: then, "other": then}},
-		remote: map[string]map[string]string{file: {env1: now, env2: now}},
-	}
-
-	_, ok := manifest.local[file][env2]
-	assert.False(t, ok)
-	assert.Nil(t, manifest.backfillLocal())
-	assert.Equal(t, then, manifest.local[file][env1])
-	assert.Equal(t, then, manifest.local[file]["other"])
-	assert.Equal(t, now, manifest.local[file][env2])
-}
-
 func TestFileManifest_Prune(t *testing.T) {
 	server := kittest.NewTestServer()
 	defer server.Close()
@@ -110,13 +84,13 @@ func TestFileManifest_DiffDates(t *testing.T) {
 		remote: make(map[string]map[string]string),
 	}
 
-	local, remote := manifest.diffDates("asset.js", "production", "development")
+	local, remote := manifest.diffDates("asset.js", "production")
 	assert.True(t, local.IsZero())
 	assert.True(t, remote.IsZero())
 
-	manifest.local["asset.js"] = map[string]string{"development": "2012-07-06T02:04:21-11:00"}
+	manifest.local["asset.js"] = map[string]string{"production": "2012-07-06T02:04:21-11:00"}
 	manifest.remote["asset.js"] = map[string]string{"production": "2012-07-06T02:04:21-11:00"}
-	local, remote = manifest.diffDates("asset.js", "production", "development")
+	local, remote = manifest.diffDates("asset.js", "production")
 	assert.False(t, local.IsZero())
 	assert.False(t, remote.IsZero())
 }
@@ -192,15 +166,15 @@ func TestFileManifest_FetchableFiles(t *testing.T) {
 }
 
 func TestFileManifest_Diff(t *testing.T) {
-	dstenv, srcenv, now, then := "production", "development", "2017-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
+	env, now, then := "production", "2017-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
 	manifest := &fileManifest{
 		local: map[string]map[string]string{
-			"asset1.js": {srcenv: now},
-			"asset2.js": {srcenv: then},
+			"asset1.js": {env: now},
+			"asset2.js": {env: then},
 		},
 		remote: map[string]map[string]string{
-			"asset2.js": {dstenv: now},
-			"asset3.js": {dstenv: then},
+			"asset2.js": {env: now},
+			"asset3.js": {env: then},
 		},
 	}
 
@@ -210,7 +184,7 @@ func TestFileManifest_Diff(t *testing.T) {
 		"asset3.js": {event: kit.Remove},
 	}
 
-	diff := manifest.Diff(actions, dstenv, srcenv)
+	diff := manifest.Diff(actions, env)
 	assert.Equal(t, 1, len(diff.Created))
 	assert.Equal(t, 1, len(diff.Updated))
 	assert.Equal(t, 1, len(diff.Removed))

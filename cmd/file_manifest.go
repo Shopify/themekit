@@ -46,10 +46,6 @@ func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, err
 		return nil, err
 	}
 
-	if err := manifest.backfillLocal(); err != nil {
-		return nil, err
-	}
-
 	return manifest, manifest.prune(clients)
 }
 
@@ -84,29 +80,6 @@ func (manifest *fileManifest) generateRemote(clients []kit.ThemeClient) error {
 	}
 
 	return requestGroup.Wait()
-}
-
-func (manifest *fileManifest) backfillLocal() (err error) {
-	batch := manifest.store.Batch()
-
-	for filename, remoteEnvs := range manifest.remote {
-		if localEnvs, found := manifest.local[filename]; found {
-			for env, version := range remoteEnvs {
-				if _, hasLocal := localEnvs[env]; !hasLocal {
-					if err = batch.Write(filename, env, version); err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-
-	if err = batch.Commit(); err != nil {
-		return err
-	}
-
-	manifest.local, err = manifest.store.Dump()
-	return err
 }
 
 func (manifest *fileManifest) prune(clients []kit.ThemeClient) error {
@@ -145,26 +118,26 @@ func parseTime(t string) time.Time {
 	return parsed
 }
 
-func (manifest *fileManifest) diffDates(filename, dstEnv, srcEnv string) (local, remote time.Time) {
+func (manifest *fileManifest) diffDates(filename, environment string) (local, remote time.Time) {
 	manifest.mutex.Lock()
 	defer manifest.mutex.Unlock()
 
 	if _, ok := manifest.local[filename]; ok {
-		local = parseTime(strings.Split(manifest.local[filename][srcEnv], versionSeparator)[0])
+		local = parseTime(strings.Split(manifest.local[filename][environment], versionSeparator)[0])
 	}
 	if _, ok := manifest.remote[filename]; ok {
-		remote = parseTime(strings.Split(manifest.remote[filename][dstEnv], versionSeparator)[0])
+		remote = parseTime(manifest.remote[filename][environment])
 	}
 	return local, remote
 }
 
 func (manifest *fileManifest) NeedsDownloading(filename, environment string) bool {
-	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
+	localTime, remoteTime := manifest.diffDates(filename, environment)
 	return localTime.Before(remoteTime) || localTime.IsZero()
 }
 
 func (manifest *fileManifest) ShouldUpload(asset kit.Asset, environment string) bool {
-	localTime, remoteTime := manifest.diffDates(asset.Key, environment, environment)
+	localTime, remoteTime := manifest.diffDates(asset.Key, environment)
 
 	manifest.mutex.Lock()
 	defer manifest.mutex.Unlock()
@@ -174,7 +147,7 @@ func (manifest *fileManifest) ShouldUpload(asset kit.Asset, environment string) 
 }
 
 func (manifest *fileManifest) ShouldRemove(filename, environment string) bool {
-	localTime, remoteTime := manifest.diffDates(filename, environment, environment)
+	localTime, remoteTime := manifest.diffDates(filename, environment)
 	return remoteTime.Before(localTime) || remoteTime.Equal(localTime) || localTime.IsZero()
 }
 
@@ -225,10 +198,10 @@ func fmtTime(t time.Time) string {
 	return "[" + t.Format("Jan 2 3:04PM 2006") + "]"
 }
 
-func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEnv string) *themeDiff {
+func (manifest *fileManifest) Diff(actions map[string]assetAction, environment string) *themeDiff {
 	diff := newDiff()
 	for filename, action := range actions {
-		local, remote := manifest.diffDates(filename, dstEnv, srcEnv)
+		local, remote := manifest.diffDates(filename, environment)
 		if !local.IsZero() && remote.IsZero() {
 			diff.Removed = append(diff.Removed, red(filename+" "+fmtTime(local)))
 		}
@@ -243,31 +216,19 @@ func (manifest *fileManifest) Diff(actions map[string]assetAction, dstEnv, srcEn
 }
 
 func (manifest *fileManifest) Set(filename, environment, version, checksum string) error {
-	var err error
 	manifest.mutex.Lock()
 	defer manifest.mutex.Unlock()
 
 	if _, ok := manifest.remote[filename]; !ok {
 		manifest.remote[filename] = make(map[string]string)
 	}
-	manifest.remote[filename][environment] = strings.Join([]string{version, checksum}, versionSeparator)
+	manifest.remote[filename][environment] = version
 
-	batch := manifest.store.Batch()
-	for env, version := range manifest.remote[filename] {
-		currentVersion, _ := manifest.store.Read(filename, environment)
-		if currentVersion == "" || env == environment {
-			if err = batch.Write(filename, env, version); err != nil {
-				return err
-			}
-		}
+	versionWithChecksum := version
+	if checksum != "" {
+		versionWithChecksum = strings.Join([]string{version, checksum}, versionSeparator)
 	}
-
-	if err = batch.Commit(); err != nil {
-		return err
-	}
-
-	manifest.local, err = manifest.store.Dump()
-	return err
+	return manifest.store.Write(filename, environment, versionWithChecksum)
 }
 
 func (manifest *fileManifest) Delete(filename, environment string) error {

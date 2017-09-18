@@ -64,12 +64,12 @@ func TestEnvironments_GetConfiguration(t *testing.T) {
 	kittest.GenerateConfig("example.myshopify.io", true)
 	envs, err := LoadEnvironments("config.yml")
 	assert.Nil(t, err)
-	_, err = envs.GetConfiguration("development", true)
+	_, err = envs.GetConfiguration("development")
 	assert.Nil(t, err)
-	_, err = envs.GetConfiguration("nope", true)
+	_, err = envs.GetConfiguration("nope")
 	assert.NotNil(t, err)
 	envs["test"] = nil
-	_, err = envs.GetConfiguration("test", true)
+	_, err = envs.GetConfiguration("test")
 	assert.NotNil(t, err)
 }
 
