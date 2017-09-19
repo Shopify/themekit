@@ -217,11 +217,7 @@ func (store *YStore) read() error {
 
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
-	if err = yaml.Unmarshal(contents, &store.data); err != nil {
-		return err
-	}
-
-	return nil
+	return yaml.Unmarshal(contents, &store.data)
 }
 
 func (store *YStore) flush() error {

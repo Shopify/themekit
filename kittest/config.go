@@ -122,8 +122,5 @@ func GenerateJSONConfig(domain string) error {
 		return err
 	}
 	data := struct{ Domain, Directory string }{domain, FixtureProjectPath}
-	if err = jsonConfig.Execute(f, data); err != nil {
-		return err
-	}
-	return nil
+	return jsonConfig.Execute(f, data)
 }
