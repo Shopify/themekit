@@ -97,17 +97,6 @@ func (manifest *fileManifest) prune(clients []kit.ThemeClient) error {
 		}
 	}
 
-	// prune environments that no longer exist
-	for filename, envs := range manifest.local {
-		for envname := range envs {
-			if i := indexOf(len(clients), func(i int) bool { return clients[i].Config.Environment == envname }); i == -1 {
-				if err := manifest.store.Delete(filename, envname); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
 	var err error
 	manifest.local, err = manifest.store.Dump()
 	return err
