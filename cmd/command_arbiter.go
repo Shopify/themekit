@@ -69,7 +69,11 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 
 		config, err := configEnvs.GetConfiguration(env)
 		if err != nil {
-			continue
+			return fmt.Errorf(
+				"[%s] %s",
+				green(config.Environment),
+				red(err.Error()),
+			)
 		}
 		if arbiter.disableIgnore {
 			config.IgnoredFiles = []string{}
@@ -85,7 +89,11 @@ func (arbiter *commandArbiter) generateThemeClients(cmd *cobra.Command, args []s
 
 		client, err := kit.NewThemeClient(config)
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"[%s] Could not create a client: %s",
+				green(config.Environment),
+				red(err.Error()),
+			)
 		}
 
 		arbiter.activeThemeClients = append(arbiter.activeThemeClients, client)
