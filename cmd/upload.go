@@ -30,7 +30,7 @@ For more documentation please see http://shopify.github.io/themekit/commands/#up
 func deploy(destructive bool) arbitratedCmd {
 	return func(client kit.ThemeClient, filenames []string) error {
 		if client.Config.ReadOnly {
-			return fmt.Errorf("[%s] environment is reaonly", green(client.Config.Environment))
+			return fmt.Errorf("[%s] environment is readonly", green(client.Config.Environment))
 		}
 
 		actions, err := arbiter.generateAssetActions(client, filenames, destructive)
