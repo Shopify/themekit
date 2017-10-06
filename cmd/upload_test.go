@@ -24,7 +24,7 @@ func TestDeploy(t *testing.T) {
 		deployMthd := deploy(true)
 		client.Config.ReadOnly = true
 		err := deployMthd(client, []string{})
-		assert.True(t, strings.Contains(err.Error(), "environment is reaonly"))
+		assert.True(t, strings.Contains(err.Error(), "environment is readonly"))
 		client.Config.ReadOnly = false
 
 		err = deployMthd(client, []string{})
