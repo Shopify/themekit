@@ -5,9 +5,9 @@ layout: default
 # theme.lock file
 
 In order to ensure changes made elsewhere are not overwritten, Themekit needs more
-information than the dependencies you configure in your `config.yml`. Themekit needs
-to store exactly which versions of each asset you currently have on your machine and
-the versions that you expect to be on shopify.
+information than your configuration in your `config.yml`. Themekit needs to store
+exactly which versions of each asset you currently have on your machine and the
+versions that you expect to be on shopify.
 
 To do this Themekit uses a `theme.lock` file in the root of your project (same
 directory as your config file). These “lockfiles” look like this:
@@ -20,15 +20,7 @@ assets/announcement-newbuybutton.svg:
 assets/app.js.liquid:
   development: 2017-07-18T06:10:40-11:00
   production: 2017-07-18T06:10:40-11:00
-assets/arrow-down.svg.liquid:
-  development: 2017-02-06T04:00:37-11:00
-  production: 2017-02-06T04:00:37-11:00
-assets/cart.svg.liquid:
-  development: 2017-07-05T04:49:01-11:00
-  production: 2017-07-05T04:49:01-11:00
-assets/newp.js.liquid:
-  development: 2017-07-14T05:55:03-11:00
-  production: 2017-07-14T05:55:03-11:00
+...
 ```
 
 This is comparable to lockfiles in other package managers like Bundler, Cargo or Yarn.
@@ -49,5 +41,7 @@ All `theme.lock` files should be checked into source control (e.g. git or mercur
 This allows Themekit to manage all asset versions across all machines, whether it
 be your coworker’s laptop or a CI server.
 
-Theme publisher should not keep the `theme.lock` file with your release because it
-will have no context for other users.
+## How to disable
+
+If you are certain of the changes you are making and the version checking is getting
+in the way, pass the `--force` flag to the command you are running.

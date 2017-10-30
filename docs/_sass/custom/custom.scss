@@ -224,41 +224,23 @@ table {
 
 @include shopify-breakpoint($tablet-down) {
   table, thead, tbody, th, td, tr {
-		display: block;
+    display: block;
     font-size: 12px;
-	}
+  }
 
-	thead tr {
-		position: absolute;
-		top: -9999px;
-		left: -9999px;
-	}
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
 
-	tr { border: 1px solid #ccc; }
+  tr { border: 1px solid #ccc; }
 
-	table td {
-		border: none;
-		border-bottom: 1px solid #eee;
-		position: relative;
-		padding-left: 50%;
-	}
-
-	td:before {
-		position: absolute;
-		top: 6px;
-		left: 6px;
-		width: 45%;
-		padding-right: 10px;
-		white-space: nowrap;
-	}
-
-
-	td:nth-of-type(1):before { content: "Internet Explorer"; }
-	td:nth-of-type(2):before { content: "Chrome, Edge, Firefox"; }
-	td:nth-of-type(3):before { content: "Safari"; }
-	td:nth-of-type(4):before { content: "Opera"; }
-	td:nth-of-type(5):before { content: "iOS"; }
-	td:nth-of-type(6):before { content: "Android"; }
+  table td {
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+  }
 }
 
 
