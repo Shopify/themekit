@@ -69,7 +69,7 @@ between your store and Theme Kit. The API key allows Theme Kit to talk to and ac
 your store, as well as its theme files.
 
 To do so, log into the Shopify store, and create a private app. In the Shopify
-Admin, go to Apps and click on View private apps. From there, click Generate API
+Admin, go to Apps and click on `Manage private apps`. From there, click Generate API
 credentials to create your private app. Make sure to set the permissions of **Theme
 templates and theme assets** to have ***Read and write*** access in order to generate the
 appropriate API credentials, then click Save.
