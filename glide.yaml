@@ -3,6 +3,10 @@ import:
 - package: github.com/fatih/color
   version: ^1.0.0
 - package: github.com/inconshreveable/go-update
+- package: github.com/0xAX/notificator
+  repo: github.com/0xax/notificator
+  vcs: git
+  version: master
 - package: github.com/ryanuber/go-glob
   version: ^0.1.0
 - package: github.com/spf13/cobra
