@@ -1,6 +1,6 @@
-### What I expected to happen
+### What happened
 
-### What actually happened
+### What I expected to happen
 
 ### Steps to reproduce
 
