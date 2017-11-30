@@ -30,7 +30,7 @@ const (
 func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, error) {
 	store, err := ystore.New(filepath.Join(path, storeName))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Problem loading the Manifest: %s", err.Error())
 	}
 
 	if err := store.SetComment(manifestComment); err != nil {
@@ -39,7 +39,7 @@ func newFileManifest(path string, clients []kit.ThemeClient) (*fileManifest, err
 
 	manifest := &fileManifest{store: store}
 	if manifest.local, err = store.Dump(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Manifest dump: %s", err.Error())
 	}
 
 	if err := manifest.generateRemote(clients); err != nil {
