@@ -69,7 +69,13 @@ func TestAssetError(t *testing.T) {
 	err.resp.Code = 409
 	err.resp.EventType = Update
 	err.generateHints()
-	assert.Equal(t, "There have been changes to this file made remotely.", err.requestErr.Other[len(err.requestErr.Other)-1])
+	assert.Equal(t, `There have been changes to this file made remotely.
+
+You can solve this by running 'theme download' to get the most recent copy of this file.
+Running 'theme download' will overwrite any changes you have made so make sure to make
+a backup.
+
+If you are certain that you want to overwrite any changes then use the --force flag`, err.requestErr.Other[len(err.requestErr.Other)-1])
 }
 
 func TestListError(t *testing.T) {
