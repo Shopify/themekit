@@ -82,7 +82,15 @@ func (err *assetError) generateHints() {
 		err.requestErr.AddS("This file is not part of your theme.")
 	}
 	if err.resp.EventType == Update && err.resp.Code == 409 {
-		err.requestErr.AddS("There have been changes to this file made remotely.")
+		err.requestErr.AddS(`
+There have been changes to this file made remotely.
+
+You can solve this by running 'theme download' to get the most recent copy of this file.
+Running 'theme download' will overwrite any changes you have made so make sure to make
+a backup.
+
+If you are certain that you want to overwrite any changes then use the --force flag
+		`)
 	}
 }
 
