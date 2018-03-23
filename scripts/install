@@ -44,4 +44,7 @@ class Installer(object):
             themefile.write(data)
         os.chmod(self.bin_path, 0o755)
 
-Installer()
+if sys.version_info[0] < 3:
+    Installer()
+else:
+    sys.exit("Python 2 is required for this script.")
