@@ -15,7 +15,7 @@ Themekit uses github issue tracking to manage bugs, please open an issue there.
 
 # Feature Request
 
-You can open a new issue on the github issues and label it with `enhancment`
+You can open a new issue on the github issues and describe the feature you would like to see.
 
 # Developing Themekit
 
