@@ -6,16 +6,21 @@ import (
 	"log"
 	"os"
 	"os/signal"
-
 	"github.com/spf13/cobra"
-
+	"github.com/0xAX/notificator"
 	"github.com/Shopify/themekit/kit"
+	"path/filepath"
+	"runtime"
 )
 
 var (
 	signalChan   = make(chan os.Signal)
 	reloadSignal = make(chan bool)
 	errReload    = errors.New("Reload Watcher")
+	notify       *notificator.Notificator
+	_, b, _, _ = runtime.Caller(0)
+	basepath   = filepath.Dir(b)
+
 )
 
 var watchCmd = &cobra.Command{
@@ -64,6 +69,8 @@ func watch() error {
 			continue
 		}
 
+		notificationMessage("Watching for file changes on host", "Watch", "")
+
 		stdOut.Printf(
 			"[%s] Watching for file changes on host %s ",
 			green(client.Config.Environment),
@@ -102,6 +109,16 @@ func handleWatchEvent(client kit.ThemeClient, asset kit.Asset, event kit.EventTy
 		blue(asset.Key),
 	)
 	if err := perform(client, asset, event, nil); err != nil {
+		notificationMessage("There is a error in your templates check your logs", "Watch", "")
 		stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
 	}
+}
+
+func notificationMessage(message string, title string, iconPath string) {
+	notify = notificator.New(notificator.Options{
+		DefaultIcon: basepath + "/docs/assets/images/shopify-logo.png",
+		AppName:     "ThemeKit",
+	})
+
+	notify.Push(title, message, basepath + "/docs/assets/images/shopify-logo.png", notificator.UR_NORMAL)
 }
