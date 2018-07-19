@@ -2,86 +2,76 @@ package cmd
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Shopify/themekit/kit"
-	"github.com/Shopify/themekit/kittest"
+	"github.com/Shopify/themekit/src/file"
+	"github.com/Shopify/themekit/src/shopify"
 )
 
-func TestStartWatch(t *testing.T) {
-	server := kittest.NewTestServer()
-	defer server.Close()
+func TestWatch(t *testing.T) {
+	ctx, _, _, _, _ := createTestCtx()
+	ctx.Env.ReadOnly = true
+	err := watch(ctx, make(chan file.Event), make(chan os.Signal))
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "environment is reaonly")
+	}
 
-	assert.NotNil(t, startWatch(nil, []string{}))
+	eventChan := make(chan file.Event, 1)
+	ctx, _, _, stdOut, _ := createTestCtx()
+	ctx.Flags.ConfigPath = "config.yml"
+	eventChan <- file.Event{Path: ctx.Flags.ConfigPath}
+	err = watch(ctx, eventChan, make(chan os.Signal))
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "reload")
+	}
+	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
+	assert.Contains(t, stdOut.String(), "Reloading config changes")
 
-	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
-	defer kittest.Cleanup()
-
+	signalChan := make(chan os.Signal)
+	eventChan = make(chan file.Event)
+	ctx, _, _, stdOut, stdErr := createTestCtx()
+	ctx.Flags.ConfigPath = "config.yml"
 	go func() {
-		reloadSignal <- true
+		eventChan <- file.Event{Op: file.Update, Path: "assets/app.js"}
 		signalChan <- os.Interrupt
 	}()
-	assert.Nil(t, startWatch(nil, []string{}))
-}
+	err = watch(ctx, eventChan, signalChan)
+	assert.Nil(t, err)
+	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
+	assert.Contains(t, stdOut.String(), "processing assets/app.js")
+	assert.Contains(t, stdErr.String(), "error loading assets/app.js: readAsset: open assets/app.js")
 
-func TestWatch(t *testing.T) {
-	server := kittest.NewTestServer()
-	defer server.Close()
-	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
-	defer kittest.Cleanup()
-	defer resetArbiter()
+	signalChan = make(chan os.Signal)
+	eventChan = make(chan file.Event)
+	ctx, client, _, stdOut, stdErr := createTestCtx()
+	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js"}).Return(nil)
+	ctx.Flags.ConfigPath = "config.yml"
+	ctx.Env.Directory = "_testdata/projectdir"
+	go func() {
+		eventChan <- file.Event{Op: file.Update, Path: "assets/app.js"}
+		signalChan <- os.Interrupt
+	}()
+	err = watch(ctx, eventChan, signalChan)
+	assert.Nil(t, err)
+	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
+	assert.Contains(t, stdOut.String(), "processing assets/app.js")
+	assert.Contains(t, stdOut.String(), "Updated assets/app.js")
 
-	_, err := getClient()
-	if assert.Nil(t, err) {
-		go func() { reloadSignal <- true }()
-		err := watch()
-		assert.Equal(t, errReload, err)
-
-		for _, client := range arbiter.activeThemeClients {
-			client.Config.ReadOnly = true
-		}
-		err = watch()
-		assert.Equal(t, err.Error(), "no valid configuration to start watch")
-		for _, client := range arbiter.activeThemeClients {
-			client.Config.ReadOnly = false
-		}
-
-		os.Remove("config.yml")
-		err = watch()
-		assert.True(t, strings.Contains(err.Error(), "no such file or directory"))
-
-		kittest.Cleanup()
-		err = watch()
-		assert.Equal(t, err.Error(), "lstat fixtures/project: no such file or directory")
-	}
-}
-
-func TestHandleWatchEvent(t *testing.T) {
-	server := kittest.NewTestServer()
-	defer server.Close()
-	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
-	defer kittest.Cleanup()
-	defer resetArbiter()
-
-	client, err := getClient()
-	if assert.Nil(t, err) {
-		server.Reset()
-		handleWatchEvent(client, kit.Asset{Key: "templates/layout.liquid"}, kit.Remove)
-		assert.Equal(t, 1, len(server.Requests))
-		assert.Equal(t, "DELETE", server.Requests[0].Method)
-		assert.True(t, strings.Contains(stdOutOutput.String(), "Received"))
-		assert.True(t, strings.Contains(stdOutOutput.String(), "Successfully"))
-
-		server.Reset()
-		resetLog()
-		handleWatchEvent(client, kit.Asset{Key: "nope"}, kit.Update)
-		assert.Equal(t, 1, len(server.Requests))
-		assert.Equal(t, "PUT", server.Requests[0].Method)
-
-		assert.True(t, strings.Contains(stdOutOutput.String(), "Received"))
-		assert.True(t, strings.Contains(stdOutOutput.String(), "Conflict"))
-	}
+	signalChan = make(chan os.Signal)
+	eventChan = make(chan file.Event)
+	ctx, client, _, stdOut, stdErr = createTestCtx()
+	client.On("DeleteAsset", shopify.Asset{Key: "assets/app.js"}).Return(nil)
+	ctx.Flags.ConfigPath = "config.yml"
+	ctx.Env.Directory = "_testdata/projectdir"
+	go func() {
+		eventChan <- file.Event{Op: file.Remove, Path: "assets/app.js"}
+		signalChan <- os.Interrupt
+	}()
+	err = watch(ctx, eventChan, signalChan)
+	assert.Nil(t, err)
+	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
+	assert.Contains(t, stdOut.String(), "processing assets/app.js")
+	assert.Contains(t, stdOut.String(), "Deleted assets/app.js")
 }

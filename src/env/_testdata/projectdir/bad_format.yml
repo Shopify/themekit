@@ -1,0 +1,5 @@
+development:
+  password: abracadabra
+  store: store.myshopify.com
+other:
+store: store.myshopify.com

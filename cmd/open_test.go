@@ -2,57 +2,68 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/Shopify/themekit/kit"
 )
 
 func TestOpen(t *testing.T) {
-	var wg sync.WaitGroup
-	var testURL string
-
-	openFunc = func(url string) error {
-		testURL = url
+	ctx, _, _, _, _ := createTestCtx()
+	ctx.Env.Domain = "my.test.domain"
+	ctx.Env.ThemeID = "123"
+	assert.Nil(t, preview(ctx, func(path string) error {
+		assert.Equal(t, path, "https://my.test.domain?preview_theme_id=123")
 		return nil
+	}))
+
+	ctx, _, _, _, _ = createTestCtx()
+	ctx.Env.Domain = "my.test.domain"
+	ctx.Env.ThemeID = "123"
+	ctx.Flags.Edit = true
+	assert.Nil(t, preview(ctx, func(path string) error {
+		assert.Equal(t, path, "https://my.test.domain/admin/themes/123/editor")
+		return nil
+	}))
+
+	ctx, _, _, _, _ = createTestCtx()
+	ctx.Env.Domain = "my.test.domain"
+	ctx.Flags.Edit = true
+	err := preview(ctx, func(path string) error { return nil })
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "cannot open editor for live theme without theme id")
 	}
 
-	config, _ := kit.NewConfiguration()
-	config.Domain = "my.test.domain"
-	config.ThemeID = "123"
-	client, _ := kit.NewThemeClient(config)
-	wg.Add(4)
+	ctx, _, _, stdOut, _ := createTestCtx()
+	ctx.Env.Domain = "my.test.domain"
+	assert.Nil(t, preview(ctx, func(path string) error {
+		assert.Equal(t, path, "https://my.test.domain")
+		return nil
+	}))
+	assert.Contains(t, stdOut.String(), "This theme is live so preview is the same as your live shop")
 
-	err := preview(client, []string{})
-	assert.Nil(t, err)
-	assert.Equal(t, "https://my.test.domain?preview_theme_id=123", testURL)
+	ctx, _, _, stdOut, _ = createTestCtx()
+	ctx.Env.Domain = "my.test.domain"
+	err = preview(ctx, func(path string) error {
+		assert.Equal(t, path, "https://my.test.domain")
+		return fmt.Errorf("fake error")
+	})
+	assert.Contains(t, stdOut.String(), "This theme is live so preview is the same as your live shop")
+	assert.Contains(t, stdOut.String(), "opening")
+	assert.Contains(t, err.Error(), "Error opening:")
+}
 
-	testURL = ""
-	openEdit = true
-	err = preview(client, []string{})
-	assert.Nil(t, err)
-	assert.Equal(t, "https://my.test.domain/admin/themes/123/editor", testURL)
+func TestPreviewURL(t *testing.T) {
+	testcases := []struct {
+		edit         bool
+		themeid, url string
+	}{
+		{edit: true, themeid: "123", url: "https://domain.com/admin/themes/123/editor"},
+		{edit: false, themeid: "123", url: "https://domain.com?preview_theme_id=123"},
+		{edit: true, url: "https://domain.com/admin/themes//editor"},
+		{edit: false, url: "https://domain.com"},
+	}
 
-	testURL = ""
-	openEdit = false
-	config.ThemeID = "live"
-	err = preview(client, []string{})
-	assert.Nil(t, err)
-	assert.Equal(t, "https://my.test.domain?preview_theme_id=", testURL)
-
-	testURL = ""
-	openEdit = true
-	config.ThemeID = "live"
-	err = preview(client, []string{})
-	assert.True(t, strings.Contains(err.Error(), "cannot open editor for live theme without theme id"))
-	assert.Equal(t, "", testURL)
-
-	config.ThemeID = "123"
-	openEdit = false
-	openFunc = func(string) error { return fmt.Errorf("fake error") }
-	err = preview(client, []string{})
-	assert.True(t, strings.Contains(err.Error(), "Error opening:"))
+	for _, testcase := range testcases {
+		assert.Equal(t, testcase.url, previewURL(testcase.edit, "domain.com", testcase.themeid))
+	}
 }

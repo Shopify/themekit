@@ -1,29 +1,41 @@
 package cmd
 
 import (
-	"os"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Shopify/themekit/src/env"
 )
 
 func TestConfigure(t *testing.T) {
-	defer os.Remove("config.yml")
-	defer resetArbiter()
-	arbiter.configPath = "config.yml"
+	ctx, _, conf, _, _ := createTestCtx()
+	conf.On("Set", "development", env.Env{}).Return(nil, nil)
+	conf.On("Save").Return(nil)
+	err := createConfig(ctx)
+	assert.Nil(t, createConfig(ctx))
 
-	err := configureCmd.RunE(nil, []string{})
-	assert.NotNil(t, err)
+	ctx, _, conf, _, _ = createTestCtx()
+	conf.On("Set", "development", env.Env{}).Return(nil, fmt.Errorf("invalid conf"))
+	conf.On("Save").Return(nil)
+	err = createConfig(ctx)
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "invalid conf")
+	}
 
-	arbiter.flagConfig.Password = "foo"
-	arbiter.flagConfig.Domain = "myshop.myshopify.com"
-	arbiter.flagConfig.ThemeID = "1"
-	arbiter.setFlagConfig()
+	ctx, _, conf, _, _ = createTestCtx()
+	conf.On("Set", "development", env.Env{}).Return(nil, nil)
+	conf.On("Save").Return(fmt.Errorf("no file"))
+	err = createConfig(ctx)
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "no file")
+	}
 
-	err = configureCmd.RunE(nil, []string{})
-	assert.Nil(t, err)
-
-	arbiter.configPath = "does_not_exist/nope.xm"
-	err = configureCmd.RunE(nil, []string{})
-	assert.NotNil(t, err)
+	ctx, _, conf, _, _ = createTestCtx()
+	ctx.Flags.Environments.Set("test")
+	ctx.Env.Domain = "my.domain.com"
+	conf.On("Set", "test", env.Env{Domain: "my.domain.com"}).Return(nil, nil)
+	conf.On("Save").Return(nil)
+	assert.Nil(t, createConfig(ctx))
 }

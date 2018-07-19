@@ -1,0 +1,6 @@
+{
+  "development": {
+    "password": "foo",
+    "store": "store.myshopify.com"
+  }
+}

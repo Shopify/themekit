@@ -36,3 +36,22 @@ Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob
 
 [Tim Anema](https://github.com/tanema), [Chris Saunders](https://github.com/csaunders),
 [Chris Butcher](https://github.com/chrisbutcher), [Jakob Külzer](https://github.com/ilikeorangutans)
+
+refactor todo
+- [x] testing packages 10/10
+- [x] fixing commands tests 8/8
+- [x] add back in warnings 2/2
+- [ ] better credentials errors
+  - [ ] get shop info to verify shop domain
+  - [ ] get all themes to verify password
+  - [ ] with all themes, set id of live theme in running config so that actions are more explicit
+- [ ] better timeout errors
+  - net/http: request canceled (Client.Timeout exceeded while awaiting headers)
+  - if this error is experienced, recommend increasing timeout
+  - possibly add a timeout value to their config
+- [ ] better performance
+  - [ ] replace should use a channel to stream assets and not load them all at once
+  - [ ] upload should stream assets in a channel and not load all assets at once
+- [ ] Better onboarding
+  - [ ] instead of bootstrap/config have new command that bootstraps or downloads
+

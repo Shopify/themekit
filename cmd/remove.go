@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 
-	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/src/cmdutil"
+	"github.com/Shopify/themekit/src/colors"
+	"github.com/Shopify/themekit/src/shopify"
 )
 
 var removeCmd = &cobra.Command{
@@ -16,37 +18,34 @@ var removeCmd = &cobra.Command{
 	Short: "Remove theme file(s) from shopify",
 	Long: `Remove will delete all specified files from shopify servers.
 
-For more documentation please see http://shopify.github.io/themekit/commands/#remove
+ For more documentation please see http://shopify.github.io/themekit/commands/#remove
 	`,
-	PreRunE: arbiter.generateThemeClients,
-	RunE:    arbiter.forEachClient(remove),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.ForEachClient(flags, args, func(ctx cmdutil.Ctx) error {
+			return remove(ctx, os.Remove)
+		})
+	},
 }
 
-func remove(client kit.ThemeClient, filenames []string) error {
-	if client.Config.ReadOnly {
-		return fmt.Errorf("[%s] environment is reaonly", green(client.Config.Environment))
-	} else if len(filenames) == 0 {
-		return fmt.Errorf("[%s] please specify file(s) to be removed", green(client.Config.Environment))
+func remove(ctx cmdutil.Ctx, removeFile func(string) error) error {
+	if ctx.Env.ReadOnly {
+		return fmt.Errorf("[%s] environment is readonly", colors.Green(ctx.Env.Name))
+	} else if len(ctx.Args) == 0 {
+		return fmt.Errorf("[%s] please specify file(s) to be removed", colors.Green(ctx.Env.Name))
 	}
 
-	for _, filename := range filenames {
-		if !arbiter.force && !arbiter.manifest.ShouldRemove(filename, client.Config.Environment) {
-			return fmt.Errorf("[%s] file was modified remotely", green(client.Config.Environment))
-		}
+	var removeGroup sync.WaitGroup
+	ctx.StartProgress(len(ctx.Args))
+	for _, filename := range ctx.Args {
+		removeGroup.Add(1)
+		asset := shopify.Asset{Key: filename}
+		go func() {
+			defer removeGroup.Done()
+			cmdutil.DeleteAsset(ctx, asset)
+			removeFile(filepath.Join(ctx.Env.Directory, asset.Key))
+		}()
 	}
 
-	var removeGroup errgroup.Group
-	bar := arbiter.newProgressBar(len(filenames), client.Config.Environment)
-	for _, filename := range filenames {
-		asset := kit.Asset{Key: filename}
-		removeGroup.Go(func() error {
-			if err := perform(client, asset, kit.Remove, bar); err != nil {
-				stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
-				return nil
-			}
-			return os.Remove(filepath.Join(client.Config.Directory, asset.Key))
-		})
-	}
-
-	return removeGroup.Wait()
+	removeGroup.Wait()
+	return nil
 }

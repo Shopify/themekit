@@ -1,51 +1,61 @@
 package cmd
 
 import (
-	"os"
-	"strings"
+	"bytes"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Shopify/themekit/kittest"
+	"github.com/Shopify/themekit/src/cmdutil"
+	"github.com/Shopify/themekit/src/cmdutil/_mocks"
+	"github.com/Shopify/themekit/src/env"
+	"github.com/Shopify/themekit/src/shopify"
 )
 
 func TestRemove(t *testing.T) {
-	server := kittest.NewTestServer()
-	defer server.Close()
-	assert.Nil(t, kittest.GenerateConfig(server.URL, true))
-	defer kittest.Cleanup()
-	defer resetArbiter()
-
-	client, err := getClient()
-	server.Reset()
-	if assert.Nil(t, err) {
-		arbiter.force = true
-		err = remove(client, []string{"templates/layout.liquid"})
-		assert.True(t, os.IsNotExist(err))
-		if assert.Equal(t, 1, len(server.Requests)) {
-			assert.Equal(t, "DELETE", server.Requests[0].Method)
-		}
-
-		asset, env, then, now := "templates/layout.liquid", "development", "2011-07-06T02:04:21-11:00", "2012-07-06T02:04:21-11:00"
-		arbiter.manifest = &fileManifest{
-			local:  map[string]map[string]string{asset: {env: then}},
-			remote: map[string]map[string]string{asset: {env: now}},
-		}
-		arbiter.force = false
-		err = remove(client, []string{"templates/layout.liquid"})
-		assert.True(t, strings.Contains(err.Error(), "file was modified remotely"))
-
-		client.Config.ReadOnly = true
-		err := remove(client, []string{"templates/layout.liquid"})
-		assert.True(t, strings.Contains(err.Error(), "environment is reaonly"))
-
-		client.Config.ReadOnly = false
-		err = remove(client, []string{})
-		assert.True(t, strings.Contains(err.Error(), "please specify file(s) to be removed"))
-
-		arbiter.force = true
-		server.Close()
-		assert.Nil(t, remove(client, []string{"templates/layout.liquid"}))
+	testcases := []struct {
+		args, err string
+		readonly  bool
+	}{
+		{args: "templates/layout.liquid"},
+		{args: "templates/layout.liquid", readonly: true, err: "environment is readonly"},
+		{err: "please specify file(s) to be removed"},
 	}
+
+	for _, testcase := range testcases {
+		ctx, client, _, _, _ := createTestCtx()
+		if testcase.args != "" {
+			ctx.Args = []string{testcase.args}
+		}
+		ctx.Env.ReadOnly = testcase.readonly
+
+		client.On("DeleteAsset", shopify.Asset{Key: testcase.args}).Return(nil)
+
+		err := remove(ctx, func(path string) error {
+			assert.Equal(t, path, testcase.args)
+			return nil
+		})
+
+		if testcase.err == "" {
+			assert.Nil(t, err)
+		} else if assert.NotNil(t, err, testcase.err) {
+			assert.Contains(t, err.Error(), testcase.err)
+		}
+	}
+}
+
+func createTestCtx() (ctx cmdutil.Ctx, client *mocks.ShopifyClient, conf *mocks.Config, stdOut, stdErr *bytes.Buffer) {
+	client = new(mocks.ShopifyClient)
+	conf = new(mocks.Config)
+	stdOut, stdErr = bytes.NewBufferString(""), bytes.NewBufferString("")
+	ctx = cmdutil.Ctx{
+		Conf:   conf,
+		Client: client,
+		Env:    &env.Env{},
+		Flags:  cmdutil.Flags{},
+		Log:    log.New(stdOut, "", 0),
+		ErrLog: log.New(stdErr, "", 0),
+	}
+	return
 }

@@ -6,64 +6,52 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 
-	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/src/cmdutil"
+	"github.com/Shopify/themekit/src/colors"
 )
-
-var openFunc = func(url string) error {
-	if openWith == "" {
-		return open.Run(url)
-	}
-	return open.RunWith(url, openWith)
-}
 
 var openCmd = &cobra.Command{
 	Use:   "open",
 	Short: "Open the preview for your store.",
 	Long: `Open will open the preview page in your browser as well as print out
 url for your reference`,
-	PreRunE: arbiter.generateThemeClients,
-	RunE:    arbiter.forSingleClient(preview),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.ForSingleClient(flags, args, func(ctx cmdutil.Ctx) error {
+			return preview(ctx, func(url string) error {
+				if ctx.Flags.With == "" {
+					return open.Run(url)
+				}
+				return open.RunWith(url, ctx.Flags.With)
+			})
+		})
+	},
 }
 
-func preview(client kit.ThemeClient, filenames []string) error {
-	themeID := client.Config.ThemeID
-
-	if openEdit && themeID == "live" {
-		return fmt.Errorf(
-			"[%s] cannot open editor for live theme without theme id",
-			green(client.Config.Environment),
-		)
+func preview(ctx cmdutil.Ctx, openFunc func(string) error) error {
+	if ctx.Flags.Edit && ctx.Env.ThemeID == "" {
+		return fmt.Errorf("[%s] cannot open editor for live theme without theme id", colors.Green(ctx.Env.Name))
 	}
 
-	if themeID == "live" {
-		stdOut.Printf(
-			"[%s] This theme is live so preview is the same as your live shop.",
-			green(client.Config.Environment),
-		)
-		themeID = ""
+	if ctx.Env.ThemeID == "" {
+		ctx.Log.Printf("[%s] This theme is live so preview is the same as your live shop.", colors.Green(ctx.Env.Name))
 	}
 
-	url := fmt.Sprintf("https://%s?preview_theme_id=%s", client.Config.Domain, themeID)
-
-	if openEdit {
-		url = fmt.Sprintf("https://%s/admin/themes/%s/editor",
-			client.Config.Domain,
-			client.Config.ThemeID)
-	}
-
-	stdOut.Printf(
-		"[%s] opening %s",
-		green(client.Config.Environment),
-		green(url),
-	)
+	url := previewURL(ctx.Flags.Edit, ctx.Env.Domain, ctx.Env.ThemeID)
+	ctx.Log.Printf("[%s] opening %s", colors.Green(ctx.Env.Name), colors.Green(url))
 
 	if err := openFunc(url); err != nil {
-		return fmt.Errorf(
-			"[%s] Error opening: %s",
-			green(client.Config.Environment),
-			red(err),
-		)
+		return fmt.Errorf("[%s] Error opening: %s", colors.Green(ctx.Env.Name), colors.Red(err))
 	}
 
 	return nil
+}
+
+func previewURL(edit bool, domain, id string) string {
+	url := fmt.Sprintf("https://%s", domain)
+	if edit {
+		return fmt.Sprintf("%s/admin/themes/%s/editor", url, id)
+	} else if id != "" {
+		return fmt.Sprintf("%s?preview_theme_id=%s", url, id)
+	}
+	return url
 }

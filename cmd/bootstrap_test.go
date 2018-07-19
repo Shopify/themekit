@@ -1,136 +1,83 @@
 package cmd
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Shopify/themekit/kit"
-	"github.com/Shopify/themekit/kittest"
+	"github.com/Shopify/themekit/src/cmdutil"
+	"github.com/Shopify/themekit/src/env"
+	"github.com/Shopify/themekit/src/shopify"
 )
 
 func TestBootstrap(t *testing.T) {
-	server := kittest.NewTestServer()
-	defer server.Close()
-	kittest.Setup()
-	defer kittest.Cleanup()
-	defer resetArbiter()
-	timberFeedPath = server.URL + "/feed"
+	name, url := "name", "https://download.com/1.2.4.zip"
 
-	assert.NotNil(t, bootstrap(nil, []string{}))
+	ctx, client, conf, _, _ := createTestCtx()
+	client.On("CreateNewTheme", name, url).Return(shopify.Theme{}, nil)
+	client.On("GetInfo").Return(shopify.Theme{Previewable: true}, nil)
+	client.On("GetAllAssets").Return([]string{}, nil)
+	conf.On("Set", "development", env.Env{}).Return(nil, nil)
+	conf.On("Save").Return(nil)
+	err := bootstrap(ctx, name, url)
+	assert.Nil(t, err)
 
-	arbiter.flagConfig.Password = "foo"
-	arbiter.flagConfig.Domain = server.URL
-	arbiter.flagConfig.Directory = kittest.FixtureProjectPath
-	arbiter.setFlagConfig()
-	assert.Nil(t, bootstrap(nil, []string{}))
+	ctx, client, _, _, _ = createTestCtx()
+	client.On("CreateNewTheme", name, url).Return(shopify.Theme{}, fmt.Errorf("can't create theme"))
+	err = bootstrap(ctx, name, url)
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "can't create theme")
+	}
 
-	timberFeedPath = "http://nope.com/nope.json"
-	assert.NotNil(t, bootstrap(nil, []string{}))
+	ctx, client, conf, _, _ = createTestCtx()
+	client.On("CreateNewTheme", name, url).Return(shopify.Theme{}, nil)
+	conf.On("Set", "development", env.Env{}).Return(nil, fmt.Errorf("cant set config"))
+	err = bootstrap(ctx, name, url)
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "cant set config")
+	}
+
+	ctx, client, conf, _, _ = createTestCtx()
+	client.On("CreateNewTheme", name, url).Return(shopify.Theme{}, nil)
+	client.On("GetInfo").Return(shopify.Theme{}, fmt.Errorf("oh no"))
+	client.On("GetAllAssets").Return([]string{}, nil)
+	conf.On("Set", "development", env.Env{}).Return(nil, nil)
+	conf.On("Save").Return(nil)
+	err = bootstrap(ctx, name, url)
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "oh no")
+	}
 }
 
-func TestGetNewThemeZipPath(t *testing.T) {
-	server := kittest.NewTestServer()
-	defer server.Close()
-	timberFeedPath = server.URL + "/feed"
+func TestGetNewThemeDetails(t *testing.T) {
+	getVerGood := func(string) (string, error) { return "https://download.com", nil }
+	getVerBad := func(string) (string, error) { return "", fmt.Errorf("cant fetch releases") }
 
-	bootstrapURL = "http://github.com/shopify/theme.zip"
-	path, err := getNewThemeZipPath()
-	assert.Equal(t, bootstrapURL, path)
-	assert.Nil(t, err)
-	bootstrapURL = ""
+	testcases := []struct {
+		in, iu, on, ou, err string
+		handler             func(string) (string, error)
+	}{
+		{on: "preTimber-latest", ou: "https://download.com", handler: getVerGood},
+		{on: "preTimber-latest", ou: "", handler: getVerBad, err: "cant fetch releases"},
+		{iu: "https://download.com/1.2.4.zip", on: "pre1.2.4", ou: "https://download.com/1.2.4.zip", handler: getVerGood},
+		{in: "name", iu: "https://download.com/1.2.4.zip", on: "name", ou: "https://download.com/1.2.4.zip", handler: getVerBad},
+	}
 
-	// master just returns early for master version
-	bootstrapVersion = "master"
-	path, err = getNewThemeZipPath()
-	assert.Equal(t, themeZipRoot+"master.zip", path)
-	assert.Nil(t, err)
-
-	// valid request
-	bootstrapVersion = "v2.0.2"
-	path, err = getNewThemeZipPath()
-	assert.Equal(t, themeZipRoot+"v2.0.2.zip", path)
-	assert.Nil(t, err)
-
-	// not found version
-	bootstrapVersion = "vn.0.p"
-	path, err = getNewThemeZipPath()
-	assert.Equal(t, "", path)
-	assert.NotNil(t, err)
-
-	server.Close()
-
-	// server fails to return
-	bootstrapVersion = "v2.0.2"
-	path, err = getNewThemeZipPath()
-	assert.Equal(t, "", path)
-	assert.NotNil(t, err)
-}
-
-func TestNewGetThemeName(t *testing.T) {
-	bootstrapPrefix = "prEfix"
-	bootstrapVersion = "4.2.0"
-	assert.Equal(t, "prEfixTimber-4.2.0", getNewThemeName())
-
-	bootstrapURL = "http://github.com/shopify/theme.zip"
-	assert.Equal(t, "prEfixtheme", getNewThemeName())
-
-	bootstrapName = "bootStrapNaeme"
-	assert.Equal(t, "bootStrapNaeme", getNewThemeName())
-
-	bootstrapPrefix = ""
-	bootstrapVersion = ""
-	bootstrapURL = ""
-	bootstrapName = ""
-}
-
-func TestDownloadThemeReleaseAtomFeed(t *testing.T) {
-	server := kittest.NewTestServer()
-	timberFeedPath = server.URL + "/feed"
-
-	feed, err := downloadThemeReleaseAtomFeed()
-	assert.Nil(t, err)
-	assert.Equal(t, 13, len(feed.Entries))
-
-	timberFeedPath = "http://nope.com/nope.json"
-	feed, err = downloadThemeReleaseAtomFeed()
-	assert.NotNil(t, err)
-	assert.Equal(t, 0, len(feed.Entries))
-
-	server.Close()
-
-	feed, err = downloadThemeReleaseAtomFeed()
-	assert.NotNil(t, err)
-	assert.Equal(t, 0, len(feed.Entries))
-}
-
-func TestFindThemeReleaseWith(t *testing.T) {
-	feed := kittest.ReleaseAtom
-	entry, err := findThemeReleaseWith(feed, "latest")
-	assert.Equal(t, feed.LatestEntry(), entry)
-	assert.Nil(t, err)
-
-	entry, err = findThemeReleaseWith(feed, "v2.0.2")
-	assert.Equal(t, "v2.0.2", entry.Title)
-	assert.Nil(t, err)
-
-	entry, err = findThemeReleaseWith(feed, "nope")
-	assert.Equal(t, "Invalid Feed", entry.Title)
-	assert.Equal(t, "Invalid Timber Version: nope\nAvailable Versions Are:\n- master\n- latest\n- v2.0.2\n- v2.0.1\n- v2.0.0\n- v1.3.2\n- v1.3.1\n- v1.3.0\n- v1.2.1\n- v1.2.0\n- v1.1.3\n- v1.1.2\n- v1.1.1\n- v1.1.0\n- v1.0.0", err.Error())
-	assert.NotNil(t, err)
-}
-
-func TestSaveConfiguration(t *testing.T) {
-	defer resetArbiter()
-	defer kittest.Cleanup()
-
-	kittest.GenerateConfig("example.myshopify.io", true)
-	env, _ := kit.LoadEnvironments("config.yml")
-	config, _ := env.GetConfiguration(kit.DefaultEnvironment)
-	assert.Nil(t, saveConfiguration(config))
-
-	kittest.GenerateConfig("example.myshopify.io", false)
-	env, _ = kit.LoadEnvironments("config.yml")
-	config, _ = env.GetConfiguration(kit.DefaultEnvironment)
-	assert.NotNil(t, saveConfiguration(config))
+	for _, testcase := range testcases {
+		flags := cmdutil.Flags{
+			Name:    testcase.in,
+			URL:     testcase.iu,
+			Version: "latest",
+			Prefix:  "pre",
+		}
+		name, url, err := getNewThemeDetails(flags, testcase.handler)
+		assert.Equal(t, testcase.on, name)
+		assert.Equal(t, testcase.ou, url)
+		if testcase.err == "" {
+			assert.Nil(t, err)
+		} else if assert.NotNil(t, err) {
+			assert.Contains(t, err.Error(), testcase.err)
+		}
+	}
 }

@@ -1,0 +1,14 @@
+development:
+  password: abracadabra
+  store: store.myshopify.com
+  ignore_files:
+  - charmander
+  - bulbasaur
+  - squirtle
+production:
+  password: abracadabra
+  store: store.myshopify.com
+  ignore_files:
+  - charmander
+  - bulbasaur
+  - squirtle
