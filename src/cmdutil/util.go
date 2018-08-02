@@ -48,6 +48,7 @@ type Flags struct {
 
 // Ctx is a specific context that a command will run in
 type Ctx struct {
+	Shop     shopify.Shop
 	Conf     config
 	Client   shopifyClient
 	Flags    Flags
@@ -59,10 +60,45 @@ type Ctx struct {
 	Bar      *mpb.Bar
 }
 
-func createCtx(conf env.Conf, e *env.Env, flags Flags, args []string, progress *mpb.Progress) (Ctx, error) {
-	client, err := shopify.NewClient(e)
+type clientFact func(*env.Env) (shopifyClient, error)
+
+func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, args []string, progress *mpb.Progress) (Ctx, error) {
+	if e.Proxy != "" {
+		colors.ColorStdOut.Printf(
+			"[%s] Proxy URL detected from Configuration [%s] SSL Certificate Validation will be disabled!",
+			colors.Green(e.Name),
+			colors.Yellow(e.Proxy),
+		)
+	}
+
+	client, err := newClient(e)
 	if err != nil {
 		return Ctx{}, err
+	}
+
+	shop, err := client.GetShop()
+	if err != nil && err == shopify.ErrShopDomainNotFound {
+		colors.ColorStdErr.Printf(
+			"[%s] invalid credentials, the domain %s is not found",
+			colors.Green(e.Name),
+			colors.Yellow(e.Domain),
+		)
+		return Ctx{}, fmt.Errorf("%s is an invalid domain", e.Domain)
+	}
+
+	themes, err := client.Themes() // this will make sure our token is correct
+	if err != nil {
+		return Ctx{}, err
+	}
+
+	if e.ThemeID == "" {
+		colors.ColorStdOut.Printf("[%s] Warning, this is your live theme.", colors.Yellow(e.Name))
+		for _, theme := range themes {
+			if theme.Role == "main" {
+				e.ThemeID = fmt.Sprintf("%v", theme.ID) // record the theme id for the live id
+				break
+			}
+		}
 	}
 
 	if flags.DisableIgnore {
@@ -71,8 +107,9 @@ func createCtx(conf env.Conf, e *env.Env, flags Flags, args []string, progress *
 	}
 
 	return Ctx{
+		Shop:     shop,
 		Conf:     &conf,
-		Client:   &client,
+		Client:   client,
 		Env:      e,
 		Flags:    flags,
 		Args:     args,
@@ -102,7 +139,7 @@ func (ctx *Ctx) DoneTask() {
 	}
 }
 
-func generateContexts(progress *mpb.Progress, flags Flags, args []string) ([]Ctx, error) {
+func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags, args []string) ([]Ctx, error) {
 	ctxs := []Ctx{}
 	flagEnv := getFlagEnv(flags)
 
@@ -124,19 +161,7 @@ func generateContexts(progress *mpb.Progress, flags Flags, args []string) ([]Ctx
 			return ctxs, err
 		}
 
-		if e.ThemeID == "" {
-			colors.ColorStdOut.Printf("[%s] Warning, this is your live theme.", colors.Yellow(name))
-		}
-
-		if e.Proxy != "" {
-			colors.ColorStdOut.Printf(
-				"[%s] Proxy URL detected from Configuration [%s] SSL Certificate Validation will be disabled!",
-				colors.Green(name),
-				colors.Yellow(e.Proxy),
-			)
-		}
-
-		ctx, err := createCtx(config, e, flags, args, progress)
+		ctx, err := createCtx(newClient, config, e, flags, args, progress)
 		if err != nil {
 			return ctxs, err
 		}
@@ -186,8 +211,12 @@ func shouldUseEnvironment(flags Flags, envName string) bool {
 // ForEachClient will generate a command context for all the available environments
 // and run a command in each of those contexts
 func ForEachClient(flags Flags, args []string, handler func(Ctx) error) error {
+	return forEachClient(shopifyThemeClientFactory, flags, args, handler)
+}
+
+func forEachClient(newClient clientFact, flags Flags, args []string, handler func(Ctx) error) error {
 	progressBarGroup := mpb.New(nil)
-	ctxs, err := generateContexts(progressBarGroup, flags, args)
+	ctxs, err := generateContexts(newClient, progressBarGroup, flags, args)
 	if err != nil {
 		return err
 	}
@@ -197,7 +226,7 @@ func ForEachClient(flags Flags, args []string, handler func(Ctx) error) error {
 	}
 	err = handlerGroup.Wait()
 	if err == ErrReload {
-		return ForEachClient(flags, args, handler)
+		return forEachClient(newClient, flags, args, handler)
 	}
 	return err
 }
@@ -206,8 +235,12 @@ func ForEachClient(flags Flags, args []string, handler func(Ctx) error) error {
 // and run a command for the first context. If more than one environment was specified,
 // then an error will be returned.
 func ForSingleClient(flags Flags, args []string, handler func(Ctx) error) error {
+	return forSingleClient(shopifyThemeClientFactory, flags, args, handler)
+}
+
+func forSingleClient(newClient clientFact, flags Flags, args []string, handler func(Ctx) error) error {
 	progressBarGroup := mpb.New(nil)
-	ctxs, err := generateContexts(progressBarGroup, flags, args)
+	ctxs, err := generateContexts(newClient, progressBarGroup, flags, args)
 	if err != nil {
 		return err
 	} else if len(ctxs) > 1 {
@@ -215,7 +248,7 @@ func ForSingleClient(flags Flags, args []string, handler func(Ctx) error) error 
 	}
 	err = handler(ctxs[0])
 	if err == ErrReload {
-		return ForEachClient(flags, args, handler)
+		return forSingleClient(newClient, flags, args, handler)
 	}
 	return err
 }
@@ -223,6 +256,10 @@ func ForSingleClient(flags Flags, args []string, handler func(Ctx) error) error 
 // ForDefaultClient will run in a context that runs of any available config including
 // defaults
 func ForDefaultClient(flags Flags, args []string, handler func(Ctx) error) error {
+	return forDefaultClient(shopifyThemeClientFactory, flags, args, handler)
+}
+
+func forDefaultClient(newClient clientFact, flags Flags, args []string, handler func(Ctx) error) error {
 	progressBarGroup := mpb.New(nil)
 	config, err := env.Load(flags.ConfigPath)
 	if err != nil && os.IsNotExist(err) {
@@ -239,7 +276,7 @@ func ForDefaultClient(flags Flags, args []string, handler func(Ctx) error) error
 		}
 	}
 
-	ctx, err := createCtx(config, e, flags, args, progressBarGroup)
+	ctx, err := createCtx(newClient, config, e, flags, args, progressBarGroup)
 	if err != nil {
 		return err
 	}
@@ -265,4 +302,12 @@ func DeleteAsset(ctx Ctx, asset shopify.Asset) {
 	} else if ctx.Flags.Verbose {
 		ctx.Log.Printf("[%s] Deleted %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
 	}
+}
+
+func shopifyThemeClientFactory(e *env.Env) (shopifyClient, error) {
+	client, err := shopify.NewClient(e)
+	if err != nil {
+		return nil, err
+	}
+	return &client, nil
 }

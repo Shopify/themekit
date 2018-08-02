@@ -10,6 +10,29 @@ type ShopifyClient struct {
 }
 
 // CreateNewTheme provides a mock function with given fields: _a0, _a1
+func (_m *ShopifyClient) Themes() ([]shopify.Theme, error) {
+	ret := _m.Called()
+
+	var r0 []shopify.Theme
+	if rf, ok := ret.Get(0).(func() []shopify.Theme); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]shopify.Theme)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CreateNewTheme provides a mock function with given fields: _a0, _a1
 func (_m *ShopifyClient) CreateNewTheme(_a0 string, _a1 string) (shopify.Theme, error) {
 	ret := _m.Called(_a0, _a1)
 

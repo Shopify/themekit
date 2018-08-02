@@ -17,39 +17,52 @@ import (
 
 func TestCreateCtx(t *testing.T) {
 	e := &env.Env{Domain: "this is not a url%@#$@#"}
-	_, err := createCtx(env.Conf{}, e, Flags{}, []string{}, nil)
+	client := new(mocks.ShopifyClient)
+	factory := func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, shopify.ErrShopDomainNotFound)
+	_, err := createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "invalid domain")
 	}
 
-	e = &env.Env{Ignores: []string{"notthere"}}
-	_, err = createCtx(env.Conf{}, e, Flags{}, []string{}, nil)
+	client = new(mocks.ShopifyClient)
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	badFactory := func(*env.Env) (shopifyClient, error) { return nil, fmt.Errorf("no such file or directory") }
+	_, err = createCtx(badFactory, env.Conf{}, &env.Env{}, Flags{}, []string{}, nil)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "no such file or directory")
 	}
 
-	_, err = createCtx(env.Conf{}, &env.Env{}, Flags{}, []string{}, nil)
+	client = new(mocks.ShopifyClient)
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, fmt.Errorf("[API] Invalid API key or access token (unrecognized login or wrong password)"))
+	_, err = createCtx(factory, env.Conf{}, &env.Env{}, Flags{}, []string{}, nil)
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "[API] Invalid API key or access token (unrecognized login or wrong password)")
+	}
+
+	e = &env.Env{}
+	client = new(mocks.ShopifyClient)
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{{ID: 65443, Role: "unpublished"}, {ID: 1234, Role: "main"}}, nil)
+	_, err = createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil)
 	assert.Nil(t, err)
+	assert.Equal(t, e.ThemeID, "1234")
 }
 
 func TestCtx_StartProgress(t *testing.T) {
-	ctx, err := createCtx(env.Conf{}, &env.Env{}, Flags{}, []string{}, mpb.New(nil))
-	assert.Nil(t, err)
-	assert.Nil(t, ctx.Bar)
+	ctx := Ctx{Env: &env.Env{}, Flags: Flags{}, progress: mpb.New(nil)}
 	ctx.StartProgress(6)
 	assert.NotNil(t, ctx.Bar)
 
-	ctx, err = createCtx(env.Conf{}, &env.Env{}, Flags{Verbose: true}, []string{}, mpb.New(nil))
-	assert.Nil(t, err)
-	assert.Nil(t, ctx.Bar)
+	ctx = Ctx{Env: &env.Env{}, Flags: Flags{Verbose: true}, progress: mpb.New(nil)}
 	ctx.StartProgress(6)
 	assert.Nil(t, ctx.Bar)
 }
 
 func TestCtx_DoneTask(t *testing.T) {
-	ctx, err := createCtx(env.Conf{}, &env.Env{}, Flags{}, []string{}, mpb.New(nil))
-	assert.Nil(t, err)
-	assert.Nil(t, ctx.Bar)
+	ctx := Ctx{Env: &env.Env{}, Flags: Flags{}, progress: mpb.New(nil)}
 	assert.NotPanics(t, ctx.DoneTask)
 	ctx.StartProgress(6)
 	assert.NotNil(t, ctx.Bar)
@@ -59,33 +72,35 @@ func TestCtx_DoneTask(t *testing.T) {
 }
 
 func TestGenerateContexts(t *testing.T) {
-	testcases := []struct {
-		flags Flags
-		count int
-		err   string
-	}{
-		{flags: Flags{}, err: "Could not find config file"},
-		{flags: Flags{ConfigPath: "_testdata/config.yml"}, count: 1},
-		{flags: Flags{ConfigPath: "_testdata/config.yml", Environments: stringArgArray{[]string{"nope"}}}, err: "Could not load any valid environments"},
-		{flags: Flags{ConfigPath: "_testdata/invalid_config.yml", Environments: stringArgArray{[]string{"other"}}}, err: "invalid config"},
-	}
+	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
+	_, err := generateContexts(factory, nil, Flags{}, []string{})
+	assert.EqualError(t, err, "Could not find config file at ")
 
-	for _, testcase := range testcases {
-		ctxs, err := generateContexts(nil, testcase.flags, []string{})
-		if testcase.err == "" {
-			assert.Nil(t, err)
-			assert.Equal(t, testcase.count, len(ctxs))
-		} else if assert.NotNil(t, err) {
-			assert.Contains(t, err.Error(), testcase.err)
-		}
-	}
+	client := new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	ctxs, err := generateContexts(factory, nil, Flags{ConfigPath: "_testdata/config.yml"}, []string{})
+	assert.Nil(t, err)
+	assert.Equal(t, len(ctxs), 1)
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	ctxs, err = generateContexts(factory, nil, Flags{ConfigPath: "_testdata/config.yml", Environments: stringArgArray{[]string{"nope"}}}, []string{})
+	assert.EqualError(t, err, "Could not load any valid environments")
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	ctxs, err = generateContexts(factory, nil, Flags{ConfigPath: "_testdata/invalid_config.yml", Environments: stringArgArray{[]string{"other"}}}, []string{})
+	assert.EqualError(t, err, "invalid config invalid environment []: (invalid store domain must end in '.myshopify.com',missing password)")
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, fmt.Errorf("not today") }
+	ctxs, err = generateContexts(factory, nil, Flags{ConfigPath: "_testdata/config.yml"}, []string{})
+	assert.EqualError(t, err, "not today")
 }
 
 func TestGetFlagEnv(t *testing.T) {
-
-	// if !flags.DisableIgnore {
-	//	flagEnv.IgnoredFiles = flags.IgnoredFiles.Value()
-	//	flagEnv.Ignores = flags.Ignores.Value()
 	flags := Flags{
 		Directory:    "d",
 		Password:     "p",
@@ -160,24 +175,23 @@ func TestForEachClient(t *testing.T) {
 	safeHandler := func(Ctx) error { return nil }
 	errHandler := func(Ctx) error { return gandalfErr }
 
-	testcases := []struct {
-		flags  Flags
-		handle func(Ctx) error
-		err    string
-	}{
-		{flags: Flags{}, handle: safeHandler, err: "Could not find config file"},
-		{flags: Flags{ConfigPath: "_testdata/config.yml"}, handle: safeHandler},
-		{flags: Flags{ConfigPath: "_testdata/config.yml"}, handle: errHandler, err: gandalfErr.Error()},
-	}
+	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
+	err := forEachClient(factory, Flags{}, []string{}, safeHandler)
+	assert.EqualError(t, err, "Could not find config file at ")
 
-	for _, testcase := range testcases {
-		err := ForEachClient(testcase.flags, []string{}, testcase.handle)
-		if testcase.err == "" {
-			assert.Nil(t, err)
-		} else if assert.NotNil(t, err) {
-			assert.Contains(t, err.Error(), testcase.err)
-		}
-	}
+	client := new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forEachClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, safeHandler)
+	assert.Nil(t, err)
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forEachClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, errHandler)
+	assert.EqualError(t, err, gandalfErr.Error())
 
 	count := 0
 	handler := func(Ctx) error {
@@ -187,10 +201,12 @@ func TestForEachClient(t *testing.T) {
 		}
 		return fmt.Errorf("nope not at all")
 	}
-	err := ForEachClient(Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
-	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "nope not at all")
-	}
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forEachClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
+	assert.EqualError(t, err, "nope not at all")
 	assert.Equal(t, 2, count)
 }
 
@@ -199,25 +215,30 @@ func TestForSingleClient(t *testing.T) {
 	safeHandler := func(Ctx) error { return nil }
 	errHandler := func(Ctx) error { return gandalfErr }
 
-	testcases := []struct {
-		flags  Flags
-		handle func(Ctx) error
-		err    string
-	}{
-		{flags: Flags{}, handle: safeHandler, err: "Could not find config file"},
-		{flags: Flags{ConfigPath: "_testdata/config.yml"}, handle: safeHandler},
-		{flags: Flags{ConfigPath: "_testdata/config.yml"}, handle: errHandler, err: gandalfErr.Error()},
-		{flags: Flags{ConfigPath: "_testdata/config.yml", Environments: stringArgArray{[]string{"*"}}}, handle: errHandler, err: "more than one environment specified for a single environment command"},
-	}
+	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
+	err := forSingleClient(factory, Flags{}, []string{}, safeHandler)
+	assert.EqualError(t, err, "Could not find config file at ")
 
-	for _, testcase := range testcases {
-		err := ForSingleClient(testcase.flags, []string{}, testcase.handle)
-		if testcase.err == "" {
-			assert.Nil(t, err)
-		} else if assert.NotNil(t, err) {
-			assert.Contains(t, err.Error(), testcase.err)
-		}
-	}
+	client := new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forSingleClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, safeHandler)
+	assert.Nil(t, err)
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forSingleClient(factory, Flags{ConfigPath: "_testdata/config.yml", Environments: stringArgArray{[]string{"*"}}}, []string{}, safeHandler)
+	assert.EqualError(t, err, "more than one environment specified for a single environment command")
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forSingleClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, errHandler)
+	assert.EqualError(t, err, gandalfErr.Error())
 
 	count := 0
 	handler := func(Ctx) error {
@@ -227,10 +248,12 @@ func TestForSingleClient(t *testing.T) {
 		}
 		return fmt.Errorf("nope not at all")
 	}
-	err := ForSingleClient(Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
-	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "nope not at all")
-	}
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forSingleClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
+	assert.EqualError(t, err, "nope not at all")
 	assert.Equal(t, 2, count)
 }
 
@@ -239,26 +262,35 @@ func TestForDefaultClient(t *testing.T) {
 	safeHandler := func(Ctx) error { return nil }
 	errHandler := func(Ctx) error { return gandalfErr }
 
-	testcases := []struct {
-		flags  Flags
-		handle func(Ctx) error
-		err    string
-	}{
-		{flags: Flags{}, handle: safeHandler, err: "missing store domain"},
-		{flags: Flags{ConfigPath: "_testdata/config.yml"}, handle: safeHandler},
-		{flags: Flags{Domain: "shop.myshopify.com", Password: "123"}, handle: safeHandler},
-		{flags: Flags{Domain: "shop.myshopify.com", Password: "123", Ignores: stringArgArray{[]string{"nothere"}}}, handle: safeHandler, err: "no such file"},
-		{flags: Flags{ConfigPath: "_testdata/config.yml"}, handle: errHandler, err: gandalfErr.Error()},
-	}
+	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
+	err := forDefaultClient(factory, Flags{}, []string{}, safeHandler)
+	assert.EqualError(t, err, "invalid environment [development]: (missing store domain,missing password)")
 
-	for _, testcase := range testcases {
-		err := ForDefaultClient(testcase.flags, []string{}, testcase.handle)
-		if testcase.err == "" {
-			assert.Nil(t, err)
-		} else if assert.NotNil(t, err) {
-			assert.Contains(t, err.Error(), testcase.err)
-		}
-	}
+	client := new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forDefaultClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, safeHandler)
+	assert.Nil(t, err)
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, safeHandler)
+	assert.Nil(t, err)
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, fmt.Errorf("server err") }
+	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, safeHandler)
+	assert.EqualError(t, err, "server err")
+
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, errHandler)
+	assert.EqualError(t, err, gandalfErr.Error())
 }
 
 func TestUploadAsset(t *testing.T) {

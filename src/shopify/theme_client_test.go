@@ -74,6 +74,43 @@ func TestThemeClient_GetShop(t *testing.T) {
 	}
 }
 
+func TestThemeClient_Themes(t *testing.T) {
+	testcases := []struct {
+		resp, resperr, err string
+		code               int
+	}{
+		{resp: `{"errors": "Not Found"}`, code: 200, err: "Not Found"},
+		{resperr: "(Client.Timeout exceeded while awaiting headers)", err: "(Client.Timeout exceeded while awaiting headers)"},
+		{resp: `{"themes":[{"id": 123456}]}`, code: 200},
+	}
+
+	for _, testcase := range testcases {
+		m := new(mocks.HttpAdapter)
+		client, _ := NewClient(&env.Env{})
+		client.http = m
+
+		expectation := m.On("Get", "/admin/themes.json")
+		if testcase.resperr != "" {
+			expectation.Return(nil, errors.New(testcase.resperr))
+		} else {
+			expectation.Return(jsonResponse(testcase.resp, testcase.code), nil)
+		}
+
+		themes, err := client.Themes()
+
+		if testcase.err == "" {
+			assert.Nil(t, err)
+			assert.Equal(t, themes[0].ID, int64(123456))
+		} else if assert.NotNil(t, err) {
+			assert.Contains(t, err.Error(), testcase.err)
+		}
+
+		if testcase.resp != "" || testcase.resperr != "" {
+			m.AssertExpectations(t)
+		}
+	}
+}
+
 func TestThemeClient_CreateNewTheme(t *testing.T) {
 	testcases := []struct {
 		in                 []string

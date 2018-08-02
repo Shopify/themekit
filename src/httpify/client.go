@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -14,6 +16,8 @@ import (
 	"github.com/Shopify/themekit/src/ratelimiter"
 	"github.com/Shopify/themekit/src/release"
 )
+
+var errClientTimeout = errors.New(`request timed out. if you are receive this error consistently, try increasing the timeout in your config`)
 
 // Params allows for a better structured input into NewClient
 type Params struct {
@@ -100,7 +104,11 @@ func (client *HTTPClient) do(method, path string, body interface{}) (*http.Respo
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s; %s)", runtime.GOOS, runtime.GOARCH, release.ThemeKitVersion.String()))
 
 	client.limit.Wait()
-	return client.client.Do(req)
+	resp, err := client.client.Do(req)
+	if err, ok := err.(net.Error); ok && err.Timeout() {
+		return nil, errClientTimeout
+	}
+	return resp, err
 }
 
 func generateHTTPAdapter(timeout time.Duration, proxyURL string) (*http.Client, error) {
@@ -134,6 +142,8 @@ func parseBaseURL(domain string) (*url.URL, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid domain %s", domain)
 	}
-	u.Scheme = "https"
+	if u.Hostname() != "127.0.0.1" { //unless we are testing locally
+		u.Scheme = "https"
+	}
 	return u, nil
 }

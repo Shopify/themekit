@@ -30,7 +30,7 @@ var (
 	// ErrThemeNotFound will be returned if trying to get a theme that does not exist
 	ErrThemeNotFound = errors.New("requested theme was not found")
 	// ErrShopDomainNotFound will be returned if you are getting shop info on an invalid domain
-	ErrShopDomainNotFound = errors.New("provided myshopify does not exist")
+	ErrShopDomainNotFound = errors.New("provided myshopify domain does not exist")
 	// ErrMissingAssetName is returned from delete when an invalid key was provided
 	ErrMissingAssetName = errors.New("asset has no name so could not be processes")
 
@@ -59,6 +59,10 @@ type Shop struct {
 type themeResponse struct {
 	Theme  Theme               `json:"theme"`
 	Errors map[string][]string `json:"errors"`
+}
+
+type themesResponse struct {
+	Themes []Theme `json:"themes"`
 }
 
 type assetResponse struct {
@@ -131,6 +135,21 @@ func (c Client) GetShop() (Shop, error) {
 	}
 
 	return shop, nil
+}
+
+// Themes will return all the available themes on a domain.
+func (c Client) Themes() ([]Theme, error) {
+	resp, err := c.http.Get("/admin/themes.json")
+	if err != nil {
+		return []Theme{}, err
+	}
+
+	var r themesResponse
+	if err := unmarshalResponse(resp.Body, &r); err != nil {
+		return []Theme{}, err
+	}
+
+	return r.Themes, nil
 }
 
 // CreateNewTheme will create a unpublished new theme on your shopify store and then

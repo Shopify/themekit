@@ -35,8 +35,6 @@ func TestClient_do(t *testing.T) {
 		assert.Equal(t, asset.Key, body["key"])
 		assert.Equal(t, asset.Value, body["value"])
 	}))
-	defer server.Close()
-
 	client, err := NewClient(Params{
 		Domain:   server.URL,
 		Password: "secret_password",
@@ -50,6 +48,28 @@ func TestClient_do(t *testing.T) {
 	resp, err := client.do("POST", "/assets.json", body)
 	assert.Nil(t, err)
 	assert.NotNil(t, resp)
+
+	server.Close()
+
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(3 * time.Second)
+	}))
+	defer server.Close()
+
+	client, _ = NewClient(Params{
+		Domain:   server.URL,
+		Timeout:  time.Nanosecond,
+		APILimit: time.Nanosecond,
+	})
+	client.baseURL.Scheme = "http"
+
+	assert.NotNil(t, client)
+	assert.Nil(t, err)
+
+	_, err = client.do("POST", "/assets.json", body)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, err, errClientTimeout)
+	}
 }
 
 func TestGenerateClientTransport(t *testing.T) {
