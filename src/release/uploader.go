@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/url"
 
+	"github.com/Shopify/themekit/src/colors"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -51,6 +53,7 @@ func newS3Uploader() (*s3Uploader, error) {
 }
 
 func (uploader *s3Uploader) File(fileName string, body io.ReadSeeker) (string, error) {
+	colors.ColorStdOut.Printf("Uploading %s", colors.Green(fileName))
 	resp, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
 		ACL:    aws.String("public-read"),
@@ -66,6 +69,7 @@ func (uploader *s3Uploader) File(fileName string, body io.ReadSeeker) (string, e
 		return "", err
 	}
 
+	colors.ColorStdOut.Printf("Complete %s", colors.Green(fileName))
 	return fileURL, nil
 }
 

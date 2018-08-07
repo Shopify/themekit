@@ -15,6 +15,8 @@ import (
 
 	"github.com/hashicorp/go-version"
 	binaryUpdate "github.com/inconshreveable/go-update"
+
+	"github.com/Shopify/themekit/src/colors"
 )
 
 var (
@@ -212,6 +214,7 @@ func remove(ver, releaseURL string, u uploader) error {
 }
 
 func updateDeploy(releases releasesList, u uploader) error {
+	colors.ColorStdOut.Printf("Updating releases")
 	err := u.JSON("releases/all.json", releases)
 	if err != nil {
 		return err
@@ -234,6 +237,8 @@ func fetchLatest(url string) (release, error) {
 }
 
 func buildRelease(ver, distDir string, u uploader) (release, error) {
+	colors.ColorStdOut.Printf("Building %s", colors.Green(ver))
+
 	var g errgroup.Group
 
 	newRelease := release{Version: ver, Platforms: []platform{}}

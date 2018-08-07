@@ -22,7 +22,7 @@ func init() {
 }
 
 func main() {
-	if len(flag.Args()) > 0 {
+	if len(flag.Args()) <= 0 {
 		stdErr.Println(colors.Red("please provide a version number"))
 		os.Exit(0)
 	}
