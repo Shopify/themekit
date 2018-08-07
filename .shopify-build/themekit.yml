@@ -1,13 +1,11 @@
 containers:
-  golang:
-    workdir: /go/src/github.com/Shopify/captain-hook
-    docker: golang:1.9
+  default:
+    docker: golang:1.10
+    workdir: /go/src/github.com/Shopify/themekit
 
-pipelines:
-  themekit-ci-builder:
-    default_container: golang
-    steps:
-      - label: Run tests and vet
-        timeout: 3m
-        run:
-        - script/ci.sh
+steps:
+- label: Run tests and vet
+  timeout: 3m
+  run:
+  - go vet -all ./...
+  - scripts/ci.sh

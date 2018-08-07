@@ -13,12 +13,9 @@ import (
 )
 
 const afterUpdateMessage = `
- Successfully updated to theme kit version %v,
- If you have troubles with this release please
- report them to https://github.com/Shopify/themekit/issues
- If your troubles are preventing you from working
- you can roll back to the previous version using
- the command 'theme update --version=v%s'
+ Successfully updated to theme kit version %v, for more information on this release please see the change log https://github.com/Shopify/themekit/blob/master/changelog.txt
+ If you have troubles with this release please report them to https://github.com/Shopify/themekit/issues
+ If your troubles are preventing you from working you can roll back to the previous version using the command 'theme update --version=v%s'
  `
 
 var (
@@ -30,8 +27,7 @@ var (
 		Short: "Theme Kit is a tool kit for manipulating shopify themes",
 		Long: `Theme Kit is a tool kit for manipulating shopify themes
 
-Theme Kit is a fast and cross platform tool that enables you
-to build shopify themes with ease.
+Theme Kit is a fast and cross platform tool that enables you to build shopify themes with ease.
 
 Complete documentation is available at https://shopify.github.io/themekit/`,
 		SilenceUsage:  true,
@@ -46,8 +42,7 @@ Complete documentation is available at https://shopify.github.io/themekit/`,
 	updateCmd = &cobra.Command{
 		Use:   "update",
 		Short: "Update Theme kit to the newest version.",
-		Long: `Update will check for a new release, then
- if there is an applicable update it will download it and apply it.
+		Long: `Update will check for a new release, then if there is an applicable update it will download it and apply it.
 
  For more documentation please see http://shopify.github.io/themekit/commands/#update
  `,

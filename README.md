@@ -4,6 +4,7 @@
   <p align="center">
     <a href="https://goreportcard.com/report/github.com/shopify/themekit"><img src="https://goreportcard.com/badge/github.com/shopify/themekit"></a>
     <a href="https://buildkite.com/shopify/themekit"><img src="https://badge.buildkite.com/6a17b90ae5d9578a0f50553c3e211a9cad335635a2d2bbfb8f.svg"></a>
+    <a href="https://codecov.io/gh/Shopify/themekit"><img src="https://codecov.io/gh/Shopify/themekit/branch/master/graph/badge.svg" /></a>
     <a href="http://godoc.org/github.com/Shopify/themekit"><img src="https://godoc.org/github.com/Shopify/themekit?status.svg"></a>
     <a href="https://github.com/Shopify/themekit/releases/latest"><img src="http://github-release-version.herokuapp.com/github/Shopify/themekit/release.svg?style=flat"></a>
   </p>
@@ -36,15 +37,3 @@ Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob
 
 [Tim Anema](https://github.com/tanema), [Chris Saunders](https://github.com/csaunders),
 [Chris Butcher](https://github.com/chrisbutcher), [Jakob Külzer](https://github.com/ilikeorangutans)
-
-refactor todo
-- [x] remove manifest
-- [x] testing packages 10/10
-- [x] fixing commands tests 8/8
-- [x] add back in warnings 2/2
-- [x] better credentials errors
-- [x] better timeout errors
-- [x] better performance
-- [ ] Better onboarding
-  - [ ] instead of bootstrap/config have new command that bootstraps or downloads
-
