@@ -47,6 +47,7 @@ func TestEnv_Validate(t *testing.T) {
 		{env: Env{Password: "file", ThemeID: "abc", Domain: "test.myshopify.com"}, err: "invalid theme_id"},
 		{env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: "_testdata/symlink_projectdir"}},
 		{env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: "_testdata/bad_symlink"}, err: "invalid project directory"},
+		{env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: "_testdata/file_symlink"}, err: "invalid project directory"},
 		{env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: "not_a_dir"}, err: "invalid project directory"},
 	}
 

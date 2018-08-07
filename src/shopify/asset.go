@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/Shopify/themekit/src/env"
@@ -37,13 +36,13 @@ func ReadAsset(e *env.Env, filename string) (Asset, error) {
 	return readAsset(e.Directory, filename)
 }
 
-// ReadAssets will load all assets for paths passed in, this also means that it will
+// FindAssets will load all assets for paths passed in, this also means that it will
 // read directories recursively. If no paths are passed in then the whole project
 // directory will be read
-func ReadAssets(e *env.Env, paths ...string) (assets []Asset, err error) {
+func FindAssets(e *env.Env, paths ...string) (assets []string, err error) {
 	filter, err := file.NewFilter(e.Directory, e.IgnoredFiles, e.Ignores)
 	if err != nil {
-		return []Asset{}, err
+		return []string{}, err
 	}
 
 	if len(paths) == 0 {
@@ -55,17 +54,17 @@ func ReadAssets(e *env.Env, paths ...string) (assets []Asset, err error) {
 		if err == ErrAssetIsDir {
 			dirAssets, err := loadAssetsFromDirectory(e.Directory, path, filter.Match)
 			if err != nil {
-				return []Asset{}, err
+				return []string{}, err
 			}
 			assets = append(assets, dirAssets...)
 		} else if err != nil {
-			return []Asset{}, err
-		} else {
-			assets = append(assets, asset)
+			return []string{}, err
+		} else if !filter.Match(asset.Key) {
+			assets = append(assets, asset.Key)
 		}
 	}
 
-	return filterAssets(assets, filter.Match), nil
+	return assets, nil
 }
 
 // Write will write the asset out to the destination directory
@@ -116,17 +115,6 @@ func (asset Asset) contents() ([]byte, error) {
 	return data, nil
 }
 
-func filterAssets(assets []Asset, ignore func(path string) bool) []Asset {
-	filteredAssets := []Asset{}
-	sort.Slice(assets, func(i, j int) bool { return assets[i].Key < assets[j].Key })
-	for index, asset := range assets {
-		if !ignore(asset.Key) && (index == len(assets)-1 || assets[index+1].Key != asset.Key+".liquid") {
-			filteredAssets = append(filteredAssets, asset)
-		}
-	}
-	return filteredAssets
-}
-
 func assetsToFilenames(assets []Asset) []string {
 	filenames := []string{}
 	for _, asset := range assets {
@@ -135,7 +123,7 @@ func assetsToFilenames(assets []Asset) []string {
 	return filenames
 }
 
-func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (assets []Asset, err error) {
+func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (assets []string, err error) {
 	err = filepath.Walk(filepath.Join(root, dir), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -147,12 +135,8 @@ func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (a
 		if err != nil {
 			return err
 		}
-		asset, err := readAsset(root, assetKey)
-		if err != nil {
-			return err
-		}
-		if !ignore(asset.Key) {
-			assets = append(assets, asset)
+		if !ignore(assetKey) {
+			assets = append(assets, assetKey)
 		}
 		return nil
 	})

@@ -284,26 +284,6 @@ func forDefaultClient(newClient clientFact, flags Flags, args []string, handler 
 	return handler(ctx)
 }
 
-// UploadAsset will perform an upload for an asset and log success or failure
-func UploadAsset(ctx Ctx, asset shopify.Asset) {
-	defer ctx.DoneTask()
-	if err := ctx.Client.UpdateAsset(asset); err != nil {
-		ctx.ErrLog.Printf("[%s] %s", colors.Green(ctx.Env.Name), err)
-	} else if ctx.Flags.Verbose {
-		ctx.Log.Printf("[%s] Updated %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
-	}
-}
-
-// DeleteAsset will perform a delete for an asset and log success or failure
-func DeleteAsset(ctx Ctx, asset shopify.Asset) {
-	defer ctx.DoneTask()
-	if err := ctx.Client.DeleteAsset(asset); err != nil {
-		ctx.ErrLog.Printf("[%s] %s", colors.Green(ctx.Env.Name), err)
-	} else if ctx.Flags.Verbose {
-		ctx.Log.Printf("[%s] Deleted %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
-	}
-}
-
 func shopifyThemeClientFactory(e *env.Env) (shopifyClient, error) {
 	client, err := shopify.NewClient(e)
 	if err != nil {

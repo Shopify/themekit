@@ -38,14 +38,13 @@ Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob
 [Chris Butcher](https://github.com/chrisbutcher), [Jakob Külzer](https://github.com/ilikeorangutans)
 
 refactor todo
+- [x] remove manifest
 - [x] testing packages 10/10
 - [x] fixing commands tests 8/8
 - [x] add back in warnings 2/2
 - [x] better credentials errors
 - [x] better timeout errors
-- [ ] better performance
-  - [ ] replace should use a channel to stream assets and not load them all at once
-  - [ ] upload should stream assets in a channel and not load all assets at once
+- [x] better performance
 - [ ] Better onboarding
   - [ ] instead of bootstrap/config have new command that bootstraps or downloads
 

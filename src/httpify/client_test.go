@@ -14,6 +14,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewClient(t *testing.T) {
+	_, err := NewClient(Params{
+		Domain: "#$%$^@$%!#@$@bad url this will not parse",
+	})
+	if assert.NotNil(t, err) {
+		assert.EqualError(t, err, "invalid domain #$%$^@$%!#@$@bad url this will not parse")
+	}
+
+	_, err = NewClient(Params{
+		Domain: "http://localhost.com",
+		Proxy:  "@#$@$^#!@#$@",
+	})
+	if assert.NotNil(t, err) {
+		assert.EqualError(t, err, "invalid proxy URI")
+	}
+}
+
 func TestClient_do(t *testing.T) {
 	body := map[string]interface{}{"key": "main.js", "value": "alert('this is javascript');"}
 
@@ -35,6 +52,7 @@ func TestClient_do(t *testing.T) {
 		assert.Equal(t, asset.Key, body["key"])
 		assert.Equal(t, asset.Value, body["value"])
 	}))
+
 	client, err := NewClient(Params{
 		Domain:   server.URL,
 		Password: "secret_password",
@@ -45,7 +63,35 @@ func TestClient_do(t *testing.T) {
 	assert.NotNil(t, client)
 	assert.Nil(t, err)
 
-	resp, err := client.do("POST", "/assets.json", body)
+	resp, err := client.Post("/assets.json", body)
+	assert.Nil(t, err)
+	assert.NotNil(t, resp)
+
+	resp, err = client.Put("/assets.json", body)
+	assert.Nil(t, err)
+	assert.NotNil(t, resp)
+
+	server.Close()
+
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, r.Header.Get("X-Shopify-Access-Token"), client.password)
+		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
+		assert.Equal(t, r.Header.Get("Accept"), "application/json")
+		assert.Equal(t, r.Header.Get("User-Agent"), fmt.Sprintf("go/themekit (%s; %s; %s)", runtime.GOOS, runtime.GOARCH, release.ThemeKitVersion.String()))
+	}))
+
+	client, err = NewClient(Params{
+		Domain:   server.URL,
+		Password: "secret_password",
+		APILimit: time.Nanosecond,
+	})
+	client.baseURL.Scheme = "http"
+
+	resp, err = client.Get("/assets.json")
+	assert.Nil(t, err)
+	assert.NotNil(t, resp)
+
+	resp, err = client.Delete("/assets.json")
 	assert.Nil(t, err)
 	assert.NotNil(t, resp)
 
@@ -70,6 +116,18 @@ func TestClient_do(t *testing.T) {
 	if assert.NotNil(t, err) {
 		assert.Equal(t, err, errClientTimeout)
 	}
+}
+
+func TestGenerateHTTPAdapter(t *testing.T) {
+	_, err := generateHTTPAdapter(time.Second, "#$#$^$%^##$")
+	if assert.NotNil(t, err) {
+		assert.EqualError(t, err, "invalid proxy URI")
+	}
+
+	c, err := generateHTTPAdapter(time.Second, "http://localhost:3000")
+	assert.Nil(t, err)
+	assert.Equal(t, time.Second, c.Timeout)
+	assert.NotNil(t, c.Transport)
 }
 
 func TestGenerateClientTransport(t *testing.T) {

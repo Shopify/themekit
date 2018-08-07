@@ -27,6 +27,12 @@ func TestRateLimiterCanGoAfterTimeout(t *testing.T) {
 	assert.Equal(t, true, received)
 }
 
+func TestWait(t *testing.T) {
+	domainLimitMap = make(map[string]*Limiter)
+	limiter := New("domain.com", time.Nanosecond)
+	limiter.Wait()
+}
+
 func checkTime(dur time.Duration) (received, timeout bool) {
 	domainLimitMap = make(map[string]*Limiter)
 	limiter := New("domain.com", dur)

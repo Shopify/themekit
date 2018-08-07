@@ -37,9 +37,9 @@ func TestGenerateActions(t *testing.T) {
 	client.On("GetAllAssets").Return([]string{"assets/logo.png"}, nil)
 	actions, err := generateActions(ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, actions["assets/logo.png"].op, file.Remove)
-	assert.Equal(t, actions["config/settings_data.json"].op, file.Update)
-	assert.Equal(t, actions["assets/app.js"].op, file.Update)
+	assert.Equal(t, actions["assets/logo.png"], file.Remove)
+	assert.Equal(t, actions["config/settings_data.json"], file.Update)
+	assert.Equal(t, actions["assets/app.js"], file.Update)
 	_, found := actions["assets/.gitkeep"]
 	assert.False(t, found)
 

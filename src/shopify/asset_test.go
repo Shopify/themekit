@@ -12,7 +12,7 @@ import (
 	"github.com/Shopify/themekit/src/env"
 )
 
-func TestReadAssets(t *testing.T) {
+func TestFindAssets(t *testing.T) {
 	goodEnv := &env.Env{Directory: filepath.Join("_testdata", "project")}
 	badEnv := &env.Env{Directory: "nope"}
 
@@ -30,7 +30,7 @@ func TestReadAssets(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		assets, err := ReadAssets(testcase.e, testcase.inputs...)
+		assets, err := FindAssets(testcase.e, testcase.inputs...)
 		if testcase.err == "" {
 			assert.Nil(t, err)
 			assert.Equal(t, testcase.count, len(assets))
@@ -87,52 +87,6 @@ func TestAsset_Contents(t *testing.T) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}
 	}
-}
-
-func TestFilterAssets(t *testing.T) {
-	ignoreNone := func(path string) bool { return strings.Contains(path, ".gitkeep") }
-	ignoreOne := func(path string) bool { return path == "templates/ignore.html.liquid" }
-
-	testcases := []struct {
-		input, expected []Asset
-		ignore          func(string) bool
-	}{
-		{
-			input:    []Asset{{Key: "templates/foo.json.liquid"}, {Key: "templates/foo.json"}},
-			expected: []Asset{{Key: "templates/foo.json.liquid"}},
-			ignore:   ignoreNone,
-		},
-		{
-			input:    []Asset{{Key: "templates/foo.json"}, {Key: "templates/foo.json.liquid"}},
-			expected: []Asset{{Key: "templates/foo.json.liquid"}},
-			ignore:   ignoreNone,
-		},
-		{
-			input:    []Asset{{Key: "templates/ignore.html.liquid"}, {Key: "templates/other.liquid"}},
-			expected: []Asset{{Key: "templates/other.liquid"}},
-			ignore:   ignoreOne,
-		},
-	}
-
-	for _, testcase := range testcases {
-		assert.Equal(t, filterAssets(testcase.input, testcase.ignore), testcase.expected)
-	}
-}
-
-func TestAssetsToFilenames(t *testing.T) {
-	input := []Asset{
-		{Key: "templates/foo.json.liquid"},
-		{Key: "templates/ignore.html.liquid"},
-		{Key: "templates/other.liquid"},
-	}
-	expected := []string{
-		"templates/foo.json.liquid",
-		"templates/ignore.html.liquid",
-		"templates/other.liquid",
-	}
-
-	filenames := assetsToFilenames(input)
-	assert.Equal(t, filenames, expected)
 }
 
 func TestLoadAssetsFromDirectory(t *testing.T) {

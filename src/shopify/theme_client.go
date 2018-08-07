@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -215,7 +216,15 @@ func (c Client) GetAllAssets() ([]string, error) {
 		return []string{}, err
 	}
 
-	return assetsToFilenames(filterAssets(r.Assets, c.filter.Match)), nil
+	filteredAssets := []string{}
+	sort.Slice(r.Assets, func(i, j int) bool { return r.Assets[i].Key < r.Assets[j].Key })
+	for index, asset := range r.Assets {
+		if !c.filter.Match(asset.Key) && (index == len(r.Assets)-1 || r.Assets[index+1].Key != asset.Key+".liquid") {
+			filteredAssets = append(filteredAssets, asset.Key)
+		}
+	}
+
+	return filteredAssets, nil
 }
 
 // GetAsset will fetch a single remote asset from the remote shopify servers.

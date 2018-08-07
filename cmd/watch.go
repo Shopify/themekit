@@ -58,20 +58,34 @@ func watch(ctx cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 				ctx.Log.Print("Reloading config changes")
 				return cmdutil.ErrReload
 			}
-
 			ctx.Log.Printf("[%s] processing %s", colors.Green(ctx.Env.Name), colors.Blue(event.Path))
-			if event.Op == file.Remove {
-				cmdutil.DeleteAsset(ctx, shopify.Asset{Key: event.Path})
-			} else {
-				asset, err := shopify.ReadAsset(ctx.Env, event.Path)
-				if err != nil {
-					ctx.ErrLog.Printf("[%s] error loading %s: %s", colors.Green(ctx.Env.Name), colors.Green(event.Path), colors.Red(err))
-					continue
-				}
-				cmdutil.UploadAsset(ctx, asset)
-			}
+			perform(ctx, event.Path, event.Op)
 		case <-sig:
 			return nil
+		}
+	}
+}
+
+func perform(ctx cmdutil.Ctx, path string, op file.Op) {
+	defer ctx.DoneTask()
+
+	if op == file.Remove {
+		if err := ctx.Client.DeleteAsset(shopify.Asset{Key: path}); err != nil {
+			ctx.ErrLog.Printf("[%s] %s", colors.Green(ctx.Env.Name), err)
+		} else if ctx.Flags.Verbose {
+			ctx.Log.Printf("[%s] Deleted %s", colors.Green(ctx.Env.Name), colors.Blue(path))
+		}
+	} else {
+		asset, err := shopify.ReadAsset(ctx.Env, path)
+		if err != nil {
+			ctx.ErrLog.Printf("[%s] error loading %s: %s", colors.Green(ctx.Env.Name), colors.Green(path), colors.Red(err))
+			return
+		}
+
+		if err := ctx.Client.UpdateAsset(asset); err != nil {
+			ctx.ErrLog.Printf("[%s] %s", colors.Green(ctx.Env.Name), err)
+		} else if ctx.Flags.Verbose {
+			ctx.Log.Printf("[%s] Updated %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
 		}
 	}
 }

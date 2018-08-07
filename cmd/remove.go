@@ -10,7 +10,7 @@ import (
 
 	"github.com/Shopify/themekit/src/cmdutil"
 	"github.com/Shopify/themekit/src/colors"
-	"github.com/Shopify/themekit/src/shopify"
+	"github.com/Shopify/themekit/src/file"
 )
 
 var removeCmd = &cobra.Command{
@@ -38,12 +38,11 @@ func remove(ctx cmdutil.Ctx, removeFile func(string) error) error {
 	ctx.StartProgress(len(ctx.Args))
 	for _, filename := range ctx.Args {
 		removeGroup.Add(1)
-		asset := shopify.Asset{Key: filename}
-		go func() {
+		go func(filename string) {
 			defer removeGroup.Done()
-			cmdutil.DeleteAsset(ctx, asset)
-			removeFile(filepath.Join(ctx.Env.Directory, asset.Key))
-		}()
+			perform(ctx, filename, file.Remove)
+			removeFile(filepath.Join(ctx.Env.Directory, filename))
+		}(filename)
 	}
 
 	removeGroup.Wait()

@@ -8,6 +8,7 @@ import (
 
 	"github.com/Shopify/themekit/src/cmdutil"
 	"github.com/Shopify/themekit/src/colors"
+	"github.com/Shopify/themekit/src/file"
 	"github.com/Shopify/themekit/src/shopify"
 )
 
@@ -32,26 +33,24 @@ func upload(ctx cmdutil.Ctx) error {
 		return fmt.Errorf("[%s] environment is readonly", colors.Green(ctx.Env.Name))
 	}
 
-	assets, err := shopify.ReadAssets(ctx.Env, ctx.Args...)
+	assetPaths, err := shopify.FindAssets(ctx.Env, ctx.Args...)
 	if err != nil {
 		return err
 	}
 
 	var uploadGroup sync.WaitGroup
-	ctx.StartProgress(len(assets))
-	for _, asset := range assets {
-		if asset.Key == settingsDataKey {
-			asset := asset
-			defer cmdutil.UploadAsset(ctx, asset)
+	ctx.StartProgress(len(assetPaths))
+	for _, path := range assetPaths {
+		if path == settingsDataKey {
+			defer perform(ctx, path, file.Update)
 			continue
 		}
 		uploadGroup.Add(1)
-		go func(asset shopify.Asset) {
+		go func(path string) {
 			defer uploadGroup.Done()
-			cmdutil.UploadAsset(ctx, asset)
-		}(asset)
+			perform(ctx, path, file.Update)
+		}(path)
 	}
-
 	uploadGroup.Wait()
 	return nil
 }

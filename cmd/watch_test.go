@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/Shopify/themekit/src/file"
 	"github.com/Shopify/themekit/src/shopify"
@@ -74,4 +76,51 @@ func TestWatch(t *testing.T) {
 	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdOut.String(), "Deleted assets/app.js")
+}
+
+func TestPerform(t *testing.T) {
+	key := "assets/app.js"
+
+	ctx, m, _, _, se := createTestCtx()
+	perform(ctx, "bad", file.Update)
+	assert.Contains(t, se.String(), "readAsset: open bad: no such file or directory")
+	m.AssertExpectations(t)
+
+	ctx, m, _, _, se = createTestCtx()
+	ctx.Env.Directory = "_testdata/projectdir"
+	m.On("UpdateAsset", shopify.Asset{Key: key}).Return(fmt.Errorf("shopify says no update"))
+	perform(ctx, key, file.Update)
+	assert.Contains(t, se.String(), "shopify says no update")
+	m.AssertExpectations(t)
+
+	ctx, m, _, so, _ := createTestCtx()
+	ctx.Env.Directory = "_testdata/projectdir"
+	m.On("UpdateAsset", shopify.Asset{Key: key}).Return(nil)
+	perform(ctx, key, file.Update)
+	assert.NotContains(t, so.String(), "Updated")
+	m.AssertExpectations(t)
+
+	ctx, m, _, so, _ = createTestCtx()
+	ctx.Env.Directory = "_testdata/projectdir"
+	ctx.Flags.Verbose = true
+	m.On("UpdateAsset", shopify.Asset{Key: key}).Return(nil)
+	perform(ctx, key, file.Update)
+	assert.Contains(t, so.String(), "Updated")
+	m.AssertExpectations(t)
+
+	ctx, m, _, so, se = createTestCtx()
+	m.On("DeleteAsset", mock.MatchedBy(func(a shopify.Asset) bool { return a.Key == "good" })).Return(nil)
+	m.On("DeleteAsset", mock.MatchedBy(func(a shopify.Asset) bool { return a.Key == "bad" })).Return(fmt.Errorf("shopify says no update"))
+
+	perform(ctx, "bad", file.Remove)
+	assert.Contains(t, se.String(), "shopify says no update")
+
+	perform(ctx, "good", file.Remove)
+	assert.NotContains(t, so.String(), "Deleted")
+
+	ctx.Flags.Verbose = true
+	perform(ctx, "good", file.Remove)
+	assert.Contains(t, so.String(), "Deleted")
+
+	m.AssertExpectations(t)
 }

@@ -226,6 +226,35 @@ func TestThemeClient_GetAllAssets(t *testing.T) {
 
 		m.AssertExpectations(t)
 	}
+
+	filtertestcases := []struct {
+		input            string
+		ignore, expected []string
+	}{
+		{
+			input:    `{"assets":[{"key":"templates/foo.json.liquid"},{"key":"templates/foo.json"}]}`,
+			expected: []string{"templates/foo.json.liquid"},
+		},
+		{
+			input:    `{"assets":[{"key":"templates/foo.json"},{"key":"templates/foo.json.liquid"}]}`,
+			expected: []string{"templates/foo.json.liquid"},
+		},
+		{
+			input:    `{"assets":[{"key":"templates/ignore.html.liquid"},{"key":"templates/other.liquid"}]}`,
+			expected: []string{"templates/other.liquid"},
+			ignore:   []string{"templates/ignore.html.liquid"},
+		},
+	}
+
+	for _, testcase := range filtertestcases {
+		m := new(mocks.HttpAdapter)
+		client, _ := NewClient(&env.Env{ThemeID: "123", IgnoredFiles: testcase.ignore})
+		client.http = m
+		m.On("Get", "/admin/themes/123/assets.json?fields=key").Return(jsonResponse(testcase.input, 200), nil)
+		assets, err := client.GetAllAssets()
+		assert.Nil(t, err)
+		assert.Equal(t, testcase.expected, assets)
+	}
 }
 
 func TestThemeClient_GetAsset(t *testing.T) {

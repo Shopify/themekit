@@ -36,57 +36,40 @@ func replace(ctx cmdutil.Ctx) error {
 
 	var replaceGroup sync.WaitGroup
 	ctx.StartProgress(len(assetsActions))
-	for _, action := range assetsActions {
-		if action.asset.Key == settingsDataKey {
-			action := action
-			defer action.do(ctx)
+	for path, op := range assetsActions {
+		if path == settingsDataKey {
+			defer perform(ctx, path, op)
 			continue
 		}
 		replaceGroup.Add(1)
-		go func(action replaceAction) {
+		go func(path string, op file.Op) {
 			defer replaceGroup.Done()
-			action.do(ctx)
-		}(action)
+			perform(ctx, path, op)
+		}(path, op)
 	}
 
 	replaceGroup.Wait()
 	return nil
 }
 
-func generateActions(ctx cmdutil.Ctx) (map[string]replaceAction, error) {
-	assetsActions := map[string]replaceAction{}
+func generateActions(ctx cmdutil.Ctx) (map[string]file.Op, error) {
+	assetsActions := map[string]file.Op{}
 
 	remoteFiles, err := ctx.Client.GetAllAssets()
 	if err != nil {
 		return assetsActions, err
 	}
 	for _, filename := range remoteFiles {
-		assetsActions[filename] = replaceAction{
-			asset: shopify.Asset{Key: filename},
-			op:    file.Remove,
-		}
+		assetsActions[filename] = file.Remove
 	}
 
-	localAssets, err := shopify.ReadAssets(ctx.Env)
+	localAssets, err := shopify.FindAssets(ctx.Env)
 	if err != nil {
 		return assetsActions, err
 	}
 
-	for _, asset := range localAssets {
-		assetsActions[asset.Key] = replaceAction{asset: asset, op: file.Update}
+	for _, path := range localAssets {
+		assetsActions[path] = file.Update
 	}
 	return assetsActions, nil
-}
-
-type replaceAction struct {
-	asset shopify.Asset
-	op    file.Op
-}
-
-func (action *replaceAction) do(ctx cmdutil.Ctx) {
-	if action.op == file.Remove {
-		cmdutil.DeleteAsset(ctx, action.asset)
-	} else {
-		cmdutil.UploadAsset(ctx, action.asset)
-	}
 }

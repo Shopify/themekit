@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/vbauerster/mpb"
 
 	"github.com/Shopify/themekit/src/cmdutil/_mocks"
@@ -42,11 +41,11 @@ func TestCreateCtx(t *testing.T) {
 		assert.Contains(t, err.Error(), "[API] Invalid API key or access token (unrecognized login or wrong password)")
 	}
 
-	e = &env.Env{}
+	e = &env.Env{Proxy: "http://localhost:3000"}
 	client = new(mocks.ShopifyClient)
 	client.On("GetShop").Return(shopify.Shop{}, nil)
 	client.On("Themes").Return([]shopify.Theme{{ID: 65443, Role: "unpublished"}, {ID: 1234, Role: "main"}}, nil)
-	_, err = createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil)
+	_, err = createCtx(factory, env.Conf{}, e, Flags{DisableIgnore: true}, []string{}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, e.ThemeID, "1234")
 }
@@ -291,48 +290,6 @@ func TestForDefaultClient(t *testing.T) {
 	client.On("Themes").Return([]shopify.Theme{}, nil)
 	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, errHandler)
 	assert.EqualError(t, err, gandalfErr.Error())
-}
-
-func TestUploadAsset(t *testing.T) {
-	ctx, m, so, se := createTestCtx()
-
-	m.On("UpdateAsset", mock.MatchedBy(func(a shopify.Asset) bool { return a.Key == "good" })).Return(nil)
-	m.On("UpdateAsset", mock.MatchedBy(func(a shopify.Asset) bool { return a.Key == "bad" })).Return(fmt.Errorf("shopify says no update"))
-	ctx.StartProgress(1)
-
-	UploadAsset(ctx, shopify.Asset{Key: "bad"})
-	assert.Equal(t, ctx.Bar.Current(), int64(1))
-	assert.Contains(t, se.String(), "shopify says no update")
-
-	UploadAsset(ctx, shopify.Asset{Key: "good"})
-	assert.NotContains(t, so.String(), "Updated")
-
-	ctx.Flags.Verbose = true
-	UploadAsset(ctx, shopify.Asset{Key: "good"})
-	assert.Contains(t, so.String(), "Updated")
-
-	m.AssertExpectations(t)
-}
-
-func TestDeleteAsset(t *testing.T) {
-	ctx, m, so, se := createTestCtx()
-
-	m.On("DeleteAsset", mock.MatchedBy(func(a shopify.Asset) bool { return a.Key == "good" })).Return(nil)
-	m.On("DeleteAsset", mock.MatchedBy(func(a shopify.Asset) bool { return a.Key == "bad" })).Return(fmt.Errorf("shopify says no update"))
-	ctx.StartProgress(1)
-
-	DeleteAsset(ctx, shopify.Asset{Key: "bad"})
-	assert.Equal(t, ctx.Bar.Current(), int64(1))
-	assert.Contains(t, se.String(), "shopify says no update")
-
-	DeleteAsset(ctx, shopify.Asset{Key: "good"})
-	assert.NotContains(t, so.String(), "Deleted")
-
-	ctx.Flags.Verbose = true
-	DeleteAsset(ctx, shopify.Asset{Key: "good"})
-	assert.Contains(t, so.String(), "Deleted")
-
-	m.AssertExpectations(t)
 }
 
 func createTestCtx() (ctx Ctx, m *mocks.ShopifyClient, stdOut, stdErr *bytes.Buffer) {
