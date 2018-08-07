@@ -33,26 +33,7 @@ command by running:
 
 ## Bootstrap
 
-If you are starting a new theme and want to have some sane defaults, you can use
-the bootstrap command. It will create a new theme based on Timber, update your
-configuration file for that theme and download it to your computer. You will
-need to provide your API password and your store domain to the command. You can
-run the command like the following:
-
-```bash
-theme bootstrap --password=[your-api-password] --store=[your-store.myshopify.com]
-```
-
-**To get your credentials setup please refer to [the setup docs]({{ '/#get-api-access' | prepend: site.baseurl }})**
-
-|**Required Flags**||
-|`-p`|`--password`| Password for access to your Shopify account.
-|`-s`|`--store   `| Your store's domain for changes to take effect
-|**Optional Flags**||
-|    |`--name   ` | a name to define your theme on your shopify admin
-|    |`--prefix ` | prefix to the Timber theme being created
-|    |`--url    ` | a url to pull a project theme zip file from.
-|    |`--version` | version of Shopify Timber to use (default "latest")
+Bootstrap has been renamed to <a class="docs-nav__link" href="{{ '/commands/#new' | prepend: site.baseurl }}">New</a>
 
 ## Configure
 
@@ -90,6 +71,56 @@ theme download templates/404.liquid templates/article.liquid
 
 |**Optional Flags**||
 |`-f`|`--force`| disable version checking and force all changes
+
+## Get
+
+Use this command to get existing theme files from shopify. If you run the following
+command:
+
+```bash
+theme get --password=[your-api-password] --store=[your-store.myshopify.com] --themeid=[your-theme-id]
+```
+
+This will create a `config.yml` file in the current directory and download the theme from
+shopify in the current directory. If you want to find theme ids, you can run
+
+```bash
+theme get --list -p=[your-password] -s=[you-store.myshopify.com]
+```
+
+and it will output all the available themes for download.
+
+|**Required Flags**||
+|`-e`|`--env     `| Environment for the theme in your config. Defaults to `development`
+|`-p`|`--password`| Password for access to your Shopify account.
+|`-s`|`--store   `| Your store's domain for changes to take effect
+|`-t`|`--themeid `| The ID of the theme that you want changes to take effect. If blank, get will fetch your live theme.
+|**Optional Flags**||
+|    |`--list   ` | will make the get command output all the available themes
+
+## New
+
+If you are starting a new theme and want to have some sane defaults, you can use
+the new command. It will create a new theme based on Timber, update your
+configuration file for that theme and download it to your computer. You will
+need to provide your API password and your store domain to the command. You can
+run the command like the following:
+
+```bash
+theme bootstrap --password=[your-api-password] --store=[your-store.myshopify.com]
+```
+
+**To get your credentials setup please refer to [the setup docs]({{ '/#get-api-access' | prepend: site.baseurl }})**
+
+|**Required Flags**||
+|`-e`|`--env     `| Environment for the new theme. Defaults to `development`
+|`-p`|`--password`| Password for access to your Shopify account.
+|`-s`|`--store   `| Your store's domain for changes to take effect
+|**Optional Flags**||
+|    |`--name   ` | a name to define your theme on your shopify admin
+|    |`--prefix ` | prefix to the Timber theme being created
+|    |`--url    ` | a url to pull a project theme zip file from.
+|    |`--version` | version of Shopify Timber to use (default "latest")
 
 ## Open
 Open will open the preview page for your theme in your browser as well as print
