@@ -11,7 +11,7 @@ import (
 	"github.com/Shopify/themekit/src/shopify"
 )
 
-func TestBootstrap(t *testing.T) {
+func TestNewTheme(t *testing.T) {
 	name, url := "name", "https://download.com/1.2.4.zip"
 
 	ctx, client, conf, _, _ := createTestCtx()
@@ -20,12 +20,12 @@ func TestBootstrap(t *testing.T) {
 	client.On("GetAllAssets").Return([]string{}, nil)
 	conf.On("Set", "development", env.Env{}).Return(nil, nil)
 	conf.On("Save").Return(nil)
-	err := bootstrap(ctx, name, url)
+	err := newTheme(ctx, name, url)
 	assert.Nil(t, err)
 
 	ctx, client, _, _, _ = createTestCtx()
 	client.On("CreateNewTheme", name, url).Return(shopify.Theme{}, fmt.Errorf("can't create theme"))
-	err = bootstrap(ctx, name, url)
+	err = newTheme(ctx, name, url)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "can't create theme")
 	}
@@ -33,7 +33,7 @@ func TestBootstrap(t *testing.T) {
 	ctx, client, conf, _, _ = createTestCtx()
 	client.On("CreateNewTheme", name, url).Return(shopify.Theme{}, nil)
 	conf.On("Set", "development", env.Env{}).Return(nil, fmt.Errorf("cant set config"))
-	err = bootstrap(ctx, name, url)
+	err = newTheme(ctx, name, url)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "cant set config")
 	}
@@ -44,7 +44,7 @@ func TestBootstrap(t *testing.T) {
 	client.On("GetAllAssets").Return([]string{}, nil)
 	conf.On("Set", "development", env.Env{}).Return(nil, nil)
 	conf.On("Save").Return(nil)
-	err = bootstrap(ctx, name, url)
+	err = newTheme(ctx, name, url)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "oh no")
 	}

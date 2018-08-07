@@ -44,6 +44,7 @@ type Flags struct {
 	Name                  string
 	Edit                  bool
 	With                  string
+	List                  bool
 }
 
 // Ctx is a specific context that a command will run in
@@ -91,13 +92,13 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 		return Ctx{}, err
 	}
 
-	if e.ThemeID == "" {
-		colors.ColorStdOut.Printf("[%s] Warning, this is your live theme.", colors.Yellow(e.Name))
-		for _, theme := range themes {
-			if theme.Role == "main" {
+	for _, theme := range themes {
+		if theme.Role == "main" {
+			if fmt.Sprintf("%v", theme.ID) == e.ThemeID || e.ThemeID == "" {
 				e.ThemeID = fmt.Sprintf("%v", theme.ID) // record the theme id for the live id
-				break
+				colors.ColorStdOut.Printf("[%s] Warning, this is your live theme.", colors.Yellow(e.Name))
 			}
+			break
 		}
 	}
 
@@ -268,9 +269,15 @@ func forDefaultClient(newClient clientFact, flags Flags, args []string, handler 
 		return err
 	}
 
+	envName := env.Default.Name
+	flagEnvs := flags.Environments.Value()
+	if len(flagEnvs) > 0 {
+		envName = flagEnvs[0]
+	}
+
 	var e *env.Env
-	if e, err = config.Get(env.Default.Name, getFlagEnv(flags)); err != nil {
-		e, err = config.Set(env.Default.Name, getFlagEnv(flags))
+	if e, err = config.Get(envName, getFlagEnv(flags)); err != nil {
+		e, err = config.Set(envName, getFlagEnv(flags))
 		if err != nil {
 			return err
 		}

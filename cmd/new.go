@@ -14,12 +14,23 @@ import (
 
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",
-	Short: "Bootstrap a new theme using Shopify Timber",
-	Long: `Bootstrap will download the latest release of Timber,
-  The most popular theme on Shopify. Bootstrap will also setup
+	Short: "[DEPRECATED] please use `new` instead",
+	Long: `[DEPRECATED] Bootstrap has been deprecated and renames to new. New will
+	work with all the same arguments as bootstrap.
+  `,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return fmt.Errorf("bootstrap has been deprecated please use `new` instead")
+	},
+}
+
+var newCmd = &cobra.Command{
+	Use:   "new",
+	Short: "New will create theme using Shopify Timber",
+	Long: `New will download the latest release of Timber,
+  The most popular theme on Shopify. New will also setup
   your config file and create a new theme id for you.
 
-  For more documentation please see http://shopify.github.io/themekit/commands/#bootstrap
+  For more documentation please see http://shopify.github.io/themekit/commands/#new
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForDefaultClient(flags, args, func(ctx cmdutil.Ctx) error {
@@ -27,12 +38,12 @@ var bootstrapCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			return bootstrap(ctx, name, url)
+			return newTheme(ctx, name, url)
 		})
 	},
 }
 
-func bootstrap(ctx cmdutil.Ctx, name, url string) error {
+func newTheme(ctx cmdutil.Ctx, name, url string) error {
 	ctx.Log.Printf("[%s] creating new theme \"%s\" from %s", colors.Yellow(ctx.Env.Domain), colors.Yellow(name), colors.Yellow(url))
 
 	theme, err := ctx.Client.CreateNewTheme(name, url)
