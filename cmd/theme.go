@@ -12,10 +12,14 @@ import (
 	"github.com/Shopify/themekit/src/release"
 )
 
-const afterUpdateMessage = `
- Successfully updated to theme kit version %v, for more information on this release please see the change log https://github.com/Shopify/themekit/blob/master/changelog.txt
- If you have troubles with this release please report them to https://github.com/Shopify/themekit/issues
- If your troubles are preventing you from working you can roll back to the previous version using the command 'theme update --version=v%s'
+const afterUpdateMessage = `Successfully updated to theme kit version %v, for more information on this release please see the change log
+	https://github.com/Shopify/themekit/blob/master/changelog.txt
+
+If you have troubles with this release please report them to
+	https://github.com/Shopify/themekit/issues
+
+If your troubles are preventing you from working you can roll back to the previous version using the command
+	'theme update --version=v%s'
  `
 
 var (
@@ -89,6 +93,7 @@ func init() {
 	replaceCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	uploadCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	openCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
+	downloadCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	newCmd.Flags().StringVar(&flags.Version, "version", "latest", "version of Shopify Timber to use")
 	updateCmd.Flags().StringVar(&flags.Version, "version", "latest", "version of themekit to install")
 	newCmd.Flags().StringVar(&flags.Prefix, "prefix", "", "prefix to the Timber theme being created")

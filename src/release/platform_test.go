@@ -22,8 +22,6 @@ func TestBuildPlatform(t *testing.T) {
 
 	for _, testcase := range testcases {
 		u := new(mocks.Uploader)
-		platforms := make(chan platform, 1)
-
 		if testcase.uploads {
 			expectation := u.On("File", "v0.1.1/platform/theme", mock.MatchedBy(func(r *os.File) bool { return true }))
 			if testcase.uerr != "" {
@@ -33,15 +31,14 @@ func TestBuildPlatform(t *testing.T) {
 			}
 		}
 
-		err := buildPlatform("v0.1.1", "platform", filepath.Join("_testdata", "dist"), testcase.bin, u, platforms)
+		plat, err := buildPlatform("v0.1.1", "platform", filepath.Join("_testdata", "dist"), testcase.bin, u)
 		if testcase.err == "" {
 			assert.Nil(t, err)
-			p := <-platforms
 			assert.Equal(t, platform{
 				Name:   "platform",
 				URL:    "http://amazon.com/v0.1.1/platform/theme",
 				Digest: "641b84fb6d971219b19aaea227a77235",
-			}, p)
+			}, plat)
 		} else if assert.NotNil(t, err) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}

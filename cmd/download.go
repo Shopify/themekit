@@ -21,7 +21,7 @@ var downloadCmd = &cobra.Command{
  For more documentation please see http://shopify.github.io/themekit/commands/#download
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cmdutil.ForSingleClient(flags, args, download)
+		return cmdutil.ForEachClient(flags, args, download)
 	},
 }
 

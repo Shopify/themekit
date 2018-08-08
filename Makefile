@@ -11,7 +11,7 @@ test: lint vet unit_test # lint, vet and test the code
 all: clean windows mac linux # will build a binary for all platforms
 release: # will run release on the built binaries uploading them to S3
 	@go install github.com/Shopify/themekit/cmd/tkrelease && tkrelease $(shell git tag --points-at HEAD)
-dist: check all ## Build binaries for all platforms and upload to S3
+dist: test all ## Build binaries for all platforms and upload to S3
 	@$(MAKE) release && $(MAKE) gen_sha
 clean: # Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";

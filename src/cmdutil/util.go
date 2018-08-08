@@ -85,6 +85,8 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 			colors.Yellow(e.Domain),
 		)
 		return Ctx{}, fmt.Errorf("%s is an invalid domain", e.Domain)
+	} else if err != nil {
+		return Ctx{}, err
 	}
 
 	themes, err := client.Themes() // this will make sure our token is correct
@@ -96,7 +98,11 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 		if theme.Role == "main" {
 			if fmt.Sprintf("%v", theme.ID) == e.ThemeID || e.ThemeID == "" {
 				e.ThemeID = fmt.Sprintf("%v", theme.ID) // record the theme id for the live id
-				colors.ColorStdOut.Printf("[%s] Warning, this is your live theme.", colors.Yellow(e.Name))
+				colors.ColorStdOut.Printf(
+					"[%s] Warning, this is the live theme on %s.",
+					colors.Yellow(e.Name),
+					colors.Yellow(shop.Name),
+				)
 			}
 			break
 		}
@@ -223,9 +229,13 @@ func forEachClient(newClient clientFact, flags Flags, args []string, handler fun
 	}
 	var handlerGroup errgroup.Group
 	for _, ctx := range ctxs {
+		ctx := ctx
 		handlerGroup.Go(func() error { return handler(ctx) })
 	}
 	err = handlerGroup.Wait()
+	if err == nil {
+		progressBarGroup.Wait()
+	}
 	if err == ErrReload {
 		return forEachClient(newClient, flags, args, handler)
 	}
@@ -248,6 +258,9 @@ func forSingleClient(newClient clientFact, flags Flags, args []string, handler f
 		return fmt.Errorf("more than one environment specified for a single environment command")
 	}
 	err = handler(ctxs[0])
+	if err == nil {
+		progressBarGroup.Wait()
+	}
 	if err == ErrReload {
 		return forSingleClient(newClient, flags, args, handler)
 	}
@@ -288,7 +301,11 @@ func forDefaultClient(newClient clientFact, flags Flags, args []string, handler 
 		return err
 	}
 
-	return handler(ctx)
+	err = handler(ctx)
+	if err == nil {
+		progressBarGroup.Wait()
+	}
+	return err
 }
 
 func shopifyThemeClientFactory(e *env.Env) (shopifyClient, error) {

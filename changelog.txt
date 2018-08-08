@@ -4,6 +4,10 @@ Minor number change because the asset manifest was removed.
 - Remove assets manifest
 - Minimized memory footprint for upload and replace
 - handling upload/replace wildcards more gracefully
+- better errors for connection issues
+- better errors for auth issues
+- better errors for timeouts
+- warning while working on live themes
 
 v0.7.5  (Nov 3, 2017)
 =====================

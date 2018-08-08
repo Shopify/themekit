@@ -11,13 +11,17 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/Shopify/themekit/src/ratelimiter"
 	"github.com/Shopify/themekit/src/release"
 )
 
-var errClientTimeout = errors.New(`request timed out. if you are receive this error consistently, try increasing the timeout in your config`)
+var (
+	errClientTimeout   = errors.New(`request timed out. if you are receive this error consistently, try increasing the timeout in your config`)
+	errConnectionIssue = errors.New("DNS problem while connecting to Shopify, this indicates a problem with your internet connection")
+)
 
 // Params allows for a better structured input into NewClient
 type Params struct {
@@ -107,6 +111,8 @@ func (client *HTTPClient) do(method, path string, body interface{}) (*http.Respo
 	resp, err := client.client.Do(req)
 	if err, ok := err.(net.Error); ok && err.Timeout() {
 		return nil, errClientTimeout
+	} else if err != nil && strings.Contains(err.Error(), "no such host") {
+		return nil, errConnectionIssue
 	}
 	return resp, err
 }

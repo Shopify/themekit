@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -238,27 +237,14 @@ func fetchLatest(url string) (release, error) {
 
 func buildRelease(ver, distDir string, u uploader) (release, error) {
 	colors.ColorStdOut.Printf("Building %s", colors.Green(ver))
-
-	var g errgroup.Group
-
 	newRelease := release{Version: ver, Platforms: []platform{}}
-	platformChan := make(chan platform, len(builds))
 
 	for platformName, binName := range builds {
-		platformName := platformName
-		binName := binName
-		g.Go(func() error {
-			return buildPlatform(ver, platformName, distDir, binName, u, platformChan)
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		return newRelease, err
-	}
-
-	for i := 0; i < len(builds); i++ {
-		p := <-platformChan
-		newRelease.Platforms = append(newRelease.Platforms, p)
+		plat, err := buildPlatform(ver, platformName, distDir, binName, u)
+		if err != nil {
+			return newRelease, err
+		}
+		newRelease.Platforms = append(newRelease.Platforms, plat)
 	}
 
 	return newRelease, nil
