@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -19,8 +20,8 @@ func TestNewThemeClient(t *testing.T) {
 		err string
 	}{
 		{e: &env.Env{ThemeID: "test123"}},
-		{e: &env.Env{Directory: "_testdata/project", Proxy: "://foo.com"}, err: "invalid proxy URI"},
-		{e: &env.Env{Ignores: []string{"nope"}}, err: "no such file or directory"},
+		{e: &env.Env{Directory: filepath.Join("_testdata", "project"), Proxy: "://foo.com"}, err: "invalid proxy URI"},
+		{e: &env.Env{Ignores: []string{"nope"}}, err: " "},
 	}
 
 	for _, testcase := range testcases {

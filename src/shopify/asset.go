@@ -144,14 +144,14 @@ func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (a
 }
 
 func readAsset(root, filename string) (asset Asset, err error) {
-	path := filepath.ToSlash(filepath.Join(root, filename))
+	path := filepath.Join(root, filename)
 
 	key, err := filepath.Rel(root, path)
 	if err != nil {
 		return Asset{}, err
 	}
 
-	asset = Asset{Key: key}
+	asset = Asset{Key: filepath.ToSlash(key)}
 	file, err := os.Open(path)
 	if err != nil {
 		return Asset{}, fmt.Errorf("readAsset: %s", err)

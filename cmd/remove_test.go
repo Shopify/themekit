@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"log"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,8 +19,8 @@ func TestRemove(t *testing.T) {
 		args, err string
 		readonly  bool
 	}{
-		{args: "templates/layout.liquid"},
-		{args: "templates/layout.liquid", readonly: true, err: "environment is readonly"},
+		{args: filepath.Join("templates", "layout.liquid")},
+		{args: filepath.Join("templates", "layout.liquid"), readonly: true, err: "environment is readonly"},
 		{err: "please specify file(s) to be removed"},
 	}
 

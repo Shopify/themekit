@@ -90,6 +90,7 @@ func filesToPatterns(files []string) ([]string, error) {
 		}
 
 		for _, line := range strings.Split(string(data), "\n") {
+			line = strings.TrimSuffix(line, "\r") // remove windows carraige return
 			if len(line) > 0 && !strings.HasPrefix(line, "#") {
 				patterns = append(patterns, line)
 			}

@@ -64,11 +64,16 @@ func filesToDownload(ctx cmdutil.Ctx) ([]string, error) {
 	fetchableFilenames := []string{}
 	for _, filename := range allFilenames {
 		for _, pattern := range ctx.Args {
+			// These need to be converted to platform specific because filepath.Match
+			// uses platform specific separators
+			pattern = filepath.FromSlash(pattern)
+			filename = filepath.FromSlash(filename)
+
 			globMatched, _ := filepath.Match(pattern, filename)
-			dirMatched, _ := filepath.Match(pattern+"/*", filename)
+			dirMatched, _ := filepath.Match(pattern+string(filepath.Separator)+"*", filename)
 			fileMatched := filename == pattern
 			if globMatched || dirMatched || fileMatched {
-				fetchableFilenames = append(fetchableFilenames, filename)
+				fetchableFilenames = append(fetchableFilenames, filepath.ToSlash(filename))
 			}
 		}
 	}

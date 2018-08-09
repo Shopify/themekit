@@ -13,11 +13,11 @@ import (
 
 func TestBuildPlatform(t *testing.T) {
 	testcases := []struct {
-		bin, err, uerr string
-		uploads        bool
+		bin, uerr    string
+		err, uploads bool
 	}{
 		{bin: "theme", uploads: true},
-		{bin: "other", uploads: false, err: "no such file or directory"},
+		{bin: "other", uploads: false, err: true},
 	}
 
 	for _, testcase := range testcases {
@@ -32,15 +32,13 @@ func TestBuildPlatform(t *testing.T) {
 		}
 
 		plat, err := buildPlatform("v0.1.1", "platform", filepath.Join("_testdata", "dist"), testcase.bin, u)
-		if testcase.err == "" {
+		if !testcase.err {
 			assert.Nil(t, err)
-			assert.Equal(t, platform{
-				Name:   "platform",
-				URL:    "http://amazon.com/v0.1.1/platform/theme",
-				Digest: "641b84fb6d971219b19aaea227a77235",
-			}, plat)
-		} else if assert.NotNil(t, err) {
-			assert.Contains(t, err.Error(), testcase.err)
+			assert.Equal(t, "platform", plat.Name)
+			assert.Equal(t, "http://amazon.com/v0.1.1/platform/theme", plat.URL)
+			assert.NotEqual(t, "", plat.Digest)
+		} else {
+			assert.NotNil(t, err)
 		}
 
 		if testcase.uploads {

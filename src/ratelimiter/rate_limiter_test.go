@@ -22,7 +22,7 @@ func TestRateLimiterHalts(t *testing.T) {
 }
 
 func TestRateLimiterCanGoAfterTimeout(t *testing.T) {
-	received, timeout := checkTime(time.Nanosecond)
+	received, timeout := checkTime(time.Millisecond)
 	assert.Equal(t, false, timeout)
 	assert.Equal(t, true, received)
 }
@@ -39,7 +39,7 @@ func checkTime(dur time.Duration) (received, timeout bool) {
 	select {
 	case <-limiter.nextChan:
 		received = true
-	case <-time.Tick(time.Millisecond):
+	case <-time.Tick(3 * time.Millisecond):
 		timeout = true
 	}
 	return

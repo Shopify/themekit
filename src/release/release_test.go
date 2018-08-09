@@ -144,7 +144,7 @@ func TestApplyUpdate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, updateFile, buf)
 
-	assert.NotNil(t, applyUpdate(p, filepath.Join("_testdata/no/updateme")))
+	assert.NotNil(t, applyUpdate(p, filepath.Join("_testdata", "no", "updateme")))
 	assert.NotNil(t, applyUpdate(platform{}, installto))
 	assert.NotNil(t, applyUpdate(platform{Digest: "abcde"}, installto))
 
@@ -159,10 +159,10 @@ func TestUpdate(t *testing.T) {
 		force, req    bool
 	}{
 		{ver: "12.34.56", err: "deploy version does not match themekit version"},
-		{ver: ThemeKitVersion.String(), dir: "_testdata/nope", err: "Dist folder does not exist"},
-		{ver: ThemeKitVersion.String(), dir: "_testdata/dist", req: true, err: "version has already been deployed"},
-		{ver: ThemeKitVersion.String(), dir: "_testdata/otherdist", err: "no such file"},
-		{ver: ThemeKitVersion.String(), dir: "_testdata/dist"},
+		{ver: ThemeKitVersion.String(), dir: filepath.Join("_testdata", "nope"), err: "Dist folder does not exist"},
+		{ver: ThemeKitVersion.String(), dir: filepath.Join("_testdata", "dist"), req: true, err: "version has already been deployed"},
+		{ver: ThemeKitVersion.String(), dir: filepath.Join("_testdata", "otherdist"), err: " "},
+		{ver: ThemeKitVersion.String(), dir: filepath.Join("_testdata", "dist")},
 	}
 
 	for _, testcase := range testcases {
@@ -245,10 +245,8 @@ func TestFetchLatest(t *testing.T) {
 
 func TestBuildRelease(t *testing.T) {
 	u := new(mocks.Uploader)
-	_, err := buildRelease("0.4.7", "_testdata/otherdist", u)
-	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "no such file")
-	}
+	_, err := buildRelease("0.4.7", filepath.Join("_testdata", "otherdist"), u)
+	assert.NotNil(t, err)
 
 	u.On(
 		"File",
@@ -256,7 +254,7 @@ func TestBuildRelease(t *testing.T) {
 		mock.MatchedBy(func(*os.File) bool { return true }),
 	).Return("http://amazon/themekit", nil)
 
-	r, err := buildRelease("0.4.7", "_testdata/dist", u)
+	r, err := buildRelease("0.4.7", filepath.Join("_testdata", "dist"), u)
 	u.AssertExpectations(t)
 	assert.Equal(t, r.Version, "0.4.7")
 
@@ -279,6 +277,6 @@ func TestBuildRelease(t *testing.T) {
 		mock.MatchedBy(func(*os.File) bool { return true }),
 	).Return("", errors.New("didnt work"))
 
-	_, err = buildRelease("0.4.7", "_testdata/dist", u)
+	_, err = buildRelease("0.4.7", filepath.Join("_testdata", "dist"), u)
 	assert.NotNil(t, err)
 }

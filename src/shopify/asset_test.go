@@ -24,9 +24,9 @@ func TestFindAssets(t *testing.T) {
 	}{
 		{e: goodEnv, inputs: []string{filepath.Join("assets", "application.js")}, count: 1},
 		{e: goodEnv, count: 7},
-		{e: badEnv, count: 7, err: "no such file or directory"},
+		{e: badEnv, count: 7, err: " "},
 		{e: goodEnv, inputs: []string{"assets", "config/settings_data.json"}, count: 3},
-		{e: goodEnv, inputs: []string{"snippets/nope.txt"}, err: "no such file or directory"},
+		{e: goodEnv, inputs: []string{"snippets/nope.txt"}, err: "readAsset: "},
 	}
 
 	for _, testcase := range testcases {
@@ -48,7 +48,7 @@ func TestAsset_Write(t *testing.T) {
 		filename, outdir, err string
 	}{
 		{outdir: testDir, filename: "blah.txt"},
-		{outdir: "nothere", filename: "blah.txt", err: "file or directory"},
+		{outdir: "nothere", filename: "blah.txt", err: " "},
 		{outdir: testDir, filename: filepath.Join("assets", "test.txt")},
 	}
 
@@ -102,7 +102,7 @@ func TestLoadAssetsFromDirectory(t *testing.T) {
 		{path: "", ignore: ignoreNone, count: 7},
 		{path: "", ignore: selectOne, count: 1},
 		{path: "assets", ignore: ignoreNone, count: 2},
-		{path: "nope", ignore: ignoreNone, count: 0, err: "no such file or directory"},
+		{path: "nope", ignore: ignoreNone, count: 0, err: " "},
 	}
 
 	for _, testcase := range testcases {
@@ -124,18 +124,19 @@ func TestReadAsset(t *testing.T) {
 		expected Asset
 		err      string
 	}{
-		{input: filepath.Join("assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content\n"}},
-		{input: filepath.Join(".", "assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content\n"}},
-		{input: "nope.txt", expected: Asset{}, err: "no such file"},
+		{input: filepath.Join("assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content"}},
+		{input: filepath.Join(".", "assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content"}},
+		{input: "nope.txt", expected: Asset{}, err: " "},
 		{input: "assets", expected: Asset{}, err: ErrAssetIsDir.Error()},
 		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII="}},
 	}
 
 	for _, testcase := range testcases {
 		actual, err := ReadAsset(e, testcase.input)
-		assert.Equal(t, testcase.expected, actual)
 		if testcase.err == "" {
 			assert.Nil(t, err)
+			assert.Equal(t, testcase.expected.Key, actual.Key)
+			assert.Contains(t, actual.Value, testcase.expected.Value) // contains because of line endings
 		} else if assert.NotNil(t, err) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}

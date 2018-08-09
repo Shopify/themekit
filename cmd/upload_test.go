@@ -14,9 +14,7 @@ func TestUpload(t *testing.T) {
 	ctx.Args = []string{"templates/layout.liquid"}
 	client.On("UpdateAsset", shopify.Asset{Key: "templates/layout.liquid"}).Return(nil)
 	err := upload(ctx)
-	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "no such file or directory")
-	}
+	assert.NotNil(t, err)
 
 	ctx, client, _, _, _ = createTestCtx()
 	ctx.Args = []string{"templates/layout.liquid"}
@@ -42,5 +40,5 @@ func TestUpload(t *testing.T) {
 	client.On("UpdateAsset", mock.MatchedBy(func(a shopify.Asset) bool { return true })).Return(nil)
 	err = upload(ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, stdOut.String(), "[] Updated assets/app.js\n[] Updated config/settings_data.json\n")
+	assert.Contains(t, stdOut.String(), "Updated config/settings_data.json")
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +15,7 @@ import (
 func TestReplace(t *testing.T) {
 	ctx, client, _, stdOut, _ := createTestCtx()
 	ctx.Flags.Verbose = true
-	ctx.Env.Directory = "_testdata/projectdir"
+	ctx.Env.Directory = filepath.Join("_testdata", "projectdir")
 	client.On("GetAllAssets").Return([]string{"assets/logo.png"}, nil)
 	client.On("UpdateAsset", mock.MatchedBy(func(shopify.Asset) bool { return true })).Return(nil).Times(2)
 	client.On("DeleteAsset", mock.MatchedBy(func(shopify.Asset) bool { return true })).Return(nil).Once()
@@ -33,7 +34,7 @@ func TestReplace(t *testing.T) {
 
 func TestGenerateActions(t *testing.T) {
 	ctx, client, _, _, _ := createTestCtx()
-	ctx.Env.Directory = "_testdata/projectdir"
+	ctx.Env.Directory = filepath.Join("_testdata", "projectdir")
 	client.On("GetAllAssets").Return([]string{"assets/logo.png"}, nil)
 	actions, err := generateActions(ctx)
 	assert.Nil(t, err)
@@ -44,7 +45,7 @@ func TestGenerateActions(t *testing.T) {
 	assert.False(t, found)
 
 	ctx, client, _, _, _ = createTestCtx()
-	ctx.Env.Directory = "_testdata/projectdir"
+	ctx.Env.Directory = filepath.Join("_testdata", "projectdir")
 	client.On("GetAllAssets").Return([]string{}, fmt.Errorf("server error"))
 	_, err = generateActions(ctx)
 	if assert.NotNil(t, err) {
@@ -55,7 +56,5 @@ func TestGenerateActions(t *testing.T) {
 	ctx.Env.Directory = "not there"
 	client.On("GetAllAssets").Return([]string{}, nil)
 	_, err = generateActions(ctx)
-	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "no such file")
-	}
+	assert.NotNil(t, err)
 }

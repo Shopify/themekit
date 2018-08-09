@@ -43,7 +43,7 @@ func TestWatch(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
-	assert.Contains(t, stdErr.String(), "error loading assets/app.js: readAsset: open assets/app.js")
+	assert.Contains(t, stdErr.String(), "error loading assets/app.js: readAsset: ")
 
 	signalChan = make(chan os.Signal)
 	eventChan = make(chan file.Event)
@@ -83,7 +83,7 @@ func TestPerform(t *testing.T) {
 
 	ctx, m, _, _, se := createTestCtx()
 	perform(ctx, "bad", file.Update)
-	assert.Contains(t, se.String(), "readAsset: open bad: no such file or directory")
+	assert.Contains(t, se.String(), "readAsset: ")
 	m.AssertExpectations(t)
 
 	ctx, m, _, _, se = createTestCtx()

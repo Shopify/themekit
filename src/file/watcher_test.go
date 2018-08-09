@@ -2,7 +2,7 @@ package file
 
 import (
 	"os"
-	//"path/filepath"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -27,7 +27,7 @@ func TestNewFileWatcher(t *testing.T) {
 
 func TestFileWatcher_WatchDirectory(t *testing.T) {
 	e := env.Env{
-		Directory:    "_testdata/project",
+		Directory:    filepath.Join("_testdata", "project"),
 		IgnoredFiles: []string{"config"},
 	}
 
@@ -35,8 +35,8 @@ func TestFileWatcher_WatchDirectory(t *testing.T) {
 	watcher.Watch()
 	assert.NotNil(t, watcher.fsWatcher)
 	assert.NotNil(t, watcher.events)
-	assert.NotNil(t, watcher.fsWatcher.Remove("_testdata/project/config"))
-	assert.Nil(t, watcher.fsWatcher.Remove("_testdata/project/assets"))
+	assert.NotNil(t, watcher.fsWatcher.Remove(filepath.Join("_testdata", "project", "config")))
+	assert.Nil(t, watcher.fsWatcher.Remove(filepath.Join("_testdata", "project", "assets")))
 	watcher.Stop()
 }
 
@@ -87,7 +87,7 @@ func TestFileWatcher_StopWatching(t *testing.T) {
 }
 
 func TestFileWatcher_TouchNotifyFile(t *testing.T) {
-	notifyPath := "_testdata/notify_file"
+	notifyPath := filepath.Join("_testdata", "notify_file")
 	watcher, _ := NewWatcher(&env.Env{Notify: notifyPath}, "")
 
 	os.Remove(notifyPath)
@@ -95,6 +95,11 @@ func TestFileWatcher_TouchNotifyFile(t *testing.T) {
 	assert.True(t, os.IsNotExist(err))
 
 	watcher.onIdle()
+	_, err = os.Stat(notifyPath)
+	assert.Nil(t, err)
+	// need to make the time different larger than milliseconds because windows
+	// trucates the time and it will fail
+	os.Chtimes(watcher.notify, time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, -1))
 	info1, err := os.Stat(notifyPath)
 	assert.Nil(t, err)
 

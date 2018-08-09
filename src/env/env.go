@@ -68,12 +68,15 @@ func (env *Env) validate() error {
 		errors = append(errors, "missing password")
 	}
 
-	var symlinkErr error
-	env.Directory, symlinkErr = filepath.EvalSymlinks(filepath.Clean(env.Directory))
-	if symlinkErr != nil {
-		errors = append(errors, fmt.Sprintf("invalid project directory: %s", symlinkErr.Error()))
-	} else if fi, err := os.Lstat(env.Directory); err != nil || !fi.Mode().IsDir() {
+	if fi, err := os.Stat(filepath.Clean(env.Directory)); err != nil {
 		errors = append(errors, fmt.Sprintf("invalid project directory %v", err))
+	} else if fi.Mode()&os.ModeSymlink != 0 {
+		var symlinkErr error
+		if env.Directory, symlinkErr = filepath.EvalSymlinks(filepath.Clean(env.Directory)); symlinkErr != nil {
+			errors = append(errors, fmt.Sprintf("invalid project directory: %s", symlinkErr.Error()))
+		}
+	} else if !fi.Mode().IsDir() {
+		errors = append(errors, fmt.Sprintf("Directory config %v is not a directory", err))
 	}
 
 	if len(errors) > 0 {

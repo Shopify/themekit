@@ -48,9 +48,7 @@ func TestGetVersionPath(t *testing.T) {
 
 	ts.Close()
 	_, err := getVersionPath("latest", ts.URL+"/feed")
-	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "connection refused")
-	}
+	assert.NotNil(t, err)
 }
 
 func TestDownloadThemeReleaseAtomFeed(t *testing.T) {
@@ -61,9 +59,7 @@ func TestDownloadThemeReleaseAtomFeed(t *testing.T) {
 	ts.Close()
 	assert.Nil(t, err)
 	_, err = downloadThemeReleaseAtomFeed(ts.URL)
-	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "connection refused")
-	}
+	assert.NotNil(t, err)
 
 	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "this is not an atom feed")
