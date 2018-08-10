@@ -8,9 +8,9 @@ import (
 )
 
 func TestRateLimiterForDomain(t *testing.T) {
-	limiter1 := New("domain.com", 0)
-	limiter2 := New("domain.com", 0)
-	limiter3 := New("otherdomain.com", 0)
+	limiter1 := New("domain.com", time.Nanosecond)
+	limiter2 := New("domain.com", time.Nanosecond)
+	limiter3 := New("otherdomain.com", time.Nanosecond)
 	assert.Equal(t, limiter1, limiter2)
 	assert.NotEqual(t, limiter2, limiter3)
 }
@@ -36,10 +36,12 @@ func TestWait(t *testing.T) {
 func checkTime(dur time.Duration) (received, timeout bool) {
 	domainLimitMap = make(map[string]*Limiter)
 	limiter := New("domain.com", dur)
+	ticker := time.NewTicker(3 * time.Millisecond)
+	defer ticker.Stop()
 	select {
 	case <-limiter.nextChan:
 		received = true
-	case <-time.Tick(3 * time.Millisecond):
+	case <-ticker.C:
 		timeout = true
 	}
 	return

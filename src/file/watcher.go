@@ -93,6 +93,9 @@ func (w *Watcher) Watch() (chan Event, error) {
 func (w *Watcher) watchFsEvents(events chan fsnotify.Event, debounce debouncer) {
 	fileEvents := make(map[string]chan fsnotify.Event)
 	complete := make(chan fsnotify.Event)
+	ticker := time.NewTicker(w.idleTimeout)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case event := <-complete:
@@ -121,7 +124,7 @@ func (w *Watcher) watchFsEvents(events chan fsnotify.Event, debounce debouncer) 
 				go debounce(w.debounceTimeout, fileEvents[event.Name], complete)
 			}
 			fileEvents[event.Name] <- event
-		case <-time.Tick(w.idleTimeout):
+		case <-ticker.C:
 			w.onIdle()
 		}
 	}
