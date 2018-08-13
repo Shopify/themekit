@@ -6,7 +6,7 @@ baseurl: "/themekit"
 url: "https://shopify.github.io"
 sass:
   cache: true
-themekitversion: "v0.8.0"
+themekitversion: "v0.7.5"
 
 # Build settings
 markdown: kramdown

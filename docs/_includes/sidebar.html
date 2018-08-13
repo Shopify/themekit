@@ -34,12 +34,6 @@
         <a class="docs-nav__link" href="{{ '/commands/#download' | prepend: site.baseurl }}">Download</a>
       </li>
       <li>
-        <a class="docs-nav__link" href="{{ '/commands/#get' | prepend: site.baseurl }}">Get</a>
-      </li>
-      <li>
-        <a class="docs-nav__link" href="{{ '/commands/#new' | prepend: site.baseurl }}">New</a>
-      </li>
-      <li>
         <a class="docs-nav__link" href="{{ '/commands/#open' | prepend: site.baseurl }}">Open</a>
       </li>
       <li>
@@ -75,6 +69,9 @@
         <a class="docs-nav__link" href="{{ '/configuration/#global-flags' | prepend: site.baseurl }}">Global Flags</a>
       </li>
     </ul>
+  </li>
+  <li>
+    <a class="docs-nav__link {% if page.url == '/theme.lock/' %}active{% endif %}" href="{{ '/theme.lock' | prepend: site.baseurl }}">theme.lock</a>
   </li>
   <li>
     <a class="docs-nav__link {% if page.url == '/ignores/' %}active{% endif %}" href="{{ '/ignores' | prepend: site.baseurl }}">Ignore Patterns</a>
