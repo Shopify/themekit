@@ -254,7 +254,7 @@ func TestBuildRelease(t *testing.T) {
 		mock.MatchedBy(func(*os.File) bool { return true }),
 	).Return("http://amazon/themekit", nil)
 
-	r, err := buildRelease("0.4.7", filepath.Join("_testdata", "dist"), u)
+	r, _ := buildRelease("0.4.7", filepath.Join("_testdata", "dist"), u)
 	u.AssertExpectations(t)
 	assert.Equal(t, r.Version, "0.4.7")
 

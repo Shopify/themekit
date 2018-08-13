@@ -31,7 +31,7 @@ func (limiter *Limiter) next() {
 	}(limiter)
 }
 
-// Wait will block untill enough time has passed and the limit will not be passed
+// Wait will block until enough time has passed and the limit will not be passed
 func (limiter *Limiter) Wait() {
 	<-limiter.nextChan
 	limiter.next()

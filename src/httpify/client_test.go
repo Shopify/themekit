@@ -80,7 +80,7 @@ func TestClient_do(t *testing.T) {
 		assert.Equal(t, r.Header.Get("User-Agent"), fmt.Sprintf("go/themekit (%s; %s; %s)", runtime.GOOS, runtime.GOARCH, release.ThemeKitVersion.String()))
 	}))
 
-	client, err = NewClient(Params{
+	client, _ = NewClient(Params{
 		Domain:   server.URL,
 		Password: "secret_password",
 		APILimit: time.Nanosecond,
