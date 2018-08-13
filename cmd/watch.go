@@ -50,7 +50,12 @@ func watch(ctx cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 		return fmt.Errorf("[%s] environment is reaonly", colors.Green(ctx.Env.Name))
 	}
 
-	ctx.Log.Printf("[%s] Watching for file changes on host %s ", colors.Green(ctx.Env.Name), colors.Yellow(ctx.Env.Domain))
+	ctx.Log.Printf(
+		"[%s] %s: Watching for file changes to theme %v",
+		colors.Green(ctx.Env.Name),
+		colors.Yellow(ctx.Shop.Name),
+		colors.Yellow(ctx.Env.ThemeID),
+	)
 	for {
 		select {
 		case event := <-events:

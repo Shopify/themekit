@@ -28,7 +28,7 @@ func TestWatch(t *testing.T) {
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "reload")
 	}
-	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
+	assert.Contains(t, stdOut.String(), "Watching for file changes")
 	assert.Contains(t, stdOut.String(), "Reloading config changes")
 
 	signalChan := make(chan os.Signal)
@@ -41,7 +41,7 @@ func TestWatch(t *testing.T) {
 	}()
 	err = watch(ctx, eventChan, signalChan)
 	assert.Nil(t, err)
-	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
+	assert.Contains(t, stdOut.String(), "Watching for file changes")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdErr.String(), "error loading assets/app.js: readAsset: ")
 
@@ -57,7 +57,7 @@ func TestWatch(t *testing.T) {
 	}()
 	err = watch(ctx, eventChan, signalChan)
 	assert.Nil(t, err)
-	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
+	assert.Contains(t, stdOut.String(), "Watching for file changes")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdOut.String(), "Updated assets/app.js")
 
@@ -73,7 +73,7 @@ func TestWatch(t *testing.T) {
 	}()
 	err = watch(ctx, eventChan, signalChan)
 	assert.Nil(t, err)
-	assert.Contains(t, stdOut.String(), "Watching for file changes on host")
+	assert.Contains(t, stdOut.String(), "Watching for file changes")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdOut.String(), "Deleted assets/app.js")
 }

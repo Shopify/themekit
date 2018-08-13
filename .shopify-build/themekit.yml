@@ -4,9 +4,10 @@ containers:
     workdir: /go/src/github.com/Shopify/themekit
 
 steps:
-- label: Run tests and vet
-  timeout: 3m
+- label: Vet
   run:
   - go vet -all ./...
-  - go test -timeout 15s -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
+- label: Test
+  run:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
   - bash -c "bash <(curl -s https://codecov.io/bash)"

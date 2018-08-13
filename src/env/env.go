@@ -68,20 +68,28 @@ func (env *Env) validate() error {
 		errors = append(errors, "missing password")
 	}
 
-	if fi, err := os.Stat(filepath.Clean(env.Directory)); err != nil {
-		errors = append(errors, fmt.Sprintf("invalid project directory %v", err))
-	} else if fi.Mode()&os.ModeSymlink != 0 {
-		var symlinkErr error
-		if env.Directory, symlinkErr = filepath.EvalSymlinks(filepath.Clean(env.Directory)); symlinkErr != nil {
-			errors = append(errors, fmt.Sprintf("invalid project directory: %s", symlinkErr.Error()))
-		}
-	} else if !fi.Mode().IsDir() {
-		errors = append(errors, fmt.Sprintf("Directory config %v is not a directory", err))
-	}
+	var dirErrors []string
+	env.Directory, dirErrors = validateDirectory(env.Directory)
+	errors = append(errors, dirErrors...)
 
 	if len(errors) > 0 {
 		return fmt.Errorf("invalid environment [%s]: (%v)", env.Name, strings.Join(errors, ","))
 	}
 
 	return nil
+}
+
+func validateDirectory(dir string) (finalDir string, errors []string) {
+	if fi, err := os.Lstat(filepath.Clean(dir)); err != nil {
+		errors = append(errors, fmt.Sprintf("invalid project directory %v", err))
+	} else if fi.Mode()&os.ModeSymlink != 0 {
+		if symDir, symlinkErr := filepath.EvalSymlinks(filepath.Clean(dir)); symlinkErr != nil {
+			errors = append(errors, fmt.Sprintf("invalid project symlink: %s", symlinkErr.Error()))
+		} else {
+			return validateDirectory(symDir)
+		}
+	} else if !fi.Mode().IsDir() {
+		errors = append(errors, fmt.Sprintf("Directory config %v is not a directory: %v", dir, err))
+	}
+	return dir, errors
 }

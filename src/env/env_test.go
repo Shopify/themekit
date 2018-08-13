@@ -50,8 +50,8 @@ func TestEnv_Validate(t *testing.T) {
 		{env: Env{Password: "test", Domain: "test.myshopify.com"}},
 		{env: Env{Password: "file", ThemeID: "abc", Domain: "test.myshopify.com"}, err: "invalid theme_id"},
 		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "symlink_projectdir")}},
-		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "bad_symlink")}, err: "invalid project directory"},
-		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "file_symlink")}, err: "invalid project directory"},
+		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "bad_symlink")}, err: "invalid project symlink"},
+		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "symlink_file")}, err: "is not a directory"},
 		{env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: "not_a_dir"}, err: "invalid project directory"},
 		{env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "projectdir", "bad_format.yml")}, err: "is not a directory"},
 	}
@@ -63,7 +63,7 @@ func TestEnv_Validate(t *testing.T) {
 		err := testcase.env.validate()
 		if testcase.err == "" {
 			assert.Nil(t, err, fmt.Sprintf("Testcase: %v", i))
-		} else if assert.Error(t, err, testcase.err) {
+		} else if assert.Error(t, err, fmt.Sprintf("Testcase: %v %v", i, testcase.err)) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}
 	}
