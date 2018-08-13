@@ -14,6 +14,8 @@ command as well as renamed bootstrap to new
 - fixing a problem with time.Ticker that causes high CPU
 - moved to buildkite
 - code coverage
+- optimization of CPU by not using time.Ticker because it leaks and is a high
+resource use
 
 v0.7.5  (Nov 3, 2017)
 =====================
