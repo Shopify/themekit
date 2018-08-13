@@ -1,4 +1,3 @@
-vendor/
 build/
 nanoc/
 .env
@@ -6,10 +5,7 @@ tags
 .DS_Store
 
 # for testing
-cmd/theme/config.yml
-cmd/theme/theme
 coverage.out
-theme.lock
 
 # for docs
 docs/_site/

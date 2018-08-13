@@ -21,16 +21,13 @@ You can open a new issue on the github issues and describe the feature you would
 
 Requirements:
 
-- Go 1.8 or higher
-
+- Go 1.10 or higher
 
 You can setup your development environment by running the following:
 
 ```
 go get -u github.com/Shopify/themekit       # get the code
 cd $GOPATH/src/github.com/Shopify/themekit  # change into the themekit directory
-make tools                                  # install platform specific development tools
-glide install                               # see https://github.com/Masterminds/glide for glide usage
 make                                        # build themekit, will install theme kit into $GOPATH/bin
 theme version                               # should output the current themekit version
 ```
@@ -38,7 +35,7 @@ theme version                               # should output the current themekit
 Helpful commands
 
 - `make` will compile themekit into your GOPATH/bin
-- `make check` will run linting/vetting/testing to make sure your code is of high standard
+- `make test` will run linting/vetting/testing to make sure your code is of high standard
 - `make help` will tell you all the commands available to you.
 
 # Deploying Themekit
@@ -55,6 +52,7 @@ Helpful commands
   - update any changes to the API
   - commit changes
 - Update `themekitversion` in docs config `docs/_config.yml` to update the download links.
+- Update the changelog.txt
 - Update `themekit.rb` formula for homebrew on https://github.com/Shopify/homebrew-shopify
   - run `make gen_sha` to generate the SHA256 for the darwin build
   - update the link and sha in the homebrew formula

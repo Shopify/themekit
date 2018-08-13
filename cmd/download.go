@@ -2,75 +2,85 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
+	"sync"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 
-	"github.com/Shopify/themekit/kit"
+	"github.com/Shopify/themekit/src/cmdutil"
+	"github.com/Shopify/themekit/src/colors"
 )
 
 var downloadCmd = &cobra.Command{
 	Use:   "download <filenames>",
 	Short: "Download one or all of the theme files",
 	Long: `Download will download specific files from shopify servers if provided file names.
-If no filenames are provided then download will download every file in the project
-and write them to disk.
+ If no filenames are provided then download will download every file in the project
+ and write them to disk.
 
-For more documentation please see http://shopify.github.io/themekit/commands/#download
-`,
-	PreRunE: arbiter.generateThemeClients,
-	RunE:    arbiter.forSingleClient(download),
+ For more documentation please see http://shopify.github.io/themekit/commands/#download
+ `,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmdutil.ForEachClient(flags, args, download)
+	},
 }
 
-func download(client kit.ThemeClient, filenames []string) error {
-	var downloadGroup errgroup.Group
-	filenames = arbiter.manifest.FetchableFiles(filenames, client.Config.Environment)
-	bar := arbiter.newProgressBar(len(filenames), client.Config.Environment)
-	for _, filename := range filenames {
-		filename := filename
-		downloadGroup.Go(func() error {
-			if err := downloadFile(client, filename); err != nil {
-				stdErr.Printf("[%s] %s", green(client.Config.Environment), err)
-			}
-			incBar(bar)
-			return nil
-		})
-	}
-	return downloadGroup.Wait()
-}
+func download(ctx cmdutil.Ctx) error {
+	var downloadGroup sync.WaitGroup
 
-func downloadFile(client kit.ThemeClient, filename string) error {
-	if !arbiter.force && !arbiter.manifest.NeedsDownloading(filename, client.Config.Environment) {
-		if arbiter.verbose {
-			stdOut.Printf(
-				"[%s] skipping %s",
-				green(client.Config.Environment),
-				blue(filename),
-			)
-		}
-		return nil
-	}
-
-	asset, err := client.Asset(filename)
+	filenames, err := filesToDownload(ctx)
 	if err != nil {
-		return fmt.Errorf("error downloading asset: %v", err)
+		return err
 	}
 
-	if err := asset.Write(client.Config.Directory); err != nil {
-		return fmt.Errorf("error writing asset: %v", err)
+	ctx.StartProgress(len(filenames))
+	for _, filename := range filenames {
+		downloadGroup.Add(1)
+		go func(filename string) {
+			defer ctx.DoneTask()
+			defer downloadGroup.Done()
+			if asset, err := ctx.Client.GetAsset(filename); err != nil {
+				ctx.ErrLog.Printf("[%s] error downloading asset: %s", colors.Green(ctx.Env.Name), err)
+			} else if err = asset.Write(ctx.Env.Directory); err != nil {
+				ctx.ErrLog.Printf("[%s] error writing asset: %s", colors.Green(ctx.Env.Name), err)
+			} else if ctx.Flags.Verbose {
+				ctx.Log.Printf("[%s] Successfully wrote %s to disk", colors.Green(ctx.Env.Name), colors.Blue(filename))
+			}
+		}(filename)
 	}
 
-	checksum, _ := asset.CheckSum()
-	if err := arbiter.manifest.Set(asset.Key, client.Config.Environment, asset.UpdatedAt, checksum); err != nil {
-		return fmt.Errorf("error updating manifest: %v", err)
-	}
-
-	if arbiter.verbose {
-		stdOut.Printf(
-			"[%s] Successfully wrote %s to disk",
-			green(client.Config.Environment),
-			blue(filename),
-		)
-	}
+	downloadGroup.Wait()
 	return nil
+}
+
+func filesToDownload(ctx cmdutil.Ctx) ([]string, error) {
+	allFilenames, err := ctx.Client.GetAllAssets()
+	if err != nil {
+		return allFilenames, err
+	} else if len(ctx.Args) <= 0 {
+		return allFilenames, nil
+	}
+
+	fetchableFilenames := []string{}
+	for _, filename := range allFilenames {
+		for _, pattern := range ctx.Args {
+			// These need to be converted to platform specific because filepath.Match
+			// uses platform specific separators
+			pattern = filepath.FromSlash(pattern)
+			filename = filepath.FromSlash(filename)
+
+			globMatched, _ := filepath.Match(pattern, filename)
+			dirMatched, _ := filepath.Match(pattern+string(filepath.Separator)+"*", filename)
+			fileMatched := filename == pattern
+			if globMatched || dirMatched || fileMatched {
+				fetchableFilenames = append(fetchableFilenames, filepath.ToSlash(filename))
+			}
+		}
+	}
+
+	if len(fetchableFilenames) == 0 {
+		return fetchableFilenames, fmt.Errorf("No file paths matched the inputted arguments")
+	}
+
+	return fetchableFilenames, nil
 }

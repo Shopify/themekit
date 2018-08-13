@@ -3,7 +3,8 @@
   <p align="center">Shopify Theme Manipulation CLI</p>
   <p align="center">
     <a href="https://goreportcard.com/report/github.com/shopify/themekit"><img src="https://goreportcard.com/badge/github.com/shopify/themekit"></a>
-    <a href="https://circleci.com/gh/Shopify/themekit"><img src="https://circleci.com/gh/Shopify/themekit.png?circle-token=ac951910873cafaaf9c1be6049d2b9d3276eb2d4"></a>
+    <a href="https://buildkite.com/shopify/themekit"><img src="https://badge.buildkite.com/6a17b90ae5d9578a0f50553c3e211a9cad335635a2d2bbfb8f.svg"></a>
+    <a href="https://codecov.io/gh/Shopify/themekit"><img src="https://codecov.io/gh/Shopify/themekit/branch/master/graph/badge.svg" /></a>
     <a href="http://godoc.org/github.com/Shopify/themekit"><img src="https://godoc.org/github.com/Shopify/themekit?status.svg"></a>
     <a href="https://github.com/Shopify/themekit/releases/latest"><img src="http://github-release-version.herokuapp.com/github/Shopify/themekit/release.svg?style=flat"></a>
   </p>

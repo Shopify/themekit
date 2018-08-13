@@ -1,19 +1,19 @@
 .PHONY: build
 install: ## Build and install the theme binary
 	@go install github.com/Shopify/themekit/cmd/theme;
-test: ## Run all tests
-	@go test -race -cover $(shell glide novendor)
-vet: ## Verify go code.
-	@go vet $(shell glide novendor)
-lint: ## Lint all packages
-	@glide novendor | xargs -n 1 golint -set_exit_status
-check: lint vet test ## lint, vet and test the code
-all: clean windows mac linux ## will build a binary for all platforms
-release: ## will run release on the built binaries uploading them to S3
+unit_test: # Run all unit tests
+	@go test -race -cover $(shell go list ./...)
+vet:
+	@go vet $(shell go list ./...)
+lint: # Lint all packages
+	@go list ./... | xargs -n 1 golint -set_exit_status
+test: lint vet unit_test # lint, vet and test the code
+all: clean windows mac linux # will build a binary for all platforms
+release: # will run release on the built binaries uploading them to S3
 	@go install github.com/Shopify/themekit/cmd/tkrelease && tkrelease $(shell git tag --points-at HEAD)
-dist: check all ## Build binaries for all platforms and upload to S3
+dist: test all ## Build binaries for all platforms and upload to S3
 	@$(MAKE) release && $(MAKE) gen_sha
-clean: ## Remove all temporary build artifacts
+clean: # Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
 build:
 	@mkdir -p build/dist/${GOOS}-${GOARCH} && \
@@ -38,7 +38,7 @@ lin32:
 	@export GOOS=linux GOARCH=386; $(MAKE) build;
 lin64:
 	@export GOOS=linux GOARCH=amd64; $(MAKE) build;
-gen_sha: ## Generate sha256 for a darwin build for usage with homebrew
+gen_sha: # Generate sha256 for a darwin build for usage with homebrew
 	@shasum -a 256 ./build/dist/darwin-amd64/theme
 serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
 	@cd docs && jekyll serve

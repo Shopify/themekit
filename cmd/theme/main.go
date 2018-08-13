@@ -1,14 +1,12 @@
 package main
 
 import (
-	"log"
 	"os"
 	"runtime"
 	"runtime/pprof"
 
-	"github.com/mattn/go-colorable"
-
 	"github.com/Shopify/themekit/cmd"
+	"github.com/Shopify/themekit/src/colors"
 )
 
 const (
@@ -16,7 +14,7 @@ const (
 	memProfileVar = "THEMEKIT_MEMPROFILE"
 )
 
-var stdErr = log.New(colorable.NewColorableStderr(), "", log.Ltime)
+var stdErr = colors.ColorStdErr
 
 func main() {
 	if CPUProfile := os.Getenv(cpuProfileVar); CPUProfile != "" {

@@ -1,0 +1,140 @@
+v0.8.0
+======
+Minor number change because the asset manifest was removed and added a get
+command as well as renamed bootstrap to new
+- new command
+- get command
+- Remove assets manifest
+- Minimized memory footprint for upload and replace
+- handling upload/replace wildcards more gracefully
+- better errors for connection issues
+- better errors for auth issues
+- better errors for timeouts
+- warning while working on live themes
+- fixing a problem with time.Ticker that causes high CPU
+- moved to buildkite
+- code coverage
+- optimization of CPU by not using time.Ticker because it leaks and is a high
+resource use
+
+v0.7.5  (Nov 3, 2017)
+=====================
+- Fixing bad manifest pruning
+
+v0.7.4 (Sep 18, 2017)
+=====================
+- Fixing how the manifest deals with dates
+
+v0.7.3 (Aug 28, 2017)
+=====================
+- Fixing symlinks used as project directory
+- Fixing race condition in manifest reads
+- Fixing environment flag on the configure command
+- Skipping invalid configs to allow invalid re-usable config
+
+v0.7.2 (Aug 21, 2017)
+=====================
+- Fixing windows watch paths
+
+v0.7.1 (Aug 21, 2017)
+=====================
+- Filtering out files properly on download
+- Local changes to a file on disk are now considered on every upload/replace
+- Fixing a hanging progress bar
+- Downloading files that are in manifest but not on disk
+- Fixing remove for non updated assets
+
+v0.7.0 (Aug 14, 2017)
+=====================
+Minor number change because the asset manifest was added. This allowed themekit
+to check the version of files on the remote server so that the developer would
+not be able to overwrite changes.
+- Glob env flag and multiple env flags
+- Handling opening live themes in the open command
+- Strict path checking to make sure files are in the project
+- Remote File Checking
+- Browser flag on open command
+
+v0.6.12 (May 24, 2017)
+=====================
+- Throttle api calls per domain
+- Show open link with open command
+- Simplify install script and make it use the cdn
+- Powershell install script
+- Handling renaming events better
+- Fixing updating compiled assets
+
+v0.6.11 (Apr 3, 2017)
+=====================
+- Better error message for bad config files
+- Added a no-ignore flag
+- Fixed asset request query params encoding
+
+v0.6.10 (Mar 10, 2017)
+=====================
+- minimal vcs integration for watch command so that watch is reloaded when branch is changed
+- watch CPU usage optimizations
+- theme open -E command to open the editor
+- Development Profiling functionality
+- Go 1.8 sorting optimization
+- Windows Color Support
+- Better Config File Loading
+
+v0.6.9-6 (Feb 21, 2017)
+=====================
+There were some deploy issues with these versions
+- Fixing watching symlinked directories
+- Fix for singlle file operations
+
+v0.6.5 (Feb 7, 2017)
+====================
+- Watch now will reload automatically if the config.yml file has changed
+- Fixed install script for python 3
+- Upload directories and download wildcards
+- Progress bar and verbose flag
+
+v0.6.4 (Jan 20, 2017)
+=====================
+- Fixes the watch command delete operations
+- Removes deprecated Shopify api usage.
+
+The last point is notable because it will make replace work faster, however it will
+make download seem slower because instead of being able to download the whole theme
+in one request, the files are downloaded individually. This is done concurrently
+however so it should not be that much of a slow down.
+
+v0.6.3 (Jan 4, 2017)
+====================
+- Fixes for windows path handling with a more isolated approach so that windows paths are not so fragile.
+
+v0.6.2 (Jan 4, 2017)
+====================
+- Added readonly flag in config
+- Added url and name flag to bootstrap
+- Restricted all operations to project directories only for less requests
+- Fixes bad windows watch paths
+- Better Remote Asset Filtering
+
+v0.6.1 (Dec 8, 2016)
+====================
+- Better Logging
+- Catching list connection errors
+
+v0.6.0 (Nov 28, 2016)
+=====================
+- Fixing sections data upload
+- Allowing directory config from config file
+- Fixed notify file in watch command
+- JSON config file support (defaults to yml)
+- Expanding default ignores and watching less files
+- Added Open command
+- Added environment to logging
+
+v0.5.3 (Nov 16, 2016)
+=====================
+Fixing constant errors on theme watch and giving better error messages for theme errors.
+
+v0.5.2 (Nov 9, 2016)
+====================
+- Fixing debouncing of file events
+- Fixing bad error handling

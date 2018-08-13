@@ -1,0 +1,13 @@
+containers:
+  default:
+    docker: golang:1.10
+    workdir: /go/src/github.com/Shopify/themekit
+
+steps:
+- label: Vet
+  run:
+  - go vet -all ./...
+- label: Test
+  run:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
+  - bash -c "bash <(curl -s https://codecov.io/bash)"
