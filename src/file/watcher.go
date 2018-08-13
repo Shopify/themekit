@@ -55,7 +55,7 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 		filter:          filter,
 		notify:          e.Notify,
 		debounceTimeout: 1100 * time.Millisecond,
-		idleTimeout:     500 * time.Millisecond,
+		idleTimeout:     time.Second,
 	}, nil
 }
 

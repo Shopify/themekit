@@ -24,7 +24,7 @@ func New(domain string, apiLimit time.Duration) *Limiter {
 
 func (limiter *Limiter) next() {
 	go func(l *Limiter) {
-		ticker := time.NewTicker(l.apiLimit)
+		ticker := time.NewTimer(l.apiLimit)
 		<-ticker.C
 		ticker.Stop()
 		l.nextChan <- true
