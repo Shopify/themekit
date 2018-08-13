@@ -55,7 +55,7 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 		filter:          filter,
 		notify:          e.Notify,
 		debounceTimeout: 1100 * time.Millisecond,
-		idleTimeout:     time.Millisecond,
+		idleTimeout:     500 * time.Millisecond,
 	}, nil
 }
 
@@ -93,8 +93,8 @@ func (w *Watcher) Watch() (chan Event, error) {
 func (w *Watcher) watchFsEvents(events chan fsnotify.Event, debounce debouncer) {
 	fileEvents := make(map[string]chan fsnotify.Event)
 	complete := make(chan fsnotify.Event)
-	ticker := time.NewTicker(w.idleTimeout)
-	defer ticker.Stop()
+	idleTimer := time.NewTimer(w.idleTimeout)
+	defer idleTimer.Stop()
 
 	for {
 		select {
@@ -109,6 +109,9 @@ func (w *Watcher) watchFsEvents(events chan fsnotify.Event, debounce debouncer) 
 			}
 			w.events <- e
 			delete(fileEvents, event.Name)
+			if len(fileEvents) == 0 {
+				idleTimer.Reset(w.idleTimeout)
+			}
 		case event, more := <-events:
 			if !more {
 				close(w.events)
@@ -119,12 +122,13 @@ func (w *Watcher) watchFsEvents(events chan fsnotify.Event, debounce debouncer) 
 				continue
 			}
 
+			idleTimer.Stop()
 			if _, ok := fileEvents[event.Name]; !ok {
 				fileEvents[event.Name] = make(chan fsnotify.Event)
 				go debounce(w.debounceTimeout, fileEvents[event.Name], complete)
 			}
 			fileEvents[event.Name] <- event
-		case <-ticker.C:
+		case <-idleTimer.C:
 			w.onIdle()
 		}
 	}
