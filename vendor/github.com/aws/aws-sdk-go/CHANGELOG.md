@@ -1,3 +1,90 @@
+Release v1.15.11 (2018-08-13)
+===
+
+### Service Client Updates
+* `service/sagemaker`: Updates service API and documentation
+  * SageMaker updated the default endpoint URL to support Private Link via the CLI/SDK.
+
+Release v1.15.10 (2018-08-10)
+===
+
+### Service Client Updates
+* `service/mediaconvert`: Updates service API and documentation
+  * This release adds support for a new rate control mode, Quality-Defined Variable Bitrate (QVBR) encoding, includes updates to optimize transcoding performance, and resolves previously reported bugs.
+* `service/rds`: Updates service documentation
+  * Documentation updates for rds
+
+Release v1.15.9 (2018-08-09)
+===
+
+### Service Client Updates
+* `service/dax`: Updates service API and documentation
+  * Add the SSESpecification field to CreateCluster to allow creation of clusters with server-side encryption, and add the SSEDescription field to DescribeClusters to display the status of server-side encryption for a cluster.
+* `service/ecs`: Updates service API and documentation
+  * This release of Amazon Elastic Container Service (Amazon ECS) introduces support for Docker volumes and Docker volume drivers. Customers can now configure their ECS Tasks to use Docker volumes, enabling stateful and storage-intensive applications to be deployed on ECS.
+* `service/rds`: Updates service API, documentation, and examples
+  * Launch RDS Aurora Serverless
+
+Release v1.15.8 (2018-08-08)
+===
+
+### Service Client Updates
+* `service/secretsmanager`: Updates service API and documentation
+  * This release introduces a ForceDeleteWithoutRecovery parameter to the DeleteSecret API enabling customers to force the deletion of a secret without any recovery window
+* `service/ssm`: Updates service API and documentation
+  * AWS Systems Manager Automation is launching two new features for Automation Execution Rate Control based on tags and customized parameter maps. With the first feature, customer can target their resources by specifying a Tag with Key/Value. With the second feature, Parameter maps rate control, customers can benefit from customization of input parameters.
+
+Release v1.15.7 (2018-08-07)
+===
+
+### Service Client Updates
+* `service/codebuild`: Updates service API and documentation
+  * Release semantic versioning feature for CodeBuild
+* `service/ec2`: Updates service API and documentation
+  * Amazon VPC Flow Logs adds support for delivering flow logs directly to S3
+* `service/logs`: Updates service API and documentation
+  * Documentation Update
+* `service/pinpoint`: Updates service API and documentation
+  * This release includes a new batch API call for Amazon Pinpoint which can be used to update endpoints and submit events. This call will accept events from clients such as mobile devices and AWS SDKs. This call will accept requests which has multiple endpoints and multiple events attached to those endpoints in a single call. This call will update the endpoints attached and will ingest events for those endpoints. The response from this call will be a multipart response per endpoint/per event submitted.
+* `service/ssm`: Updates service API and documentation
+  * Two new filters ExecutionStage and DocumentName will be added to ListCommands so that customers will have more approaches to query their commands.
+
+Release v1.15.6 (2018-08-06)
+===
+
+### Service Client Updates
+* `service/dynamodb`: Updates service API and documentation
+  * Amazon DynamoDB Point-in-time recovery (PITR) provides continuous backups of your table data. DynamoDB now supports the ability to self-restore a deleted PITR enabled table. Now, when a table with PITR enabled is deleted, a system backup is automatically created and retained for 35 days (at no additional cost). System backups allow you to restore the deleted PITR enabled table to the state it was just before the point of deletion. For more information, see the Amazon DynamoDB Developer Guide.
+* `service/health`: Updates service API, documentation, and paginators
+  * Updates the ARN structure vended by AWS Health API. All ARNs will now include the service and type code of the associated event, as vended by DescribeEventTypes.
+
+Release v1.15.5 (2018-08-03)
+===
+
+### Service Client Updates
+* `service/alexaforbusiness`: Updates service API and documentation
+
+Release v1.15.4 (2018-08-02)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/kinesis`: Updates service API, documentation, and paginators
+  * This update introduces SubscribeToShard and RegisterStreamConsumer APIs which allows for retrieving records on a data stream over HTTP2 with enhanced fan-out capabilities. With this new feature the Java SDK now supports event streaming natively which will allow you to define payload and exception structures on the client over a persistent connection. For more information, see Developing Consumers with Enhanced Fan-Out in the Kinesis Developer Guide.
+* `service/polly`: Updates service API and documentation
+  * Amazon Polly enables female voice Aditi to speak Hindi language
+* `service/resource-groups`: Updates service API and documentation
+* `service/ssm`: Updates service API and documentation
+  * This release updates AWS Systems Manager APIs to let customers create and use service-linked roles to register and edit Maintenance Window tasks.
+
+Release v1.15.3 (2018-08-01)
+===
+
+### Service Client Updates
+* `service/storagegateway`: Updates service API, documentation, and examples
+  * AWS Storage Gateway now enables you to create stored volumes with AWS KMS support.
+* `service/transcribe`: Updates service API and documentation
+
 Release v1.15.2 (2018-07-31)
 ===
 

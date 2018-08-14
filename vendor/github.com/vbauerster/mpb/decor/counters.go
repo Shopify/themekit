@@ -167,17 +167,40 @@ func Counters(unit int, pairFormat string, wcc ...WC) Decorator {
 	for _, widthConf := range wcc {
 		wc = widthConf
 	}
-	wc.BuildFormat()
-	return DecoratorFunc(func(s *Statistics, widthAccumulator chan<- int, widthDistributor <-chan int) string {
-		var str string
-		switch unit {
-		case UnitKiB:
-			str = fmt.Sprintf(pairFormat, CounterKiB(s.Current), CounterKiB(s.Total))
-		case UnitKB:
-			str = fmt.Sprintf(pairFormat, CounterKB(s.Current), CounterKB(s.Total))
-		default:
-			str = fmt.Sprintf(pairFormat, s.Current, s.Total)
-		}
-		return wc.FormatMsg(str, widthAccumulator, widthDistributor)
-	})
+	wc.Init()
+	d := &countersDecorator{
+		WC:         wc,
+		unit:       unit,
+		pairFormat: pairFormat,
+	}
+	return d
+}
+
+type countersDecorator struct {
+	WC
+	unit        int
+	pairFormat  string
+	completeMsg *string
+}
+
+func (d *countersDecorator) Decor(st *Statistics) string {
+	if st.Completed && d.completeMsg != nil {
+		return d.FormatMsg(*d.completeMsg)
+	}
+
+	var str string
+	switch d.unit {
+	case UnitKiB:
+		str = fmt.Sprintf(d.pairFormat, CounterKiB(st.Current), CounterKiB(st.Total))
+	case UnitKB:
+		str = fmt.Sprintf(d.pairFormat, CounterKB(st.Current), CounterKB(st.Total))
+	default:
+		str = fmt.Sprintf(d.pairFormat, st.Current, st.Total)
+	}
+
+	return d.FormatMsg(str)
+}
+
+func (d *countersDecorator) OnCompleteMessage(msg string) {
+	d.completeMsg = &msg
 }

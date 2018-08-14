@@ -1,0 +1,21 @@
+deploy:
+  variables:
+      -
+        name: DEPLOY_VERSION
+        title: Version to deploy
+        default: $(shell git tag --points-at HEAD)
+  override:
+    - make all
+    - go install github.com/Shopify/themekit/cmd/tkrelease
+    - tkrelease -f $DEPLOY_VERSION
+
+rollback:
+  variables:
+      -
+        name: DEPLOY_VERSION
+        title: Version to deploy
+        default: $(shell git tag --points-at HEAD)
+  override:
+    - make all
+    - go install github.com/Shopify/themekit/cmd/tkrelease
+    - tkrelease -f -d $DEPLOY_VERSION

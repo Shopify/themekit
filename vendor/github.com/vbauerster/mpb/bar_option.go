@@ -1,6 +1,8 @@
 package mpb
 
 import (
+	"io"
+
 	"github.com/vbauerster/mpb/decor"
 )
 
@@ -67,24 +69,6 @@ func BarID(id int) BarOption {
 	}
 }
 
-// BarDynamicTotal is a flag, if set enables dynamic total behaviour.
-// If provided total <= 0, it is set implicitly.
-func BarDynamicTotal() BarOption {
-	return func(s *bState) {
-		s.dynamic = true
-	}
-}
-
-// BarAutoIncrTotal auto increment total by n, when trigger percentage remained till bar completion.
-// In other words: say you've set trigger = 10, then auto increment will start after bar reaches 90 %.
-// Effective only if BarDynamicTotal option is set.
-func BarAutoIncrTotal(trigger, n int64) BarOption {
-	return func(s *bState) {
-		s.totalAutoIncrTrigger = trigger
-		s.totalAutoIncrBy = n
-	}
-}
-
 // BarRemoveOnComplete is a flag, if set whole bar line will be removed on complete event.
 // If both BarRemoveOnComplete and BarClearOnComplete are set, first bar section gets cleared
 // and then whole bar line gets removed completely.
@@ -116,6 +100,14 @@ func BarClearOnComplete() BarOption {
 func BarPriority(priority int) BarOption {
 	return func(s *bState) {
 		s.priority = priority
+	}
+}
+
+// BarNewLineExtend takes user defined efn, which is called each render cycle.
+// Any write to provided writer w of efn, will appear on new line of respective bar.
+func BarNewLineExtend(efn func(w io.Writer, completed bool)) BarOption {
+	return func(s *bState) {
+		s.newLineExtendFn = efn
 	}
 }
 
