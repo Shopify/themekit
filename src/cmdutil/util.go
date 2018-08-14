@@ -64,7 +64,7 @@ type Ctx struct {
 
 type clientFact func(*env.Env) (shopifyClient, error)
 
-func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, args []string, progress *mpb.Progress) (Ctx, error) {
+func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, args []string, progress *mpb.Progress, setTheme bool) (Ctx, error) {
 	if e.Proxy != "" {
 		colors.ColorStdOut.Printf(
 			"[%s] Proxy URL detected from Configuration [%s] SSL Certificate Validation will be disabled!",
@@ -95,17 +95,19 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 		return Ctx{}, err
 	}
 
-	for _, theme := range themes {
-		if theme.Role == "main" {
-			if fmt.Sprintf("%v", theme.ID) == e.ThemeID || e.ThemeID == "" {
-				e.ThemeID = fmt.Sprintf("%v", theme.ID) // record the theme id for the live id
-				colors.ColorStdOut.Printf(
-					"[%s] Warning, this is the live theme on %s.",
-					colors.Yellow(e.Name),
-					colors.Yellow(shop.Name),
-				)
+	if setTheme {
+		for _, theme := range themes {
+			if theme.Role == "main" {
+				if fmt.Sprintf("%v", theme.ID) == e.ThemeID || e.ThemeID == "" {
+					e.ThemeID = fmt.Sprintf("%v", theme.ID) // record the theme id for the live id
+					colors.ColorStdOut.Printf(
+						"[%s] Warning, this is the live theme on %s.",
+						colors.Yellow(e.Name),
+						colors.Yellow(shop.Name),
+					)
+				}
+				break
 			}
-			break
 		}
 	}
 
@@ -169,7 +171,7 @@ func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags,
 			return ctxs, err
 		}
 
-		ctx, err := createCtx(newClient, config, e, flags, args, progress)
+		ctx, err := createCtx(newClient, config, e, flags, args, progress, true)
 		if err != nil {
 			return ctxs, err
 		}
@@ -297,7 +299,7 @@ func forDefaultClient(newClient clientFact, flags Flags, args []string, handler 
 		}
 	}
 
-	ctx, err := createCtx(newClient, config, e, flags, args, progressBarGroup)
+	ctx, err := createCtx(newClient, config, e, flags, args, progressBarGroup, false)
 	if err != nil {
 		return err
 	}
