@@ -27,6 +27,7 @@ var uploadCmd = &cobra.Command{
  For more documentation please see http://shopify.github.io/themekit/commands/#upload
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		colors.ColorStdOut.Printf("[%s] upload has been deprecated please use `deploy` with the --nodelete flag instead", colors.Yellow("WARN"))
 		return cmdutil.ForEachClient(flags, args, upload)
 	},
 }

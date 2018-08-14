@@ -18,7 +18,7 @@ var deployCmd = &cobra.Command{
  For more documentation please see http://shopify.github.io/themekit/commands/#deploy
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) > 0 || flags.Soft {
+		if len(args) > 0 || flags.NoDelete {
 			return cmdutil.ForEachClient(flags, args, upload)
 		}
 		return cmdutil.ForEachClient(flags, args, replace)

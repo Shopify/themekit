@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/src/cmdutil"
+	"github.com/Shopify/themekit/src/colors"
 	"github.com/Shopify/themekit/src/file"
 	"github.com/Shopify/themekit/src/shopify"
 )
@@ -24,6 +25,7 @@ var replaceCmd = &cobra.Command{
  For more documentation please see http://shopify.github.io/themekit/commands/#replace
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		colors.ColorStdOut.Printf("[%s] replace has been deprecated please use `deploy` instead", colors.Yellow("WARN"))
 		if len(args) > 0 {
 			return cmdutil.ForEachClient(flags, args, upload)
 		}

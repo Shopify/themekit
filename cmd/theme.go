@@ -107,7 +107,7 @@ func init() {
 	openCmd.Flags().BoolVarP(&flags.Edit, "edit", "E", false, "open the web editor for the theme.")
 	openCmd.Flags().StringVarP(&flags.With, "browser", "b", "", "name of the browser to open the url. the name should match the name of browser on your system.")
 	getCmd.Flags().BoolVarP(&flags.List, "list", "l", false, "list available themes.")
-	deployCmd.Flags().BoolVarP(&flags.Soft, "soft", "s", false, "do no delete file on shopify diring deploy.")
+	deployCmd.Flags().BoolVarP(&flags.NoDelete, "nodelete", "n", false, "do no delete file on shopify diring deploy.")
 
 	ThemeCmd.AddCommand(openCmd, versionCmd, bootstrapCmd, newCmd, configureCmd, downloadCmd, removeCmd, updateCmd, uploadCmd, replaceCmd, watchCmd, getCmd, deployCmd)
 }
