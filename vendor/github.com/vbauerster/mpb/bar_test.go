@@ -48,11 +48,11 @@ func TestBarID(t *testing.T) {
 		t.Errorf("Expected bar id: %d, got %d\n", wantID, gotID)
 	}
 
-	p.Abort(bar)
+	p.Abort(bar, true)
 	p.Wait()
 }
 
-func TestBarIncrRefillBy(t *testing.T) {
+func TestBarSetRefill(t *testing.T) {
 	var buf bytes.Buffer
 
 	width := 100
@@ -64,7 +64,8 @@ func TestBarIncrRefillBy(t *testing.T) {
 
 	bar := p.AddBar(int64(total), BarTrim())
 
-	bar.RefillBy(till, refillRune)
+	bar.SetRefill(till, refillRune)
+	bar.IncrBy(till)
 
 	for i := 0; i < total-till; i++ {
 		bar.Increment()
@@ -89,14 +90,7 @@ func TestBarPanics(t *testing.T) {
 	wantPanic := "Upps!!!"
 	total := 100
 
-	bar := p.AddBar(int64(total), PrependDecorators(
-		decor.DecoratorFunc(func(s *decor.Statistics, _ chan<- int, _ <-chan int) string {
-			if s.Current >= 42 {
-				panic(wantPanic)
-			}
-			return "test"
-		}),
-	))
+	bar := p.AddBar(int64(total), PrependDecorators(panicDecorator(wantPanic)))
 
 	go func() {
 		for i := 0; i < 100; i++ {
@@ -112,4 +106,24 @@ func TestBarPanics(t *testing.T) {
 	if !strings.Contains(debugStr, wantPanic) {
 		t.Errorf("%q doesn't contain %q\n", debugStr, wantPanic)
 	}
+}
+
+func panicDecorator(panicMsg string) decor.Decorator {
+	d := &decorator{
+		panicMsg: panicMsg,
+	}
+	d.Init()
+	return d
+}
+
+type decorator struct {
+	decor.WC
+	panicMsg string
+}
+
+func (d *decorator) Decor(st *decor.Statistics) string {
+	if st.Current >= 42 {
+		panic(d.panicMsg)
+	}
+	return d.FormatMsg("")
 }

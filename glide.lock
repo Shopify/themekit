@@ -1,8 +1,8 @@
 hash: 2ba6f752a6487c05e45583cdb05c79889d1ce38d040087c3d2db1879c8d31ff9
-updated: 2018-08-01T11:58:07.661445-04:00
+updated: 2018-08-14T14:47:00.750762-04:00
 imports:
 - name: github.com/aws/aws-sdk-go
-  version: 1c16cd01d7852416012413263c331ef3172c9ad1
+  version: 64113c0fdaf2a7260761008a08a573d883adcf45
   subpackages:
   - aws
   - aws/awserr
@@ -39,6 +39,8 @@ imports:
   - service/sts
 - name: github.com/caarlos0/env
   version: d0de832ed2fbc4e7bfaa30ab5cf0b3417d15f529
+- name: github.com/dustin/gojson
+  version: 2e71ec9dd5adce3b168cd0dbde03b5cc04951c30
 - name: github.com/fatih/color
   version: 5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4
 - name: github.com/fsnotify/fsnotify
@@ -64,6 +66,11 @@ imports:
   version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
 - name: github.com/ryanuber/go-glob
   version: 572520ed46dbddaed19ea3d9541bdd0494163693
+- name: github.com/Shopify/ejson
+  version: 977f8d77a9d2bd522980137cbd1329753a536a40
+  subpackages:
+  - crypto
+  - json
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
@@ -71,19 +78,29 @@ imports:
 - name: github.com/spf13/cobra
   version: 7c4570c3ebeb8129a1f7456d0908a8b676b6f9f1
 - name: github.com/spf13/pflag
-  version: 3ebe029320b2676d667ae88da602a5f854788a8a
+  version: 9a97c102cda95a86cec2345a6f09f55a939babf5
 - name: github.com/spf13/viper
-  version: d493c32b69b8c6f2377bf30bc4d70267ffbc0793
+  version: 907c19d40d9a6c9bb55f040ff4ae45271a4754b9
 - name: github.com/vbauerster/mpb
-  version: 3674fd1f0789dbb003aa91a7b06138df0ef83c0f
+  version: b89b6c9ce4c35decc74d18628a5def8299d6c41f
   subpackages:
   - cwriter
   - decor
   - internal
 - name: github.com/VividCortex/ewma
   version: 43880d236f695d39c62cf7aa4ebd4508c258e6c0
+- name: golang.org/x/crypto
+  version: de0752318171da717af4ce24d0a2e8626afaeb11
+  subpackages:
+  - curve25519
+  - internal/subtle
+  - nacl/box
+  - nacl/secretbox
+  - poly1305
+  - salsa20/salsa
+  - ssh/terminal
 - name: golang.org/x/net
-  version: 49c15d80dfbc983ea25246ee959d970efe09ec09
+  version: c39426892332e1bb5ec0a434a079bf82f5d30c54
   subpackages:
   - context
 - name: golang.org/x/sync
@@ -91,9 +108,10 @@ imports:
   subpackages:
   - errgroup
 - name: golang.org/x/sys
-  version: bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e
+  version: 4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf
   subpackages:
   - unix
+  - windows
 - name: gopkg.in/yaml.v1
   version: 9f9df34309c04878acc86042b16630b0f696e1de
 testImports:

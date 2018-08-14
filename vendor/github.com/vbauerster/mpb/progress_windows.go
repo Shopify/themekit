@@ -2,12 +2,7 @@
 
 package mpb
 
-import (
-	"github.com/vbauerster/mpb/cwriter"
-)
-
 func (p *Progress) serve(s *pState) {
-	var numP, numA int
 	for {
 		select {
 		case op := <-p.operateState:
@@ -21,13 +16,11 @@ func (p *Progress) serve(s *pState) {
 				close(p.done)
 				return
 			}
-			if s.heapUpdated {
-				numP = s.bHeap.maxNumP()
-				numA = s.bHeap.maxNumA()
-				s.heapUpdated = false
+			tw, err := s.cw.GetWidth()
+			if err != nil {
+				tw = s.width
 			}
-			tw, _, _ := cwriter.TermSize()
-			s.render(tw, numP, numA)
+			s.render(tw)
 		}
 	}
 }

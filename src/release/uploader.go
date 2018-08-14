@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/url"
 
-	"github.com/Shopify/themekit/src/colors"
-
+	"github.com/Shopify/ejson"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+
+	"github.com/Shopify/themekit/src/colors"
 )
 
 const (
@@ -35,7 +35,8 @@ type uploader interface {
 }
 
 func newS3Uploader() (*s3Uploader, error) {
-	raw, err := ioutil.ReadFile(".env")
+	colors.ColorStdOut.Printf("Decrypting secrets")
+	raw, err := ejson.DecryptFile("config/secrets.ejson", "/opt/ejson/keys", "")
 	if err != nil {
 		return nil, err
 	}

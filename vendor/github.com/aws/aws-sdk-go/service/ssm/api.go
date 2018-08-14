@@ -6431,6 +6431,36 @@ func (c *SSM) LabelParameterVersionRequest(input *LabelParameterVersionInput) (r
 
 // LabelParameterVersion API operation for Amazon Simple Systems Manager (SSM).
 //
+// A parameter label is a user-defined alias to help you manage different versions
+// of a parameter. When you modify a parameter, Systems Manager automatically
+// saves a new version and increments the version number by one. A label can
+// help you remember the purpose of a parameter when there are multiple versions.
+//
+// Parameter labels have the following requirements and restrictions.
+//
+//    * A version of a parameter can have a maximum of 10 labels.
+//
+//    * You can't attach the same label to different versions of the same parameter.
+//    For example, if version 1 has the label Production, then you can't attach
+//    Production to version 2.
+//
+//    * You can move a label from one version of a parameter to another.
+//
+//    * You can't create a label when you create a new parameter. You must attach
+//    a label to a specific version of a parameter.
+//
+//    * You can't delete a parameter label. If you no longer want to use a parameter
+//    label, then you must move it to a different version of a parameter.
+//
+//    * A label can have a maximum of 100 characters.
+//
+//    * Labels can contain letters (case sensitive), numbers, periods (.), hyphens
+//    (-), or underscores (_).
+//
+//    * Labels can't begin with a number, "aws," or "ssm" (not case sensitive).
+//    If a label fails to meet these requirements, then the label is not associated
+//    with a parameter and the system displays it in the list of InvalidLabels.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6454,6 +6484,7 @@ func (c *SSM) LabelParameterVersionRequest(input *LabelParameterVersionInput) (r
 //   and version, and try again.
 //
 //   * ErrCodeParameterVersionLabelLimitExceeded "ParameterVersionLabelLimitExceeded"
+//   A parameter version can have a maximum of ten labels.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/LabelParameterVersion
 func (c *SSM) LabelParameterVersion(input *LabelParameterVersionInput) (*LabelParameterVersionOutput, error) {
@@ -11302,6 +11333,9 @@ type AutomationExecution struct {
 	// The target of the execution.
 	Target *string `type:"string"`
 
+	// The specified key-value mapping of document parameters to target resources.
+	TargetMaps []map[string][]*string `type:"list"`
+
 	// The parameter name.
 	TargetParameterName *string `min:"1" type:"string"`
 
@@ -11439,6 +11473,12 @@ func (s *AutomationExecution) SetTarget(v string) *AutomationExecution {
 	return s
 }
 
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *AutomationExecution) SetTargetMaps(v []map[string][]*string) *AutomationExecution {
+	s.TargetMaps = v
+	return s
+}
+
 // SetTargetParameterName sets the TargetParameterName field's value.
 func (s *AutomationExecution) SetTargetParameterName(v string) *AutomationExecution {
 	s.TargetParameterName = &v
@@ -11571,6 +11611,9 @@ type AutomationExecutionMetadata struct {
 	// The list of execution outputs as defined in the Automation document.
 	Target *string `type:"string"`
 
+	// The specified key-value mapping of document parameters to target resources.
+	TargetMaps []map[string][]*string `type:"list"`
+
 	// The list of execution outputs as defined in the Automation document.
 	TargetParameterName *string `min:"1" type:"string"`
 
@@ -11693,6 +11736,12 @@ func (s *AutomationExecutionMetadata) SetResolvedTargets(v *ResolvedTargets) *Au
 // SetTarget sets the Target field's value.
 func (s *AutomationExecutionMetadata) SetTarget(v string) *AutomationExecutionMetadata {
 	s.Target = &v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *AutomationExecutionMetadata) SetTargetMaps(v []map[string][]*string) *AutomationExecutionMetadata {
+	s.TargetMaps = v
 	return s
 }
 
@@ -22418,12 +22467,19 @@ func (s *InventoryResultItem) SetTypeName(v string) *InventoryResultItem {
 type LabelParameterVersionInput struct {
 	_ struct{} `type:"structure"`
 
+	// One or more labels to attach to the specified parameter version.
+	//
 	// Labels is a required field
 	Labels []*string `min:"1" type:"list" required:"true"`
 
+	// The parameter name on which you want to attach one or more labels.
+	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
+	// The specific version of the parameter on which you want to attach one or
+	// more labels. If no version is specified, the system attaches the label to
+	// the latest version.)
 	ParameterVersion *int64 `type:"long"`
 }
 
@@ -22480,6 +22536,9 @@ func (s *LabelParameterVersionInput) SetParameterVersion(v int64) *LabelParamete
 type LabelParameterVersionOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The label does not meet the requirements. For information about parameter
+	// label requirements, see Labeling Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html)
+	// in the AWS Systems Manager User Guide.
 	InvalidLabels []*string `min:"1" type:"list"`
 }
 
@@ -27514,10 +27573,20 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// order with tasks that have the same priority scheduled in parallel.
 	Priority *int64 `type:"integer"`
 
-	// The role that should be assumed when executing the task.
+	// The role to assume when running the Maintenance Window task.
 	//
-	// ServiceRoleArn is a required field
-	ServiceRoleArn *string `type:"string" required:"true"`
+	// If you do not specify a service role ARN, Systems Manager will use your account's
+	// service-linked role for Systems Manager by default. If no service-linked
+	// role for Systems Manager exists in your account, it will be created when
+	// you run RegisterTaskWithMaintenanceWindow without specifying a service role
+	// ARN.
+	//
+	// For more information, see Service-Linked Role Permissions for Systems Manager
+	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
+	// and Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
+	// Window Tasks?  (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
+	// in the AWS Systems Manager User Guide.
+	ServiceRoleArn *string `type:"string"`
 
 	// The targets (either instances or Maintenance Window targets).
 	//
@@ -27593,9 +27662,6 @@ func (s *RegisterTaskWithMaintenanceWindowInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 3))
-	}
-	if s.ServiceRoleArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("ServiceRoleArn"))
 	}
 	if s.Targets == nil {
 		invalidParams.Add(request.NewErrParamRequired("Targets"))
@@ -28813,6 +28879,10 @@ type StartAutomationExecutionInput struct {
 	// in the Automation document.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps cannot be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
+
 	// The name of the parameter used as the target resource for the rate-controlled
 	// execution. Required if you specify Targets.
 	TargetParameterName *string `min:"1" type:"string"`
@@ -28908,6 +28978,12 @@ func (s *StartAutomationExecutionInput) SetMode(v string) *StartAutomationExecut
 // SetParameters sets the Parameters field's value.
 func (s *StartAutomationExecutionInput) SetParameters(v map[string][]*string) *StartAutomationExecutionInput {
 	s.Parameters = v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *StartAutomationExecutionInput) SetTargetMaps(v []map[string][]*string) *StartAutomationExecutionInput {
+	s.TargetMaps = v
 	return s
 }
 
@@ -30271,6 +30347,18 @@ type UpdateMaintenanceWindowTaskInput struct {
 
 	// The IAM service role ARN to modify. The system assumes this role during task
 	// execution.
+	//
+	// If you do not specify a service role ARN, Systems Manager will use your account's
+	// service-linked role for Systems Manager by default. If no service-linked
+	// role for Systems Manager exists in your account, it will be created when
+	// you run RegisterTaskWithMaintenanceWindow without specifying a service role
+	// ARN.
+	//
+	// For more information, see Service-Linked Role Permissions for Systems Manager
+	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
+	// and Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
+	// Window Tasks?  (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
+	// in the AWS Systems Manager User Guide.
 	ServiceRoleArn *string `type:"string"`
 
 	// The targets (either instances or tags) to modify. Instances are specified
