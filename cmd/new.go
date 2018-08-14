@@ -15,11 +15,21 @@ import (
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",
 	Short: "[DEPRECATED] please use `new` instead",
-	Long: `[DEPRECATED] Bootstrap has been deprecated and renames to new. New will
-	work with all the same arguments as bootstrap.
+	Long: `[DEPRECATED] Bootstrap will download the latest release of Timber,
+  The most popular theme on Shopify. New will also setup
+  your config file and create a new theme id for you.
+
+  For more documentation please see http://shopify.github.io/themekit/commands/#bootstrap
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("bootstrap has been deprecated please use `new` instead")
+		return cmdutil.ForDefaultClient(flags, args, func(ctx cmdutil.Ctx) error {
+			ctx.Log.Printf("[%s] bootstrap has been deprecated please use `new` instead", colors.Yellow("WARN"))
+			name, url, err := getNewThemeDetails(flags, timber.GetVersionPath)
+			if err != nil {
+				return err
+			}
+			return newTheme(ctx, name, url)
+		})
 	},
 }
 
@@ -34,7 +44,7 @@ var newCmd = &cobra.Command{
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForDefaultClient(flags, args, func(ctx cmdutil.Ctx) error {
-			url, name, err := getNewThemeDetails(flags, timber.GetVersionPath)
+			name, url, err := getNewThemeDetails(flags, timber.GetVersionPath)
 			if err != nil {
 				return err
 			}
