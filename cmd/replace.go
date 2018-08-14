@@ -18,6 +18,9 @@ var replaceCmd = &cobra.Command{
  the files on shopify with your local files. Any files that do not
  exist on your local machine will be removed from shopify.
 
+  Deprecation Notice: This command is deprecated in v0.8.0 and will be removed in
+	v0.8.1. Please use the 'deploy' command instead.
+
  For more documentation please see http://shopify.github.io/themekit/commands/#replace
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {

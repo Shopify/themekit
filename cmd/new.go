@@ -14,12 +14,15 @@ import (
 
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",
-	Short: "[DEPRECATED] please use `new` instead",
-	Long: `[DEPRECATED] Bootstrap will download the latest release of Timber,
-  The most popular theme on Shopify. New will also setup
-  your config file and create a new theme id for you.
+	Short: "Bootstrap will create theme using Shopify Timber",
+	Long: `Bootstrap will download the latest release of Timber,
+ The most popular theme on Shopify. New will also setup
+ your config file and create a new theme id for you.
 
-  For more documentation please see http://shopify.github.io/themekit/commands/#bootstrap
+	Deprecation Notice: This command is deprecated in v0.8.0 and will be removed in
+	v0.8.1. Please use the 'new' command instead.
+
+ For more documentation please see http://shopify.github.io/themekit/commands/#bootstrap
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForDefaultClient(flags, args, func(ctx cmdutil.Ctx) error {

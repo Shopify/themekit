@@ -21,6 +21,9 @@ var uploadCmd = &cobra.Command{
  If no filenames are provided then upload will upload every file in the project
  to shopify.
 
+  Deprecation Notice: This command is deprecated in v0.8.0 and will be removed in
+	v0.8.1. Please use the 'deploy' command instead.
+
  For more documentation please see http://shopify.github.io/themekit/commands/#upload
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
