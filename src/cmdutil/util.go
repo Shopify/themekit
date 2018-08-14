@@ -45,6 +45,7 @@ type Flags struct {
 	Edit                  bool
 	With                  string
 	List                  bool
+	Soft                  bool
 }
 
 // Ctx is a specific context that a command will run in
