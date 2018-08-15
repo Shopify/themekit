@@ -12,4 +12,4 @@ steps:
 - wait
 - label: ":rocket: Deploy"
   run:
-  - scripts/deploy
+  - scripts/deploy.sh
