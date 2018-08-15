@@ -90,8 +90,8 @@ func Install(ver string) error {
 
 // Update will update the details of a release or deploy a new release with the
 // deploy feed
-func Update(ver string, force bool) error {
-	u, err := newS3Uploader()
+func Update(key, secret, ver string, force bool) error {
+	u, err := newS3Uploader(key, secret)
 	if err != nil {
 		return err
 	}
@@ -101,8 +101,8 @@ func Update(ver string, force bool) error {
 // Remove will remove a themekit release from the deployed releases list. This will
 // prevent any users from installing the version again. This can only be done will
 // appropriate S3 priviledges
-func Remove(ver string) error {
-	u, err := newS3Uploader()
+func Remove(key, secret, ver string) error {
+	u, err := newS3Uploader(key, secret)
 	if err != nil {
 		return err
 	}
