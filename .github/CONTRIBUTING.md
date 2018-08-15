@@ -40,10 +40,8 @@ Helpful commands
 
 # Deploying Themekit
 
-- You will need to have a valid `.env` file with credentials for the Amazon account. Please contact an admin with this info
 - Update ThemeKitVersion in `kit/version.go` and commit.
-- run `git tag <version> && git push origin --tags`
-- Create a release using `make dist`
+- run `git tag <version> && git push origin --tags` this will deploy on buildkite.
 - On Github create a new release for the tag and take note of any relevant changes.
   - Include a brief summary of all the changes
   - Include links to the Pull Requests that introduced these changes
