@@ -2,8 +2,8 @@
 set -e
 
 main() {
-  current_tag="$(git tag --points-at HEAD)"
   make all
+  current_tag="$(git tag --points-at HEAD)"
   if [ -z "$current_tag" ]; then
     echo "No tag to deploy"
     return
