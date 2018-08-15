@@ -5,7 +5,7 @@ vet:
 	@go vet $(shell go list ./...)
 lint: # Lint all packages
 	@go list ./... | xargs -n 1 golint -set_exit_status
-test: lint vet unit_test ## lint, vet and test the code
+test: lint vet ## lint, vet and test the code
 	@go test -race -cover $(shell go list ./...)
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
