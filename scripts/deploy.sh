@@ -2,15 +2,14 @@
 set -e
 
 main() {
-  make all
-  current_tag="$(git tag --points-at HEAD)"
-  if [ -z "$current_tag" ]; then
+  if [ -z "$BUILDKITE_TAG" ]; then
     echo "No tag to deploy"
     return
   fi
+  make all
   go build -o ./build/release ./cmd/tkrelease
-  echo "Deploying $current_tag"
-  ./build/release -k="$AWS_KEY" -s="$AWS_SECRET" $current_tag
+  echo "Deploying $BUILDKITE_TAG"
+  ./build/release -k="$AWS_KEY" -s="$AWS_SECRET" $BUILDKITE_TAG
   make gen_sha
 }
 
