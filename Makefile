@@ -5,17 +5,17 @@ vet:
 	@go vet $(shell go list ./...)
 lint: # Lint all packages
 	@go list ./... | xargs -n 1 golint -set_exit_status
-test: lint vet unit_test # lint, vet and test the code
+test: lint vet unit_test ## lint, vet and test the code
 	@go test -race -cover $(shell go list ./...)
-all: clean # will build a binary for all platforms
+clean: ## Remove all temporary build artifacts
+	@rm -rf build && echo "project cleaned";
+all: clean ## will build a binary for all platforms
 	@export GOOS=windows GOARCH=386 EXT=.exe; $(MAKE) build;
 	@export GOOS=windows GOARCH=amd64 EXT=.exe; $(MAKE) build;
 	@export GOOS=darwin GOARCH=386; $(MAKE) build;
 	@export GOOS=darwin GOARCH=amd64; $(MAKE) build;
 	@export GOOS=linux GOARCH=386; $(MAKE) build;
 	@export GOOS=linux GOARCH=amd64; $(MAKE) build;
-clean: # Remove all temporary build artifacts
-	@rm -rf build && echo "project cleaned";
 build:
 	@mkdir -p build/dist/${GOOS}-${GOARCH} && \
     echo "[${GOOS}-${GOARCH}] build started" && \
