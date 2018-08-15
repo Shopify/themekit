@@ -7,11 +7,11 @@ steps:
 - label: Vet
   run:
   - go vet -all ./...
-- label: :hammer: Test
+- label: ":hammer: Test"
   run:
   - go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
   - bash -c "bash <(curl -s https://codecov.io/bash)"
 - wait
-- label: :rocket: Deploy
+- label: ":rocket: Deploy"
   run:
   - ./scripts/deploy
