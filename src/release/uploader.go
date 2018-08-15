@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/url"
 
 	"github.com/Shopify/themekit/src/colors"
@@ -20,11 +19,6 @@ const (
 	bucketName = "shopify-themekit"
 )
 
-type deploySecrets struct {
-	Key    string `json:"key"`
-	Secret string `json:"secret"`
-}
-
 type s3Uploader struct {
 	*s3manager.Uploader
 }
@@ -34,21 +28,9 @@ type uploader interface {
 	JSON(string, interface{}) error
 }
 
-func newS3Uploader() (*s3Uploader, error) {
-	raw, err := ioutil.ReadFile(".env")
-	if err != nil {
-		return nil, err
-	}
-
-	var secrets deploySecrets
-	err = json.Unmarshal(raw, &secrets)
-	if err != nil {
-		return nil, err
-	}
-
-	creds := credentials.NewStaticCredentials(secrets.Key, secrets.Secret, "")
+func newS3Uploader(key, secret string) (*s3Uploader, error) {
+	creds := credentials.NewStaticCredentials(key, secret, "")
 	cfg := aws.NewConfig().WithRegion(region).WithCredentials(creds)
-
 	return &s3Uploader{s3manager.NewUploader(session.New(cfg))}, nil
 }
 
