@@ -4,10 +4,12 @@ containers:
     workdir: /go/src/github.com/Shopify/themekit
 
 steps:
-- label: Vet
+- label: ":hammer: Test"
   run:
   - go vet -all ./...
-- label: Test
-  run:
   - go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
   - bash -c "bash <(curl -s https://codecov.io/bash)"
+- wait
+- label: ":rocket: Deploy"
+  run:
+  - scripts/deploy.sh
