@@ -82,7 +82,7 @@ see your access credentials. Please copy the password. You will need it later.
 If you are starting from scratch and want to get a quick start, run the following:
 
 ```bash
-theme bootstrap --password=[your-password] --store=[your-store.myshopify.com]
+theme new --password=[your-password] --store=[your-store.myshopify.com]
 ```
 
 This will create a new theme for your online store from the [Timber](https://shopify.github.io/Timber/) template. Then
@@ -91,16 +91,15 @@ it will download all those assets from Shopify and automatically create a `confi
 ## Configure an existing theme.
 
 To connect an existing theme, you need the theme’s ID number. The easiest way to
-get your theme’s ID number is to go to the Theme Editor click on Edit HTML/CSS and
-copy the theme ID number from the URL — it will be last several digits after mystore.myshopify.com/admin/themes/.
-
-<img src="{{ "/assets/images/shopify-local-theme-development-theme-id.gif" | prepend: site.baseurl }}" />
-
-Then once you have noted your theme ID, run the following commands:
+get your theme’s ID number is to use the get command like this:
 
 ```bash
-# create configuration
-theme configure --password=[your-password] --store=[you-store.myshopify.com] --themeid=[your-theme-id]
-# download and setup project in the current directory
-theme download
+theme get --list -p=[your-password] -s=[you-store.myshopify.com]
+```
+
+Then once you have noted your theme ID, run the following command to generate a
+config and download the theme from shopify:
+
+```bash
+theme get -p=[your-password] -s=[you-store.myshopify.com] -t=[your-theme-id]
 ```
