@@ -1,5 +1,6 @@
-v0.8.0
-======
+
+v0.8.0 (Aug 20, 2018)
+=====================
 Minor number change because the asset manifest was removed and added a get
 command as well as renamed bootstrap to new
 - new command
