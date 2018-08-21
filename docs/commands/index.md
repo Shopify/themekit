@@ -70,7 +70,6 @@ Deploy can be used without any filenames and it will replace the whole theme. If
 some filenames are provided to replace then only those files will be replaced.
 
 |**Optional Flags**||
-|`-f`|`--force`  | disable version checking and force all changes
 |`-a`|`--allenvs`| Will run this command for each environment in your config file.
 |`-n`|`--nodelete`| will run deploy without removing files from shopify.
 
@@ -83,9 +82,6 @@ could enter the following command:
 ```bash
 theme download templates/404.liquid templates/article.liquid
 ```
-
-|**Optional Flags**||
-|`-f`|`--force`| disable version checking and force all changes
 
 ## Get
 Get can be used to setup your theme on your local machine. It will both create
@@ -168,7 +164,6 @@ theme remove templates/404.liquid templates/article.liquid
 are required to serve a valid theme.
 
 |**Optional Flags**||
-|`-f`|`--force`  | disable version checking and force all changes
 |`-a`|`--allenvs`| Will run this command for each environment in your config file.
 
 ## Replace
@@ -209,6 +204,5 @@ theme watch --notify=/tmp/theme.update
 ```
 
 |**Optional Flags**||
-|`-f`|`--force`  | disable version checking and force all changes
 |`-a`|`--allenvs`| Will run this command for each environment in your config file.
 |`-n`|`--notify` | File path to a file that you want updated on idle.
