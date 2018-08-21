@@ -26,6 +26,12 @@ build:
 		echo "[${GOOS}-${GOARCH}] build complete";
 gen_sha: # Generate sha256 for a darwin build for usage with homebrew
 	@shasum -a 256 ./build/dist/darwin-amd64/theme
+md5s: ## Generate md5 sums for all builds
+	@echo "darwinamd64sum: $(shell md5 -q ./build/dist/darwin-amd64/theme)"
+	@echo "windows386sum: $(shell md5 -q ./build/dist/windows-386/theme.exe)"
+	@echo "windowsamd64sum: $(shell md5 -q ./build/dist/windows-amd64/theme.exe)"
+	@echo "linux386sum: $(shell md5 -q ./build/dist/linux-386/theme)"
+	@echo "linuxamd64sum: $(shell md5 -q ./build/dist/linux-amd64/theme)"
 serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
 	@cd docs && jekyll serve
 init_tools: ## Will install tools needed to work on this repo

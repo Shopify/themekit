@@ -6,7 +6,14 @@ baseurl: "/themekit"
 url: "https://shopify.github.io"
 sass:
   cache: true
+# remember to update the checksums
 themekitversion: "v0.8.0"
+# these can be generated with `make md5s`
+darwinamd64sum: 0a4aa649375325df05d7b4b8286d5103
+windows386sum: 621a5289dd18793b9f0d1a0abe085e8a
+windowsamd64sum: a21480efefe3b724db6d175fbdff3618
+linux386sum: c6eb47958a295cb184c3c6ba796583ba
+linuxamd64sum: 7e66a3ebdb652be23d9a5b00b3544ca5
 
 # Build settings
 markdown: kramdown
