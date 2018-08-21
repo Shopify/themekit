@@ -52,7 +52,9 @@ Helpful commands
   - run `make serve_docs`
   - update any changes to the API
   - commit changes
-- Update `themekitversion` in docs config `docs/_config.yml` to update the download links.
+- Update `themekitversion` in docs config `docs/_config.yml` to update the download links,
+  then run `make md5s` to generate the checksums for the new files. Add these to the `docs/_config.yml`
+  file as well.
 - Update the changelog.txt
 - Update `themekit.rb` formula for homebrew on https://github.com/Shopify/homebrew-shopify
   - run `make gen_sha` to generate the SHA256 for the darwin build

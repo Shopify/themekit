@@ -54,13 +54,13 @@ Run the following commands in Powershell as Administrator.
 
 Download the latest release executable.
 
-| OS     | Architecture |          |
-| :------| :------------| :------- |
-| macOS  | 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/darwin-amd64/theme)
-| Windows| 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-amd64/theme.exe)
-| Windows| 32-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-386/theme.exe)
-| Linux  | 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-amd64/theme)
-| Linux  | 32-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-386/theme)
+| OS     | Architecture |          | md4 checksums |
+| :------| :------------| :------- | :------------ |
+| macOS  | 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/darwin-amd64/theme)      | {{ site.darwinamd64sum }}
+| Windows| 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-amd64/theme.exe) | {{ site.windowsamd64sum }}
+| Windows| 32-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-386/theme.exe)   | {{ site.windows386sum }}
+| Linux  | 64-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-amd64/theme)       | {{ site.linuxamd64sum }}
+| Linux  | 32-bit       |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-386/theme)         | {{ site.linux386sum }}
 
 ## Get API Access
 
