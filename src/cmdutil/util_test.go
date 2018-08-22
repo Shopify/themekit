@@ -89,11 +89,6 @@ func TestGenerateContexts(t *testing.T) {
 	assert.EqualError(t, err, "Could not load any valid environments")
 
 	client = new(mocks.ShopifyClient)
-	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
-	_, err = generateContexts(factory, nil, Flags{ConfigPath: "_testdata/invalid_config.yml", Environments: stringArgArray{[]string{"other"}}}, []string{})
-	assert.EqualError(t, err, "invalid config invalid environment []: (invalid store domain must end in '.myshopify.com',missing password)")
-
-	client = new(mocks.ShopifyClient)
 	factory = func(*env.Env) (shopifyClient, error) { return client, fmt.Errorf("not today") }
 	_, err = generateContexts(factory, nil, Flags{ConfigPath: "_testdata/config.yml"}, []string{})
 	assert.EqualError(t, err, "not today")

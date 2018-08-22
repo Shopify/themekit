@@ -22,7 +22,6 @@ func TestLoad(t *testing.T) {
 	}{
 		{path: "_testdata/projectdir/valid_config.yml", err: ""},
 		{path: "_testdata/projectdir/bad_format.yml", err: ""},
-		{path: "_testdata/projectdir/invalid_config.yml", err: "invalid store domain"},
 		{path: "_testdata/projectdir/invalid_yaml.yml", err: "Invalid yaml found while loading the config file"},
 		{path: "_testdata/projectdir/config.json", err: ""},
 		{path: "_testdata/projectdir/bad_config.json", err: "Invalid json found while loading the config file"},

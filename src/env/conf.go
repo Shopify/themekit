@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"encoding/json"
 	"github.com/caarlos0/env"
@@ -67,7 +66,7 @@ func Load(configPath string) (Conf, error) {
 		}
 	}
 
-	return conf, conf.validate()
+	return conf, nil
 }
 
 // Set will set the environment value and then mixin any overrides passed in. The os
@@ -94,26 +93,6 @@ func (c *Conf) Get(name string, overrides ...Env) (*Env, error) {
 		return env, ErrEnvNotDefined
 	}
 	return newEnv(name, *env, append([]Env{c.osEnv}, overrides...)...)
-}
-
-func (c Conf) validate() error {
-	errors := []string{}
-
-	for _, env := range c.Envs {
-		if env == nil {
-			continue
-		}
-		err := env.validate()
-		if err != nil {
-			errors = append(errors, err.Error())
-		}
-	}
-
-	if len(errors) > 0 {
-		return fmt.Errorf("invalid config %v", strings.Join(errors, ","))
-	}
-
-	return nil
 }
 
 // Save will write out the config to a file.
