@@ -47,6 +47,7 @@ foreach($platform in $release.platforms) {
       Write-Host -foreground Red    -background Black "Error: $($PSItem.Exception.Message)";
       Exit 1
     }
+    break
   }
 }
 
