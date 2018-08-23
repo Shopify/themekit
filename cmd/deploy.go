@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -107,7 +108,7 @@ func generateActions(ctx cmdutil.Ctx) (map[string]file.Op, error) {
 			return assetsActions, err
 		}
 		for _, filename := range remoteFiles {
-			assetsActions[filename] = file.Remove
+			assetsActions[filepath.ToSlash(filename)] = file.Remove
 		}
 	}
 
