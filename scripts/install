@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import os, urllib, json, sys
+import os, urllib, json, sys, hashlib
 
 class Installer(object):
     LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
@@ -30,14 +30,18 @@ class Installer(object):
             sys.exit("Please open an issue at https://github.com/Shopify/themekit/issues")
         return Installer.ARCH_MAPPING[arch_name]
 
-    def __findReleaseURL(self):
+    def __findReleasePlatform(self):
         for index, platform in enumerate(self.release['platforms']):
             if platform['name'] == self.arch:
-                return platform['url']
+                return platform
 
     def __download(self):
-        release_url = self.__findReleaseURL()
-        data = urllib.urlopen(release_url).read()
+        platform = self.__findReleasePlatform()
+        data = urllib.urlopen(platform['url']).read()
+        if hashlib.md5(data).hexdigest() != platform['digest']:
+            sys.exit("Downloaded binary did not match checksum.")
+        else:
+            print("Validated binary checksum")
         if not os.path.exists(self.install_path):
             os.makedirs(self.install_path)
         with open(self.bin_path, "wb") as themefile:

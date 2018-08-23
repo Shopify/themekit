@@ -32,6 +32,13 @@ foreach($platform in $release.platforms) {
     Write-Output "Downloading version $($release.version) of Shopify Themekit.";
     Try {
       $web_client.DownloadFile($platform.url, $dest)
+
+      $hashFromFile = Get-FileHash $dest -Algorithm MD5
+      if ($hashFromFile.Hash -eq $platform.digest) {
+        Write-Host -ForegroundColor Green 'Validated binary checksum'
+      } else {
+        Write-Host -ForegroundColor Red 'Downloaded binary did not match checksum.'
+      }
     } Catch {
       Write-Output "Couldn't download Shopify Themekit";
       Write-Host -foreground Yellow -background Black "Couldn't download Shopify Themekit. Check your internet connection.";
