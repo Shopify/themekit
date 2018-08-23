@@ -77,6 +77,10 @@ func TestIsUpdateAvailable(t *testing.T) {
 		assert.Equal(t, checkUpdateAvailable(ts.URL), testcase.applicable)
 		ts.Close()
 	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	ts.Close()
+	assert.False(t, checkUpdateAvailable(ts.URL))
 }
 
 func TestInstallLatest(t *testing.T) {
@@ -99,6 +103,10 @@ func TestInstallLatest(t *testing.T) {
 		}
 		ts.Close()
 	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	ts.Close()
+	assert.Error(t, installLatest(ts.URL, func(p platform) error { return nil }))
 }
 
 func TestInstallVersion(t *testing.T) {
@@ -183,13 +191,17 @@ func TestUpdate(t *testing.T) {
 
 		ts.Close()
 	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	ts.Close()
+	err := update(ThemeKitVersion.String(), ts.URL, filepath.Join("_testdata", "dist"), false, new(mocks.LaxUploader))
+	assert.Error(t, err)
 }
 
 func TestRemove(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `[{"version":"0.4.7", "platforms": [{"name": "plat-name"}]}]`)
 	}))
-	defer ts.Close()
 
 	testcases := []struct {
 		ver, dir, err string
@@ -207,6 +219,9 @@ func TestRemove(t *testing.T) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}
 	}
+
+	ts.Close()
+	assert.Error(t, remove(ThemeKitVersion.String(), ts.URL, new(mocks.LaxUploader)))
 }
 
 func TestUpdateDeploy(t *testing.T) {
@@ -217,6 +232,10 @@ func TestUpdateDeploy(t *testing.T) {
 	m.On("JSON", "releases/latest.json", latest).Return(nil)
 	updateDeploy(releases, m)
 	m.AssertExpectations(t)
+
+	m = new(mocks.Uploader)
+	m.On("JSON", "releases/all.json", releases).Return(errors.New("nope"))
+	assert.Error(t, updateDeploy(releases, m))
 }
 
 func TestFetchLatest(t *testing.T) {

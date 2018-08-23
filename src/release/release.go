@@ -214,8 +214,7 @@ func remove(ver, releaseURL string, u uploader) error {
 
 func updateDeploy(releases releasesList, u uploader) error {
 	colors.ColorStdOut.Printf("Updating releases")
-	err := u.JSON("releases/all.json", releases)
-	if err != nil {
+	if err := u.JSON("releases/all.json", releases); err != nil {
 		return err
 	}
 	return u.JSON("releases/latest.json", releases.get("latest"))
