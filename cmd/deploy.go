@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -118,7 +117,7 @@ func generateActions(ctx cmdutil.Ctx) (map[string]file.Op, error) {
 	}
 
 	for _, path := range localAssets {
-		assetsActions[filepath.ToSlash(path)] = file.Update
+		assetsActions[path] = file.Update
 	}
 	return assetsActions, nil
 }
