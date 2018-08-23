@@ -91,22 +91,14 @@ func Install(ver string) error {
 // Update will update the details of a release or deploy a new release with the
 // deploy feed
 func Update(key, secret, ver string, force bool) error {
-	u, err := newS3Uploader(key, secret)
-	if err != nil {
-		return err
-	}
-	return update(ver, releasesS3URL, filepath.Join("build", "dist"), force, u)
+	return update(ver, releasesS3URL, filepath.Join("build", "dist"), force, newS3Uploader(key, secret))
 }
 
 // Remove will remove a themekit release from the deployed releases list. This will
 // prevent any users from installing the version again. This can only be done will
 // appropriate S3 priviledges
 func Remove(key, secret, ver string) error {
-	u, err := newS3Uploader(key, secret)
-	if err != nil {
-		return err
-	}
-	return remove(ver, releasesS3URL, u)
+	return remove(ver, releasesS3URL, newS3Uploader(key, secret))
 }
 
 func checkUpdateAvailable(latestURL string) bool {

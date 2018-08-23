@@ -15,38 +15,48 @@ import (
 )
 
 const (
-	region     = "us-east-1"
-	bucketName = "shopify-themekit"
+	region = "us-east-1"
 )
 
-type s3Uploader struct {
-	*s3manager.Uploader
-}
+var (
+	bucket = aws.String("shopify-themekit")
+	acl    = aws.String("public-read")
+)
 
-type uploader interface {
-	File(string, io.ReadSeeker) (string, error)
-	JSON(string, interface{}) error
-}
+type (
+	s3Uploader struct {
+		upload uploadFunc
+	}
+	uploadFunc func(name string, body io.Reader) (string, error)
+	uploader   interface {
+		File(string, io.ReadSeeker) (string, error)
+		JSON(string, interface{}) error
+	}
+)
 
-func newS3Uploader(key, secret string) (*s3Uploader, error) {
+func newS3Uploader(key, secret string) *s3Uploader {
 	creds := credentials.NewStaticCredentials(key, secret, "")
 	cfg := aws.NewConfig().WithRegion(region).WithCredentials(creds)
-	return &s3Uploader{s3manager.NewUploader(session.New(cfg))}, nil
+	return &s3Uploader{
+		upload: func(filename string, body io.Reader) (string, error) {
+			u := s3manager.NewUploader(session.New(cfg))
+			resp, err := u.Upload(&s3manager.UploadInput{Bucket: bucket, ACL: acl, Key: aws.String(filename), Body: body})
+			if err != nil {
+				return "", err
+			}
+			return resp.Location, nil
+		},
+	}
 }
 
 func (uploader *s3Uploader) File(fileName string, body io.ReadSeeker) (string, error) {
 	colors.ColorStdOut.Printf("Uploading %s", colors.Green(fileName))
-	resp, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucketName),
-		ACL:    aws.String("public-read"),
-		Key:    aws.String(fileName),
-		Body:   body,
-	})
+	location, err := uploader.upload(fileName, body)
 	if err != nil {
 		return "", err
 	}
 
-	fileURL, err := url.QueryUnescape(resp.Location)
+	fileURL, err := url.QueryUnescape(location)
 	if err != nil {
 		return "", err
 	}
