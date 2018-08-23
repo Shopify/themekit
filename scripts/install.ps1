@@ -38,6 +38,8 @@ foreach($platform in $release.platforms) {
         Write-Host -ForegroundColor Green 'Validated binary checksum'
       } else {
         Write-Host -ForegroundColor Red 'Downloaded binary did not match checksum.'
+        Remove-Item $dest
+        Exit 1
       }
     } Catch {
       Write-Output "Couldn't download Shopify Themekit";
@@ -45,6 +47,7 @@ foreach($platform in $release.platforms) {
       Write-Host -foreground Red    -background Black "Error: $($PSItem.Exception.Message)";
       Exit 1
     }
+    break
   }
 }
 
