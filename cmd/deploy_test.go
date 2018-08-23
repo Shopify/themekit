@@ -73,12 +73,13 @@ func TestReplace(t *testing.T) {
 func TestGenerateActions(t *testing.T) {
 	ctx, client, _, _, _ := createTestCtx()
 	ctx.Env.Directory = filepath.Join("_testdata", "projectdir")
-	client.On("GetAllAssets").Return([]string{filepath.Join("assets", "logo.png")}, nil)
+	client.On("GetAllAssets").Return([]string{"assets/logo.png"}, nil)
 	actions, err := generateActions(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, actions["assets/logo.png"], file.Remove)
 	assert.Equal(t, actions["config/settings_data.json"], file.Update)
 	assert.Equal(t, actions["assets/app.js"], file.Update)
+	assert.Equal(t, len(actions), 3)
 	_, found := actions["assets/.gitkeep"]
 	assert.False(t, found)
 

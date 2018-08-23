@@ -108,7 +108,7 @@ func generateActions(ctx cmdutil.Ctx) (map[string]file.Op, error) {
 			return assetsActions, err
 		}
 		for _, filename := range remoteFiles {
-			assetsActions[filepath.ToSlash(filename)] = file.Remove
+			assetsActions[filename] = file.Remove
 		}
 	}
 
@@ -118,7 +118,7 @@ func generateActions(ctx cmdutil.Ctx) (map[string]file.Op, error) {
 	}
 
 	for _, path := range localAssets {
-		assetsActions[path] = file.Update
+		assetsActions[filepath.ToSlash(path)] = file.Update
 	}
 	return assetsActions, nil
 }
