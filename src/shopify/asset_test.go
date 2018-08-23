@@ -92,7 +92,7 @@ func TestAsset_Contents(t *testing.T) {
 func TestLoadAssetsFromDirectory(t *testing.T) {
 	root := filepath.Join("_testdata", "project")
 	ignoreNone := func(path string) bool { return strings.Contains(path, ".gitkeep") }
-	selectOne := func(path string) bool { return path != filepath.Join("assets", "application.js") }
+	selectOne := func(path string) bool { return path != "assets/application.js" }
 
 	testcases := []struct {
 		path, err string

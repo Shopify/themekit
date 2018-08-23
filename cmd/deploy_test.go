@@ -79,6 +79,7 @@ func TestGenerateActions(t *testing.T) {
 	assert.Equal(t, actions["assets/logo.png"], file.Remove)
 	assert.Equal(t, actions["config/settings_data.json"], file.Update)
 	assert.Equal(t, actions["assets/app.js"], file.Update)
+	assert.Equal(t, len(actions), 3)
 	_, found := actions["assets/.gitkeep"]
 	assert.False(t, found)
 

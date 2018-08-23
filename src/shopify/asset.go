@@ -135,6 +135,7 @@ func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (a
 		if err != nil {
 			return err
 		}
+		assetKey = filepath.ToSlash(assetKey)
 		if !ignore(assetKey) {
 			assets = append(assets, assetKey)
 		}
