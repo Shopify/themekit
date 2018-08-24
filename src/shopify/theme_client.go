@@ -269,7 +269,7 @@ func (c Client) UpdateAsset(asset Asset) error {
 
 	if len(r.Errors) > 0 {
 		if _, ok := r.Errors["asset"]; ok {
-			if resp.StatusCode == 422 && r.Errors["asset"][0] == "Cannot overwrite generated asset" {
+			if resp.StatusCode == 422 && strings.Contains(r.Errors["asset"][0], "Cannot overwrite generated asset") {
 				c.DeleteAsset(asset) // No need to check the error because if it fails then remove will be tried again.
 				return c.UpdateAsset(asset)
 			}

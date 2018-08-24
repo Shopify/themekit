@@ -345,7 +345,7 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 		}),
 		map[string]Asset{"asset": asset},
 	).Return(&http.Response{
-		Body:       &StringReadCloser{strings.NewReader(`{"errors":{"asset":["Cannot overwrite generated asset"]}}`)},
+		Body:       &StringReadCloser{strings.NewReader(`{"errors":{"asset":["Cannot overwrite generated asset filename.txt"]}}`)},
 		StatusCode: 422,
 	}, nil)
 
