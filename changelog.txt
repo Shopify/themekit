@@ -1,3 +1,10 @@
+v0.8.1
+======
+- Added checksums to the download links
+- Added checksum validation for auto install scripts
+- Fixed deploy for windows paths
+- Fixed overwriting compiled assets
+
 v0.8.0 (Aug 20, 2018)
 =====================
 Minor number change because the asset manifest was removed and added a get
