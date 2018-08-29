@@ -40,7 +40,7 @@ var (
  exist on your local machine will be removed from shopify.
 
   Deprecation Notice: This command is deprecated in v0.8.0 and will be removed in
-	v0.8.1. Please use the 'deploy' command instead.
+	v1.0.0. Please use the 'deploy' command instead.
 
  For more documentation please see http://shopify.github.io/themekit/commands/#replace
  `,
@@ -58,7 +58,7 @@ var (
  to shopify.
 
   Deprecation Notice: This command is deprecated in v0.8.0 and will be removed in
-	v0.8.1. Please use the 'deploy' command instead.
+	v1.0.0. Please use the 'deploy' command instead.
 
  For more documentation please see http://shopify.github.io/themekit/commands/#upload
  `,

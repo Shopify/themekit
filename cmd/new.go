@@ -20,7 +20,7 @@ var bootstrapCmd = &cobra.Command{
  your config file and create a new theme id for you.
 
 	Deprecation Notice: This command is deprecated in v0.8.0 and will be removed in
-	v0.8.1. Please use the 'new' command instead.
+	v1.0.0. Please use the 'new' command instead.
 
  For more documentation please see http://shopify.github.io/themekit/commands/#bootstrap
   `,
