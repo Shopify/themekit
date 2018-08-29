@@ -140,9 +140,7 @@ func (w *Watcher) Stop() {
 	if w.fsWatcher == nil {
 		return
 	}
-	// This is half assed because fsnotify sometimes deadlocks
-	// if it finishes before exit great if not garbage collection will do it.
-	go w.fsWatcher.Close()
+	w.fsWatcher.Close()
 }
 
 func (w *Watcher) onIdle() {
