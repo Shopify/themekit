@@ -14,6 +14,15 @@ import (
 	"github.com/Shopify/themekit/src/shopify"
 )
 
+// This is the limit of assets that can be uploaded at the same time. This may
+// need to be tweaked in the future.
+const assetLimit = 100
+
+// This sets a hard limit on how many assets are loaded at a single time before
+// being uploaded. This is to protect from memory errors when very large themes
+// are uploaded.
+var assetLimitSemaphore = make(chan struct{}, assetLimit)
+
 var watchCmd = &cobra.Command{
 	Use:   "watch",
 	Short: "Watch directory for changes and update remote theme",
@@ -81,6 +90,9 @@ func perform(ctx cmdutil.Ctx, path string, op file.Op) {
 			ctx.Log.Printf("[%s] Deleted %s", colors.Green(ctx.Env.Name), colors.Blue(path))
 		}
 	} else {
+		assetLimitSemaphore <- struct{}{}
+		defer func() { <-assetLimitSemaphore }()
+
 		asset, err := shopify.ReadAsset(ctx.Env, path)
 		if err != nil {
 			ctx.ErrLog.Printf("[%s] error loading %s: %s", colors.Green(ctx.Env.Name), colors.Green(path), colors.Red(err))
