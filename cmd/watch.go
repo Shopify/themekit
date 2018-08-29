@@ -76,7 +76,7 @@ func perform(ctx cmdutil.Ctx, path string, op file.Op) {
 
 	if op == file.Remove {
 		if err := ctx.Client.DeleteAsset(shopify.Asset{Key: path}); err != nil {
-			ctx.ErrLog.Printf("[%s] %s", colors.Green(ctx.Env.Name), err)
+			ctx.ErrLog.Printf("[%s] (%s) %s", colors.Green(ctx.Env.Name), colors.Blue(path), err)
 		} else if ctx.Flags.Verbose {
 			ctx.Log.Printf("[%s] Deleted %s", colors.Green(ctx.Env.Name), colors.Blue(path))
 		}
@@ -88,7 +88,7 @@ func perform(ctx cmdutil.Ctx, path string, op file.Op) {
 		}
 
 		if err := ctx.Client.UpdateAsset(asset); err != nil {
-			ctx.ErrLog.Printf("[%s] %s", colors.Green(ctx.Env.Name), err)
+			ctx.ErrLog.Printf("[%s] (%s) %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key), err)
 		} else if ctx.Flags.Verbose {
 			ctx.Log.Printf("[%s] Updated %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
 		}
