@@ -15,7 +15,7 @@ func TestGet(t *testing.T) {
 	conf.On("Set", "development", env.Env{}).Return(nil, nil)
 	conf.On("Save").Return(nil)
 	client.On("GetAllAssets").Return([]string{}, nil)
-	assert.Nil(t, getTheme(ctx))
+	assert.Error(t, getTheme(ctx), "No files to download")
 
 	ctx, _, conf, _, _ = createTestCtx()
 	conf.On("Set", "development", env.Env{}).Return(nil, fmt.Errorf("invalid conf"))
@@ -39,7 +39,7 @@ func TestGet(t *testing.T) {
 	conf.On("Set", "test", env.Env{Domain: "my.domain.com"}).Return(nil, nil)
 	conf.On("Save").Return(nil)
 	client.On("GetAllAssets").Return([]string{}, nil)
-	assert.Nil(t, getTheme(ctx))
+	assert.Error(t, getTheme(ctx), "No files to download")
 
 	ctx, client, conf, _, _ = createTestCtx()
 	ctx.Flags.List = true

@@ -21,7 +21,7 @@ func TestNewTheme(t *testing.T) {
 	conf.On("Set", "development", env.Env{}).Return(nil, nil)
 	conf.On("Save").Return(nil)
 	err := newTheme(ctx, name, url)
-	assert.Nil(t, err)
+	assert.Error(t, err)
 
 	ctx, client, _, _, _ = createTestCtx()
 	client.On("CreateNewTheme", name, url).Return(shopify.Theme{}, fmt.Errorf("can't create theme"))
