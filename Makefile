@@ -23,6 +23,7 @@ build:
 			-ldflags="-s -w" \
 			-o build/dist/${GOOS}-${GOARCH}/theme${EXT} \
 			github.com/Shopify/themekit/cmd/theme && \
+		upx -9 build/dist/${GOOS}-${GOARCH}/theme${EXT} && \
 		echo "[${GOOS}-${GOARCH}] build complete";
 gen_sha: # Generate sha256 for a darwin build for usage with homebrew
 	@shasum -a 256 ./build/dist/darwin-amd64/theme

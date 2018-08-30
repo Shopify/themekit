@@ -33,6 +33,10 @@ func download(ctx cmdutil.Ctx) error {
 		return err
 	}
 
+	if len(filenames) == 0 {
+		return fmt.Errorf("No files to download")
+	}
+
 	ctx.StartProgress(len(filenames))
 	for _, filename := range filenames {
 		downloadGroup.Add(1)
