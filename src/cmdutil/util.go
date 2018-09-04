@@ -73,6 +73,11 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 		)
 	}
 
+	if flags.DisableIgnore {
+		e.IgnoredFiles = []string{}
+		e.Ignores = []string{}
+	}
+
 	client, err := newClient(e)
 	if err != nil {
 		return Ctx{}, err
@@ -109,11 +114,6 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 				break
 			}
 		}
-	}
-
-	if flags.DisableIgnore {
-		e.IgnoredFiles = []string{}
-		e.Ignores = []string{}
 	}
 
 	return Ctx{
