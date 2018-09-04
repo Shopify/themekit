@@ -284,6 +284,8 @@ func TestBuildRelease(t *testing.T) {
 		{Name: "linux-amd64", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
 		{Name: "windows-386", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
 		{Name: "windows-amd64", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
+		{Name: "freebsd-386", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
+		{Name: "freebsd-amd64", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
 	}
 	for _, p := range testplatforms {
 		assert.Contains(t, r.Platforms, p)
