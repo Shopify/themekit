@@ -61,6 +61,8 @@ Download the latest release executable.
 | Windows| 32-bit       | {{ site.windows386sum }}   |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/windows-386/theme.exe)
 | Linux  | 64-bit       | {{ site.linuxamd64sum }}   |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-amd64/theme)
 | Linux  | 32-bit       | {{ site.linux386sum }}     |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-386/theme)
+| FreeBSD| 64-bit       | {{ site.freebsdamd64sum }} |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/freebsd-amd64/theme)
+| FreeBSD| 32-bit       | {{ site.freebsd386sum }}   |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/freebsd-386/theme)
 
 ## Get API Access
 

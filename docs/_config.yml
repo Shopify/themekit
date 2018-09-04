@@ -14,6 +14,8 @@ windows386sum: 621a5289dd18793b9f0d1a0abe085e8a
 windowsamd64sum: a21480efefe3b724db6d175fbdff3618
 linux386sum: c6eb47958a295cb184c3c6ba796583ba
 linuxamd64sum: 7e66a3ebdb652be23d9a5b00b3544ca5
+freebsd386sum: 03846999dc4987f3e78a4c9d58b099b5
+freebsdamd64sum: 907b0e82467e626966625888af20301a
 
 # Build settings
 markdown: kramdown
