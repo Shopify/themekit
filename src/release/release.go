@@ -24,6 +24,8 @@ var (
 		"darwin-386":    "theme",
 		"linux-386":     "theme",
 		"linux-amd64":   "theme",
+		"freebsd-386":   "theme",
+		"freebsd-amd64": "theme",
 		"windows-386":   "theme.exe",
 		"windows-amd64": "theme.exe",
 	}
