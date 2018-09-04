@@ -7,7 +7,9 @@ class Installer(object):
         "darwin x86_64": "darwin-amd64",
         "darwin i386": "darwin-386",
         "linux x86_64": "linux-amd64",
-        "linux i686": "linux-386"
+        "linux i686": "linux-386",
+        "freebsd x86_64": "freebsd-amd64",
+        "freebsd i686": "freebsd-386"
     }
 
     def __init__(self, path="/usr/local/bin"):
