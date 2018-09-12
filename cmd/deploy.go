@@ -70,7 +70,7 @@ var (
 	}
 )
 
-func deploy(ctx cmdutil.Ctx) error {
+func deploy(ctx *cmdutil.Ctx) error {
 	if ctx.Env.ReadOnly {
 		return fmt.Errorf("[%s] environment is readonly", colors.Green(ctx.Env.Name))
 	}
@@ -98,7 +98,7 @@ func deploy(ctx cmdutil.Ctx) error {
 	return nil
 }
 
-func generateActions(ctx cmdutil.Ctx) (map[string]file.Op, error) {
+func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 	assetsActions := map[string]file.Op{}
 
 	if len(ctx.Args) == 0 && !ctx.Flags.NoDelete {

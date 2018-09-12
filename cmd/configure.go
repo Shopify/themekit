@@ -20,7 +20,7 @@ var configureCmd = &cobra.Command{
 	},
 }
 
-func createConfig(ctx cmdutil.Ctx) error {
+func createConfig(ctx *cmdutil.Ctx) error {
 	flagEnvs := ctx.Flags.Environments.Value()
 	if len(flagEnvs) == 0 {
 		if _, err := ctx.Conf.Set(env.Default.Name, *ctx.Env); err != nil {

@@ -32,7 +32,7 @@ var getCmd = &cobra.Command{
 	},
 }
 
-func getTheme(ctx cmdutil.Ctx) error {
+func getTheme(ctx *cmdutil.Ctx) error {
 	if ctx.Flags.List {
 		themes, err := ctx.Client.Themes()
 		if err != nil {

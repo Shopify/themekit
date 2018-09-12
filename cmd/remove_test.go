@@ -46,11 +46,11 @@ func TestRemove(t *testing.T) {
 	}
 }
 
-func createTestCtx() (ctx cmdutil.Ctx, client *mocks.ShopifyClient, conf *mocks.Config, stdOut, stdErr *bytes.Buffer) {
+func createTestCtx() (ctx *cmdutil.Ctx, client *mocks.ShopifyClient, conf *mocks.Config, stdOut, stdErr *bytes.Buffer) {
 	client = new(mocks.ShopifyClient)
 	conf = new(mocks.Config)
 	stdOut, stdErr = bytes.NewBufferString(""), bytes.NewBufferString("")
-	ctx = cmdutil.Ctx{
+	ctx = &cmdutil.Ctx{
 		Conf:   conf,
 		Client: client,
 		Env:    &env.Env{},

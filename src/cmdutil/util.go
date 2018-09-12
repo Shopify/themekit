@@ -64,7 +64,7 @@ type Ctx struct {
 
 type clientFact func(*env.Env) (shopifyClient, error)
 
-func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, args []string, progress *mpb.Progress, setTheme bool) (Ctx, error) {
+func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, args []string, progress *mpb.Progress, setTheme bool) (*Ctx, error) {
 	if e.Proxy != "" {
 		colors.ColorStdOut.Printf(
 			"[%s] Proxy URL detected from Configuration [%s] SSL Certificate Validation will be disabled!",
@@ -80,7 +80,7 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 
 	client, err := newClient(e)
 	if err != nil {
-		return Ctx{}, err
+		return &Ctx{}, err
 	}
 
 	shop, err := client.GetShop()
@@ -90,14 +90,14 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 			colors.Green(e.Name),
 			colors.Yellow(e.Domain),
 		)
-		return Ctx{}, fmt.Errorf("%s is an invalid domain", e.Domain)
+		return &Ctx{}, fmt.Errorf("%s is an invalid domain", e.Domain)
 	} else if err != nil {
-		return Ctx{}, err
+		return &Ctx{}, err
 	}
 
 	themes, err := client.Themes() // this will make sure our token is correct
 	if err != nil {
-		return Ctx{}, err
+		return &Ctx{}, err
 	}
 
 	if setTheme {
@@ -116,7 +116,7 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 		}
 	}
 
-	return Ctx{
+	return &Ctx{
 		Shop:     shop,
 		Conf:     &conf,
 		Client:   client,
@@ -149,8 +149,8 @@ func (ctx *Ctx) DoneTask() {
 	}
 }
 
-func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags, args []string) ([]Ctx, error) {
-	ctxs := []Ctx{}
+func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags, args []string) ([]*Ctx, error) {
+	ctxs := []*Ctx{}
 	flagEnv := getFlagEnv(flags)
 
 	config, err := env.Load(flags.ConfigPath)
@@ -220,11 +220,11 @@ func shouldUseEnvironment(flags Flags, envName string) bool {
 
 // ForEachClient will generate a command context for all the available environments
 // and run a command in each of those contexts
-func ForEachClient(flags Flags, args []string, handler func(Ctx) error) error {
+func ForEachClient(flags Flags, args []string, handler func(*Ctx) error) error {
 	return forEachClient(shopifyThemeClientFactory, flags, args, handler)
 }
 
-func forEachClient(newClient clientFact, flags Flags, args []string, handler func(Ctx) error) error {
+func forEachClient(newClient clientFact, flags Flags, args []string, handler func(*Ctx) error) error {
 	progressBarGroup := mpb.New(nil)
 	ctxs, err := generateContexts(newClient, progressBarGroup, flags, args)
 	if err != nil {
@@ -248,11 +248,11 @@ func forEachClient(newClient clientFact, flags Flags, args []string, handler fun
 // ForSingleClient will generate a command context for all the available environments,
 // and run a command for the first context. If more than one environment was specified,
 // then an error will be returned.
-func ForSingleClient(flags Flags, args []string, handler func(Ctx) error) error {
+func ForSingleClient(flags Flags, args []string, handler func(*Ctx) error) error {
 	return forSingleClient(shopifyThemeClientFactory, flags, args, handler)
 }
 
-func forSingleClient(newClient clientFact, flags Flags, args []string, handler func(Ctx) error) error {
+func forSingleClient(newClient clientFact, flags Flags, args []string, handler func(*Ctx) error) error {
 	progressBarGroup := mpb.New(nil)
 	ctxs, err := generateContexts(newClient, progressBarGroup, flags, args)
 	if err != nil {
@@ -272,11 +272,11 @@ func forSingleClient(newClient clientFact, flags Flags, args []string, handler f
 
 // ForDefaultClient will run in a context that runs of any available config including
 // defaults
-func ForDefaultClient(flags Flags, args []string, handler func(Ctx) error) error {
+func ForDefaultClient(flags Flags, args []string, handler func(*Ctx) error) error {
 	return forDefaultClient(shopifyThemeClientFactory, flags, args, handler)
 }
 
-func forDefaultClient(newClient clientFact, flags Flags, args []string, handler func(Ctx) error) error {
+func forDefaultClient(newClient clientFact, flags Flags, args []string, handler func(*Ctx) error) error {
 	progressBarGroup := mpb.New(nil)
 	config, err := env.Load(flags.ConfigPath)
 	if err != nil && os.IsNotExist(err) {
