@@ -4,6 +4,7 @@ v0.8.1
 - Added checksum validation for auto install scripts
 - Fixed deploy for windows paths
 - Fixed overwriting compiled assets
+- Fixed error output
 
 v0.8.0 (Aug 20, 2018)
 =====================

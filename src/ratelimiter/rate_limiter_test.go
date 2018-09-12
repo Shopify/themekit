@@ -16,13 +16,13 @@ func TestRateLimiterForDomain(t *testing.T) {
 }
 
 func TestRateLimiterHalts(t *testing.T) {
-	received, timeout := checkTime(time.Second)
+	received, timeout := checkTime("testone.com", time.Second)
 	assert.Equal(t, true, timeout)
 	assert.Equal(t, false, received)
 }
 
 func TestRateLimiterCanGoAfterTimeout(t *testing.T) {
-	received, timeout := checkTime(time.Millisecond)
+	received, timeout := checkTime("testtwo.com", time.Millisecond)
 	assert.Equal(t, false, timeout)
 	assert.Equal(t, true, received)
 }
@@ -33,10 +33,10 @@ func TestWait(t *testing.T) {
 	limiter.Wait()
 }
 
-func checkTime(dur time.Duration) (received, timeout bool) {
+func checkTime(domain string, dur time.Duration) (received, timeout bool) {
 	domainLimitMap = make(map[string]*Limiter)
-	limiter := New("domain.com", dur)
-	ticker := time.NewTicker(3 * time.Millisecond)
+	limiter := New(domain, dur)
+	ticker := time.NewTicker(300 * time.Millisecond)
 	defer ticker.Stop()
 	select {
 	case <-limiter.nextChan:

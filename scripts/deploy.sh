@@ -20,6 +20,9 @@ main() {
 
   echo "---------- Generating Shasum for homebrew ----------"
   make gen_sha
+
+  echo "---------- Generating MD5s for download links ----------"
+  make md5s
 }
 
 main "$@"

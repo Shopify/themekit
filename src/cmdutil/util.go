@@ -3,8 +3,10 @@ package cmdutil
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/ryanuber/go-glob"
@@ -58,8 +60,10 @@ type Ctx struct {
 	Args     []string
 	Log      *log.Logger
 	ErrLog   *log.Logger
+	errBuff  []string
 	progress *mpb.Progress
 	Bar      *mpb.Bar
+	mu       sync.RWMutex
 }
 
 type clientFact func(*env.Env) (shopifyClient, error)
@@ -126,18 +130,39 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 		progress: progress,
 		Log:      colors.ColorStdOut,
 		ErrLog:   colors.ColorStdErr,
+		errBuff:  []string{},
 	}, nil
 }
 
 // StartProgress will create a new progress bar for the running context with the
 // total amount of tasks as the count
 func (ctx *Ctx) StartProgress(count int) {
+	barErrors := func(w io.Writer, completed bool) {
+		ctx.mu.RLock()
+		defer ctx.mu.RUnlock()
+		for _, msg := range ctx.errBuff {
+			io.WriteString(w, msg+"\r\n")
+		}
+	}
+
 	if !ctx.Flags.Verbose && ctx.progress != nil {
 		ctx.Bar = ctx.progress.AddBar(
 			int64(count),
+			mpb.BarNewLineExtend(barErrors),
 			mpb.PrependDecorators(decor.Name(fmt.Sprintf("[%s] ", ctx.Env.Name)), decor.Counters(0, "%d|%d")),
 			mpb.AppendDecorators(decor.Percentage(decor.WCSyncSpace)),
 		)
+	}
+}
+
+// Err acts like Printf but will display error messages better
+func (ctx *Ctx) Err(msg string, inter ...interface{}) {
+	if ctx.progress != nil && ctx.Bar != nil {
+		ctx.mu.Lock()
+		defer ctx.mu.Unlock()
+		ctx.errBuff = append(ctx.errBuff, fmt.Sprintf(msg, inter...))
+	} else {
+		ctx.ErrLog.Printf(msg, inter...)
 	}
 }
 
@@ -242,6 +267,12 @@ func forEachClient(newClient clientFact, flags Flags, args []string, handler fun
 	if err == ErrReload {
 		return forEachClient(newClient, flags, args, handler)
 	}
+	for _, ctx := range ctxs {
+		if len(ctx.errBuff) > 0 {
+			ctx.ErrLog.Println("finished command with errors")
+			break
+		}
+	}
 	return err
 }
 
@@ -266,6 +297,9 @@ func forSingleClient(newClient clientFact, flags Flags, args []string, handler f
 	}
 	if err == ErrReload {
 		return forSingleClient(newClient, flags, args, handler)
+	}
+	if len(ctxs[0].errBuff) > 0 {
+		ctxs[0].ErrLog.Println("finished command with errors")
 	}
 	return err
 }
@@ -307,6 +341,9 @@ func forDefaultClient(newClient clientFact, flags Flags, args []string, handler 
 	err = handler(ctx)
 	if err == nil {
 		progressBarGroup.Wait()
+	}
+	if len(ctx.errBuff) > 0 {
+		ctx.ErrLog.Println("finished command with errors")
 	}
 	return err
 }

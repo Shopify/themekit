@@ -1,11 +1,12 @@
 .PHONY: build
 install: ## Build and install the theme binary
 	@go install github.com/Shopify/themekit/cmd/theme;
-vet:
-	@go vet $(shell go list ./...)
 lint: # Lint all packages
-	@go list ./... | xargs -n 1 golint -set_exit_status
-test: lint vet ## lint, vet and test the code
+ifeq ("$(shell which golint 2>/dev/null)","")
+	@go get -u github.com/golang/lint/golint
+endif
+	@golint -set_exit_status $(shell go list ./...)
+test: lint ## lint and test the code
 	@go test -race -cover $(shell go list ./...)
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
@@ -37,11 +38,10 @@ md5s: ## Generate md5 sums for all builds
 	@echo "freebsd386sum: $(shell md5 -q ./build/dist/freebsd-386/theme)"
 	@echo "freebsdamd64sum: $(shell md5 -q ./build/dist/freebsd-amd64/theme)"
 serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
+ifeq ("$(shell which jekyll 2>/dev/null)","")
+	gem install jekyll
+endif
 	@cd docs && jekyll serve
-init_tools: ## Will install tools needed to work on this repo
-	@curl https://glide.sh/get | sh
-	@go get -u github.com/golang/lint/golint
-	@gem install jekyll
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
