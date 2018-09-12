@@ -33,7 +33,7 @@ var watchCmd = &cobra.Command{
  For more documentation please see http://shopify.github.io/themekit/commands/#watch
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cmdutil.ForEachClient(flags, args, func(ctx cmdutil.Ctx) error {
+		return cmdutil.ForEachClient(flags, args, func(ctx *cmdutil.Ctx) error {
 			watcher, err := file.NewWatcher(ctx.Env, ctx.Flags.ConfigPath)
 			if err != nil {
 				return err
@@ -51,7 +51,7 @@ var watchCmd = &cobra.Command{
 	},
 }
 
-func watch(ctx cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
+func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 	ctx.Flags.Verbose = true
 	ctx.Log.SetFlags(log.Ltime)
 
@@ -80,7 +80,7 @@ func watch(ctx cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 	}
 }
 
-func perform(ctx cmdutil.Ctx, path string, op file.Op) {
+func perform(ctx *cmdutil.Ctx, path string, op file.Op) {
 	defer ctx.DoneTask()
 
 	if op == file.Remove {

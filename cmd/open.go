@@ -19,13 +19,13 @@ var openCmd = &cobra.Command{
 	Long: `Open will open the preview page in your browser as well as print out
 url for your reference`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cmdutil.ForSingleClient(flags, args, func(ctx cmdutil.Ctx) error {
+		return cmdutil.ForSingleClient(flags, args, func(ctx *cmdutil.Ctx) error {
 			return preview(ctx, open.Run, open.RunWith)
 		})
 	},
 }
 
-func preview(ctx cmdutil.Ctx, run runFunc, runWith runWithFunc) error {
+func preview(ctx *cmdutil.Ctx, run runFunc, runWith runWithFunc) error {
 	url := fmt.Sprintf("https://%s?preview_theme_id=%s", ctx.Env.Domain, ctx.Env.ThemeID)
 	if ctx.Flags.Edit {
 		url = fmt.Sprintf("https://%s/admin/themes/%s/editor", ctx.Env.Domain, ctx.Env.ThemeID)

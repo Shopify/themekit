@@ -25,7 +25,7 @@ var downloadCmd = &cobra.Command{
 	},
 }
 
-func download(ctx cmdutil.Ctx) error {
+func download(ctx *cmdutil.Ctx) error {
 	var downloadGroup sync.WaitGroup
 
 	filenames, err := filesToDownload(ctx)
@@ -57,7 +57,7 @@ func download(ctx cmdutil.Ctx) error {
 	return nil
 }
 
-func filesToDownload(ctx cmdutil.Ctx) ([]string, error) {
+func filesToDownload(ctx *cmdutil.Ctx) ([]string, error) {
 	allFilenames, err := ctx.Client.GetAllAssets()
 	if err != nil {
 		return allFilenames, err

@@ -25,7 +25,7 @@ var bootstrapCmd = &cobra.Command{
  For more documentation please see http://shopify.github.io/themekit/commands/#bootstrap
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cmdutil.ForDefaultClient(flags, args, func(ctx cmdutil.Ctx) error {
+		return cmdutil.ForDefaultClient(flags, args, func(ctx *cmdutil.Ctx) error {
 			ctx.Log.Printf("[%s] bootstrap has been deprecated please use `new` instead", colors.Yellow("WARN"))
 			name, url, err := getNewThemeDetails(flags, timber.GetVersionPath)
 			if err != nil {
@@ -46,7 +46,7 @@ var newCmd = &cobra.Command{
   For more documentation please see http://shopify.github.io/themekit/commands/#new
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cmdutil.ForDefaultClient(flags, args, func(ctx cmdutil.Ctx) error {
+		return cmdutil.ForDefaultClient(flags, args, func(ctx *cmdutil.Ctx) error {
 			name, url, err := getNewThemeDetails(flags, timber.GetVersionPath)
 			if err != nil {
 				return err
@@ -56,7 +56,7 @@ var newCmd = &cobra.Command{
 	},
 }
 
-func newTheme(ctx cmdutil.Ctx, name, url string) error {
+func newTheme(ctx *cmdutil.Ctx, name, url string) error {
 	ctx.Log.Printf("[%s] creating new theme \"%s\" from %s", colors.Yellow(ctx.Env.Domain), colors.Yellow(name), colors.Yellow(url))
 
 	theme, err := ctx.Client.CreateNewTheme(name, url)

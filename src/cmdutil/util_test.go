@@ -1,9 +1,7 @@
 package cmdutil
 
 import (
-	"bytes"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -166,8 +164,8 @@ func TestShouldUseEnvironment(t *testing.T) {
 
 func TestForEachClient(t *testing.T) {
 	gandalfErr := fmt.Errorf("you shall not pass")
-	safeHandler := func(Ctx) error { return nil }
-	errHandler := func(Ctx) error { return gandalfErr }
+	safeHandler := func(*Ctx) error { return nil }
+	errHandler := func(*Ctx) error { return gandalfErr }
 
 	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
 	err := forEachClient(factory, Flags{}, []string{}, safeHandler)
@@ -188,7 +186,7 @@ func TestForEachClient(t *testing.T) {
 	assert.EqualError(t, err, gandalfErr.Error())
 
 	count := 0
-	handler := func(Ctx) error {
+	handler := func(*Ctx) error {
 		count++
 		if count == 1 {
 			return ErrReload
@@ -206,8 +204,8 @@ func TestForEachClient(t *testing.T) {
 
 func TestForSingleClient(t *testing.T) {
 	gandalfErr := fmt.Errorf("you shall not pass")
-	safeHandler := func(Ctx) error { return nil }
-	errHandler := func(Ctx) error { return gandalfErr }
+	safeHandler := func(*Ctx) error { return nil }
+	errHandler := func(*Ctx) error { return gandalfErr }
 
 	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
 	err := forSingleClient(factory, Flags{}, []string{}, safeHandler)
@@ -235,7 +233,7 @@ func TestForSingleClient(t *testing.T) {
 	assert.EqualError(t, err, gandalfErr.Error())
 
 	count := 0
-	handler := func(Ctx) error {
+	handler := func(*Ctx) error {
 		count++
 		if count == 1 {
 			return ErrReload
@@ -253,8 +251,8 @@ func TestForSingleClient(t *testing.T) {
 
 func TestForDefaultClient(t *testing.T) {
 	gandalfErr := fmt.Errorf("you shall not pass")
-	safeHandler := func(Ctx) error { return nil }
-	errHandler := func(Ctx) error { return gandalfErr }
+	safeHandler := func(*Ctx) error { return nil }
+	errHandler := func(*Ctx) error { return gandalfErr }
 
 	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
 	err := forDefaultClient(factory, Flags{}, []string{}, safeHandler)
@@ -285,19 +283,4 @@ func TestForDefaultClient(t *testing.T) {
 	client.On("Themes").Return([]shopify.Theme{}, nil)
 	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, errHandler)
 	assert.EqualError(t, err, gandalfErr.Error())
-}
-
-func createTestCtx() (ctx Ctx, m *mocks.ShopifyClient, stdOut, stdErr *bytes.Buffer) {
-	m = new(mocks.ShopifyClient)
-	stdOut, stdErr = bytes.NewBufferString(""), bytes.NewBufferString("")
-	ctx = Ctx{
-		Conf:     &env.Conf{},
-		Client:   m,
-		Env:      &env.Env{},
-		Flags:    Flags{},
-		Log:      log.New(stdOut, "", 0),
-		ErrLog:   log.New(stdErr, "", 0),
-		progress: mpb.New(nil),
-	}
-	return
 }
