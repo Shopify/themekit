@@ -60,13 +60,12 @@ func TestCreateCtx(t *testing.T) {
 }
 
 func TestCtx_StartProgress(t *testing.T) {
-	ctx := Ctx{Env: &env.Env{}, Flags: Flags{}, progress: mpb.New(nil)}
-	ctx.StartProgress(6)
-	assert.NotNil(t, ctx.Bar)
-
-	ctx = Ctx{Env: &env.Env{}, Flags: Flags{Verbose: true}, progress: mpb.New(nil)}
+	ctx := Ctx{Env: &env.Env{}, Flags: Flags{Verbose: true}, progress: mpb.New(nil)}
 	ctx.StartProgress(6)
 	assert.Nil(t, ctx.Bar)
+	ctx.Flags.Verbose = false
+	ctx.StartProgress(6)
+	assert.NotNil(t, ctx.Bar)
 }
 
 func TestCtx_Err(t *testing.T) {

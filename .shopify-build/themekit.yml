@@ -1,14 +1,11 @@
 containers:
   default:
-    docker: golang:1.10
-    workdir: /go/src/github.com/Shopify/themekit
-
+    docker: golang:1.11
 steps:
 - label: ":hammer: Lint"
   timeout: 5m
   run:
-  - go get -u github.com/golang/lint/golint
-  - golint -set_exit_status $(go list ./...)
+  - make lint
 - label: ":hammer: Test"
   timeout: 5m
   run:
@@ -18,4 +15,8 @@ steps:
 - label: ":rocket: Deploy"
   timeout: 5m
   run:
+  - make all
+  - go install ./cmd/tkrelease
   - scripts/deploy.sh
+  - make md5s
+  - make gen_sha

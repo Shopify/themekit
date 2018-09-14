@@ -12,4 +12,5 @@
 
 OS (including version):
 Themekit version:
+Editor (including version):
 Ignore Files(if any):

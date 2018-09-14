@@ -21,15 +21,15 @@ You can open a new issue on the github issues and describe the feature you would
 
 Requirements:
 
-- Go 1.10 or higher
+- Go 1.11 or higher
 
 You can setup your development environment by running the following:
 
 ```
-go get -u github.com/Shopify/themekit       # get the code
-cd $GOPATH/src/github.com/Shopify/themekit  # change into the themekit directory
-make                                        # build themekit, will install theme kit into $GOPATH/bin
-theme version                               # should output the current themekit version
+git clone git@github.com:Shopify/themekit.git # get the code
+cd themekit                                   # change into the themekit directory
+make                                          # build themekit, will install theme kit into $GOPATH/bin
+theme version                                 # should output the current themekit version
 ```
 
 Helpful commands

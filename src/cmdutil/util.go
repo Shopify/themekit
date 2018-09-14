@@ -137,15 +137,15 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 // StartProgress will create a new progress bar for the running context with the
 // total amount of tasks as the count
 func (ctx *Ctx) StartProgress(count int) {
-	barErrors := func(w io.Writer, completed bool) {
-		ctx.mu.RLock()
-		defer ctx.mu.RUnlock()
-		for _, msg := range ctx.errBuff {
-			io.WriteString(w, msg+"\r\n")
-		}
-	}
-
 	if !ctx.Flags.Verbose && ctx.progress != nil {
+		barErrors := func(w io.Writer, completed bool) {
+			ctx.mu.RLock()
+			defer ctx.mu.RUnlock()
+			for _, msg := range ctx.errBuff {
+				io.WriteString(w, msg+"\r\n")
+			}
+		}
+
 		ctx.Bar = ctx.progress.AddBar(
 			int64(count),
 			mpb.BarNewLineExtend(barErrors),
