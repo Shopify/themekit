@@ -75,7 +75,7 @@ func newTheme(ctx *cmdutil.Ctx, name, url string) error {
 
 	for {
 		if theme, err := ctx.Client.GetInfo(); err != nil {
-			ctx.ErrLog.Println("Encountered an error while checking new theme. Please run `theme download` to complete the setup.")
+			ctx.Err("Encountered an error while checking new theme. Please run `theme download` to complete the setup.")
 			return err
 		} else if theme.Previewable {
 			ctx.Log.Println("downloading...")

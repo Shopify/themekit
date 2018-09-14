@@ -4,12 +4,18 @@ containers:
     workdir: /go/src/github.com/Shopify/themekit
 
 steps:
-- label: ":hammer: Test"
+- label: ":hammer: Lint"
+  timeout: 5m
   run:
-  - go vet -all ./...
+  - go get -u github.com/golang/lint/golint
+  - golint -set_exit_status $(go list ./...)
+- label: ":hammer: Test"
+  timeout: 5m
+  run:
   - go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
   - bash -c "bash <(curl -s https://codecov.io/bash)"
 - wait
 - label: ":rocket: Deploy"
+  timeout: 5m
   run:
   - scripts/deploy.sh

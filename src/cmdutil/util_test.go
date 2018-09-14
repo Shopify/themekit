@@ -1,7 +1,9 @@
 package cmdutil
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +22,15 @@ func TestCreateCtx(t *testing.T) {
 	_, err := createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil, false)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "invalid domain")
+	}
+
+	e = &env.Env{Domain: "this is not a url%@#$@#"}
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, fmt.Errorf("This is bad"))
+	_, err = createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil, false)
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "This is bad")
 	}
 
 	client = new(mocks.ShopifyClient)
@@ -56,6 +67,21 @@ func TestCtx_StartProgress(t *testing.T) {
 	ctx = Ctx{Env: &env.Env{}, Flags: Flags{Verbose: true}, progress: mpb.New(nil)}
 	ctx.StartProgress(6)
 	assert.Nil(t, ctx.Bar)
+}
+
+func TestCtx_Err(t *testing.T) {
+	stdErr := bytes.NewBufferString("")
+	ctx := Ctx{Env: &env.Env{}, Flags: Flags{}, progress: mpb.New(nil), ErrLog: log.New(stdErr, "", 0)}
+
+	ctx.Err("[%s] this is err", "Development")
+	assert.Contains(t, stdErr.String(), "[Development] this is err")
+
+	ctx.StartProgress(6)
+	assert.NotNil(t, ctx.Bar)
+
+	ctx.Err("[%s] this is err", "production")
+	assert.Equal(t, ctx.errBuff[0], "[production] this is err")
+	assert.NotContains(t, stdErr.String(), "[production] this is err")
 }
 
 func TestCtx_DoneTask(t *testing.T) {
@@ -200,6 +226,21 @@ func TestForEachClient(t *testing.T) {
 	err = forEachClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
 	assert.EqualError(t, err, "nope not at all")
 	assert.Equal(t, 2, count)
+
+	stdErr := bytes.NewBufferString("")
+	handler = func(ctx *Ctx) error {
+		ctx.ErrLog = log.New(stdErr, "", 0)
+		ctx.StartProgress(1)
+		ctx.Err("oopsy")
+		ctx.DoneTask()
+		return nil
+	}
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	forEachClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
+	assert.Contains(t, stdErr.String(), "finished command with errors")
 }
 
 func TestForSingleClient(t *testing.T) {
@@ -247,6 +288,21 @@ func TestForSingleClient(t *testing.T) {
 	err = forSingleClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
 	assert.EqualError(t, err, "nope not at all")
 	assert.Equal(t, 2, count)
+
+	stdErr := bytes.NewBufferString("")
+	handler = func(ctx *Ctx) error {
+		ctx.ErrLog = log.New(stdErr, "", 0)
+		ctx.StartProgress(1)
+		ctx.Err("oopsy")
+		ctx.DoneTask()
+		return nil
+	}
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	forSingleClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
+	assert.Contains(t, stdErr.String(), "finished command with errors")
 }
 
 func TestForDefaultClient(t *testing.T) {
@@ -283,4 +339,19 @@ func TestForDefaultClient(t *testing.T) {
 	client.On("Themes").Return([]shopify.Theme{}, nil)
 	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, errHandler)
 	assert.EqualError(t, err, gandalfErr.Error())
+
+	stdErr := bytes.NewBufferString("")
+	handler := func(ctx *Ctx) error {
+		ctx.ErrLog = log.New(stdErr, "", 0)
+		ctx.StartProgress(1)
+		ctx.Err("oopsy")
+		ctx.DoneTask()
+		return nil
+	}
+	client = new(mocks.ShopifyClient)
+	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
+	client.On("GetShop").Return(shopify.Shop{}, nil)
+	client.On("Themes").Return([]shopify.Theme{}, nil)
+	forDefaultClient(factory, Flags{ConfigPath: "_testdata/config.yml"}, []string{}, handler)
+	assert.Contains(t, stdErr.String(), "finished command with errors")
 }
