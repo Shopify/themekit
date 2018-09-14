@@ -2,9 +2,11 @@ v0.8.1
 ======
 - Added checksums to the download links
 - Added checksum validation for auto install scripts
+- Added support for freebsd
 - Fixed deploy for windows paths
 - Fixed overwriting compiled assets
 - Fixed error output
+- Fixed no-ignore flag on download
 
 v0.8.0 (Aug 20, 2018)
 =====================
