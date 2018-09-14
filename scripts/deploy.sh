@@ -1,4 +1,5 @@
 #!/bin/bash
+# Deploy script used for deploying on CI
 set -e
 
 main() {

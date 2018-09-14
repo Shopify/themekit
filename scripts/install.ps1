@@ -1,5 +1,21 @@
-﻿$web_client = New-Object System.Net.WebClient
+﻿<#
+.SYNOPSIS
+  Installs themekit on windows systems
+.DESCRIPTION
+  This script will check the themekit release feed, download the most recent release,
+  verify it's checksum and then make it available on the command line.
+.NOTES
+  Version:        1.0
+  Author:         Tim Anema
+  Creation Date:  May 2, 2017
+#>
+$web_client = New-Object System.Net.WebClient
 $latest_release_url = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
+$destFolder = "C:\Program Files (x86)\Theme Kit"
+if ([System.Environment]::Is64BitOperatingSystem) {
+  $destFolder = "C:\Program Files\Theme Kit"
+}
+$dest = "$($destFolder)\theme.exe"
 
 Write-Output "Fetching release data";
 Try {
@@ -10,12 +26,6 @@ Try {
   Write-Host -foreground Red    -background Black "Error: $($PSItem.Exception.Message)";
   Exit 1
 }
-
-$destFolder = "C:\Program Files (x86)\Theme Kit"
-if ([System.Environment]::Is64BitOperatingSystem) {
-  $destFolder = "C:\Program Files\Theme Kit"
-}
-$dest = "$($destFolder)\theme.exe"
 
 Try {
   New-Item -ItemType Directory -Force -Path $destFolder | Out-Null

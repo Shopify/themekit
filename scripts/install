@@ -1,4 +1,12 @@
 #!/usr/bin/python
+'''
+    File name: install
+    Author: Tim Anema
+    Date created: Sep 29, 2016
+    Date last modified: Sep 14 2018
+    Python Version: 2.7
+    Description: Install script for themekit. It will download a release and make it executable
+'''
 import os, urllib, json, sys, hashlib
 
 class Installer(object):
