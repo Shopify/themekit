@@ -7,7 +7,7 @@ ifeq ("$(shell which golint 2>/dev/null)","")
 endif
 	@golint -set_exit_status ./...
 test: lint ## lint and test the code
-	@go test -race -cover -covermode=atomic $(shell go list ./...)
+	@go test -race -cover -covermode=atomic ./...
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
 all: clean ## will build a binary for all platforms
