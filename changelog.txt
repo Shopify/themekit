@@ -1,5 +1,5 @@
-v0.8.1
-======
+v0.8.1 (Sept 18, 2018)
+======================
 - Added checksums to the download links
 - Added checksum validation for auto install scripts
 - Added support for freebsd
