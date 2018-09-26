@@ -27,7 +27,7 @@ build:
 			-o build/dist/${GOOS}-${GOARCH}/theme${EXT} \
 			github.com/Shopify/themekit/cmd/theme && \
 		echo "[${GOOS}-${GOARCH}] build complete";
-gen_sha: # Generate sha256 for a darwin build for usage with homebrew
+sha: ## Generate sha256 for a darwin build for usage with homebrew
 	@shasum -a 256 ./build/dist/darwin-amd64/theme
 md5s: ## Generate md5 sums for all builds
 	@echo "darwinamd64sum: $(shell md5 -q ./build/dist/darwin-amd64/theme)"
@@ -42,7 +42,7 @@ ifeq ("$(shell which jekyll 2>/dev/null)","")
 	gem install jekyll
 endif
 	@cd docs && jekyll serve
-help: ## Prints this message
+help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
