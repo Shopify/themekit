@@ -19,4 +19,3 @@ steps:
   - go install ./cmd/tkrelease
   - scripts/deploy.sh
   - make md5s
-  - make gen_sha
