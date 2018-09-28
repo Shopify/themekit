@@ -351,7 +351,7 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 
 	m.On(
 		"Delete",
-		"/admin/themes/123/assets.json?asset%5Bkey%5D=filename.txt",
+		"/admin/themes/123/assets.json?asset%5Bkey%5D=filename.txt.liquid",
 	).Return(jsonResponse("{}", 200), nil)
 
 	m.On(
