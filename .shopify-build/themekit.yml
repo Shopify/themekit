@@ -18,4 +18,3 @@ steps:
   - make all
   - go install ./cmd/tkrelease
   - scripts/deploy.sh
-  - make md5s
