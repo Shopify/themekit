@@ -13,10 +13,8 @@ steps:
   - bash -c "bash <(curl -s https://codecov.io/bash)"
 - wait
 - label: ":rocket: Deploy"
-  timeout: 5m
+  timeout: 12m
   run:
   - make all
   - go install ./cmd/tkrelease
   - scripts/deploy.sh
-  - make md5s
-  - make gen_sha
