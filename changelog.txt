@@ -1,5 +1,6 @@
-v0.8.2
+v1.0.0
 ======================
+- Changed how the New command works. Now will create files locally and upload them.
 - Fixed a problem with uploading compiled assets
 
 v0.8.1 (Sept 18, 2018)

@@ -114,22 +114,21 @@ func TestThemeClient_Themes(t *testing.T) {
 
 func TestThemeClient_CreateNewTheme(t *testing.T) {
 	testcases := []struct {
-		in                 []string
+		in                 string
 		theme              Theme
 		resp, resperr, err string
 	}{
-		{in: []string{"", "https://githubz.com/shopify/timberlands"}, resp: `{"errors":{"name":["can't be blank"]}}`, err: "name can't be blank"},
-		{in: []string{"my theme", "https://githubz.com/shopify/timberlands"}, resp: `{"errors": "Not Found"}`, err: "Not Found"},
-		{in: []string{"my theme", ""}, err: "theme zip path is required"},
-		{in: []string{"my theme", "https://githubz.com/shopify/timberlands"}, resperr: "(Client.Timeout exceeded while awaiting headers)", err: "(Client.Timeout exceeded while awaiting headers)"},
-		{in: []string{"my theme", "https://githubz.com/shopify/timberlands"}, resp: `{"theme":{"id": 123456,"name":"timberland","role":"unpublished","previewable":false}}`},
+		{in: "", resp: `{"errors":{"name":["can't be blank"]}}`, err: "name can't be blank"},
+		{in: "my theme", resp: `{"errors": "Not Found"}`, err: "Not Found"},
+		{in: "my theme", resperr: "(Client.Timeout exceeded while awaiting headers)", err: "(Client.Timeout exceeded while awaiting headers)"},
+		{in: "my theme", resp: `{"theme":{"id": 123456,"name":"timberland","role":"unpublished","previewable":false}}`},
 	}
 
 	for _, testcase := range testcases {
 		client, _ := NewClient(&env.Env{})
 		m := new(mocks.HttpAdapter)
 		client.http = m
-		query := map[string]interface{}{"theme": Theme{Name: testcase.in[0], Source: testcase.in[1]}}
+		query := map[string]interface{}{"theme": Theme{Name: testcase.in}}
 
 		if testcase.resp != "" {
 			m.On("Post", "/admin/themes.json", query).Return(jsonResponse(testcase.resp, 200), nil)
@@ -137,7 +136,7 @@ func TestThemeClient_CreateNewTheme(t *testing.T) {
 			m.On("Post", "/admin/themes.json", query).Return(nil, errors.New(testcase.resperr))
 		}
 
-		theme, err := client.CreateNewTheme(testcase.in[0], testcase.in[1])
+		theme, err := client.CreateNewTheme(testcase.in)
 
 		if testcase.err == "" {
 			assert.Nil(t, err)

@@ -7,7 +7,7 @@ import (
 
 type shopifyClient interface {
 	GetShop() (shopify.Shop, error)
-	CreateNewTheme(string, string) (shopify.Theme, error)
+	CreateNewTheme(string) (shopify.Theme, error)
 	GetInfo() (shopify.Theme, error)
 	Themes() ([]shopify.Theme, error)
 	GetAllAssets() ([]string, error)

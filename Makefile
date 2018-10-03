@@ -1,5 +1,5 @@
 .PHONY: build
-install: ## Build and install the theme binary
+install: bundle ## Build and install the theme binary
 	@go install github.com/Shopify/themekit/cmd/theme;
 lint: # Lint all packages
 ifeq ("$(shell which golint 2>/dev/null)","")
@@ -10,7 +10,7 @@ test: lint ## lint and test the code
 	@go test -race -cover -covermode=atomic ./...
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
-all: clean ## will build a binary for all platforms
+all: clean bundle ## will build a binary for all platforms
 	@export GOOS=windows GOARCH=386 EXT=.exe; $(MAKE) build;
 	@export GOOS=windows GOARCH=amd64 EXT=.exe; $(MAKE) build;
 	@export GOOS=darwin GOARCH=386; $(MAKE) build;
@@ -27,6 +27,8 @@ build:
 			-o build/dist/${GOOS}-${GOARCH}/theme${EXT} \
 			github.com/Shopify/themekit/cmd/theme && \
 		echo "[${GOOS}-${GOARCH}] build complete";
+bundle:
+	@go run src/static/cmd/bundle.go
 sha: ## Generate sha256 for a darwin build for usage with homebrew
 	@shasum -a 256 ./build/dist/darwin-amd64/theme
 md5s: ## Generate md5 sums for all builds
@@ -39,7 +41,7 @@ md5s: ## Generate md5 sums for all builds
 	@echo "freebsdamd64sum: $(shell md5 -q ./build/dist/freebsd-amd64/theme)"
 serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
 ifeq ("$(shell which jekyll 2>/dev/null)","")
-	gem install jekyll
+	@gem install jekyll
 endif
 	@cd docs && jekyll serve
 help:
