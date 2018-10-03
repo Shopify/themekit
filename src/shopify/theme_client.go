@@ -44,7 +44,6 @@ var (
 type Theme struct {
 	ID          int64  `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
-	Source      string `json:"src,omitempty"`
 	Role        string `json:"role,omitempty"`
 	Previewable bool   `json:"previewable,omitempty"`
 	Processing  bool   `json:"processing,omitempty"`
@@ -157,12 +156,8 @@ func (c Client) Themes() ([]Theme, error) {
 
 // CreateNewTheme will create a unpublished new theme on your shopify store and then
 // set the theme id on this theme client to the one recently created.
-func (c *Client) CreateNewTheme(name, zipLocation string) (theme Theme, err error) {
-	if zipLocation == "" {
-		return Theme{}, ErrZipPathRequired
-	}
-
-	resp, err := c.http.Post("/admin/themes.json", map[string]interface{}{"theme": Theme{Name: name, Source: zipLocation}})
+func (c *Client) CreateNewTheme(name string) (theme Theme, err error) {
+	resp, err := c.http.Post("/admin/themes.json", map[string]interface{}{"theme": Theme{Name: name}})
 	if err != nil {
 		return Theme{}, err
 	}
