@@ -1,3 +1,7 @@
+v0.8.2
+======================
+- Fixed a problem with uploading compiled assets
+
 v0.8.1 (Sept 18, 2018)
 ======================
 - Added checksums to the download links
