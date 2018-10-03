@@ -15,15 +15,16 @@ Using Theme Kit will enable you to
 
 ## Installation
 
-### Automatic Installation
+### Linux & macOS Automatic Installation
 
-If you are on Mac or Linux you can use the following installation script to automatically download and install Theme Kit for you.
+If you are on macOS or Linux, you can use the following installation script to automatically
+download and install the latest Theme Kit for you.
 
 ```bash
 curl -s https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | sudo python
 ```
 
-### Homebrew
+### macOS Homebrew Installation
 
 If you have [homebrew](http://brew.sh/) installed you can install Theme Kit by running the following commands.
 
@@ -32,27 +33,13 @@ brew tap shopify/shopify
 brew install themekit
 ```
 
-### Windows Installation
-
-#### Automatic Powershell Install
+### Windows Automatic Powershell Installation
 Run the following commands in Powershell as Administrator.
 ```
 (New-Object System.Net.WebClient).DownloadString("https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install.ps1") | powershell -command -
 ```
 
-#### Manual
-- Create a folder inside `C:\Program Files\` called `Theme Kit`
-- Download themekit (below) and copy the extracted program into `C:\Program Files\Theme Kit`
-- Navigate to `Control Panel > System and Security > System`. Another way to get there is to Right-Click on `My Computer` and choose the `properties` item
-- Look for the button or link called `Environment Variables`
-- In the second panel look for the item called `Path` and double-click on it. This should open a window with a text field that is overflowing with content.
-- Move your cursor all the way to the end and add the following: `;C:\Program Files\Theme Kit\`
-- Click `OK` until all the windows are gone.
-- To verify that Theme Kit has been installed, open `cmd.exe` and type in `theme`.
-
 ### Manual Installation
-
-Download the latest release executable.
 
 | OS     | Architecture | md5 checksums              |          |
 | :------| :------------| :------------------------- | :------- |
@@ -63,6 +50,22 @@ Download the latest release executable.
 | Linux  | 32-bit       | {{ site.linux386sum }}     |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/linux-386/theme)
 | FreeBSD| 64-bit       | {{ site.freebsdamd64sum }} |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/freebsd-amd64/theme)
 | FreeBSD| 32-bit       | {{ site.freebsd386sum }}   |  [download](https://shopify-themekit.s3.amazonaws.com/{{ site.themekitversion }}/freebsd-386/theme)
+
+#### Linux & macOS
+- Download the themekit binary that works for your system.
+- Compare checksums of the binary by running `md5 theme`
+- Put the binary on your path. We recommend somewhere like `/usr/local/bin`
+- Ensure that it works as expected by running `theme version`
+
+#### Windows Installation
+- Create a folder inside `C:\Program Files` called `Theme Kit`
+- Download themekit (below) and copy the extracted program into `C:\Program Files\Theme Kit`
+- Navigate to `Control Panel > System and Security > System`. Another way to get there is to Right-Click on `My Computer` and choose the `properties` item
+- Look for the button or link called `Environment Variables`
+- In the second panel look for the item called `Path` and double-click on it. This should open a window with a text field that is overflowing with content.
+- Move your cursor all the way to the end and add the following: `;C:\Program Files\Theme Kit`
+- Click `OK` until all the windows are gone.
+- To verify that Theme Kit has been installed, open `cmd.exe` and type in `theme`.
 
 ## Get API Access
 
