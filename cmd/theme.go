@@ -9,6 +9,7 @@ import (
 
 	"github.com/Shopify/themekit/src/cmdutil"
 	"github.com/Shopify/themekit/src/colors"
+	"github.com/Shopify/themekit/src/env"
 	"github.com/Shopify/themekit/src/release"
 )
 
@@ -74,7 +75,7 @@ func init() {
 	defaultConfigPath := filepath.Join(pwd, "config.yml")
 
 	ThemeCmd.PersistentFlags().StringVarP(&flags.ConfigPath, "config", "c", defaultConfigPath, "path to config.yml")
-	ThemeCmd.PersistentFlags().VarP(&flags.Environments, "env", "e", "environment to run the command")
+	ThemeCmd.PersistentFlags().StringArrayVarP(&flags.Environments, "env", "e", []string{env.Default.Name}, "environment to run the command")
 	ThemeCmd.PersistentFlags().StringVarP(&flags.Directory, "dir", "d", "", "directory that command will take effect. (default current directory)")
 	ThemeCmd.PersistentFlags().StringVarP(&flags.Password, "password", "p", "", "theme password. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().StringVarP(&flags.ThemeID, "themeid", "t", "", "theme id. This will override what is in your config.yml")
@@ -83,8 +84,8 @@ func init() {
 	ThemeCmd.PersistentFlags().DurationVar(&flags.Timeout, "timeout", 0, "the timeout to kill any stalled processes. This will override what is in your config.yml")
 	ThemeCmd.PersistentFlags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable more verbose output from the running command.")
 	ThemeCmd.PersistentFlags().BoolVarP(&flags.DisableUpdateNotifier, "no-update-notifier", "", false, "Stop theme kit from notifying about updates.")
-	ThemeCmd.PersistentFlags().Var(&flags.IgnoredFiles, "ignored-file", "A single file to ignore, use the flag multiple times to add multiple.")
-	ThemeCmd.PersistentFlags().Var(&flags.Ignores, "ignores", "A path to a file that contains ignore patterns.")
+	ThemeCmd.PersistentFlags().StringArrayVar(&flags.IgnoredFiles, "ignored-file", []string{}, "A single file to ignore, use the flag multiple times to add multiple.")
+	ThemeCmd.PersistentFlags().StringArrayVar(&flags.Ignores, "ignores", []string{}, "A path to a file that contains ignore patterns.")
 	ThemeCmd.PersistentFlags().BoolVar(&flags.DisableIgnore, "no-ignore", false, "Will disable config ignores so that all files can be changed")
 
 	watchCmd.Flags().StringVarP(&flags.NotifyFile, "notify", "n", "", "file to touch when workers have gone idle")
