@@ -109,5 +109,5 @@ func init() {
 	getCmd.Flags().BoolVarP(&flags.List, "list", "l", false, "list available themes.")
 	deployCmd.Flags().BoolVarP(&flags.NoDelete, "nodelete", "n", false, "do no delete file on shopify diring deploy.")
 
-	ThemeCmd.AddCommand(openCmd, versionCmd, bootstrapCmd, newCmd, configureCmd, downloadCmd, removeCmd, updateCmd, uploadCmd, replaceCmd, watchCmd, getCmd, deployCmd)
+	ThemeCmd.AddCommand(publishCmd, openCmd, versionCmd, bootstrapCmd, newCmd, configureCmd, downloadCmd, removeCmd, updateCmd, uploadCmd, replaceCmd, watchCmd, getCmd, deployCmd)
 }

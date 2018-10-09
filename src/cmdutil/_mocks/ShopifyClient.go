@@ -132,6 +132,20 @@ func (_m *ShopifyClient) GetInfo() (shopify.Theme, error) {
 	return r0, r1
 }
 
+// PublishTheme provides a mock function with given fields:
+func (_m *ShopifyClient) PublishTheme() error {
+	ret := _m.Called()
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r1
+}
+
 // GetShop provides a mock function with given fields:
 func (_m *ShopifyClient) GetShop() (shopify.Shop, error) {
 	ret := _m.Called()

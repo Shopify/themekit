@@ -41,7 +41,7 @@ var (
 // Theme represents a shopify theme.
 type Theme struct {
 	ID          int64  `json:"id,omitempty"`
-	Name        string `json:"name"`
+	Name        string `json:"name,omitempty"`
 	Source      string `json:"src,omitempty"`
 	Role        string `json:"role,omitempty"`
 	Previewable bool   `json:"previewable,omitempty"`
@@ -197,6 +197,34 @@ func (c Client) GetInfo() (Theme, error) {
 	}
 
 	return r.Theme, nil
+}
+
+// PublishTheme will update the theme to be role main
+func (c Client) PublishTheme() error {
+	if c.themeID == "" {
+		return errors.New("cannot publish a theme without a theme id set")
+	}
+
+	resp, err := c.http.Put(
+		fmt.Sprintf("/admin/themes/%s.json", c.themeID),
+		map[string]Theme{"theme": {Role: "main"}},
+	)
+	if err != nil {
+		return err
+	} else if resp.StatusCode == 404 {
+		return ErrThemeNotFound
+	}
+
+	var r themeResponse
+	if err = unmarshalResponse(resp.Body, &r); err != nil {
+		return err
+	}
+
+	if len(r.Errors) > 0 {
+		return errors.New(toSentence(toMessages(r.Errors)))
+	}
+
+	return nil
 }
 
 // GetAllAssets will return a slice of remote assets from the shopify servers. The
