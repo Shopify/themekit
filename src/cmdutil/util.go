@@ -243,7 +243,6 @@ func expandEnvironments(flags Flags, confEnvs map[string]*env.Env) []string {
 	for _, flagEnv := range flags.Environments {
 		if strings.Contains(flagEnv, "*") {
 			for confEnv := range confEnvs {
-				fmt.Println(confEnv, flagEnv, glob.Glob(flagEnv, confEnv))
 				if glob.Glob(flagEnv, confEnv) {
 					envs = append(envs, confEnv)
 				}
