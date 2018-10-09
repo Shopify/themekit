@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -26,7 +27,7 @@ var ErrReload = errors.New("reloading config")
 // command line. Some of the values are used across different commands
 type Flags struct {
 	ConfigPath            string
-	Environments          stringArgArray
+	Environments          []string
 	Directory             string
 	Password              string
 	ThemeID               string
@@ -35,8 +36,8 @@ type Flags struct {
 	Timeout               time.Duration
 	Verbose               bool
 	DisableUpdateNotifier bool
-	IgnoredFiles          stringArgArray
-	Ignores               stringArgArray
+	IgnoredFiles          []string
+	Ignores               []string
 	DisableIgnore         bool
 	NotifyFile            string
 	AllEnvs               bool
@@ -179,21 +180,24 @@ func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags,
 	flagEnv := getFlagEnv(flags)
 
 	config, err := env.Load(flags.ConfigPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return ctxs, fmt.Errorf("Could not find config file at %v", flags.ConfigPath)
-		}
+	if err != nil && os.IsNotExist(err) {
+		colors.ColorStdOut.Printf(
+			"[%s] Could not find config file at %v",
+			colors.Yellow("warn"),
+			colors.Yellow(flags.ConfigPath),
+		)
+	} else if err != nil {
 		return ctxs, err
 	}
 
-	for name := range config.Envs {
-		if !shouldUseEnvironment(flags, name) {
-			continue
-		}
-
+	for _, name := range expandEnvironments(flags, config.Envs) {
 		e, err := config.Get(name, flagEnv)
-		if err != nil {
+		if err != nil && err != env.ErrEnvDoesNotExist {
 			return ctxs, err
+		} else if e == nil {
+			if e, err = config.Set(name, flagEnv); err != nil {
+				return ctxs, err
+			}
 		}
 
 		ctx, err := createCtx(newClient, config, e, flags, args, progress, true)
@@ -202,10 +206,6 @@ func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags,
 		}
 
 		ctxs = append(ctxs, ctx)
-	}
-
-	if len(ctxs) == 0 {
-		return ctxs, fmt.Errorf("Could not load any valid environments")
 	}
 
 	return ctxs, nil
@@ -223,24 +223,37 @@ func getFlagEnv(flags Flags) env.Env {
 	}
 
 	if !flags.DisableIgnore {
-		flagEnv.IgnoredFiles = flags.IgnoredFiles.Value()
-		flagEnv.Ignores = flags.Ignores.Value()
+		flagEnv.IgnoredFiles = flags.IgnoredFiles
+		flagEnv.Ignores = flags.Ignores
 	}
 
 	return flagEnv
 }
 
-func shouldUseEnvironment(flags Flags, envName string) bool {
-	flagEnvs := flags.Environments.Value()
-	if flags.AllEnvs || (len(flagEnvs) == 0 && envName == env.Default.Name) {
-		return true
+func expandEnvironments(flags Flags, confEnvs map[string]*env.Env) []string {
+	envs := []string{}
+
+	if flags.AllEnvs {
+		for env := range confEnvs {
+			envs = append(envs, env)
+		}
+		return envs
 	}
-	for _, env := range flagEnvs {
-		if env == envName || glob.Glob(env, envName) {
-			return true
+
+	for _, flagEnv := range flags.Environments {
+		if strings.Contains(flagEnv, "*") {
+			for confEnv := range confEnvs {
+				fmt.Println(confEnv, flagEnv, glob.Glob(flagEnv, confEnv))
+				if glob.Glob(flagEnv, confEnv) {
+					envs = append(envs, confEnv)
+				}
+			}
+		} else {
+			envs = append(envs, flagEnv)
 		}
 	}
-	return false
+
+	return envs
 }
 
 // ForEachClient will generate a command context for all the available environments
@@ -320,14 +333,14 @@ func forDefaultClient(newClient clientFact, flags Flags, args []string, handler 
 	}
 
 	envName := env.Default.Name
-	flagEnvs := flags.Environments.Value()
-	if len(flagEnvs) > 0 {
-		envName = flagEnvs[0]
+	if len(flags.Environments) > 0 {
+		envName = flags.Environments[0]
 	}
 
 	var e *env.Env
-	if e, err = config.Get(envName, getFlagEnv(flags)); err != nil {
-		e, err = config.Set(envName, getFlagEnv(flags))
+	flagEnv := getFlagEnv(flags)
+	if e, err = config.Get(envName, flagEnv); err != nil {
+		e, err = config.Set(envName, flagEnv)
 		if err != nil {
 			return err
 		}

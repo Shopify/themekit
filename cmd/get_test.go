@@ -34,7 +34,7 @@ func TestGet(t *testing.T) {
 	}
 
 	ctx, client, conf, _, _ = createTestCtx()
-	ctx.Flags.Environments.Set("test")
+	ctx.Flags.Environments = []string{"test"}
 	ctx.Env.Domain = "my.domain.com"
 	conf.On("Set", "test", env.Env{Domain: "my.domain.com"}).Return(nil, nil)
 	conf.On("Save").Return(nil)

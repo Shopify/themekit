@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/src/cmdutil"
-	"github.com/Shopify/themekit/src/env"
 )
 
 var configureCmd = &cobra.Command{
@@ -21,16 +20,9 @@ var configureCmd = &cobra.Command{
 }
 
 func createConfig(ctx *cmdutil.Ctx) error {
-	flagEnvs := ctx.Flags.Environments.Value()
-	if len(flagEnvs) == 0 {
-		if _, err := ctx.Conf.Set(env.Default.Name, *ctx.Env); err != nil {
+	for _, name := range ctx.Flags.Environments {
+		if _, err := ctx.Conf.Set(name, *ctx.Env); err != nil {
 			return err
-		}
-	} else {
-		for _, name := range flagEnvs {
-			if _, err := ctx.Conf.Set(name, *ctx.Env); err != nil {
-				return err
-			}
 		}
 	}
 	return ctx.Conf.Save()
