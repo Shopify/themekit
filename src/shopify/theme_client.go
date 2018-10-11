@@ -28,6 +28,8 @@ var (
 	ErrZipPathRequired = errors.New("theme zip path is required")
 	// ErrInfoWithoutThemeID will be returned if GetInfo is called on a live theme
 	ErrInfoWithoutThemeID = errors.New("cannot get info without a theme id")
+	// ErrPublishWithoutThemeID will be returned if PublishTheme is called on a live theme
+	ErrPublishWithoutThemeID = errors.New("cannot publish a theme without a theme id set")
 	// ErrThemeNotFound will be returned if trying to get a theme that does not exist
 	ErrThemeNotFound = errors.New("requested theme was not found")
 	// ErrShopDomainNotFound will be returned if you are getting shop info on an invalid domain
@@ -202,7 +204,7 @@ func (c Client) GetInfo() (Theme, error) {
 // PublishTheme will update the theme to be role main
 func (c Client) PublishTheme() error {
 	if c.themeID == "" {
-		return errors.New("cannot publish a theme without a theme id set")
+		return ErrPublishWithoutThemeID
 	}
 
 	resp, err := c.http.Put(
