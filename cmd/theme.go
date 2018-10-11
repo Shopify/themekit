@@ -97,7 +97,7 @@ func init() {
 	downloadCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	deployCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	updateCmd.Flags().StringVar(&flags.Version, "version", "latest", "version of themekit to install")
-	newCmd.Flags().StringVar(&flags.Name, "name", "", "a name to define your theme on your shopify admin")
+	newCmd.Flags().StringVarP(&flags.Name, "name", "n", "", "a name to define your theme on your shopify admin")
 	openCmd.Flags().BoolVarP(&flags.Edit, "edit", "E", false, "open the web editor for the theme.")
 	openCmd.Flags().StringVarP(&flags.With, "browser", "b", "", "name of the browser to open the url. the name should match the name of browser on your system.")
 	getCmd.Flags().BoolVarP(&flags.List, "list", "l", false, "list available themes.")
