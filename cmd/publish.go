@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/src/cmdutil"
+	"github.com/Shopify/themekit/src/colors"
 )
 
 var publishCmd = &cobra.Command{
@@ -20,5 +21,13 @@ the theme you want to publish using the env flag.
 }
 
 func publish(ctx *cmdutil.Ctx) error {
-	return ctx.Client.PublishTheme()
+	err := ctx.Client.PublishTheme()
+	if err == nil {
+		ctx.Log.Printf(
+			"[%s] Successfully published theme %s",
+			colors.Green(ctx.Env.Name),
+			colors.Green(ctx.Env.ThemeID),
+		)
+	}
+	return err
 }
