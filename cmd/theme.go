@@ -91,8 +91,6 @@ func init() {
 	watchCmd.Flags().StringVarP(&flags.NotifyFile, "notify", "n", "", "file to touch when workers have gone idle")
 	watchCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	removeCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
-	replaceCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
-	uploadCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	openCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	downloadCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	deployCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
@@ -103,5 +101,5 @@ func init() {
 	getCmd.Flags().BoolVarP(&flags.List, "list", "l", false, "list available themes.")
 	deployCmd.Flags().BoolVarP(&flags.NoDelete, "nodelete", "n", false, "do no delete file on shopify diring deploy.")
 
-	ThemeCmd.AddCommand(publishCmd, openCmd, versionCmd, newCmd, configureCmd, downloadCmd, removeCmd, updateCmd, uploadCmd, replaceCmd, watchCmd, getCmd, deployCmd)
+	ThemeCmd.AddCommand(publishCmd, openCmd, versionCmd, newCmd, configureCmd, downloadCmd, removeCmd, updateCmd, watchCmd, getCmd, deployCmd)
 }
