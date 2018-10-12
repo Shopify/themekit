@@ -1,6 +1,8 @@
 v0.8.2
 ======================
 - Fixed a problem with uploading compiled assets
+- Decoupled config file from command execution so any command can run without
+	a config file.
 
 v0.8.1 (Sept 18, 2018)
 ======================

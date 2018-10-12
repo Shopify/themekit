@@ -54,7 +54,9 @@ func createTestCtx() (ctx *cmdutil.Ctx, client *mocks.ShopifyClient, conf *mocks
 		Conf:   conf,
 		Client: client,
 		Env:    &env.Env{},
-		Flags:  cmdutil.Flags{},
+		Flags: cmdutil.Flags{
+			Environments: []string{"development"},
+		},
 		Log:    log.New(stdOut, "", 0),
 		ErrLog: log.New(stdErr, "", 0),
 	}
