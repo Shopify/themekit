@@ -28,6 +28,8 @@ var (
 	ErrZipPathRequired = errors.New("theme zip path is required")
 	// ErrInfoWithoutThemeID will be returned if GetInfo is called on a live theme
 	ErrInfoWithoutThemeID = errors.New("cannot get info without a theme id")
+	// ErrPublishWithoutThemeID will be returned if PublishTheme is called on a live theme
+	ErrPublishWithoutThemeID = errors.New("cannot publish a theme without a theme id set")
 	// ErrThemeNotFound will be returned if trying to get a theme that does not exist
 	ErrThemeNotFound = errors.New("requested theme was not found")
 	// ErrShopDomainNotFound will be returned if you are getting shop info on an invalid domain
@@ -41,7 +43,7 @@ var (
 // Theme represents a shopify theme.
 type Theme struct {
 	ID          int64  `json:"id,omitempty"`
-	Name        string `json:"name"`
+	Name        string `json:"name,omitempty"`
 	Source      string `json:"src,omitempty"`
 	Role        string `json:"role,omitempty"`
 	Previewable bool   `json:"previewable,omitempty"`
@@ -197,6 +199,34 @@ func (c Client) GetInfo() (Theme, error) {
 	}
 
 	return r.Theme, nil
+}
+
+// PublishTheme will update the theme to be role main
+func (c Client) PublishTheme() error {
+	if c.themeID == "" {
+		return ErrPublishWithoutThemeID
+	}
+
+	resp, err := c.http.Put(
+		fmt.Sprintf("/admin/themes/%s.json", c.themeID),
+		map[string]Theme{"theme": {Role: "main"}},
+	)
+	if err != nil {
+		return err
+	} else if resp.StatusCode == 404 {
+		return ErrThemeNotFound
+	}
+
+	var r themeResponse
+	if err = unmarshalResponse(resp.Body, &r); err != nil {
+		return err
+	}
+
+	if len(r.Errors) > 0 {
+		return errors.New(toSentence(toMessages(r.Errors)))
+	}
+
+	return nil
 }
 
 // GetAllAssets will return a slice of remote assets from the shopify servers. The

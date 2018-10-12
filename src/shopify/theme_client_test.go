@@ -193,6 +193,49 @@ func TestThemeClient_GetInfo(t *testing.T) {
 	}
 }
 
+func TestThemeClient_PublishTheme(t *testing.T) {
+	testcases := []struct {
+		themeID, resp, resperr, err string
+		code                        int
+	}{
+		{err: ErrPublishWithoutThemeID.Error()},
+		{themeID: "nope", resp: `{"errors": "Not Found"}`, code: 200, err: "Not Found"},
+		{themeID: "123456", resperr: "(Client.Timeout exceeded while awaiting headers)", err: "(Client.Timeout exceeded while awaiting headers)"},
+		{themeID: "123456", resp: `{"theme":{"id": 123456,"name":"timberland","role":"main","previewable":true}}`, code: 200},
+		{themeID: "123456", resp: `{"errors":{"role":["cannot be set to main: missing required file layout/theme.liquid"]}}`, code: 422, err: "role cannot be set to main: missing required file layout/theme.liquid"},
+		{themeID: "123456", resp: "{}", code: 404, err: ErrThemeNotFound.Error()},
+	}
+
+	for i, testcase := range testcases {
+		m := new(mocks.HttpAdapter)
+		client, _ := NewClient(&env.Env{ThemeID: testcase.themeID})
+		client.http = m
+
+		expectation := m.On(
+			"Put",
+			fmt.Sprintf("/admin/themes/%s.json", testcase.themeID),
+			map[string]Theme{"theme": {Role: "main"}},
+		)
+		if testcase.resperr != "" {
+			expectation.Return(nil, errors.New(testcase.resperr))
+		} else {
+			expectation.Return(jsonResponse(testcase.resp, testcase.code), nil)
+		}
+
+		err := client.PublishTheme()
+
+		if testcase.err == "" {
+			assert.Nil(t, err, fmt.Sprintf("unexpected err in testcase: %d", i))
+		} else if assert.NotNil(t, err) {
+			assert.Contains(t, err.Error(), testcase.err)
+		}
+
+		if testcase.resp != "" || testcase.resperr != "" {
+			m.AssertExpectations(t)
+		}
+	}
+}
+
 func TestThemeClient_GetAllAssets(t *testing.T) {
 	testcases := []struct {
 		resp, resperr, err string

@@ -9,6 +9,7 @@ type shopifyClient interface {
 	GetShop() (shopify.Shop, error)
 	CreateNewTheme(string, string) (shopify.Theme, error)
 	GetInfo() (shopify.Theme, error)
+	PublishTheme() error
 	Themes() ([]shopify.Theme, error)
 	GetAllAssets() ([]string, error)
 	GetAsset(string) (shopify.Asset, error)
