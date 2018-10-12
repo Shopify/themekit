@@ -118,7 +118,7 @@ func TestThemeClient_CreateNewTheme(t *testing.T) {
 		theme              Theme
 		resp, resperr, err string
 	}{
-		{in: "", resp: `{"errors":{"name":["can't be blank"]}}`, err: "name can't be blank"},
+		{in: "", err: ErrThemeNameRequired.Error()},
 		{in: "my theme", resp: `{"errors": "Not Found"}`, err: "Not Found"},
 		{in: "my theme", resperr: "(Client.Timeout exceeded while awaiting headers)", err: "(Client.Timeout exceeded while awaiting headers)"},
 		{in: "my theme", resp: `{"theme":{"id": 123456,"name":"timberland","role":"unpublished","previewable":false}}`},

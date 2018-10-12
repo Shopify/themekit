@@ -36,6 +36,8 @@ var (
 	ErrShopDomainNotFound = errors.New("provided myshopify domain does not exist")
 	// ErrMissingAssetName is returned from delete when an invalid key was provided
 	ErrMissingAssetName = errors.New("asset has no name so could not be processes")
+	// ErrThemeNameRequired is returned when trying to create a theme with a blank name
+	ErrThemeNameRequired = errors.New("theme name is required to create a theme")
 
 	shopifyAPILimit = time.Second / 2 // 2 calls per second
 )
@@ -157,6 +159,10 @@ func (c Client) Themes() ([]Theme, error) {
 // CreateNewTheme will create a unpublished new theme on your shopify store and then
 // set the theme id on this theme client to the one recently created.
 func (c *Client) CreateNewTheme(name string) (theme Theme, err error) {
+	if name == "" {
+		return Theme{}, ErrThemeNameRequired
+	}
+
 	resp, err := c.http.Post("/admin/themes.json", map[string]interface{}{"theme": Theme{Name: name}})
 	if err != nil {
 		return Theme{}, err
