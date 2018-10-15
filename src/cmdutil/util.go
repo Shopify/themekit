@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/ryanuber/go-glob"
 	"github.com/vbauerster/mpb"
 	"github.com/vbauerster/mpb/decor"
@@ -178,6 +179,10 @@ func (ctx *Ctx) DoneTask() {
 func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags, args []string) ([]*Ctx, error) {
 	ctxs := []*Ctx{}
 	flagEnv := getFlagEnv(flags)
+
+	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
+		return ctxs, err
+	}
 
 	config, err := env.Load(flags.ConfigPath)
 	if err != nil && os.IsNotExist(err) {

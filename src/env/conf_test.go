@@ -37,6 +37,15 @@ func TestLoad(t *testing.T) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}
 	}
+
+	os.Setenv("STOREPASS", "abracadabra")
+	os.Setenv("STOREDOMAIN", "magic.myshopify.com")
+	defer os.Unsetenv("STOREPASS")
+	defer os.Unsetenv("STOREDOMAIN")
+	conf, err := Load("_testdata/projectdir/valid_config.yml")
+	assert.Nil(t, err)
+	assert.Equal(t, "abracadabra", conf.Envs["development"].Password)
+	assert.Equal(t, "magic.myshopify.com", conf.Envs["development"].Domain)
 }
 
 func TestSearchConfigPath(t *testing.T) {
@@ -87,6 +96,11 @@ func TestConf_Set(t *testing.T) {
 }
 
 func TestConf_Get(t *testing.T) {
+	os.Setenv("STOREPASS", "abracadabra")
+	os.Setenv("STOREDOMAIN", "magic.myshopify.com")
+	defer os.Unsetenv("STOREPASS")
+	defer os.Unsetenv("STOREDOMAIN")
+
 	testcases := []struct {
 		path, toGet, themeid string
 		err                  error
