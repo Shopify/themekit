@@ -48,5 +48,6 @@ func newTheme(ctx *cmdutil.Ctx, generate func(ctx *cmdutil.Ctx) error) error {
 		return err
 	}
 
+	ctx.Log.Printf("[%s] uploading new files to shopify", colors.Yellow(ctx.Env.Domain))
 	return deploy(ctx)
 }
