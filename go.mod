@@ -16,6 +16,7 @@ require (
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db
+	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0
 	github.com/skratchdot/open-golang v0.0.0-20160302144031-75fb7ed4208c
 	github.com/spf13/cobra v0.0.0-20180722215644-7c4570c3ebeb
 	github.com/spf13/pflag v1.0.2 // indirect

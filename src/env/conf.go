@@ -10,10 +10,19 @@ import (
 
 	"encoding/json"
 	"github.com/caarlos0/env"
+	"github.com/joho/godotenv"
+	"github.com/shibukawa/configdir"
 	"gopkg.in/yaml.v1"
 )
 
+const (
+	vendor   = "Shopify"
+	appname  = "Themekit"
+	filename = "variables"
+)
+
 var (
+	cdir          = configdir.New(vendor, appname)
 	supportedExts = []string{"yml", "yaml", "json"}
 	// ErrEnvDoesNotExist is returned when an environment that does not exist in the config is requested
 	ErrEnvDoesNotExist = errors.New("environment does not exist in this environments list")
@@ -30,6 +39,22 @@ type Conf struct {
 	Envs  map[string]*Env
 	osEnv Env
 	path  string
+}
+
+func init() {
+	cdir.LocalPath, _ = os.Getwd()
+}
+
+// SourceVariables will find the environment files for configuration and import their
+// environment variables into the current running process
+func SourceVariables(flagpath string) error {
+	if flagpath != "" {
+		return godotenv.Load(flagpath)
+	}
+	if fldr := cdir.QueryFolderContainsFile(filename); fldr != nil {
+		return godotenv.Load(filepath.Join(fldr.Path, filename))
+	}
+	return nil
 }
 
 // New will build a new blank config

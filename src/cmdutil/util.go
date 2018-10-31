@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/ryanuber/go-glob"
 	"github.com/vbauerster/mpb"
 	"github.com/vbauerster/mpb/decor"
@@ -28,6 +27,7 @@ var ErrReload = errors.New("reloading config")
 // command line. Some of the values are used across different commands
 type Flags struct {
 	ConfigPath            string
+	VariableFilePath      string
 	Environments          []string
 	Directory             string
 	Password              string
@@ -180,7 +180,7 @@ func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags,
 	ctxs := []*Ctx{}
 	flagEnv := getFlagEnv(flags)
 
-	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
+	if err := env.SourceVariables(flags.VariableFilePath); err != nil {
 		return ctxs, err
 	}
 
