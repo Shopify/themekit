@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Shopify/themekit/src/env"
-	"github.com/fsnotify/fsnotify"
+	"github.com/radovskyb/watcher"
 )
 
 // Op describes the different types of file operations
@@ -18,6 +19,7 @@ const (
 	Update Op = iota
 	// Remove is a file op where the file is removed
 	Remove
+	filepathSplit = " -> "
 )
 
 // Event decsribes a file change event
@@ -26,17 +28,16 @@ type Event struct {
 	Path string
 }
 
-type debouncer func(timeout time.Duration, events, complete chan fsnotify.Event)
-
 // Watcher is the object used to watch files for change and notify on any events,
 // these events can then be passed along to kit to be sent to shopify.
 type Watcher struct {
-	fsWatcher       *fsnotify.Watcher
+	Events chan Event
+
+	fsWatcher       *watcher.Watcher
 	filter          Filter
 	notify          string
 	directory       string
 	configPath      string
-	events          chan Event
 	debounceTimeout time.Duration
 	idleTimeout     time.Duration
 }
@@ -49,10 +50,35 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 		return nil, err
 	}
 
+	fsWatcher := watcher.New()
+	fsWatcher.IgnoreHiddenFiles(true)
+	fsWatcher.FilterOps(
+		watcher.Create,
+		watcher.Write,
+		watcher.Remove,
+		watcher.Rename,
+		watcher.Move,
+	)
+
+	if configPath != "" {
+		if err := fsWatcher.Add(configPath); err != nil {
+			return nil, fmt.Errorf("Could not watch config path %s: %s", configPath, err)
+		}
+	}
+
+	for _, folder := range assetLocations {
+		path := filepath.Join(e.Directory, folder)
+		if err := fsWatcher.Add(path); err != nil && !os.IsNotExist(err) {
+			return nil, fmt.Errorf("Could not watch directory %s: %s", path, err)
+		}
+	}
+
 	return &Watcher{
+		Events:          make(chan Event),
 		configPath:      configPath,
 		directory:       e.Directory,
 		filter:          filter,
+		fsWatcher:       fsWatcher,
 		notify:          e.Notify,
 		debounceTimeout: 1100 * time.Millisecond,
 		idleTimeout:     time.Second,
@@ -61,86 +87,86 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 
 // Watch will start the watcher actually receiving file change events and sending
 // events to the Events channel
-func (w *Watcher) Watch() (chan Event, error) {
-	fsWatcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return nil, err
-	}
-
-	w.fsWatcher = fsWatcher
-	w.events = make(chan Event)
-
-	go w.watchFsEvents(fsWatcher.Events, debounce)
-
-	if err := fsWatcher.Add(w.configPath); err != nil {
-		return nil, fmt.Errorf("Could not config path: %s", err)
-	}
-
-	return w.events, filepath.Walk(w.directory, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() && !w.filter.Match(path) && path != w.directory {
-			if err := fsWatcher.Add(path); err != nil {
-				return fmt.Errorf("Could not watch directory %s: %s", path, err)
-			}
-		}
-		return nil
-	})
+func (w *Watcher) Watch() {
+	go w.watchFsEvents()
+	go w.fsWatcher.Start(w.debounceTimeout)
 }
 
-func (w *Watcher) watchFsEvents(events chan fsnotify.Event, debounce debouncer) {
-	fileEvents := make(map[string]chan fsnotify.Event)
-	complete := make(chan fsnotify.Event)
+func (w *Watcher) watchFsEvents() {
 	idleTimer := time.NewTimer(w.idleTimeout)
 	defer idleTimer.Stop()
-
 	for {
 		select {
-		case event := <-complete:
-			projectPath := pathToProject(w.directory, event.Name)
-			if projectPath == "" {
-				projectPath = event.Name
-			}
-			e := Event{Op: Update, Path: projectPath}
-			if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Rename == fsnotify.Rename {
-				e.Op = Remove
-			}
-			w.events <- e
-			delete(fileEvents, event.Name)
-			if len(fileEvents) == 0 {
+		case event, ok := <-w.fsWatcher.Event:
+			if ok && w.onEvent(event) {
 				idleTimer.Reset(w.idleTimeout)
 			}
-		case event, more := <-events:
-			if !more {
-				close(w.events)
-				return
-			}
-
-			if event.Op == fsnotify.Chmod || (w.configPath != event.Name && w.filter.Match(event.Name)) {
-				continue
-			}
-
-			idleTimer.Stop()
-			if _, ok := fileEvents[event.Name]; !ok {
-				fileEvents[event.Name] = make(chan fsnotify.Event)
-				go debounce(w.debounceTimeout, fileEvents[event.Name], complete)
-			}
-			fileEvents[event.Name] <- event
 		case <-idleTimer.C:
 			w.onIdle()
+		case <-w.fsWatcher.Closed:
+			w.Stop()
+			return
 		}
 	}
+}
+
+func (w *Watcher) onEvent(event watcher.Event) bool {
+	if event.IsDir() {
+		return false
+	}
+
+	oldPath, currentPath := w.parsePath(event.Path)
+	if w.configPath != event.Path && w.filter.Match(currentPath) {
+		return false
+	}
+
+	var events []Event
+	if isEventType(event.Op, watcher.Rename, watcher.Move) {
+		events = append(events, Event{Op: Remove, Path: oldPath}, Event{Op: Update, Path: currentPath})
+	} else if isEventType(event.Op, watcher.Remove) {
+		events = append(events, Event{Op: Remove, Path: currentPath})
+	} else if isEventType(event.Op, watcher.Create, watcher.Write) {
+		events = append(events, Event{Op: Update, Path: currentPath})
+	}
+
+	for _, e := range events {
+		w.Events <- e
+	}
+
+	return len(events) > 0
+}
+
+func (w *Watcher) parsePath(path string) (old, current string) {
+	parts := strings.Split(path, filepathSplit)
+	for i, path := range parts {
+		projectPath := pathToProject(w.directory, path)
+		if projectPath == "" {
+			projectPath = path
+		}
+		parts[i] = projectPath
+	}
+	if len(parts) > 1 {
+		return parts[0], parts[1]
+	}
+	return "", parts[0]
+}
+
+func isEventType(currentOp watcher.Op, allowedOps ...watcher.Op) bool {
+	for _, op := range allowedOps {
+		if currentOp == op {
+			return true
+		}
+	}
+	return false
 }
 
 // Stop will stop the Watcher from watching it's directories and clean
 // up any go routines doing work.
 func (w *Watcher) Stop() {
-	if w.fsWatcher == nil {
-		return
-	}
 	w.fsWatcher.Close()
+	for len(w.Events) > 0 { // drain events
+		<-w.Events
+	}
 }
 
 func (w *Watcher) onIdle() {
@@ -149,16 +175,4 @@ func (w *Watcher) onIdle() {
 	}
 	os.Create(w.notify)
 	os.Chtimes(w.notify, time.Now(), time.Now())
-}
-
-func debounce(timeout time.Duration, incoming, complete chan fsnotify.Event) {
-	var event fsnotify.Event
-	for {
-		select {
-		case event = <-incoming:
-		case <-time.After(timeout):
-			complete <- event
-			return
-		}
-	}
 }

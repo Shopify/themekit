@@ -1,131 +1,179 @@
 package file
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
+	"github.com/radovskyb/watcher"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Shopify/themekit/src/env"
 )
 
 func TestNewFileWatcher(t *testing.T) {
-	e := env.Env{
-		Directory:    "/tmp",
-		IgnoredFiles: []string{"*.png"},
-		Notify:       "/tmp/notify",
-	}
-	filter, _ := NewFilter(e.Directory, e.IgnoredFiles, []string{})
-	watcher, err := NewWatcher(&e, "")
-	assert.Nil(t, err)
-	assert.Equal(t, watcher.filter, filter)
-	assert.Equal(t, watcher.notify, e.Notify)
+	w := createTestWatcher(t)
+	filter, _ := NewFilter(filepath.Join("_testdata", "project"), []string{"config/"}, []string{})
+	assert.Equal(t, w.filter, filter)
+	assert.Equal(t, w.notify, "/tmp/notifytest")
+	assert.NotNil(t, w.fsWatcher)
+	assert.NotNil(t, w.Events)
+	watchedFiles := w.fsWatcher.WatchedFiles()
+	assert.Equal(t, 14, len(watchedFiles))
 }
 
-func TestFileWatcher_WatchDirectory(t *testing.T) {
-	e := env.Env{
+func TestFileWatcher_Watch(t *testing.T) {
+	e := &env.Env{
 		Directory:    filepath.Join("_testdata", "project"),
 		IgnoredFiles: []string{"config"},
 	}
+	w, _ := NewWatcher(e, "")
+	w.Watch()
 
-	watcher, _ := NewWatcher(&e, "")
-	watcher.Watch()
-	assert.NotNil(t, watcher.fsWatcher)
-	assert.NotNil(t, watcher.events)
-	assert.NotNil(t, watcher.fsWatcher.Remove(filepath.Join("_testdata", "project", "config")))
-	assert.Nil(t, watcher.fsWatcher.Remove(filepath.Join("_testdata", "project", "assets")))
-	watcher.Stop()
+	path := filepath.Join("_testdata", "project", "assets", "application.js")
+	info, _ := os.Stat(path)
+	w.fsWatcher.Wait()
+	w.fsWatcher.Event <- watcher.Event{Op: watcher.Create, Path: path, FileInfo: info}
+
+	select {
+	case <-w.Events:
+	case <-time.After(time.Second):
+		t.Error("Didnt process an event so must not be watching")
+	}
+
+	w.Stop()
 }
 
 func TestFileWatcher_WatchFsEvents(t *testing.T) {
-	watcher, _ := NewWatcher(&env.Env{Directory: "_testdata/project", IgnoredFiles: []string{"config/settings.json"}}, "")
-	watcher.events = make(chan Event)
-	events := make(chan fsnotify.Event)
-	go watcher.watchFsEvents(events, func(t time.Duration, events, complete chan fsnotify.Event) { complete <- (<-events) })
-
 	testcases := []struct {
-		event         fsnotify.Event
+		filename      string
+		op            watcher.Op
 		shouldReceive bool
 		expectedOp    Op
 	}{
-		{shouldReceive: false, event: fsnotify.Event{Name: "_testdata/project/config/settings.json", Op: fsnotify.Write}},
-		{shouldReceive: false, event: fsnotify.Event{Name: "_testdata/project/templates/foo.liquid", Op: fsnotify.Chmod}},
-		{shouldReceive: true, expectedOp: Update, event: fsnotify.Event{Name: "_testdata/project/templates/template.liquid", Op: fsnotify.Write}},
-		{shouldReceive: true, expectedOp: Update, event: fsnotify.Event{Name: "_testdata/project/templates/customers/test.liquid", Op: fsnotify.Write}},
-		{shouldReceive: true, expectedOp: Remove, event: fsnotify.Event{Name: "_testdata/project/templates/customers/test.liquid", Op: fsnotify.Remove}},
-		{shouldReceive: true, expectedOp: Remove, event: fsnotify.Event{Name: "_testdata/project/templates/customers/test.liquid", Op: fsnotify.Rename}},
+		{shouldReceive: false, filename: "_testdata/project/config/settings.json", op: watcher.Write},
+		{shouldReceive: true, expectedOp: Update, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
+		{shouldReceive: true, expectedOp: Update, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Write},
+		{shouldReceive: true, expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
+		{shouldReceive: true, expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Rename},
 	}
 
+	w := createTestWatcher(t)
+	w.Watch()
+	w.Events = make(chan Event, len(testcases))
+	defer w.Stop()
 	for _, testcase := range testcases {
-		events <- testcase.event
+		info, _ := os.Stat(testcase.filename)
+		w.fsWatcher.Event <- watcher.Event{Op: testcase.op, Path: testcase.filename, FileInfo: info}
 		if testcase.shouldReceive {
-			e := <-watcher.events
-			assert.Contains(t, testcase.event.Name, e.Path)
+			e := <-w.Events
+			assert.Contains(t, testcase.filename, e.Path)
 			assert.Equal(t, testcase.expectedOp, e.Op)
 		} else {
-			assert.False(t, len(watcher.events) > 0, testcase.event.Name)
+			assert.False(t, len(w.Events) > 0, testcase.filename)
 		}
 	}
+}
 
-	// Shutdown sequence works
-	close(events)
-	_, ok := <-watcher.events
-	assert.False(t, ok)
+func TestFileWatcher_OnEvent(t *testing.T) {
+	testcases := []struct {
+		filename   string
+		op         watcher.Op
+		expectedOp []Op
+	}{
+		{expectedOp: []Op{}, filename: "_testdata/project/templates/customers", op: watcher.Write},
+		{expectedOp: []Op{}, filename: "_testdata/project/config/settings.json", op: watcher.Write},
+		{expectedOp: []Op{Update}, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
+		{expectedOp: []Op{Update}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Create},
+		{expectedOp: []Op{Remove}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
+		{expectedOp: []Op{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Rename},
+		{expectedOp: []Op{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Move},
+	}
+
+	w := createTestWatcher(t)
+	w.Events = make(chan Event, len(testcases))
+	defer w.Stop()
+	for i, testcase := range testcases {
+		_, currentPath := w.parsePath(testcase.filename)
+		info, _ := os.Stat(filepath.Join("_testdata", "project", currentPath))
+		w.onEvent(watcher.Event{Op: testcase.op, Path: testcase.filename, FileInfo: info})
+		assert.Equal(t, len(testcase.expectedOp), len(w.Events), fmt.Sprintf("testcase: %v", i))
+		for i := 0; i < len(testcase.expectedOp); i++ {
+			e := <-w.Events
+			assert.Contains(t, testcase.filename, e.Path)
+			assert.Equal(t, testcase.expectedOp[i], e.Op)
+		}
+	}
+}
+
+func TestFileWatcher_ParsePath(t *testing.T) {
+	testcases := []struct {
+		input, oldpath, currentpath string
+	}{
+		{"_testdata/project/assets/app.js", "", "assets/app.js"},
+		{"_testdata/project/assets/app.js -> _testdata/project/assets/app.js.liquid", "assets/app.js", "assets/app.js.liquid"},
+		{"not/another/path/assets/app.js", "", "not/another/path/assets/app.js"},
+	}
+	w := createTestWatcher(t)
+	for _, testcase := range testcases {
+		o, c := w.parsePath(testcase.input)
+		assert.Equal(t, o, testcase.oldpath)
+		assert.Equal(t, c, testcase.currentpath)
+	}
+}
+
+func TestIsEventType(t *testing.T) {
+	expectedOps := []watcher.Op{watcher.Write, watcher.Remove, watcher.Rename}
+	refutedOps := []watcher.Op{watcher.Chmod, watcher.Create, watcher.Move}
+
+	for _, op := range expectedOps {
+		assert.True(t, isEventType(op, expectedOps...), fmt.Sprintf("%v", op))
+	}
+
+	for _, op := range refutedOps {
+		assert.False(t, isEventType(op, expectedOps...), fmt.Sprintf("%v", op))
+	}
 }
 
 func TestFileWatcher_StopWatching(t *testing.T) {
-	watcher, err := NewWatcher(&env.Env{Directory: "_testdata/project"}, "")
-	assert.Nil(t, err)
-	watcher.Stop()
-	watcher.Watch()
-	watcher.Stop()
-	_, ok := <-watcher.events
-	assert.False(t, ok)
+	w := createTestWatcher(t)
+	w.Stop()
+	w.Watch()
+	w.Stop()
 }
 
 func TestFileWatcher_TouchNotifyFile(t *testing.T) {
 	notifyPath := filepath.Join("_testdata", "notify_file")
-	watcher, _ := NewWatcher(&env.Env{Notify: notifyPath}, "")
+	w, _ := NewWatcher(&env.Env{Notify: notifyPath}, "")
 
 	os.Remove(notifyPath)
 	_, err := os.Stat(notifyPath)
 	assert.True(t, os.IsNotExist(err))
 
-	watcher.onIdle()
+	w.onIdle()
 	_, err = os.Stat(notifyPath)
 	assert.Nil(t, err)
 	// need to make the time different larger than milliseconds because windows
 	// trucates the time and it will fail
-	os.Chtimes(watcher.notify, time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, -1))
+	os.Chtimes(w.notify, time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, -1))
 	info1, err := os.Stat(notifyPath)
 	assert.Nil(t, err)
 
-	watcher.onIdle()
+	w.onIdle()
 	info2, err := os.Stat(notifyPath)
 	assert.Nil(t, err)
 	assert.NotEqual(t, info1.ModTime(), info2.ModTime())
 }
 
-func TestDebounce(t *testing.T) {
-	writes := []fsnotify.Event{
-		{Name: "_testdata/project/assets/application.js", Op: fsnotify.Create},
-		{Name: "_testdata/project/assets/application.js", Op: fsnotify.Write},
-		{Name: "_testdata/project/assets/application.js", Op: fsnotify.Remove},
-		{Name: "_testdata/project/assets/application.js", Op: fsnotify.Rename},
+func createTestWatcher(t *testing.T) *Watcher {
+	e := &env.Env{
+		Directory:    filepath.Join("_testdata", "project"),
+		IgnoredFiles: []string{"config/"},
+		Notify:       "/tmp/notifytest",
 	}
-
-	events := make(chan fsnotify.Event)
-	complete := make(chan fsnotify.Event)
-	go debounce(time.Millisecond, events, complete)
-
-	for _, write := range writes {
-		events <- write
-	}
-
-	e := <-complete
-	assert.Equal(t, e.Name, "_testdata/project/assets/application.js")
-	assert.Equal(t, e.Op, fsnotify.Rename)
+	w, err := NewWatcher(e, filepath.Join("_testdata", "project", "config.yml"))
+	assert.Nil(t, err)
+	return w
 }

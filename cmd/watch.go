@@ -38,15 +38,11 @@ var watchCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			watchEvents, err := watcher.Watch()
-			if err != nil {
-				return err
-			}
+			watcher.Watch()
 			defer watcher.Stop()
-
 			signalChan := make(chan os.Signal)
 			signal.Notify(signalChan, os.Interrupt)
-			return watch(ctx, watchEvents, signalChan)
+			return watch(ctx, watcher.Events, signalChan)
 		})
 	},
 }
