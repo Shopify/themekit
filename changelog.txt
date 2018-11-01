@@ -4,6 +4,9 @@ v1.0.0
 - Fixed a problem with uploading compiled assets
 - Decoupled config file from command execution so any command can run without
 	a config file.
+- Added environment variable interpolation into config files.
+- Added a global environment variable file so that variables can be easily
+managed
 
 v0.8.1 (Sept 18, 2018)
 ======================
