@@ -7,6 +7,10 @@ v1.0.0
 - Added environment variable interpolation into config files.
 - Added a global environment variable file so that variables can be easily
 managed
+- Changed the file watcher backend to use a polling strategy. This will work
+more consistently across all platforms without worries of changes in what
+events each operating systems send.
+- Fixes multiple unrequired file events
 
 v0.8.1 (Sept 18, 2018)
 ======================
