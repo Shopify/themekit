@@ -27,6 +27,7 @@ var ErrReload = errors.New("reloading config")
 // command line. Some of the values are used across different commands
 type Flags struct {
 	ConfigPath            string
+	VariableFilePath      string
 	Environments          []string
 	Directory             string
 	Password              string
@@ -178,6 +179,10 @@ func (ctx *Ctx) DoneTask() {
 func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags, args []string) ([]*Ctx, error) {
 	ctxs := []*Ctx{}
 	flagEnv := getFlagEnv(flags)
+
+	if err := env.SourceVariables(flags.VariableFilePath); err != nil {
+		return ctxs, err
+	}
 
 	config, err := env.Load(flags.ConfigPath)
 	if err != nil && os.IsNotExist(err) {

@@ -10,10 +10,19 @@ import (
 
 	"encoding/json"
 	"github.com/caarlos0/env"
+	"github.com/joho/godotenv"
+	"github.com/shibukawa/configdir"
 	"gopkg.in/yaml.v1"
 )
 
+const (
+	vendor   = "Shopify"
+	appname  = "Themekit"
+	filename = "variables"
+)
+
 var (
+	cdir          = configdir.New(vendor, appname)
 	supportedExts = []string{"yml", "yaml", "json"}
 	// ErrEnvDoesNotExist is returned when an environment that does not exist in the config is requested
 	ErrEnvDoesNotExist = errors.New("environment does not exist in this environments list")
@@ -30,6 +39,22 @@ type Conf struct {
 	Envs  map[string]*Env
 	osEnv Env
 	path  string
+}
+
+func init() {
+	cdir.LocalPath, _ = os.Getwd()
+}
+
+// SourceVariables will find the environment files for configuration and import their
+// environment variables into the current running process
+func SourceVariables(flagpath string) error {
+	if flagpath != "" {
+		return godotenv.Load(flagpath)
+	}
+	if fldr := cdir.QueryFolderContainsFile(filename); fldr != nil {
+		return godotenv.Load(filepath.Join(fldr.Path, filename))
+	}
+	return nil
 }
 
 // New will build a new blank config
@@ -53,16 +78,20 @@ func Load(configPath string) (Conf, error) {
 	}
 
 	contents, err := ioutil.ReadFile(path)
-	if err == nil {
-		switch ext {
-		case "yml", "yaml":
-			if err = yaml.Unmarshal(contents, &conf.Envs); err != nil {
-				return conf, fmt.Errorf("Invalid yaml found while loading the config file: %v", err)
-			}
-		case "json":
-			if err = json.Unmarshal(contents, &conf.Envs); err != nil {
-				return conf, fmt.Errorf("Invalid json found while loading the config file: %v", err)
-			}
+	if err != nil {
+		return conf, err
+	}
+
+	contents = []byte(os.ExpandEnv(string(contents)))
+
+	switch ext {
+	case "yml", "yaml":
+		if err = yaml.Unmarshal(contents, &conf.Envs); err != nil {
+			return conf, fmt.Errorf("Invalid yaml found while loading the config file: %v", err)
+		}
+	case "json":
+		if err = json.Unmarshal(contents, &conf.Envs); err != nil {
+			return conf, fmt.Errorf("Invalid json found while loading the config file: %v", err)
 		}
 	}
 

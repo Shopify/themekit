@@ -11,10 +11,12 @@ require (
 	github.com/imdario/mergo v0.3.6
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.0.0-20180310133214-efa589957cd0
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db
+	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0
 	github.com/skratchdot/open-golang v0.0.0-20160302144031-75fb7ed4208c
 	github.com/spf13/cobra v0.0.0-20180722215644-7c4570c3ebeb
 	github.com/spf13/pflag v1.0.2 // indirect

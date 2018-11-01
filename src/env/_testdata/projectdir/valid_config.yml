@@ -1,6 +1,6 @@
 development:
-  password: abracadabra
-  store: store.myshopify.com
+  password: ${STOREPASS}
+  store: $STOREDOMAIN
   ignore_files:
   - charmander
   - bulbasaur
