@@ -20,14 +20,9 @@ the theme you want to publish using the env flag.
 	},
 }
 
-func publish(ctx *cmdutil.Ctx) error {
-	err := ctx.Client.PublishTheme()
-	if err == nil {
-		ctx.Log.Printf(
-			"[%s] Successfully published theme %s",
-			colors.Green(ctx.Env.Name),
-			colors.Green(ctx.Env.ThemeID),
-		)
+func publish(ctx *cmdutil.Ctx) (err error) {
+	if err = ctx.Client.PublishTheme(); err == nil {
+		ctx.Log.Printf("[%s] Successfully published theme %s", colors.Green(ctx.Env.Name), colors.Green(ctx.Env.ThemeID))
 	}
 	return err
 }
