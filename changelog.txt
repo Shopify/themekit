@@ -11,6 +11,8 @@ managed
 more consistently across all platforms without worries of changes in what
 events each operating systems send.
 - Fixes multiple unrequired file events
+- Added an error when developers are deploying themes with files that will
+conflict with Shopify's liquid compilation. example: app.js and app.js.liquid
 
 v0.8.1 (Sept 18, 2018)
 ======================
