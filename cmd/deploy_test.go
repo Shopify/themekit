@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -8,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/Shopify/themekit/src/colors"
 	"github.com/Shopify/themekit/src/file"
 	"github.com/Shopify/themekit/src/shopify"
 )
@@ -96,4 +98,45 @@ func TestGenerateActions(t *testing.T) {
 	client.On("GetAllAssets").Return([]string{}, nil)
 	_, err = generateActions(ctx)
 	assert.NotNil(t, err)
+
+	ctx, client, _, _, _ = createTestCtx()
+	ctx.Env.Name = "development"
+	ctx.Env.Directory = filepath.Join("_testdata", "badprojectdir")
+	client.On("GetAllAssets").Return([]string{}, nil)
+	actions, err = generateActions(ctx)
+	assert.NotNil(t, err)
+	var tpl bytes.Buffer
+	compiledFilenameWarning.Execute(&tpl, struct {
+		EnvName   string
+		FileNames []string
+	}{EnvName: colors.Yellow("development"), FileNames: []string{colors.Yellow("assets/app.js") + colors.Blue(" conflicts with ") + colors.Yellow("assets/app.js.liquid")}})
+	assert.Equal(t, tpl.String(), err.Error())
+}
+
+func TestCompileAssetFilenames(t *testing.T) {
+	input := []string{
+		"assets/app.js",
+		"assets/app.scss",
+		"assets/foo.js.liquid",
+		"assets/app.js.liquid",
+		"assets/foo.js",
+	}
+	expected := []string{
+		colors.Yellow("assets/app.js") + colors.Blue(" conflicts with ") + colors.Yellow("assets/app.js.liquid"),
+	}
+	assert.Equal(t, expected, compileAssetFilenames(input))
+}
+
+func TestCompiledAssetWarning(t *testing.T) {
+	filenames := []string{
+		colors.Yellow("assets/app.js") + colors.Blue(" conflicts with ") + colors.Yellow("assets/app.js.liquid"),
+	}
+
+	var tpl bytes.Buffer
+	compiledFilenameWarning.Execute(&tpl, struct {
+		EnvName   string
+		FileNames []string
+	}{EnvName: colors.Yellow("development"), FileNames: filenames})
+
+	assert.Equal(t, tpl.String(), compiledAssetWarning("development", filenames).Error())
 }
