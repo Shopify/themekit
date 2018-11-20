@@ -1,8 +1,12 @@
 package cmd
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"sort"
 	"sync"
+	"text/template"
 
 	"github.com/spf13/cobra"
 
@@ -13,6 +17,22 @@ import (
 )
 
 const settingsDataKey = "config/settings_data.json"
+
+var compiledFilenameWarning = template.Must(template.New("compiledFilenamesWarning").Parse(
+	`[{{.EnvName}}] You have file names that will conflict with each other.
+If you have files named [filename].js.liquid or [filename].scss.liquid,
+they will be compiled to [filename].js and [filename].scss respectively
+when they are uploaded to Shopify. Having both files uploaded to Shopify
+will overwrite one or the other and cause unexpected behavior.
+
+The files you will need to change are:
+  {{- range .FileNames }}
+	{{ . }}
+	{{- end }}
+
+To fix this, you will need to ignore, rename or delete one or both of
+the files.
+`))
 
 var deployCmd = &cobra.Command{
 	Use:   "deploy <filenames>",
@@ -76,8 +96,34 @@ func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 		return assetsActions, err
 	}
 
+	problemAssets := compileAssetFilenames(localAssets)
+	if len(problemAssets) > 0 {
+		return assetsActions, compiledAssetWarning(ctx.Env.Name, problemAssets)
+	}
+
 	for _, path := range localAssets {
 		assetsActions[path] = file.Update
 	}
 	return assetsActions, nil
+}
+
+func compileAssetFilenames(filenames []string) (problemAssets []string) {
+	sort.Strings(filenames)
+	for i := 0; i < len(filenames)-1; i += 2 {
+		if filenames[i]+".liquid" == filenames[i+1] {
+			problemAssets = append(problemAssets, colors.Yellow(filenames[i])+
+				colors.Blue(" conflicts with ")+
+				colors.Yellow(filenames[i+1]))
+		}
+	}
+	return
+}
+
+func compiledAssetWarning(env string, filenames []string) error {
+	var tpl bytes.Buffer
+	compiledFilenameWarning.Execute(&tpl, struct {
+		EnvName   string
+		FileNames []string
+	}{EnvName: colors.Yellow(env), FileNames: filenames})
+	return errors.New(tpl.String())
 }
