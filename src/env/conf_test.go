@@ -67,6 +67,8 @@ func TestSearchConfigPath(t *testing.T) {
 }
 
 func TestConf_Set(t *testing.T) {
+	dir, _ := filepath.Abs(filepath.Join("..", "file"))
+
 	testcases := []struct {
 		name      string
 		initial   Env
@@ -77,7 +79,7 @@ func TestConf_Set(t *testing.T) {
 		{name: "", initial: Env{}, err: ErrInvalidEnvironmentName.Error()},
 		{name: "development", initial: Env{}, err: "invalid environment"},
 		{name: "development", initial: Env{Domain: "yes.myshopify.com", Password: "abc123"}, expected: Env{Name: "development", Domain: "yes.myshopify.com", Password: "abc123", Directory: Default.Directory, Timeout: Default.Timeout}},
-		{name: "development", initial: Env{Domain: "yes.myshopify.com", Password: "abc123", Directory: filepath.Join("..", "file")}, expected: Env{Name: "development", Domain: "yes.myshopify.com", Password: "abc123", Directory: filepath.Join("..", "file"), Timeout: Default.Timeout}},
+		{name: "development", initial: Env{Domain: "yes.myshopify.com", Password: "abc123", Directory: filepath.Join("..", "file")}, expected: Env{Name: "development", Domain: "yes.myshopify.com", Password: "abc123", Directory: dir, Timeout: Default.Timeout}},
 		{name: "development", initial: Env{Domain: "yes.myshopify.com", Password: "abc123"}, overrides: []Env{{ThemeID: "12345"}}, expected: Env{Name: "development", Domain: "yes.myshopify.com", Password: "abc123", ThemeID: "12345", Directory: Default.Directory, Timeout: Default.Timeout}},
 	}
 

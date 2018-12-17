@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -13,13 +14,14 @@ import (
 func TestEnvNew(t *testing.T) {
 	env, _ := newEnv("", Env{})
 	assert.Equal(t, Default, *env)
+	pwd, _ := os.Getwd()
 
 	osEnv := Env{
 		Name:         "Foobar",
 		Password:     "password",
 		ThemeID:      "themeid",
 		Domain:       "nope.myshopify.com",
-		Directory:    filepath.Join("..", "env"),
+		Directory:    filepath.Join(pwd, "env"),
 		IgnoredFiles: []string{"one", "two", "three"},
 		Proxy:        ":3000",
 		Ignores:      []string{"four", "five", "six"},
