@@ -91,5 +91,13 @@ func validateDirectory(dir string) (finalDir string, errors []string) {
 	} else if !fi.Mode().IsDir() {
 		errors = append(errors, fmt.Sprintf("Directory config %v is not a directory: %v", dir, err))
 	}
+
+	if !filepath.IsAbs(dir) {
+		var err error
+		if dir, err = filepath.Abs(dir); err != nil {
+			errors = append(errors, fmt.Sprintf("Could not get absolute root bath: %v", err))
+		}
+	}
+
 	return dir, errors
 }

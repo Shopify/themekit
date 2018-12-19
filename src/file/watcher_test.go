@@ -13,6 +13,12 @@ import (
 	"github.com/Shopify/themekit/src/env"
 )
 
+func TestMain(m *testing.M) {
+	drainTimeout = 100 * time.Millisecond
+	pollInterval = time.Millisecond
+	os.Exit(m.Run())
+}
+
 func TestNewFileWatcher(t *testing.T) {
 	w := createTestWatcher(t)
 	filter, _ := NewFilter(filepath.Join("_testdata", "project"), []string{"config/"}, []string{})
@@ -106,6 +112,22 @@ func TestFileWatcher_OnEvent(t *testing.T) {
 			assert.Equal(t, testcase.expectedOp[i], e.Op)
 		}
 	}
+}
+
+func TestFileWatcher_debouncing(t *testing.T) {
+	w := createTestWatcher(t)
+	w.Events = make(chan Event, 10)
+	path := filepath.Join("_testdata", "project", "templates", "customers", "test.liquid")
+	info, _ := os.Stat(path)
+	go func() {
+		w.fsWatcher.Event <- watcher.Event{Op: watcher.Write, Path: path, FileInfo: info}
+		w.fsWatcher.Event <- watcher.Event{Op: watcher.Write, Path: path, FileInfo: info}
+		w.fsWatcher.Event <- watcher.Event{Op: watcher.Remove, Path: path, FileInfo: info}
+	}()
+	go w.watchFsEvents()
+	defer w.Stop()
+	time.Sleep(2 * drainTimeout)
+	assert.Equal(t, 1, len(w.Events))
 }
 
 func TestFileWatcher_ParsePath(t *testing.T) {

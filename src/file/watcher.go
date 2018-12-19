@@ -22,6 +22,16 @@ const (
 	filepathSplit = " -> "
 )
 
+var (
+	// how long until we stop trying to drain events before emitting events
+	drainTimeout = time.Second
+	// the interval that the watcher polls the filesystem this needs to be less than
+	// the drain timeout, otherwise debouncing will not work
+	pollInterval = 500 * time.Millisecond
+	// amount of time with no events before touching the notify file
+	idleTimeout = time.Second
+)
+
 // Event decsribes a file change event
 type Event struct {
 	Op   Op
@@ -33,13 +43,11 @@ type Event struct {
 type Watcher struct {
 	Events chan Event
 
-	fsWatcher       *watcher.Watcher
-	filter          Filter
-	notify          string
-	directory       string
-	configPath      string
-	debounceTimeout time.Duration
-	idleTimeout     time.Duration
+	fsWatcher  *watcher.Watcher
+	filter     Filter
+	notify     string
+	directory  string
+	configPath string
 }
 
 // NewWatcher will create a new file change watching for a a given directory defined
@@ -74,14 +82,12 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 	}
 
 	return &Watcher{
-		Events:          make(chan Event),
-		configPath:      configPath,
-		directory:       e.Directory,
-		filter:          filter,
-		fsWatcher:       fsWatcher,
-		notify:          e.Notify,
-		debounceTimeout: 1100 * time.Millisecond,
-		idleTimeout:     time.Second,
+		Events:     make(chan Event),
+		configPath: configPath,
+		directory:  e.Directory,
+		filter:     filter,
+		fsWatcher:  fsWatcher,
+		notify:     e.Notify,
 	}, nil
 }
 
@@ -89,17 +95,17 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 // events to the Events channel
 func (w *Watcher) Watch() {
 	go w.watchFsEvents()
-	go w.fsWatcher.Start(w.debounceTimeout)
+	go w.fsWatcher.Start(pollInterval)
 }
 
 func (w *Watcher) watchFsEvents() {
-	idleTimer := time.NewTimer(w.idleTimeout)
+	idleTimer := time.NewTimer(idleTimeout)
 	defer idleTimer.Stop()
 	for {
 		select {
 		case event, ok := <-w.fsWatcher.Event:
 			if ok && w.onEvent(event) {
-				idleTimer.Reset(w.idleTimeout)
+				idleTimer.Reset(idleTimeout)
 			}
 		case <-idleTimer.C:
 			w.onIdle()
@@ -111,16 +117,43 @@ func (w *Watcher) watchFsEvents() {
 }
 
 func (w *Watcher) onEvent(event watcher.Event) bool {
+	events := map[string]Event{}
+	for _, event := range w.translateEvent(event) {
+		events[event.Path] = event
+	}
+	drainTimer := time.NewTimer(drainTimeout)
+	defer drainTimer.Stop()
+	for {
+		select {
+		case event, ok := <-w.fsWatcher.Event:
+			if !ok {
+				continue
+			}
+			for _, e := range w.translateEvent(event) {
+				events[e.Path] = e
+			}
+			drainTimer.Reset(drainTimeout)
+		case <-drainTimer.C:
+			for _, e := range events {
+				w.Events <- e
+			}
+			return len(events) > 0
+		}
+	}
+}
+
+func (w *Watcher) translateEvent(event watcher.Event) []Event {
+	var events []Event
+
 	if event.IsDir() {
-		return false
+		return events
 	}
 
 	oldPath, currentPath := w.parsePath(event.Path)
 	if w.configPath != event.Path && w.filter.Match(currentPath) {
-		return false
+		return events
 	}
 
-	var events []Event
 	if isEventType(event.Op, watcher.Rename, watcher.Move) {
 		events = append(events, Event{Op: Remove, Path: oldPath}, Event{Op: Update, Path: currentPath})
 	} else if isEventType(event.Op, watcher.Remove) {
@@ -128,12 +161,7 @@ func (w *Watcher) onEvent(event watcher.Event) bool {
 	} else if isEventType(event.Op, watcher.Create, watcher.Write) {
 		events = append(events, Event{Op: Update, Path: currentPath})
 	}
-
-	for _, e := range events {
-		w.Events <- e
-	}
-
-	return len(events) > 0
+	return events
 }
 
 func (w *Watcher) parsePath(path string) (old, current string) {
