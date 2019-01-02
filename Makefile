@@ -1,13 +1,14 @@
 .PHONY: build
 install: bundle ## Build and install the theme binary
-	@go install github.com/Shopify/themekit/cmd/theme;
+	@CGO_ENABLED=0 go install github.com/Shopify/themekit/cmd/theme;
 lint: # Lint all packages
 ifeq ("$(shell which golint 2>/dev/null)","")
 	@go get -u github.com/golang/lint/golint
 endif
 	@golint -set_exit_status ./...
 test: lint ## lint and test the code
-	@go test -race -cover -covermode=atomic ./...
+	@echo "Race & Coverage Tests" && go test -race -cover -covermode=atomic ./...
+	@echo "CGO Disable Tests" && CGO_ENABLED=0 go test ./...
 clean: ## Remove all temporary build artifacts
 	@rm -rf build && echo "project cleaned";
 all: clean bundle ## will build a binary for all platforms
@@ -22,7 +23,7 @@ all: clean bundle ## will build a binary for all platforms
 build:
 	@mkdir -p build/dist/${GOOS}-${GOARCH} && \
     echo "[${GOOS}-${GOARCH}] build started" && \
-		go build \
+		CGO_ENABLED=0 go build \
 			-ldflags="-s -w" \
 			-o build/dist/${GOOS}-${GOARCH}/theme${EXT} \
 			github.com/Shopify/themekit/cmd/theme && \
