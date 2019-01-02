@@ -15,7 +15,7 @@ import (
 
 func TestMain(m *testing.M) {
 	drainTimeout = 100 * time.Millisecond
-	pollInterval = time.Millisecond
+	pollInterval = time.Nanosecond
 	os.Exit(m.Run())
 }
 
@@ -70,15 +70,22 @@ func TestFileWatcher_WatchFsEvents(t *testing.T) {
 	w.Watch()
 	w.Events = make(chan Event, len(testcases))
 	defer w.Stop()
-	for _, testcase := range testcases {
+	for i, testcase := range testcases {
 		info, _ := os.Stat(testcase.filename)
 		w.fsWatcher.Event <- watcher.Event{Op: testcase.op, Path: testcase.filename, FileInfo: info}
+
 		if testcase.shouldReceive {
 			e := <-w.Events
 			assert.Contains(t, testcase.filename, e.Path)
-			assert.Equal(t, testcase.expectedOp, e.Op)
+			assert.Equal(t, testcase.expectedOp, e.Op, fmt.Sprintf("got the wrong operation %v", i))
 		} else {
-			assert.False(t, len(w.Events) > 0, testcase.filename)
+			if !assert.False(t, len(w.Events) > 0, testcase.filename) {
+				<-w.Events
+			}
+		}
+
+		for len(w.Events) > 0 {
+			<-w.Events
 		}
 	}
 }
