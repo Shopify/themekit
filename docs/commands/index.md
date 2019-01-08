@@ -14,27 +14,6 @@ command by running:
 > theme [command] --help
 ```
 
-## General Global Flags
-
-|`-c` |`--config            `| path to config.yml
-|`-d` |`--dir               `| directory that command will take effect. (default current directory)
-|`-e` |`--env               `| environment to run the command
-|`-h` |`--help              `| help for themekit
-|`  ` |`--ignored-file      `| A single file to ignore, use the flag multiple times to add multiple.
-|`  ` |`--ignores           `| A path to a file that contains ignore patterns.
-|`  ` |`--no-ignore         `| Will disable config ignores so that all files can be changed
-|`  ` |`--no-update-notifier`| Stop theme kit from notifying about updates.
-|`-p` |`--password          `| theme password. This will override what is in your config.yml
-|`  ` |`--proxy             `| proxy for all theme requests. This will override what is in your config.yml
-|`-s` |`--store             `| your shopify domain. This will override what is in your config.yml
-|`-t` |`--themeid           `| theme id. This will override what is in your config.yml
-|`  ` |`--timeout           `| the timeout to kill any stalled processes. This will override what is in your config.yml
-|`-v` |`--verbose           `| Enable more verbose output from the running command.
-
-## Bootstrap
-
-The bootstrap command has been renamed to `new`, please see the corresponding docs.
-
 ## Configure
 
 Use this command to create or update configuration files. If you run the following
@@ -51,7 +30,6 @@ development:
   password: [your-api-password]
   theme_id: "[your-theme-id]"
   store: [your-store].myshopify.com
-  timeout: 30s
 ```
 
 |**Required Flags**||
@@ -70,7 +48,7 @@ Deploy can be used without any filenames and it will replace the whole theme. If
 some filenames are provided to replace then only those files will be replaced.
 
 |**Optional Flags**||
-|`-a`|`--allenvs`| Will run this command for each environment in your config file.
+|`-a`|`--allenvs` | Will run this command for each environment in your config file.
 |`-n`|`--nodelete`| will run deploy without removing files from shopify.
 
 ## Download
@@ -108,6 +86,8 @@ development:
   store: [your-store].myshopify.com
 ```
 
+**To get your credentials setup please refer to [the setup docs]({{ '/#get-api-access' | prepend: site.baseurl }})**
+
 |**Required Flags**||
 |`-p`|`--password`| Password for access to your Shopify account.
 |`-s`|`--store   `| Your store's domain for changes to take effect
@@ -117,13 +97,16 @@ development:
 ## new
 
 If you are starting a new theme and want to have some sane defaults, you can use
-the new command (formerly the bootstrap command). It will create a new theme based on Timber, update your
-configuration file for that theme and download it to your computer. You will
-need to provide your API password and your store domain to the command. You can
+the new command. The command will
+- Create a new theme on shopify with the provided name.
+- Initialize your configuration with your credentials and your new theme id.
+- Generate and upload some default templates to make your theme valid.
+
+You will need to provide your API password and your store domain to the command. You can
 run the command like the following:
 
 ```bash
-theme new --password=[your-api-password] --store=[your-store.myshopify.com]
+theme new --password=[your-api-password] --store=[your-store.myshopify.com] --name="Dramatic Theme"
 ```
 
 **To get your credentials setup please refer to [the setup docs]({{ '/#get-api-access' | prepend: site.baseurl }})**
@@ -131,11 +114,7 @@ theme new --password=[your-api-password] --store=[your-store.myshopify.com]
 |**Required Flags**||
 |`-p`|`--password`| Password for access to your Shopify account.
 |`-s`|`--store   `| Your store's domain for changes to take effect
-|**Optional Flags**||
-|    |`--name   ` | a name to define your theme on your shopify admin
-|    |`--prefix ` | prefix to the Timber theme being created
-|    |`--url    ` | a url to pull a project theme zip file from.
-|    |`--version` | version of Shopify Timber to use (default "latest")
+|`-n`|`--name    `| The name of your new theme.
 
 ## Open
 Open will open the preview page for your theme in your browser as well as print
@@ -165,28 +144,6 @@ are required to serve a valid theme.
 
 |**Optional Flags**||
 |`-a`|`--allenvs`| Will run this command for each environment in your config file.
-
-## Replace
-Replace has been renamed to `deploy` and has been deprecated, please see corresponding docs.
-
-## Update
-Update will update the Theme Kit command to the newest version. Update can also be
-used to roll back to previous versions by providing it with a `--version` argument.
-If there is a beta or prerelease version available you may also specify it with
-the version flag, otherwise it will not be installed.
-
-```bash
-theme update --version=v0.5.0
-```
-
-|**Optional Flags**||
-||`--version`  | Specifies what version Theme Kit should install.
-
-## Upload
-Upload has been renamed to `deploy` with the --nodelete flag and has been deprecated, please see corresponding docs.
-
-## Version
-Version will print out the current version of the library.
 
 ## Watch
 Watch will start a process that will watch your directory for changes and
