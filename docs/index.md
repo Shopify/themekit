@@ -3,7 +3,7 @@ layout: default
 ---
 # Shopify Theme Kit
 
-Theme Kit is a single binary that has no dependencies. Download the application
+Theme Kit is a command line tool for shopify themes. Download the application
 and with a tiny bit of setup you’re off to the theme creation races.
 
 Using Theme Kit will enable you to
