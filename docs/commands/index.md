@@ -94,7 +94,7 @@ development:
 |**Optional Flags**||
 |`-t`|`--themeid `| The ID of the theme that you want changes to take effect, if no theme id is passed, your live theme will be fetched
 
-## new
+## New
 
 If you are starting a new theme and want to have some sane defaults, you can use
 the new command. The command will
