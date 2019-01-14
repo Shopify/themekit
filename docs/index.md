@@ -82,16 +82,20 @@ see your access credentials. Please copy the password. You will need it later.
 
 <img src="{{ "/assets/images/shopify-local-theme-development-generate-api.gif" | prepend: site.baseurl }}" />
 
-## Use a new theme.
+## Create a new theme.
 
 If you are starting from scratch and want to get a quick start, run the following:
 
 ```bash
-theme new --password=[your-password] --store=[your-store.myshopify.com]
+theme new --password=[your-password] --store=[your-store.myshopify.com] --name=[theme name]
 ```
 
-This will create a new theme for your online store from the [Timber](https://shopify.github.io/Timber/) template. Then
-it will download all those assets from Shopify and automatically create a `config.yml` file for you.
+This will:
+- generate a basic theme template locally
+- create a theme on shopify
+- upload the new files to shopify
+- Create/update your config file with the configuration for your new theme.
+
 
 ## Configure an existing theme.
 
