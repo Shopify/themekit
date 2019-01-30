@@ -115,6 +115,7 @@ func TestInstallVersion(t *testing.T) {
 	}{
 		{in: "0.4.7"},
 		{in: "0.0.0", err: "version 0.0.0 not found"},
+		{in: "v.0.8.2", err: "Malformed version: v.0.8.2"},
 	}
 
 	for _, testcase := range testcases {
@@ -171,6 +172,7 @@ func TestUpdate(t *testing.T) {
 		{ver: ThemeKitVersion.String(), dir: filepath.Join("_testdata", "dist"), req: true, err: "version has already been deployed"},
 		{ver: ThemeKitVersion.String(), dir: filepath.Join("_testdata", "otherdist"), err: " "},
 		{ver: ThemeKitVersion.String(), dir: filepath.Join("_testdata", "dist")},
+		{ver: "v.0.8.2", err: "Malformed version: v.0.8.2"},
 	}
 
 	for _, testcase := range testcases {
@@ -209,6 +211,7 @@ func TestRemove(t *testing.T) {
 	}{
 		{ver: "12.34.56", err: "version has not be deployed"},
 		{ver: "0.4.7"},
+		{ver: "v.0.8.2", err: "Malformed version: v.0.8.2"},
 	}
 
 	for _, testcase := range testcases {
