@@ -123,6 +123,10 @@ func installLatest(latestURL string, install func(platform) error) error {
 }
 
 func installVersion(ver, releasesURL string, install func(platform) error) error {
+	if _, err := version.NewVersion(ver); err != nil {
+		return err
+	}
+
 	releases, err := fetchReleases(releasesURL)
 	if err != nil {
 		return err
@@ -163,6 +167,10 @@ func applyUpdate(platformRelease platform, targetPath string) error {
 }
 
 func update(ver, releasesURL, distDir string, force bool, u uploader) error {
+	if _, err := version.NewVersion(ver); err != nil {
+		return err
+	}
+
 	if !force {
 		requestedVersion, _ := version.NewVersion(ver)
 		if !requestedVersion.Equal(ThemeKitVersion) {
@@ -193,6 +201,10 @@ func update(ver, releasesURL, distDir string, force bool, u uploader) error {
 }
 
 func remove(ver, releaseURL string, u uploader) error {
+	if _, err := version.NewVersion(ver); err != nil {
+		return err
+	}
+
 	releases, err := fetchReleases(releaseURL)
 	if err != nil {
 		return err
