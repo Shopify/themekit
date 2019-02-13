@@ -21,7 +21,7 @@ If you are on macOS or Linux, you can use the following installation script to a
 download and install the latest Theme Kit for you.
 
 ```bash
-curl -s https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install | sudo python
+curl -s https://shopify.github.io/themekit/scripts/install.py | sudo python
 ```
 
 ### macOS Homebrew Installation
@@ -36,7 +36,7 @@ brew install themekit
 ### Windows Automatic Powershell Installation
 Run the following commands in Powershell as Administrator.
 ```
-(New-Object System.Net.WebClient).DownloadString("https://raw.githubusercontent.com/Shopify/themekit/master/scripts/install.ps1") | powershell -command -
+(New-Object System.Net.WebClient).DownloadString("https://shopify.github.io/themekit/scripts/install.ps1") | powershell -command -
 ```
 
 ### Manual Installation
