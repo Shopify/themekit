@@ -65,11 +65,7 @@ Run the following commands in Powershell as Administrator.
 
 - Create a folder inside `C:\Program Files` called `Theme Kit`
 - Download themekit (below) and copy the extracted program into `C:\Program Files\Theme Kit`
-- Navigate to `Control Panel > System and Security > System`. Another way to get there is to Right-Click on `My Computer` and choose the `properties` item
-- Look for the button or link called `Environment Variables`
-- In the second panel look for the item called `Path` and double-click on it. This should open a window with a text field that is overflowing with content.
-- Move your cursor all the way to the end and add the following: `C:\Program Files\Theme Kit`
-- Click `OK` until all the windows are gone.
+- You will then need to add `C:\Program Files\Theme Kit` to your `PATH` environment variable. You can find really [in-depth instructions here](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/)
 - To verify that Theme Kit has been installed, open `cmd.exe` and type in `theme`.
 
 ## Get API Access
