@@ -59,10 +59,10 @@ Helpful commands
     - Update the version in `choco/themekit.nuspec`
     - Update the version and checksums in `choco/tools/chocolateyinstall.ps1`
     - Run `choco pack` in a window VM
-    - Submit for approval
-- Update the changelog.txt
+    - Log into [chocolatey.org](chocolatey.org) (use the themekit@shopify.com credentials) and submit an update for approval
 - Update `themekit.rb` formula for homebrew on https://github.com/Shopify/homebrew-shopify
   - run `make gen_sha` to generate the SHA256 for the darwin build
   - update the link and sha in the homebrew formula
 - Notify the maintainer of the AUR themekit package https://aur.archlinux.org/packages/shopify-themekit-bin
   of an update so they can release a new version.
+- Update the changelog.txt with the date of the version release

@@ -1,5 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>themekit</id>
@@ -10,7 +9,7 @@
     <authors>Tim Anema</authors>
     <projectUrl>https://shopify.github.io/themekit/</projectUrl>
     <iconUrl>https://shopify.github.io/themekit/choco_assets/shopify-logo.png</iconUrl>
-    <copyright>2019</copyright>
+    <copyright>Shopify 2019</copyright>
     <licenseUrl>https://github.com/Shopify/themekit/blob/master/LICENSE</licenseUrl>
     <projectSourceUrl>https://github.com/Shopify/themekit</projectSourceUrl>
     <docsUrl>https://shopify.github.io/themekit/</docsUrl>
