@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>themekit</id>
+    <version>1.0.0</version>
+    <packageSourceUrl>https://github.com/Shopify/themekit/blob/master/choco</packageSourceUrl>
+    <owners>Shopify</owners>
+    <title>Shopify Themekit</title>
+    <authors>Tim Anema</authors>
+    <projectUrl>https://shopify.github.io/themekit/</projectUrl>
+    <iconUrl>http://cdn.rawgit.com/__REPLACE_YOUR_REPO__/master/icons/themekit.png</iconUrl>
+    <copyright>2019</copyright>
+    <licenseUrl>https://github.com/Shopify/themekit/blob/master/LICENSE</licenseUrl>
+    <projectSourceUrl>https://github.com/Shopify/themekit</projectSourceUrl>
+    <docsUrl>https://shopify.github.io/themekit/</docsUrl>
+    <bugTrackerUrl>https://github.com/Shopify/themekit/issues</bugTrackerUrl>
+    <tags>themekit shopify</tags>
+    <summary>Theme Kit is a command line tool for shopify themes.</summary>
+    <description>Themekit is a tool for manipulating shopify themes from the command line with a focus on flexibility so that you can incorporate it into your other workflows.</description>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
