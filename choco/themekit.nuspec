@@ -9,7 +9,7 @@
     <title>Shopify Themekit</title>
     <authors>Tim Anema</authors>
     <projectUrl>https://shopify.github.io/themekit/</projectUrl>
-    <iconUrl>http://cdn.rawgit.com/__REPLACE_YOUR_REPO__/master/icons/themekit.png</iconUrl>
+    <iconUrl>https://shopify.github.io/themekit/choco_assets/shopify-logo.png</iconUrl>
     <copyright>2019</copyright>
     <licenseUrl>https://github.com/Shopify/themekit/blob/master/LICENSE</licenseUrl>
     <projectSourceUrl>https://github.com/Shopify/themekit</projectSourceUrl>
