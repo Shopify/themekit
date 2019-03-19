@@ -16,7 +16,10 @@
     <bugTrackerUrl>https://github.com/Shopify/themekit/issues</bugTrackerUrl>
     <tags>themekit shopify</tags>
     <summary>Theme Kit is a command line tool for shopify themes.</summary>
-    <description>Themekit is a tool for manipulating shopify themes from the command line with a focus on flexibility so that you can incorporate it into your other workflows.</description>
+    <description>
+      Themekit is a tool for manipulating shopify themes from the command line with
+      a focus on flexibility so that you can incorporate it into your other workflows.
+    </description>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
