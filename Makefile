@@ -3,7 +3,7 @@ install: bundle ## Build and install the theme binary
 	@go install github.com/Shopify/themekit/cmd/theme;
 lint: # Lint all packages
 ifeq ("$(shell which golint 2>/dev/null)","")
-	@go get -u github.com/golang/lint/golint
+	@go get -u golang.org/x/lint/golint
 endif
 	@golint -set_exit_status ./...
 test: lint ## lint and test the code
