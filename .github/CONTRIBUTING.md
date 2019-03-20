@@ -21,7 +21,7 @@ You can open a new issue on the github issues and describe the feature you would
 
 Requirements:
 
-- Go 1.11 or higher
+- Go 1.12 or higher
 
 You can setup your development environment by running the following:
 
