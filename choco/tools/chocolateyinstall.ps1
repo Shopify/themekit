@@ -9,8 +9,6 @@ $checksum       = 'd005b0d4538257036b435b35029b4d07'
 $checksum64     = '264ea64005bb8a3e56189430a7a166e3'
 $validExitCodes = @(0)
 
-if (![System.IO.Directory]::Exists($toolsDir)) {[System.IO.Directory]::CreateDirectory($toolsDir)}
-
 Get-ChocolateyWebFile `
   -PackageName $packageName `
   -FileFullPath $file `
