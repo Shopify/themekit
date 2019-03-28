@@ -36,11 +36,15 @@ brew install themekit
 
 ### Windows Automatic Powershell Installation
 
-Run the following commands in Powershell as Administrator.
+If you have [chocolatey](https://chocolatey.org/) installed you can install themekit by running the following commands.
 
 ```
-(New-Object System.Net.WebClient).DownloadString("https://shopify.github.io/themekit/scripts/install.ps1") | powershell -command -
+choco install themekit
 ```
+
+### Arch installation
+
+There is a package available for install on the [AUR](https://aur.archlinux.org/packages/shopify-themekit-bin)
 
 ### Manual Installation
 
@@ -67,6 +71,10 @@ Run the following commands in Powershell as Administrator.
 - Download themekit (below) and copy the extracted program into `C:\Program Files\Theme Kit`
 - You will then need to add `C:\Program Files\Theme Kit` to your `PATH` environment variable. You can find really [in-depth instructions here](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/)
 - To verify that Theme Kit has been installed, open `cmd.exe` and type in `theme`.
+
+#### Build from source
+
+Please refer to the [contributing docs](https://github.com/Shopify/themekit/blob/master/.github/CONTRIBUTING.md#developing-themekit)
 
 ## Get API Access
 

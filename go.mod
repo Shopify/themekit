@@ -24,9 +24,11 @@ require (
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.2.2
 	github.com/vbauerster/mpb v3.3.2+incompatible
-	golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b // indirect
-	golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3 // indirect
+	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a // indirect
+	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
+	golang.org/x/net v0.0.0-20190320064053-1272bf9dcd53 // indirect
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
-	golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e // indirect
+	golang.org/x/sys v0.0.0-20190318195719-6c81ef8f67ca // indirect
+	golang.org/x/tools v0.0.0-20190319232107-3f1ed9edd1b4 // indirect
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
 )
