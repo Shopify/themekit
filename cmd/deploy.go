@@ -40,7 +40,7 @@ var deployCmd = &cobra.Command{
 	Long: `Deploy will overwrite specific files if provided with file names.
  If deploy is not provided with file names then it will deploy all
  the files on shopify with your local files. Any files that do not
- exist on your local machine will be removed from shopify unless the --soft
+ exist on your local machine will be removed from shopify unless the --nodelete
  flag is passed
 
  For more documentation please see http://shopify.github.io/themekit/commands/#deploy
