@@ -34,7 +34,7 @@ brew tap shopify/shopify
 brew install themekit
 ```
 
-### Windows Automatic Powershell Installation
+### Windows Chocolatey Installation
 
 If you have [chocolatey](https://chocolatey.org/) installed you can install themekit by running the following commands.
 
