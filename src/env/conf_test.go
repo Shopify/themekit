@@ -146,6 +146,44 @@ func TestConf_Save(t *testing.T) {
 	assert.Equal(t, err, ErrNoEnvironmentsDefined)
 }
 
+func TestConf_SaveKeepsDirectoryRelativeIfItIsRelative(t *testing.T) {
+	configDir, _ := os.Getwd()
+	configPath := filepath.Join(configDir, "config.yml")
+	conf := New(configPath)
+	conf.Set("foobar", Env{
+		Password:  "password",
+		Domain:    "nope.myshopify.com",
+		Directory: filepath.Join(configDir, "project"),
+	})
+
+	stringBuff := bytes.NewBufferString("")
+	assert.Nil(t, conf.save(stringBuff))
+
+	expected := `foobar:
+  password: password
+  store: nope.myshopify.com
+  directory: project
+`
+	assert.Equal(t, expected, stringBuff.String())
+
+	conf = New(configPath)
+	conf.Set("foobar", Env{
+		Password:  "password",
+		Domain:    "nope.myshopify.com",
+		Directory: filepath.Clean(filepath.Join(configDir, "..", "file")),
+	})
+
+	stringBuff = bytes.NewBufferString("")
+	assert.Nil(t, conf.save(stringBuff))
+
+	expected = `foobar:
+  password: password
+  store: nope.myshopify.com
+  directory: ../file
+`
+	assert.Equal(t, expected, stringBuff.String())
+}
+
 func overWriteEnvVar(name, value string, fn func()) {
 	originalValue := os.Getenv(name)
 	os.Setenv(name, value)

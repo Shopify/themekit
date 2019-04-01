@@ -143,6 +143,11 @@ func (c Conf) save(w io.Writer) error {
 		}
 		if env.Directory == Default.Directory {
 			env.Directory = ""
+		} else if env.Directory != "" {
+			configDir := filepath.Dir(c.path)
+			if rel, err := filepath.Rel(configDir, env.Directory); err == nil {
+				env.Directory = rel
+			}
 		}
 		if env.Timeout == Default.Timeout {
 			env.Timeout = 0
