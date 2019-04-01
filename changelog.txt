@@ -1,3 +1,11 @@
+v1.0.1
+======================
+- Added chocolatey installation option
+- Fixed relative filepath saving in the directory config
+- Fixed an issue with updating to a invalid version
+- A small fix for a typo in the theme template
+- Disabled cgo and updated to Go 1.12 for better certificate handling
+
 v1.0.0 (Jan 8, 2019)
 ======================
 - Changed how the New command works. Now will create files locally and upload them.
