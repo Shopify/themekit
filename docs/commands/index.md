@@ -14,6 +14,19 @@ command by running:
 > theme [command] --help
 ```
 
+## Using Environments
+
+All of the following commands can be run with a selected environment from the configuration.
+This allows multiple configurations to be held in the same config file.
+Please see the [configuration documentation]({{ '/configuration/#config-file' | prepend: site.baseurl }}) for reference.
+
+To use these environments you must specify them by name with the `--env` flag or `-e` for short.
+The default environment is `development`. For example if you wanted to deploy to your production environment you could run
+
+```bash
+theme deploy --env=production
+```
+
 ## Configure
 
 Use this command to create or update configuration files. If you run the following
