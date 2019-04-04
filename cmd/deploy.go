@@ -50,6 +50,11 @@ var deployCmd = &cobra.Command{
 	},
 }
 
+type deployOp struct {
+	op       file.Op
+	checksum string
+}
+
 func deploy(ctx *cmdutil.Ctx) error {
 	if ctx.Env.ReadOnly {
 		return fmt.Errorf("[%s] environment is readonly", colors.Green(ctx.Env.Name))
@@ -62,32 +67,32 @@ func deploy(ctx *cmdutil.Ctx) error {
 
 	var deployGroup sync.WaitGroup
 	ctx.StartProgress(len(assetsActions))
-	for path, op := range assetsActions {
+	for path, action := range assetsActions {
 		if path == settingsDataKey {
-			defer perform(ctx, path, op)
+			defer perform(ctx, path, action.checksum, action.op)
 			continue
 		}
 		deployGroup.Add(1)
-		go func(path string, op file.Op) {
+		go func(path string, action deployOp) {
 			defer deployGroup.Done()
-			perform(ctx, path, op)
-		}(path, op)
+			perform(ctx, path, action.checksum, action.op)
+		}(path, action)
 	}
 
 	deployGroup.Wait()
 	return nil
 }
 
-func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
-	assetsActions := map[string]file.Op{}
+func generateActions(ctx *cmdutil.Ctx) (map[string]deployOp, error) {
+	assetsActions := map[string]deployOp{}
 
 	if len(ctx.Args) == 0 && !ctx.Flags.NoDelete {
 		remoteFiles, err := ctx.Client.GetAllAssets()
 		if err != nil {
 			return assetsActions, err
 		}
-		for _, filename := range remoteFiles {
-			assetsActions[filename] = file.Remove
+		for filename, checksum := range remoteFiles {
+			assetsActions[filename] = deployOp{op: file.Remove, checksum: checksum}
 		}
 	}
 
@@ -101,13 +106,21 @@ func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 		return assetsActions, compiledAssetWarning(ctx.Env.Name, problemAssets)
 	}
 
-	for _, path := range localAssets {
-		assetsActions[path] = file.Update
+	for path, checksum := range localAssets {
+		if action, ok := assetsActions[path]; ok && action.checksum == checksum {
+			assetsActions[path] = deployOp{op: file.Skip, checksum: action.checksum}
+		} else {
+			assetsActions[path] = deployOp{op: file.Update, checksum: action.checksum}
+		}
 	}
 	return assetsActions, nil
 }
 
-func compileAssetFilenames(filenames []string) (problemAssets []string) {
+func compileAssetFilenames(files map[string]string) (problemAssets []string) {
+	filenames := make([]string, len(files))
+	for path := range files {
+		filenames = append(filenames, path)
+	}
 	sort.Strings(filenames)
 	for i := 0; i < len(filenames)-1; i += 2 {
 		if filenames[i]+".liquid" == filenames[i+1] {

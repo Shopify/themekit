@@ -2,6 +2,7 @@ package shopify
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -24,6 +25,7 @@ type Asset struct {
 	ContentType string `json:"content_type,omitempty"`
 	ThemeID     int64  `json:"theme_id,omitempty"`
 	UpdatedAt   string `json:"updated_at,omitempty"`
+	Checksum    string `json:"checksum"`
 }
 
 var (
@@ -39,10 +41,10 @@ func ReadAsset(e *env.Env, filename string) (Asset, error) {
 // FindAssets will load all assets for paths passed in, this also means that it will
 // read directories recursively. If no paths are passed in then the whole project
 // directory will be read
-func FindAssets(e *env.Env, paths ...string) (assets []string, err error) {
+func FindAssets(e *env.Env, paths ...string) (assets map[string]string, err error) {
 	filter, err := file.NewFilter(e.Directory, e.IgnoredFiles, e.Ignores)
 	if err != nil {
-		return []string{}, err
+		return map[string]string{}, err
 	}
 
 	if len(paths) == 0 {
@@ -54,13 +56,15 @@ func FindAssets(e *env.Env, paths ...string) (assets []string, err error) {
 		if err == ErrAssetIsDir {
 			dirAssets, err := loadAssetsFromDirectory(e.Directory, path, filter.Match)
 			if err != nil {
-				return []string{}, err
+				return map[string]string{}, err
 			}
-			assets = append(assets, dirAssets...)
+			for filename, checksum := range dirAssets {
+				assets[filename] = checksum
+			}
 		} else if err != nil {
-			return []string{}, err
+			return map[string]string{}, err
 		} else if !filter.Match(asset.Key) {
-			assets = append(assets, asset.Key)
+			assets[asset.Key] = asset.Checksum
 		}
 	}
 
@@ -123,52 +127,79 @@ func assetsToFilenames(assets []Asset) []string {
 	return filenames
 }
 
-func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (assets []string, err error) {
-	err = filepath.Walk(filepath.Join(root, dir), func(path string, info os.FileInfo, err error) error {
+func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (map[string]string, error) {
+	assets := map[string]string{}
+	return assets, filepath.Walk(filepath.Join(root, dir), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() {
+
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+
+		key, sum, err := readAssetInfo(root, relPath)
+		if err == ErrAssetIsDir {
 			return nil
-		}
-		assetKey, err := filepath.Rel(root, path)
-		if err != nil {
+		} else if err != nil {
 			return err
 		}
-		assetKey = filepath.ToSlash(assetKey)
-		if !ignore(assetKey) {
-			assets = append(assets, assetKey)
+
+		if !ignore(key) {
+			assets[key] = sum
 		}
 		return nil
 	})
-	return
 }
 
-func readAsset(root, filename string) (asset Asset, err error) {
+func readAssetInfo(root, filename string) (string, string, error) {
 	path := filepath.Join(root, filename)
 
 	key, err := filepath.Rel(root, path)
 	if err != nil {
-		return Asset{}, err
+		return "", "", err
 	}
 
-	asset = Asset{Key: filepath.ToSlash(key)}
-	file, err := os.Open(path)
-	if err != nil {
-		return Asset{}, fmt.Errorf("readAsset: %s", err)
-	}
-	defer file.Close()
+	key = filepath.ToSlash(key)
 
 	info, err := os.Stat(path)
 	if err != nil {
-		return Asset{}, fmt.Errorf("readAsset: %s", err)
+		return "", "", fmt.Errorf("readAssetInfo: %s", err)
 	}
 
 	if info.IsDir() {
-		return Asset{}, ErrAssetIsDir
+		return "", "", ErrAssetIsDir
 	}
 
-	buffer, err := ioutil.ReadAll(file)
+	checksum, err := calculateAssetChecksum(path)
+	return key, checksum, err
+}
+
+func calculateAssetChecksum(path string) (string, error) {
+	buffer, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	if filepath.Ext(path) == ".json" {
+		var out bytes.Buffer
+		if err := json.Compact(&out, buffer); err != nil {
+			return "", err
+		}
+		buffer = out.Bytes()
+	}
+	return fmt.Sprintf("%x", sha1.Sum(buffer)), err
+}
+
+func readAsset(root, filename string) (asset Asset, err error) {
+	key, sum, err := readAssetInfo(root, filename)
+	if err != nil {
+		return Asset{}, err
+	}
+
+	asset = Asset{Key: filepath.ToSlash(key), Checksum: sum}
+
+	buffer, err := ioutil.ReadFile(filepath.Join(root, filename))
 	if err != nil {
 		return Asset{}, fmt.Errorf("readAsset: %s", err)
 	}

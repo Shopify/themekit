@@ -9,6 +9,7 @@ import (
 
 	"github.com/Shopify/themekit/src/cmdutil"
 	"github.com/Shopify/themekit/src/colors"
+	"github.com/Shopify/themekit/src/shopify"
 )
 
 var downloadCmd = &cobra.Command{
@@ -37,27 +38,37 @@ func download(ctx *cmdutil.Ctx) error {
 		return fmt.Errorf("No files to download")
 	}
 
+	localAssets, err := shopify.FindAssets(ctx.Env)
+	if err != nil {
+		return err
+	}
+
 	ctx.StartProgress(len(filenames))
-	for _, filename := range filenames {
+	for filename, remoteCheck := range filenames {
 		downloadGroup.Add(1)
-		go func(filename string) {
+		go func(filename, remoteCheck string) {
 			defer ctx.DoneTask()
 			defer downloadGroup.Done()
-			if asset, err := ctx.Client.GetAsset(filename); err != nil {
+			localCheck, ok := localAssets[filename]
+			if ok && localCheck == remoteCheck {
+				if ctx.Flags.Verbose {
+					ctx.Log.Printf("[%s] No changes made to %s", colors.Green(ctx.Env.Name), colors.Blue(filename))
+				}
+			} else if asset, err := ctx.Client.GetAsset(filename); err != nil {
 				ctx.Err("[%s] error downloading asset: %s", colors.Green(ctx.Env.Name), err)
 			} else if err = asset.Write(ctx.Env.Directory); err != nil {
 				ctx.Err("[%s] error writing asset: %s", colors.Green(ctx.Env.Name), err)
 			} else if ctx.Flags.Verbose {
 				ctx.Log.Printf("[%s] Successfully wrote %s to disk", colors.Green(ctx.Env.Name), colors.Blue(filename))
 			}
-		}(filename)
+		}(filename, remoteCheck)
 	}
 
 	downloadGroup.Wait()
 	return nil
 }
 
-func filesToDownload(ctx *cmdutil.Ctx) ([]string, error) {
+func filesToDownload(ctx *cmdutil.Ctx) (map[string]string, error) {
 	allFilenames, err := ctx.Client.GetAllAssets()
 	if err != nil {
 		return allFilenames, err
@@ -65,8 +76,8 @@ func filesToDownload(ctx *cmdutil.Ctx) ([]string, error) {
 		return allFilenames, nil
 	}
 
-	fetchableFilenames := []string{}
-	for _, filename := range allFilenames {
+	fetchableFilenames := map[string]string{}
+	for filename, checksum := range allFilenames {
 		for _, pattern := range ctx.Args {
 			// These need to be converted to platform specific because filepath.Match
 			// uses platform specific separators
@@ -77,7 +88,7 @@ func filesToDownload(ctx *cmdutil.Ctx) ([]string, error) {
 			dirMatched, _ := filepath.Match(pattern+string(filepath.Separator)+"*", filename)
 			fileMatched := filename == pattern
 			if globMatched || dirMatched || fileMatched {
-				fetchableFilenames = append(fetchableFilenames, filepath.ToSlash(filename))
+				fetchableFilenames[filename] = checksum
 			}
 		}
 	}

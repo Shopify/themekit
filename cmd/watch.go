@@ -56,11 +56,23 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 	}
 
 	ctx.Log.Printf(
+		"[%s] %s: Querying state of theme %v on shopify",
+		colors.Green(ctx.Env.Name),
+		colors.Yellow(ctx.Shop.Name),
+		colors.Yellow(ctx.Env.ThemeID),
+	)
+	remoteFiles, err := ctx.Client.GetAllAssets()
+	if err != nil {
+		return err
+	}
+
+	ctx.Log.Printf(
 		"[%s] %s: Watching for file changes to theme %v",
 		colors.Green(ctx.Env.Name),
 		colors.Yellow(ctx.Shop.Name),
 		colors.Yellow(ctx.Env.ThemeID),
 	)
+
 	for {
 		select {
 		case event := <-events:
@@ -69,36 +81,50 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 				return cmdutil.ErrReload
 			}
 			ctx.Log.Printf("[%s] processing %s", colors.Green(ctx.Env.Name), colors.Blue(event.Path))
-			perform(ctx, event.Path, event.Op)
+
+			remoteFiles[event.Path] = perform(ctx, event.Path, remoteFiles[event.Path], event.Op)
 		case <-sig:
 			return nil
 		}
 	}
 }
 
-func perform(ctx *cmdutil.Ctx, path string, op file.Op) {
+func perform(ctx *cmdutil.Ctx, path, checksum string, op file.Op) string {
 	defer ctx.DoneTask()
 
-	if op == file.Remove {
-		if err := ctx.Client.DeleteAsset(shopify.Asset{Key: path}); err != nil {
+	if op == file.Skip {
+		if ctx.Flags.Verbose {
+			ctx.Log.Printf("[%s] Skipped %s", colors.Green(ctx.Env.Name), colors.Blue(path))
+		}
+		return checksum
+	} else if op == file.Remove {
+		if err := ctx.Client.DeleteAsset(shopify.Asset{Key: path, Checksum: checksum}); err != nil {
 			ctx.Err("[%s] (%s) %s", colors.Green(ctx.Env.Name), colors.Blue(path), err)
-		} else if ctx.Flags.Verbose {
+			return checksum
+		}
+
+		if ctx.Flags.Verbose {
 			ctx.Log.Printf("[%s] Deleted %s", colors.Green(ctx.Env.Name), colors.Blue(path))
 		}
-	} else {
-		assetLimitSemaphore <- struct{}{}
-		defer func() { <-assetLimitSemaphore }()
-
-		asset, err := shopify.ReadAsset(ctx.Env, path)
-		if err != nil {
-			ctx.Err("[%s] error loading %s: %s", colors.Green(ctx.Env.Name), colors.Green(path), colors.Red(err))
-			return
-		}
-
-		if err := ctx.Client.UpdateAsset(asset); err != nil {
-			ctx.Err("[%s] (%s) %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key), err)
-		} else if ctx.Flags.Verbose {
-			ctx.Log.Printf("[%s] Updated %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
-		}
+		return ""
 	}
+
+	assetLimitSemaphore <- struct{}{}
+	defer func() { <-assetLimitSemaphore }()
+
+	asset, err := shopify.ReadAsset(ctx.Env, path)
+	if err != nil {
+		ctx.Err("[%s] error loading %s: %s", colors.Green(ctx.Env.Name), colors.Green(path), colors.Red(err))
+		return checksum
+	}
+
+	if err := ctx.Client.UpdateAsset(asset, checksum); err != nil {
+		ctx.Err("[%s] (%s) %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key), err)
+		return checksum
+	}
+
+	if ctx.Flags.Verbose {
+		ctx.Log.Printf("[%s] Updated %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
+	}
+	return asset.Checksum
 }

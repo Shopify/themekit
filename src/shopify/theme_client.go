@@ -38,6 +38,9 @@ var (
 	ErrMissingAssetName = errors.New("asset has no name so could not be processes")
 	// ErrThemeNameRequired is returned when trying to create a theme with a blank name
 	ErrThemeNameRequired = errors.New("theme name is required to create a theme")
+	// ErrContentLock is returned when a modify call is made on an asset with a checksum passed.
+	// This will ensure you are modifying the version of the file that you expect
+	ErrContentLock = errors.New("a remote change may have happened to this file")
 
 	shopifyAPILimit = time.Second / 2 // 2 calls per second
 )
@@ -234,24 +237,24 @@ func (c Client) PublishTheme() error {
 // assets are sorted and any ignored files based on your config are filtered out.
 // The assets returned will not have any data, only ID and filenames. This is because
 // fetching all the assets at one time is not a good idea.
-func (c Client) GetAllAssets() ([]string, error) {
-	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key"}))
+func (c Client) GetAllAssets() (map[string]string, error) {
+	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key,checksum"}))
 	if err != nil {
-		return []string{}, err
+		return map[string]string{}, err
 	} else if resp.StatusCode == 404 {
-		return []string{}, ErrThemeNotFound
+		return map[string]string{}, ErrThemeNotFound
 	}
 
 	var r assetsResponse
 	if err := unmarshalResponse(resp.Body, &r); err != nil {
-		return []string{}, err
+		return map[string]string{}, err
 	}
 
-	filteredAssets := []string{}
+	filteredAssets := map[string]string{}
 	sort.Slice(r.Assets, func(i, j int) bool { return r.Assets[i].Key < r.Assets[j].Key })
 	for index, asset := range r.Assets {
 		if !c.filter.Match(asset.Key) && (index == len(r.Assets)-1 || r.Assets[index+1].Key != asset.Key+".liquid") {
-			filteredAssets = append(filteredAssets, asset.Key)
+			filteredAssets[asset.Key] = asset.Checksum
 		}
 	}
 
@@ -279,18 +282,25 @@ func (c Client) GetAsset(filename string) (Asset, error) {
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
 func (c Client) CreateAsset(asset Asset) error {
-	return c.UpdateAsset(asset)
+	return c.UpdateAsset(asset, "")
 }
 
 // UpdateAsset will take an asset and will return  when the asset has been updated.
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
-func (c Client) UpdateAsset(asset Asset) error {
-	resp, err := c.http.Put(c.assetPath(map[string]string{}), map[string]Asset{"asset": asset})
+func (c Client) UpdateAsset(asset Asset, checksumLock string) error {
+	params := map[string]interface{}{"asset": asset}
+	if checksumLock != "" {
+		params["checksum_lock"] = checksumLock
+	}
+
+	resp, err := c.http.Put(c.assetPath(map[string]string{}), params)
 	if err != nil {
 		return err
 	} else if resp.StatusCode == 404 {
 		return ErrNotPartOfTheme
+	} else if resp.StatusCode == 409 {
+		return ErrContentLock
 	}
 
 	var r assetResponse
@@ -303,7 +313,7 @@ func (c Client) UpdateAsset(asset Asset) error {
 			if resp.StatusCode == 422 && strings.Contains(r.Errors["asset"][0], "Cannot overwrite generated asset") {
 				// No need to check the error because if it fails then remove will be tried again.
 				c.DeleteAsset(Asset{Key: asset.Key + ".liquid"})
-				return c.UpdateAsset(asset)
+				return c.UpdateAsset(asset, checksumLock)
 			}
 			return errors.New(toSentence(r.Errors["asset"]))
 		}
@@ -317,7 +327,12 @@ func (c Client) UpdateAsset(asset Asset) error {
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
 func (c Client) DeleteAsset(asset Asset) error {
-	resp, err := c.http.Delete(c.assetPath(map[string]string{"asset[key]": asset.Key}))
+	params := map[string]string{"asset[key]": asset.Key}
+	if asset.Checksum != "" {
+		params["checksum_lock"] = asset.Checksum
+	}
+
+	resp, err := c.http.Delete(c.assetPath(params))
 	if err != nil {
 		return err
 	} else if resp.StatusCode == 403 {
@@ -326,6 +341,8 @@ func (c Client) DeleteAsset(asset Asset) error {
 		return ErrNotPartOfTheme
 	} else if resp.StatusCode == 406 {
 		return ErrMissingAssetName
+	} else if resp.StatusCode == 409 {
+		return ErrContentLock
 	}
 
 	var r assetResponse

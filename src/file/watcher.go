@@ -15,6 +15,8 @@ import (
 type Op int
 
 const (
+	// Skip is an op used to basically noop any operation that might update or remove
+	Skip Op = -1
 	// Update is a file op where the file is updated
 	Update Op = iota
 	// Remove is a file op where the file is removed
