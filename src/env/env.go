@@ -60,7 +60,7 @@ func (env *Env) validate() error {
 
 	if len(env.Domain) == 0 {
 		errors = append(errors, "missing store domain")
-	} else if !strings.HasSuffix(env.Domain, "myshopify.com") {
+	} else if !strings.HasSuffix(env.Domain, "myshopify.com") && !strings.HasSuffix(env.Domain, "myshopify.io") {
 		errors = append(errors, "invalid store domain must end in '.myshopify.com'")
 	}
 
