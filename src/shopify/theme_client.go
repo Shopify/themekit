@@ -23,7 +23,7 @@ var (
 	// ErrNotPartOfTheme will be returned when trying to alter a filepath that does not exist in the theme
 	ErrNotPartOfTheme = errors.New("this file is not part of your theme")
 	// ErrMalformedResponse will be returned if we could not unmarshal the response from shopify
-	ErrMalformedResponse = errors.New("received a malformed response")
+	ErrMalformedResponse = errors.New("received a malformed response from shopify, this usually indicates a problem with your connection")
 	// ErrZipPathRequired is returned if a source path was not provided to create a new theme
 	ErrZipPathRequired = errors.New("theme zip path is required")
 	// ErrInfoWithoutThemeID will be returned if GetInfo is called on a live theme
