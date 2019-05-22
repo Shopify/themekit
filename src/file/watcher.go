@@ -137,16 +137,15 @@ func (w *Watcher) onEvent(event watcher.Event) bool {
 }
 
 func (w *Watcher) translateEvent(event watcher.Event) []Event {
-	var events []Event
 	oldPath, currentPath := w.parsePath(event.Path)
 	if isEventType(event.Op, watcher.Rename, watcher.Move) {
-		events = append(events, Event{Op: Remove, Path: oldPath}, Event{Op: Update, Path: currentPath})
+		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath}}
 	} else if isEventType(event.Op, watcher.Remove) {
-		events = append(events, Event{Op: Remove, Path: currentPath})
+		return []Event{{Op: Remove, Path: currentPath}}
 	} else if isEventType(event.Op, watcher.Create, watcher.Write) {
-		events = append(events, Event{Op: Update, Path: currentPath})
+		return []Event{{Op: Update, Path: currentPath}}
 	}
-	return events
+	return []Event{}
 }
 
 func (w *Watcher) parsePath(path string) (old, current string) {
