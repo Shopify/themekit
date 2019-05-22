@@ -21,8 +21,6 @@ func TestMain(m *testing.M) {
 
 func TestNewFileWatcher(t *testing.T) {
 	w := createTestWatcher(t)
-	filter, _ := NewFilter(filepath.Join("_testdata", "project"), []string{"config/"}, []string{})
-	assert.Equal(t, w.filter, filter)
 	assert.Equal(t, w.notify, "/tmp/notifytest")
 	assert.NotNil(t, w.fsWatcher)
 	assert.NotNil(t, w.Events)
@@ -61,10 +59,10 @@ func TestFileWatcher_filterHook(t *testing.T) {
 		{filename: "_testdata/project/templates", skip: true},
 	}
 
-	w := createTestWatcher(t)
+	hook := createTestFilterHook(t)
 	for i, testcase := range testcases {
 		info, _ := os.Stat(testcase.filename)
-		result := w.filterHook(info, testcase.filename)
+		result := hook(info, testcase.filename)
 		if testcase.skip {
 			assert.Equal(t, result, watcher.ErrSkip, fmt.Sprintf("testcase: %v", i))
 		} else {
@@ -213,4 +211,15 @@ func createTestWatcher(t *testing.T) *Watcher {
 	w, err := NewWatcher(e, filepath.Join("_testdata", "project", "config.yml"))
 	assert.Nil(t, err)
 	return w
+}
+
+func createTestFilterHook(t *testing.T) watcher.FilterFileHookFunc {
+	e := &env.Env{
+		Directory:    filepath.Join("_testdata", "project"),
+		IgnoredFiles: []string{"config/"},
+		Notify:       "/tmp/notifytest",
+	}
+	hook, err := filterHook(e, filepath.Join("_testdata", "project", "config.yml"))
+	assert.Nil(t, err)
+	return hook
 }

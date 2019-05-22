@@ -42,45 +42,47 @@ type Event struct {
 type Watcher struct {
 	Events chan Event
 
-	fsWatcher  *watcher.Watcher
-	filter     Filter
-	notify     string
-	directory  string
-	configPath string
+	fsWatcher *watcher.Watcher
+	notify    string
+	directory string
 }
 
 // NewWatcher will create a new file change watching for a a given directory defined
 // in an environment
 func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
+	fsWatcher := watcher.New()
+	fsWatcher.IgnoreHiddenFiles(true)
+	fsWatcher.FilterOps(watcher.Create, watcher.Write, watcher.Remove, watcher.Rename, watcher.Move)
+
+	hook, err := filterHook(e, configPath)
+	if err != nil {
+		return nil, err
+	}
+	fsWatcher.AddFilterHook(hook)
+
+	if err := fsWatcher.AddRecursive(e.Directory); err != nil {
+		return nil, fmt.Errorf("Could not watch directory: %s", err)
+	}
+
+	return &Watcher{
+		Events:    make(chan Event),
+		directory: e.Directory,
+		notify:    e.Notify,
+		fsWatcher: fsWatcher,
+	}, nil
+}
+
+func filterHook(e *env.Env, configPath string) (watcher.FilterFileHookFunc, error) {
 	filter, err := NewFilter(e.Directory, e.IgnoredFiles, e.Ignores)
 	if err != nil {
 		return nil, err
 	}
-
-	newWatcher := &Watcher{
-		Events:     make(chan Event),
-		configPath: configPath,
-		directory:  e.Directory,
-		filter:     filter,
-		notify:     e.Notify,
-	}
-
-	newWatcher.fsWatcher = watcher.New()
-	newWatcher.fsWatcher.IgnoreHiddenFiles(true)
-	newWatcher.fsWatcher.FilterOps(watcher.Create, watcher.Write, watcher.Remove, watcher.Rename, watcher.Move)
-	newWatcher.fsWatcher.AddFilterHook(newWatcher.filterHook)
-	if err := newWatcher.fsWatcher.AddRecursive(e.Directory); err != nil {
-		return nil, fmt.Errorf("Could not watch directory: %s", err)
-	}
-
-	return newWatcher, nil
-}
-
-func (w *Watcher) filterHook(info os.FileInfo, fullPath string) error {
-	if info.IsDir() || (w.configPath != fullPath && w.filter.Match(fullPath)) {
-		return watcher.ErrSkip
-	}
-	return nil
+	return func(info os.FileInfo, fullPath string) error {
+		if info.IsDir() || (configPath != fullPath && filter.Match(fullPath)) {
+			return watcher.ErrSkip
+		}
+		return nil
+	}, nil
 }
 
 // Watch will start the watcher actually receiving file change events and sending
