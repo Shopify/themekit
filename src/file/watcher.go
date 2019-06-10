@@ -3,7 +3,6 @@ package file
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -43,51 +42,46 @@ type Event struct {
 type Watcher struct {
 	Events chan Event
 
-	fsWatcher  *watcher.Watcher
-	filter     Filter
-	notify     string
-	directory  string
-	configPath string
+	fsWatcher *watcher.Watcher
+	notify    string
+	directory string
 }
 
 // NewWatcher will create a new file change watching for a a given directory defined
 // in an environment
 func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
+	fsWatcher := watcher.New()
+	fsWatcher.IgnoreHiddenFiles(true)
+	fsWatcher.FilterOps(watcher.Create, watcher.Write, watcher.Remove, watcher.Rename, watcher.Move)
+
+	hook, err := filterHook(e, configPath)
+	if err != nil {
+		return nil, err
+	}
+	fsWatcher.AddFilterHook(hook)
+
+	if err := fsWatcher.AddRecursive(e.Directory); err != nil {
+		return nil, fmt.Errorf("Could not watch directory: %s", err)
+	}
+
+	return &Watcher{
+		Events:    make(chan Event),
+		directory: e.Directory,
+		notify:    e.Notify,
+		fsWatcher: fsWatcher,
+	}, nil
+}
+
+func filterHook(e *env.Env, configPath string) (watcher.FilterFileHookFunc, error) {
 	filter, err := NewFilter(e.Directory, e.IgnoredFiles, e.Ignores)
 	if err != nil {
 		return nil, err
 	}
-
-	fsWatcher := watcher.New()
-	fsWatcher.IgnoreHiddenFiles(true)
-	fsWatcher.FilterOps(
-		watcher.Create,
-		watcher.Write,
-		watcher.Remove,
-		watcher.Rename,
-		watcher.Move,
-	)
-
-	if configPath != "" {
-		if err := fsWatcher.Add(configPath); err != nil {
-			return nil, fmt.Errorf("Could not watch config path %s: %s", configPath, err)
+	return func(info os.FileInfo, fullPath string) error {
+		if info.IsDir() || (configPath != fullPath && filter.Match(fullPath)) {
+			return watcher.ErrSkip
 		}
-	}
-
-	for _, folder := range assetLocations {
-		path := filepath.Join(e.Directory, folder)
-		if err := fsWatcher.Add(path); err != nil && !os.IsNotExist(err) {
-			return nil, fmt.Errorf("Could not watch directory %s: %s", path, err)
-		}
-	}
-
-	return &Watcher{
-		Events:     make(chan Event),
-		configPath: configPath,
-		directory:  e.Directory,
-		filter:     filter,
-		fsWatcher:  fsWatcher,
-		notify:     e.Notify,
+		return nil
 	}, nil
 }
 
@@ -143,25 +137,15 @@ func (w *Watcher) onEvent(event watcher.Event) bool {
 }
 
 func (w *Watcher) translateEvent(event watcher.Event) []Event {
-	var events []Event
-
-	if event.IsDir() {
-		return events
-	}
-
 	oldPath, currentPath := w.parsePath(event.Path)
-	if w.configPath != event.Path && w.filter.Match(currentPath) {
-		return events
-	}
-
 	if isEventType(event.Op, watcher.Rename, watcher.Move) {
-		events = append(events, Event{Op: Remove, Path: oldPath}, Event{Op: Update, Path: currentPath})
+		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath}}
 	} else if isEventType(event.Op, watcher.Remove) {
-		events = append(events, Event{Op: Remove, Path: currentPath})
+		return []Event{{Op: Remove, Path: currentPath}}
 	} else if isEventType(event.Op, watcher.Create, watcher.Write) {
-		events = append(events, Event{Op: Update, Path: currentPath})
+		return []Event{{Op: Update, Path: currentPath}}
 	}
-	return events
+	return []Event{}
 }
 
 func (w *Watcher) parsePath(path string) (old, current string) {

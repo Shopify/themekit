@@ -21,13 +21,9 @@ func TestMain(m *testing.M) {
 
 func TestNewFileWatcher(t *testing.T) {
 	w := createTestWatcher(t)
-	filter, _ := NewFilter(filepath.Join("_testdata", "project"), []string{"config/"}, []string{})
-	assert.Equal(t, w.filter, filter)
 	assert.Equal(t, w.notify, "/tmp/notifytest")
 	assert.NotNil(t, w.fsWatcher)
 	assert.NotNil(t, w.Events)
-	watchedFiles := w.fsWatcher.WatchedFiles()
-	assert.Equal(t, 14, len(watchedFiles))
 }
 
 func TestFileWatcher_Watch(t *testing.T) {
@@ -52,18 +48,40 @@ func TestFileWatcher_Watch(t *testing.T) {
 	w.Stop()
 }
 
+func TestFileWatcher_filterHook(t *testing.T) {
+	testcases := []struct {
+		skip     bool
+		filename string
+	}{
+		{filename: "_testdata/project/config/settings.json", skip: true},
+		{filename: "_testdata/project/config.yml", skip: false},
+		{filename: "_testdata/project/templates/template.liquid", skip: false},
+		{filename: "_testdata/project/templates", skip: true},
+	}
+
+	hook := createTestFilterHook(t)
+	for i, testcase := range testcases {
+		info, _ := os.Stat(testcase.filename)
+		result := hook(info, testcase.filename)
+		if testcase.skip {
+			assert.Equal(t, result, watcher.ErrSkip, fmt.Sprintf("testcase: %v", i))
+		} else {
+			assert.Nil(t, result, fmt.Sprintf("testcase: %v", i))
+		}
+	}
+}
+
 func TestFileWatcher_WatchFsEvents(t *testing.T) {
 	testcases := []struct {
-		filename      string
-		op            watcher.Op
-		shouldReceive bool
-		expectedOp    Op
+		filename   string
+		op         watcher.Op
+		expectedOp Op
 	}{
-		{shouldReceive: false, filename: "_testdata/project/config/settings.json", op: watcher.Write},
-		{shouldReceive: true, expectedOp: Update, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
-		{shouldReceive: true, expectedOp: Update, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Write},
-		{shouldReceive: true, expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
-		{shouldReceive: true, expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Rename},
+		{filename: "_testdata/project/config/settings.json", op: watcher.Write},
+		{expectedOp: Update, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
+		{expectedOp: Update, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Write},
+		{expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
+		{expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Rename},
 	}
 
 	w := createTestWatcher(t)
@@ -74,19 +92,9 @@ func TestFileWatcher_WatchFsEvents(t *testing.T) {
 		info, _ := os.Stat(testcase.filename)
 		w.fsWatcher.Event <- watcher.Event{Op: testcase.op, Path: testcase.filename, FileInfo: info}
 
-		if testcase.shouldReceive {
-			e := <-w.Events
-			assert.Contains(t, testcase.filename, e.Path)
-			assert.Equal(t, testcase.expectedOp, e.Op, fmt.Sprintf("got the wrong operation %v", i))
-		} else {
-			if !assert.False(t, len(w.Events) > 0, testcase.filename) {
-				<-w.Events
-			}
-		}
-
-		for len(w.Events) > 0 {
-			<-w.Events
-		}
+		e := <-w.Events
+		assert.Contains(t, testcase.filename, e.Path)
+		assert.Equal(t, testcase.expectedOp, e.Op, fmt.Sprintf("got the wrong operation %v", i))
 	}
 }
 
@@ -96,8 +104,6 @@ func TestFileWatcher_OnEvent(t *testing.T) {
 		op         watcher.Op
 		expectedOp []Op
 	}{
-		{expectedOp: []Op{}, filename: "_testdata/project/templates/customers", op: watcher.Write},
-		{expectedOp: []Op{}, filename: "_testdata/project/config/settings.json", op: watcher.Write},
 		{expectedOp: []Op{Update}, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
 		{expectedOp: []Op{Update}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Create},
 		{expectedOp: []Op{Remove}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
@@ -205,4 +211,15 @@ func createTestWatcher(t *testing.T) *Watcher {
 	w, err := NewWatcher(e, filepath.Join("_testdata", "project", "config.yml"))
 	assert.Nil(t, err)
 	return w
+}
+
+func createTestFilterHook(t *testing.T) watcher.FilterFileHookFunc {
+	e := &env.Env{
+		Directory:    filepath.Join("_testdata", "project"),
+		IgnoredFiles: []string{"config/"},
+		Notify:       "/tmp/notifytest",
+	}
+	hook, err := filterHook(e, filepath.Join("_testdata", "project", "config.yml"))
+	assert.Nil(t, err)
+	return hook
 }
