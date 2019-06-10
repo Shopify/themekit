@@ -1,5 +1,7 @@
 v1.0.1
 ======================
+- Changes file watcher to be more flexible by polling recursivly instead of
+individually on each folder
 - Added chocolatey installation option
 - Fixed relative filepath saving in the directory config
 - Fixed an issue with updating to a invalid version
