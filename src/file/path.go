@@ -7,14 +7,17 @@ import (
 
 var (
 	assetLocations = []string{
-		"templates/customers",
 		"assets",
 		"config",
+		"content",
+		"frame",
 		"layout",
+		"locales",
+		"pages",
+		"sections",
 		"snippets",
 		"templates",
-		"locales",
-		"sections",
+		"templates/customers",
 	}
 )
 
