@@ -29,16 +29,21 @@ func TestPathToProject(t *testing.T) {
 func TestDirInProject(t *testing.T) {
 	root := filepath.Join("long", "path", "to")
 	tests := map[string]bool{
-		"": false,
-		filepath.Join(root, "misc"):                false,
+		"":                                         false,
 		filepath.Join(root, "assets"):              true,
-		filepath.Join(root, "templates/customers"): true,
 		filepath.Join(root, "config"):              true,
+		filepath.Join(root, "content"):             true,
+		filepath.Join(root, "css"):                 false,
+		filepath.Join(root, "frame"):               true,
 		filepath.Join(root, "layout"):              true,
+		filepath.Join(root, "locales"):             true,
+		filepath.Join(root, "misc"):                false,
+		filepath.Join(root, "node_modules"):        false,
+		filepath.Join(root, "pages"):               true,
+		filepath.Join(root, "sections"):            true,
 		filepath.Join(root, "snippets"):            true,
 		filepath.Join(root, "templates"):           true,
-		filepath.Join(root, "locales"):             true,
-		filepath.Join(root, "sections"):            true,
+		filepath.Join(root, "templates/customers"): true,
 	}
 	for input, expected := range tests {
 		assert.Equal(t, expected, isProjectDirectory(root, input), input)
@@ -48,8 +53,8 @@ func TestDirInProject(t *testing.T) {
 func TestPathInProject(t *testing.T) {
 	root := filepath.Join("long", "path", "to")
 	tests := map[string]bool{
-		"": false,
-		filepath.Join(root, "config.yml"):                            false,
+		"":                                false,
+		filepath.Join(root, "config.yml"): false,
 		filepath.Join(root, "misc", "other.html"):                    false,
 		filepath.Join(root, "assets", "logo.png"):                    true,
 		filepath.Join(root, "node_modules", "assets", "logo.png"):    false,
