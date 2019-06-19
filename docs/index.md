@@ -16,18 +16,9 @@ Using Theme Kit will enable you to
 
 ## Installation
 
-### Linux & macOS Automatic Installation
+### macOS Installation
 
-If you are on macOS or Linux, you can use the following installation script to automatically
-download and install the latest Theme Kit for you.
-
-```bash
-curl -s https://shopify.github.io/themekit/scripts/install.py | sudo python
-```
-
-### macOS Homebrew Installation
-
-If you have [homebrew](http://brew.sh/) installed you can install Theme Kit by running the following commands.
+Use [homebrew](http://brew.sh/) to install Theme Kit by running the following commands.
 
 ```bash
 brew tap shopify/shopify
@@ -40,6 +31,15 @@ If you have [chocolatey](https://chocolatey.org/) installed you can install them
 
 ```
 choco install themekit
+```
+
+### Linux Installation
+
+If you are on linux based system, you can use the following installation script to automatically
+download and install the latest Theme Kit for you.
+
+```bash
+curl -s https://shopify.github.io/themekit/scripts/install.py | sudo python
 ```
 
 ### Arch installation
