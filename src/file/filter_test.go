@@ -29,12 +29,18 @@ func TestFilter_Match(t *testing.T) {
 		{glob: "*test.txt", input: "templates/test.txt", matches: true},
 		{glob: "*test.txt", input: "templates/foo/test.txt", matches: true},
 		{glob: "*test.txt", input: "/tmp/templates/foo/test.txt", matches: true},
+		{glob: "*test.txt", input: "templates\foo\test.txt", matches: true},
 		{glob: "*build/*", input: "templates/build/hello/world", matches: true},
+		{glob: "*assets/sass/*", input: `assets\sass\foo.sass`, matches: true},
 		{glob: "*.json", input: "templates/settings.json", matches: true},
 		{glob: "*.gif", input: "templates/world.gif", matches: true},
+		{glob: "*.gif", input: `templates\world.gif`, matches: true},
 		{glob: "*.gif", input: "templates/worldgifno", matches: false},
+		{glob: "*.gif", input: `templates\worldgifno`, matches: false},
 		{regexp: `\.bat`, input: "templates/hello.bat", matches: true},
+		{regexp: `\.bat`, input: `templates\hello.bat`, matches: true},
 		{regexp: `\.bat`, input: "templates/hellobatno", matches: false},
+		{regexp: `\.bat`, input: `templates\hellobatno`, matches: false},
 		{regexp: `\.bat`, input: "templates/hello.css", matches: false},
 		{glob: "*test.txt", input: "/not/in/project/test.txt", matches: true},
 		{glob: "*test.txt", input: "test.txt", matches: true},
@@ -49,11 +55,7 @@ func TestFilter_Match(t *testing.T) {
 		if testcase.glob != "" {
 			filter.globs = []string{testcase.glob}
 		}
-		if testcase.matches {
-			assert.True(t, filter.Match(testcase.input), testcase.input)
-		} else {
-			assert.False(t, filter.Match(testcase.input), testcase.input)
-		}
+		assert.Equal(t, testcase.matches, filter.Match(testcase.input), testcase.input)
 	}
 }
 

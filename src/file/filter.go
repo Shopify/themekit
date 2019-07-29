@@ -56,6 +56,7 @@ func NewFilter(rootDir string, patterns []string, files []string) (Filter, error
 
 // Match will return true if the file path has matched a pattern in this filter
 func (f Filter) Match(path string) bool {
+	path = toSlash(path)
 	if len(path) == 0 || !pathInProject(f.rootDir, path) {
 		return true
 	}
@@ -129,4 +130,8 @@ func patternsToRegexpsAndGlobs(patterns []string) ([]*regexp.Regexp, []string) {
 	}
 
 	return regexps, globs
+}
+
+func toSlash(path string) string {
+	return strings.ReplaceAll(path, `\`, "/")
 }
