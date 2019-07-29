@@ -12,6 +12,7 @@ There are general values that you will be able to config for all of Theme Kit ac
 
 | Attribute    | Description
 |:-------------|:---------------------
+| config       | A customer path to your config file. This defaults to the current path that the command is run in.
 | store        | Your store's Shopify domain with the `.myshopify.com` postfix. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
 | password     | Your API password. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
 | theme_id     | The theme that you want the command to take effect on. If you want to make changes to the current live theme you may set this value to `'live'`. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
@@ -117,6 +118,7 @@ debugging settings or scripting calls to Theme Kit from something like `cron`.
 
 | Attribute    | Flag            | Shortcut
 |:-------------|:----------------|:--------|
+| config       | `--config`      | -c      |
 | password     | `--password`    |         |
 | theme_id     | `--themeid`     |         |
 | store        | `--store`       | -s      |
