@@ -1,0 +1,9 @@
+language: go
+go:
+  - 1.12
+script:
+  - make lint
+  - go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
