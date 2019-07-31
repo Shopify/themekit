@@ -1,0 +1,9 @@
+language: go
+go:
+  - 1.12
+script:
+  - env GO111MODULE=on make lint
+  - env GO111MODULE=on go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
