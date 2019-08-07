@@ -38,6 +38,15 @@ Helpful commands
 - `make test` will run linting/vetting/testing to make sure your code is of high standard
 - `make help` will tell you all the commands available to you.
 
+# Debugging Requests
+
+A man in the middle proxy is the easiest way to introspect the requests that themekit makes. To start using it please do the following.
+
+- `brew install mitmproxy`
+- `mitmproxy -p 5000 -w themekit_dump` This will start it listening on port 5000 and write to the file `themekit_dump`
+- in another console, in your project directory run `theme deploy --proxy http://localhost:5000`
+- After that command finished, you can quit mitmproxy by pressing q then y 
+
 # Deploying Themekit
 
 - Update ThemeKitVersion in `kit/version.go` and commit.
