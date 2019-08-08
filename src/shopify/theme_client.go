@@ -22,6 +22,8 @@ var (
 	ErrCriticalFile = errors.New("this file is critical and removing it would cause your theme to become non-functional")
 	// ErrNotPartOfTheme will be returned when trying to alter a filepath that does not exist in the theme
 	ErrNotPartOfTheme = errors.New("this file is not part of your theme")
+	// ErrEmptyResponse will be returned if we could not read the response body
+	ErrEmptyResponse = errors.New("could not read the response from shopify")
 	// ErrMalformedResponse will be returned if we could not unmarshal the response from shopify
 	ErrMalformedResponse = errors.New("received a malformed response from shopify, this usually indicates a problem with your connection")
 	// ErrZipPathRequired is returned if a source path was not provided to create a new theme
@@ -360,17 +362,19 @@ func (c Client) assetPath(query map[string]string) string {
 func unmarshalResponse(body io.ReadCloser, data interface{}) error {
 	reqBody, err := ioutil.ReadAll(body)
 	if err != nil {
-		return ErrMalformedResponse
+		return fmt.Errorf("%v: %v", ErrEmptyResponse, err)
 	}
+
 	err = body.Close()
 	if err != nil {
 		return err
 	}
+
 	var re reqErr
 	mainErr := json.Unmarshal(reqBody, data)
 	basicErr := json.Unmarshal(reqBody, &re)
 	if mainErr != nil && basicErr != nil {
-		return ErrMalformedResponse
+		return fmt.Errorf("%v: %v %v", ErrMalformedResponse, mainErr, basicErr)
 	}
 	if len(re.Errors) > 0 {
 		return errors.New(re.Errors)
