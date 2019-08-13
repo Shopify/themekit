@@ -32,6 +32,7 @@ func TestFileWatcher_Watch(t *testing.T) {
 		IgnoredFiles: []string{"config"},
 	}
 	w, _ := NewWatcher(e, "")
+	w.checksums = map[string]string{}
 	w.Watch()
 
 	path := filepath.Join("_testdata", "project", "assets", "application.js")
@@ -43,6 +44,28 @@ func TestFileWatcher_Watch(t *testing.T) {
 	case <-w.Events:
 	case <-time.After(time.Second):
 		t.Error("Didnt process an event so must not be watching")
+	}
+
+	w.Stop()
+}
+
+func TestFileWatcher_WatchDuplicateEvents(t *testing.T) {
+	e := &env.Env{
+		Directory:    filepath.Join("_testdata", "project"),
+		IgnoredFiles: []string{"config"},
+	}
+	w, _ := NewWatcher(e, "")
+	w.Watch()
+
+	path := filepath.Join("_testdata", "project", "assets", "application.js")
+	info, _ := os.Stat(path)
+	w.fsWatcher.Wait()
+	w.fsWatcher.Event <- watcher.Event{Op: watcher.Create, Path: path, FileInfo: info}
+
+	select {
+	case <-w.Events:
+		t.Error("should not have recieved an event since file did not change")
+	case <-time.After(50 * time.Millisecond):
 	}
 
 	w.Stop()
@@ -84,17 +107,17 @@ func TestFileWatcher_WatchFsEvents(t *testing.T) {
 		{expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Rename},
 	}
 
-	w := createTestWatcher(t)
-	w.Watch()
-	w.Events = make(chan Event, len(testcases))
-	defer w.Stop()
 	for i, testcase := range testcases {
+		w := createTestWatcher(t)
+		w.Watch()
+		w.Events = make(chan Event, len(testcases))
 		info, _ := os.Stat(testcase.filename)
 		w.fsWatcher.Event <- watcher.Event{Op: testcase.op, Path: testcase.filename, FileInfo: info}
 
 		e := <-w.Events
 		assert.Contains(t, testcase.filename, e.Path)
 		assert.Equal(t, testcase.expectedOp, e.Op, fmt.Sprintf("got the wrong operation %v", i))
+		w.Stop()
 	}
 }
 
@@ -111,10 +134,9 @@ func TestFileWatcher_OnEvent(t *testing.T) {
 		{expectedOp: []Op{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Move},
 	}
 
-	w := createTestWatcher(t)
-	w.Events = make(chan Event, len(testcases))
-	defer w.Stop()
 	for i, testcase := range testcases {
+		w := createTestWatcher(t)
+		w.Events = make(chan Event, len(testcases))
 		_, currentPath := w.parsePath(testcase.filename)
 		info, _ := os.Stat(filepath.Join("_testdata", "project", currentPath))
 		w.onEvent(watcher.Event{Op: testcase.op, Path: testcase.filename, FileInfo: info})
@@ -122,8 +144,9 @@ func TestFileWatcher_OnEvent(t *testing.T) {
 		for i := 0; i < len(testcase.expectedOp); i++ {
 			e := <-w.Events
 			assert.Contains(t, testcase.filename, e.Path)
-			assert.Equal(t, testcase.expectedOp[i], e.Op)
+			assert.Equal(t, testcase.expectedOp[i], e.Op, fmt.Sprintf("Wrong op in testcase %v", i))
 		}
+		w.Stop()
 	}
 }
 
@@ -210,6 +233,7 @@ func createTestWatcher(t *testing.T) *Watcher {
 	}
 	w, err := NewWatcher(e, filepath.Join("_testdata", "project", "config.yml"))
 	assert.Nil(t, err)
+	w.checksums = map[string]string{}
 	return w
 }
 
