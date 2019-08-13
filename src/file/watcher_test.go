@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 	"time"
 
@@ -121,17 +122,23 @@ func TestFileWatcher_WatchFsEvents(t *testing.T) {
 	}
 }
 
+type OptSlice []Op
+
+func (p OptSlice) Len() int           { return len(p) }
+func (p OptSlice) Less(i, j int) bool { return p[i] < p[j] }
+func (p OptSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
 func TestFileWatcher_OnEvent(t *testing.T) {
 	testcases := []struct {
 		filename   string
 		op         watcher.Op
-		expectedOp []Op
+		expectedOp OptSlice
 	}{
-		{expectedOp: []Op{Update}, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
-		{expectedOp: []Op{Update}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Create},
-		{expectedOp: []Op{Remove}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
-		{expectedOp: []Op{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Rename},
-		{expectedOp: []Op{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Move},
+		{expectedOp: OptSlice{Update}, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
+		{expectedOp: OptSlice{Update}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Create},
+		{expectedOp: OptSlice{Remove}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
+		{expectedOp: OptSlice{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Rename},
+		{expectedOp: OptSlice{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Move},
 	}
 
 	for i, testcase := range testcases {
@@ -141,11 +148,19 @@ func TestFileWatcher_OnEvent(t *testing.T) {
 		info, _ := os.Stat(filepath.Join("_testdata", "project", currentPath))
 		w.onEvent(watcher.Event{Op: testcase.op, Path: testcase.filename, FileInfo: info})
 		assert.Equal(t, len(testcase.expectedOp), len(w.Events), fmt.Sprintf("testcase: %v", i))
+
+		recievedEvents := OptSlice{}
 		for i := 0; i < len(testcase.expectedOp); i++ {
 			e := <-w.Events
 			assert.Contains(t, testcase.filename, e.Path)
-			assert.Equal(t, testcase.expectedOp[i], e.Op, fmt.Sprintf("Wrong op in testcase %v", i))
+			recievedEvents = append(recievedEvents, e.Op)
 		}
+
+		sort.Sort(testcase.expectedOp)
+		sort.Sort(recievedEvents)
+
+		assert.Equal(t, testcase.expectedOp, recievedEvents, fmt.Sprintf("Wrong op in testcase %v", i))
+
 		w.Stop()
 	}
 }
