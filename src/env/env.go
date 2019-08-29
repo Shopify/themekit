@@ -95,7 +95,7 @@ func validateDirectory(dir string) (finalDir string, errors []string) {
 	if !filepath.IsAbs(dir) {
 		var err error
 		if dir, err = filepath.Abs(dir); err != nil {
-			errors = append(errors, fmt.Sprintf("Could not get absolute root bath: %v", err))
+			errors = append(errors, fmt.Sprintf("Could not get absolute root path: %v", err))
 		}
 	}
 
