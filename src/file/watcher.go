@@ -33,8 +33,9 @@ var (
 
 // Event decsribes a file change event
 type Event struct {
-	Op   Op
-	Path string
+	Op       Op
+	Path     string
+	checksum string
 }
 
 // Watcher is the object used to watch files for change and notify on any events,
@@ -45,6 +46,7 @@ type Watcher struct {
 	fsWatcher *watcher.Watcher
 	notify    string
 	directory string
+	checksums map[string]string
 }
 
 // NewWatcher will create a new file change watching for a a given directory defined
@@ -64,9 +66,15 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 		return nil, fmt.Errorf("Could not watch directory: %s", err)
 	}
 
+	checksums, err := dirSums(e.Directory)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Watcher{
 		Events:    make(chan Event),
 		directory: e.Directory,
+		checksums: checksums,
 		notify:    e.Notify,
 		fsWatcher: fsWatcher,
 	}, nil
@@ -129,6 +137,7 @@ func (w *Watcher) onEvent(event watcher.Event) bool {
 			drainTimer.Reset(drainTimeout)
 		case <-drainTimer.C:
 			for _, e := range events {
+				w.updateChecksum(e)
 				w.Events <- e
 			}
 			return len(events) > 0
@@ -136,14 +145,26 @@ func (w *Watcher) onEvent(event watcher.Event) bool {
 	}
 }
 
+func (w *Watcher) updateChecksum(e Event) {
+	if e.Op == Remove {
+		delete(w.checksums, e.Path)
+	} else if e.Op == Update {
+		w.checksums[e.Path] = e.checksum
+	}
+}
+
 func (w *Watcher) translateEvent(event watcher.Event) []Event {
 	oldPath, currentPath := w.parsePath(event.Path)
+	checksum, err := fileChecksum(w.directory, currentPath)
+	if err == nil && checksum == w.checksums[currentPath] {
+		return []Event{}
+	}
 	if isEventType(event.Op, watcher.Rename, watcher.Move) {
-		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath}}
+		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath, checksum: checksum}}
 	} else if isEventType(event.Op, watcher.Remove) {
 		return []Event{{Op: Remove, Path: currentPath}}
 	} else if isEventType(event.Op, watcher.Create, watcher.Write) {
-		return []Event{{Op: Update, Path: currentPath}}
+		return []Event{{Op: Update, Path: currentPath, checksum: checksum}}
 	}
 	return []Event{}
 }
