@@ -164,8 +164,7 @@ upload them to Shopify. Any changes will be logged to the terminal and the statu
 of the upload will be logged as well. The program can be stopped by simply typing
 ctrl+C.
 
-To ease integrating the watcher with tools such as LiveReload, you can provide
-an the optional `--notify` argument with a file path  that you want to have updated
+To ease integrating the watcher with tools such as LiveReload, you can provide the optional `--notify` argument with a file path  that you want to have updated
 when the workers have gone idle. For example, if you had LiveReload watching for
 update made to a file at /tmp/theme.update you would enter the following command:
 
