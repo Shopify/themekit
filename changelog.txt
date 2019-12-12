@@ -1,4 +1,8 @@
-v1.0.1
+v1.0.2 (Dec 12, 2019)
+=====================
+- Content checks to not process files that have not changed
+
+v1.0.1 (Jun 19, 2019)
 ======================
 - Added support for Sections-Everywhere
 - Changes file watcher to be more flexible by polling recursivly instead of
