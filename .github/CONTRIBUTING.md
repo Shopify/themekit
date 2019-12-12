@@ -45,7 +45,7 @@ A man in the middle proxy is the easiest way to introspect the requests that the
 - `brew install mitmproxy`
 - `mitmproxy -p 5000 -w themekit_dump` This will start it listening on port 5000 and write to the file `themekit_dump`
 - in another console, in your project directory run `theme deploy --proxy http://localhost:5000`
-- After that command finished, you can quit mitmproxy by pressing q then y 
+- After that command finished, you can quit mitmproxy by pressing q then y
 
 # Deploying Themekit
 
