@@ -1,4 +1,4 @@
-v1.0.3
+v1.0.3 (Dec 17 2019)
 ====================
 - Add support for pages/customers directory
 
