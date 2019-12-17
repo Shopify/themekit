@@ -14,6 +14,7 @@ var (
 		"layout",
 		"locales",
 		"pages",
+		"pages/customers",
 		"sections",
 		"snippets",
 		"templates",
