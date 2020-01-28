@@ -15,9 +15,9 @@ import (
 var newCmd = &cobra.Command{
 	Use:   "new",
 	Short: "New will create theme using Shopify Timber",
-	Long: `New will download the latest release of Timber,
-  The most popular theme on Shopify. New will also setup
-  your config file and create a new theme id for you.
+	Long: `New will create a new theme on Shopify, generate a minimal template of
+	all the required files that a theme needs to be functional and then setup
+  your config file for working with your new theme.
 
   For more documentation please see http://shopify.github.io/themekit/commands/#new
   `,
