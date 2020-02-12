@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 '''
     File name: install
-    Author: Tim Anema
+    Author: Tim Anema, Jared McKnight
     Date created: Sep 29, 2016
-    Date last modified: Sep 14 2018
+    Date last modified: Feb 12 2020
     Python Version: 2.7+
     Description: Install script for themekit. It will download a release and make it executable
 '''
