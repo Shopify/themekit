@@ -111,12 +111,12 @@ To connect an existing theme, you need the theme’s ID number. The easiest way 
 get your theme’s ID number is to use the get command like this:
 
 ```bash
-theme get --list -p=[your-password] -s=[you-store.myshopify.com]
+theme get --list -p=[your-password] -s=[your-store.myshopify.com]
 ```
 
 Then once you have noted your theme ID, run the following command to generate a
 config and download the theme from shopify:
 
 ```bash
-theme get -p=[your-password] -s=[you-store.myshopify.com] -t=[your-theme-id]
+theme get -p=[your-password] -s=[your-store.myshopify.com] -t=[your-theme-id]
 ```
