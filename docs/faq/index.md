@@ -3,12 +3,6 @@ layout: default
 ---
 # FAQ
 
-## What is the difference between ThemeKit and Slate
-
-Slate is a bunch of tooling built on top of Themekit. Themekit is more just a client
-with the themes API, letting you use whichever tools you need on top. Slate has
-an opinionated set of tools that Shopify uses to develop its own themes.
-
 ## How can I reload the page when I make changes
 
 You will need to use another tool to do this, however there are many options available
