@@ -55,7 +55,19 @@ Deploy will completely replace what is on Shopify with what is in your current
 project directory. This means that any files that are on Shopify but are not on
 your local disk will be removed from Shopify. Any files that are both on your local
 disk and Shopify will be updated. Lastly any files that are only on your local
-disk will be upload to Shopify.
+disk will be upload to Shopify. Example commands:
+
+If you want to replace the whole theme, enter the following command:
+
+```bash
+theme deploy
+```
+
+If you want to replace only specific files, enter the following command:
+
+```bash
+theme deploy templates/404.liquid
+```
 
 Deploy can be used without any filenames and it will replace the whole theme. If
 some filenames are provided to replace then only those files will be replaced.
