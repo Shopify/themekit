@@ -9,7 +9,7 @@ You will need to use another tool to do this, however there are many options ava
 to you to suit all use cases.
 
 - [Prepros](https://prepros.io/)
-- [LivePage Chrome Plugin](https://chrome.google.com/webstore/detail/livepage/pilnojpmdoofaelbinaeodfpjheijkbh?hl=en-US)
+- [LivePage Chrome Plugin](https://livepage.mikerogers.io/)
 - [BrowserSync](https://www.browsersync.io/)
 - [LiveReload](http://livereload.com/)
 
