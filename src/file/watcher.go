@@ -6,8 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/themekit/src/env"
 	"github.com/radovskyb/watcher"
+
+	"github.com/Shopify/themekit/src/env"
+	"github.com/Shopify/themekit/src/shopify"
 )
 
 // Op describes the different types of file operations
@@ -66,9 +68,10 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 		return nil, fmt.Errorf("Could not watch directory: %s", err)
 	}
 
-	checksums, err := dirSums(e.Directory)
-	if err != nil {
-		return nil, err
+	assets, _ := shopify.FindAssets(e, e.Directory)
+	checksums := map[string]string{}
+	for _, asset := range assets {
+		checksums[asset.Key] = asset.Checksum
 	}
 
 	return &Watcher{

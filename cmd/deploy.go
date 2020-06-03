@@ -91,19 +91,23 @@ func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 		}
 	}
 
-	localAssets, err := shopify.FindAssets(ctx.Env, ctx.Args...)
-	if err != nil {
-		return assetsActions, err
+	localAssets, _ := shopify.FindAssets(ctx.Env, ctx.Args...)
+	for _, asset := range localAssets {
+		fmt.Println(asset.Key, asset.Checksum)
 	}
 
-	problemAssets := compileAssetFilenames(localAssets)
-	if len(problemAssets) > 0 {
-		return assetsActions, compiledAssetWarning(ctx.Env.Name, problemAssets)
-	}
+	// if err != nil {
+	//	return assetsActions, err
+	// }
 
-	for _, path := range localAssets {
-		assetsActions[path] = file.Update
-	}
+	// problemAssets := compileAssetFilenames(localAssets)
+	// if len(problemAssets) > 0 {
+	//	return assetsActions, compiledAssetWarning(ctx.Env.Name, problemAssets)
+	// }
+
+	// for _, path := range localAssets {
+	//	assetsActions[path] = file.Update
+	// }
 	return assetsActions, nil
 }
 

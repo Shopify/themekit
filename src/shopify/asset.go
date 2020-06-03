@@ -2,6 +2,7 @@ package shopify
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -20,6 +21,7 @@ import (
 type Asset struct {
 	Key         string `json:"key"`
 	Value       string `json:"value,omitempty"`
+	Checksum    string `json:"checksum,omitempty"`
 	Attachment  string `json:"attachment,omitempty"`
 	ContentType string `json:"content_type,omitempty"`
 	ThemeID     int64  `json:"theme_id,omitempty"`
@@ -39,10 +41,10 @@ func ReadAsset(e *env.Env, filename string) (Asset, error) {
 // FindAssets will load all assets for paths passed in, this also means that it will
 // read directories recursively. If no paths are passed in then the whole project
 // directory will be read
-func FindAssets(e *env.Env, paths ...string) (assets []string, err error) {
+func FindAssets(e *env.Env, paths ...string) (assets []Asset, err error) {
 	filter, err := file.NewFilter(e.Directory, e.IgnoredFiles, e.Ignores)
 	if err != nil {
-		return []string{}, err
+		return []Asset{}, err
 	}
 
 	if len(paths) == 0 {
@@ -54,13 +56,13 @@ func FindAssets(e *env.Env, paths ...string) (assets []string, err error) {
 		if err == ErrAssetIsDir {
 			dirAssets, err := loadAssetsFromDirectory(e.Directory, path, filter.Match)
 			if err != nil {
-				return []string{}, err
+				return []Asset{}, err
 			}
 			assets = append(assets, dirAssets...)
 		} else if err != nil {
-			return []string{}, err
+			return []Asset{}, err
 		} else if !filter.Match(asset.Key) {
-			assets = append(assets, asset.Key)
+			assets = append(assets, asset)
 		}
 	}
 
@@ -123,7 +125,9 @@ func assetsToFilenames(assets []Asset) []string {
 	return filenames
 }
 
-func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (assets []string, err error) {
+func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) ([]Asset, error) {
+	var assets []Asset
+	var err error
 	err = filepath.Walk(filepath.Join(root, dir), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -137,11 +141,12 @@ func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (a
 		}
 		assetKey = filepath.ToSlash(assetKey)
 		if !ignore(assetKey) {
-			assets = append(assets, assetKey)
+			file, _ := readAsset(dir, assetKey)
+			assets = append(assets, file)
 		}
 		return nil
 	})
-	return
+	return assets, err
 }
 
 func readAsset(root, filename string) (asset Asset, err error) {
@@ -176,8 +181,17 @@ func readAsset(root, filename string) (asset Asset, err error) {
 	contentType := http.DetectContentType(buffer)
 	if strings.Contains(contentType, "text") {
 		asset.Value = string(buffer)
+		if filepath.Ext(asset.Key) == ".json" {
+			buf := new(bytes.Buffer)
+			json.Compact(buf, []byte(asset.Value))
+			asset.Checksum = fmt.Sprintf("%x", md5.Sum(buf.Bytes()))
+		} else {
+			asset.Checksum = fmt.Sprintf("%x", md5.Sum([]byte(asset.Value)))
+		}
 	} else {
 		asset.Attachment = base64.StdEncoding.EncodeToString(buffer)
+		asset.Checksum = fmt.Sprintf("%x", md5.Sum([]byte(asset.Attachment)))
 	}
+
 	return asset, nil
 }
