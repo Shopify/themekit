@@ -124,11 +124,13 @@ func TestReadAsset(t *testing.T) {
 		expected Asset
 		err      string
 	}{
-		{input: filepath.Join("assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content"}},
-		{input: filepath.Join(".", "assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content"}},
+		{input: filepath.Join("assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content", Checksum: "f980fcdcfeb5bcf24c0de5c199c3a94b"}},
+		{input: filepath.Join(".", "assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content", Checksum: "f980fcdcfeb5bcf24c0de5c199c3a94b"}},
 		{input: "nope.txt", expected: Asset{}, err: " "},
 		{input: "assets", expected: Asset{}, err: ErrAssetIsDir.Error()},
-		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII="}},
+		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment:
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII=", Checksum:
+		"9e24e19b024c44b778301d880bd8e6f4"}},
 	}
 
 	for _, testcase := range testcases {
@@ -137,6 +139,7 @@ func TestReadAsset(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, testcase.expected.Key, actual.Key)
 			assert.Contains(t, actual.Value, testcase.expected.Value) // contains because of line endings
+			assert.Equal(t, testcase.expected.Checksum, actual.Checksum)
 		} else if assert.NotNil(t, err) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}

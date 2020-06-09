@@ -2,6 +2,7 @@ package shopify
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -23,6 +24,7 @@ type Asset struct {
 	Attachment  string `json:"attachment,omitempty"`
 	ContentType string `json:"content_type,omitempty"`
 	ThemeID     int64  `json:"theme_id,omitempty"`
+	Checksum    string `json:"checksum,omitempty"`
 	UpdatedAt   string `json:"updated_at,omitempty"`
 }
 
@@ -176,8 +178,15 @@ func readAsset(root, filename string) (asset Asset, err error) {
 	contentType := http.DetectContentType(buffer)
 	if strings.Contains(contentType, "text") {
 		asset.Value = string(buffer)
+		asset.Checksum = calculateChecksum(asset.Value)
 	} else {
 		asset.Attachment = base64.StdEncoding.EncodeToString(buffer)
+	  // not sure about this, need to verify against server.	
+		asset.Checksum = calculateChecksum(asset.Attachment)
 	}
 	return asset, nil
+}
+
+func calculateChecksum(value string) (checksum string) {
+	return fmt.Sprintf("%x", md5.Sum([]byte(value)))
 }
