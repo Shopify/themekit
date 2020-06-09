@@ -23,9 +23,9 @@ func TestFindAssets(t *testing.T) {
 		count  int
 	}{
 		{e: goodEnv, inputs: []string{filepath.Join("assets", "application.js")}, count: 1},
-		{e: goodEnv, count: 7},
+		{e: goodEnv, count: 8},
 		{e: badEnv, count: 7, err: " "},
-		{e: goodEnv, inputs: []string{"assets", "config/settings_data.json"}, count: 3},
+		{e: goodEnv, inputs: []string{"assets", "config/settings_data.json"}, count: 4},
 		{e: goodEnv, inputs: []string{"snippets/nope.txt"}, err: "readAsset: "},
 	}
 
@@ -99,9 +99,9 @@ func TestLoadAssetsFromDirectory(t *testing.T) {
 		ignore    func(string) bool
 		count     int
 	}{
-		{path: "", ignore: ignoreNone, count: 7},
+		{path: "", ignore: ignoreNone, count: 8},
 		{path: "", ignore: selectOne, count: 1},
-		{path: "assets", ignore: ignoreNone, count: 2},
+		{path: "assets", ignore: ignoreNone, count: 3},
 		{path: "nope", ignore: ignoreNone, count: 0, err: " "},
 	}
 
@@ -128,9 +128,8 @@ func TestReadAsset(t *testing.T) {
 		{input: filepath.Join(".", "assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content", Checksum: "f980fcdcfeb5bcf24c0de5c199c3a94b"}},
 		{input: "nope.txt", expected: Asset{}, err: " "},
 		{input: "assets", expected: Asset{}, err: ErrAssetIsDir.Error()},
-		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment:
-		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII=", Checksum:
-		"9e24e19b024c44b778301d880bd8e6f4"}},
+		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII=", Checksum: "9e24e19b024c44b778301d880bd8e6f4"}},
+		{input: filepath.Join("assets", "app.json"), expected: Asset{Key: "assets/app.json", Value: "{\"testing\" : \"data\"}", Checksum: "10c8cd94eb19e29a70b08fa8a31bba89"}},
 	}
 
 	for _, testcase := range testcases {

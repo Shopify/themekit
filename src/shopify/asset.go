@@ -178,15 +178,25 @@ func readAsset(root, filename string) (asset Asset, err error) {
 	contentType := http.DetectContentType(buffer)
 	if strings.Contains(contentType, "text") {
 		asset.Value = string(buffer)
-		asset.Checksum = calculateChecksum(asset.Value)
+		asset.Checksum = calculateTextChecksum(asset.Value, filepath.Ext(asset.Key) == ".json")
 	} else {
 		asset.Attachment = base64.StdEncoding.EncodeToString(buffer)
-	  // not sure about this, need to verify against server.	
-		asset.Checksum = calculateChecksum(asset.Attachment)
+		asset.Checksum = calculateByteArrayChecksum(buffer)
 	}
 	return asset, nil
 }
 
-func calculateChecksum(value string) (checksum string) {
+func calculateTextChecksum(value string, isJSON bool) (checksum string) {
+	if isJSON {
+		buf := new(bytes.Buffer)
+		json.Compact(buf, []byte(value))
+		return fmt.Sprintf("%x", md5.Sum(buf.Bytes()))
+	}
 	return fmt.Sprintf("%x", md5.Sum([]byte(value)))
+}
+
+func calculateByteArrayChecksum(value []byte) (checksum string) {
+	hash := md5.New()
+	hash.Write(value)
+	return fmt.Sprintf("%x", hash.Sum(nil))
 }
