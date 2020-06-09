@@ -23,9 +23,9 @@ func TestFindAssets(t *testing.T) {
 		count  int
 	}{
 		{e: goodEnv, inputs: []string{filepath.Join("assets", "application.js")}, count: 1},
-		{e: goodEnv, count: 7},
+		{e: goodEnv, count: 10},
 		{e: badEnv, count: 7, err: " "},
-		{e: goodEnv, inputs: []string{"assets", "config/settings_data.json"}, count: 3},
+		{e: goodEnv, inputs: []string{"assets", "config/settings_data.json"}, count: 6},
 		{e: goodEnv, inputs: []string{"snippets/nope.txt"}, err: "readAsset: "},
 	}
 
@@ -99,9 +99,9 @@ func TestLoadAssetsFromDirectory(t *testing.T) {
 		ignore    func(string) bool
 		count     int
 	}{
-		{path: "", ignore: ignoreNone, count: 7},
+		{path: "", ignore: ignoreNone, count: 10},
 		{path: "", ignore: selectOne, count: 1},
-		{path: "assets", ignore: ignoreNone, count: 2},
+		{path: "assets", ignore: ignoreNone, count: 5},
 		{path: "nope", ignore: ignoreNone, count: 0, err: " "},
 	}
 
@@ -124,11 +124,16 @@ func TestReadAsset(t *testing.T) {
 		expected Asset
 		err      string
 	}{
-		{input: filepath.Join("assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content"}},
-		{input: filepath.Join(".", "assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content"}},
+		{input: filepath.Join("assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content", Checksum: "f980fcdcfeb5bcf24c0de5c199c3a94b"}},
+		{input: filepath.Join(".", "assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content", Checksum: "f980fcdcfeb5bcf24c0de5c199c3a94b"}},
 		{input: "nope.txt", expected: Asset{}, err: " "},
 		{input: "assets", expected: Asset{}, err: ErrAssetIsDir.Error()},
-		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII="}},
+		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII=", Checksum: "9e24e19b024c44b778301d880bd8e6f4"}},
+		{input: filepath.Join("assets", "app.json"), expected: Asset{Key: "assets/app.json", Value: "{\"testing\" : \"data\"}", Checksum: "31409bedd9f5852166c0a4a9b874f1a7"}},
+		// `app_alternate.json` has the same content but different whitespace. Since we normalise JSON before persisting, it has the same checksum.
+		{input: filepath.Join("assets", "app_alternate.json"), expected: Asset{Key: "assets/app_alternate.json", Value: "{\"testing\":\"data\"}", Checksum: "31409bedd9f5852166c0a4a9b874f1a7"}},
+		{input: filepath.Join("assets", "template.liquid"), expected: Asset{Key: "assets/template.liquid", Value: "{% comment %}\n  The contents\n{% endcomment %}\n", Checksum: "8bed50f07f1e8d52b07300e983c21a86"}},
+
 	}
 
 	for _, testcase := range testcases {
@@ -137,6 +142,7 @@ func TestReadAsset(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, testcase.expected.Key, actual.Key)
 			assert.Contains(t, actual.Value, testcase.expected.Value) // contains because of line endings
+			assert.Equal(t, testcase.expected.Checksum, actual.Checksum)
 		} else if assert.NotNil(t, err) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}

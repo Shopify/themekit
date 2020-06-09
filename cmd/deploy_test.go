@@ -37,7 +37,8 @@ func TestUpload(t *testing.T) {
 	ctx.Flags.NoDelete = true
 	ctx.Env.Directory = "_testdata/projectdir"
 	ctx.Flags.Verbose = true
-	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js"}).Return(nil)
+	// This checksum corresponds to a zero-byte file
+	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js", Checksum: "d41d8cd98f00b204e9800998ecf8427e"}).Return(nil)
 	err = deploy(ctx)
 	assert.Nil(t, err)
 	assert.Contains(t, stdOut.String(), "Updated assets/app.js")

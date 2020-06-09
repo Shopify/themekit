@@ -48,7 +48,7 @@ func TestWatch(t *testing.T) {
 	signalChan = make(chan os.Signal)
 	eventChan = make(chan file.Event)
 	ctx, client, _, stdOut, stdErr := createTestCtx()
-	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js"}).Return(nil)
+	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js", Checksum: "d41d8cd98f00b204e9800998ecf8427e"}).Return(nil)
 	ctx.Flags.ConfigPath = "config.yml"
 	ctx.Env.Directory = "_testdata/projectdir"
 	go func() {
@@ -88,14 +88,14 @@ func TestPerform(t *testing.T) {
 
 	ctx, m, _, _, se = createTestCtx()
 	ctx.Env.Directory = "_testdata/projectdir"
-	m.On("UpdateAsset", shopify.Asset{Key: key}).Return(fmt.Errorf("shopify says no update"))
+	m.On("UpdateAsset", shopify.Asset{Key: key, Checksum: "d41d8cd98f00b204e9800998ecf8427e"}).Return(fmt.Errorf("shopify says no update"))
 	perform(ctx, key, file.Update)
 	assert.Contains(t, se.String(), "shopify says no update")
 	m.AssertExpectations(t)
 
 	ctx, m, _, so, _ := createTestCtx()
 	ctx.Env.Directory = "_testdata/projectdir"
-	m.On("UpdateAsset", shopify.Asset{Key: key}).Return(nil)
+	m.On("UpdateAsset", shopify.Asset{Key: key, Checksum: "d41d8cd98f00b204e9800998ecf8427e"}).Return(nil)
 	perform(ctx, key, file.Update)
 	assert.NotContains(t, so.String(), "Updated")
 	m.AssertExpectations(t)
@@ -103,7 +103,7 @@ func TestPerform(t *testing.T) {
 	ctx, m, _, so, _ = createTestCtx()
 	ctx.Env.Directory = "_testdata/projectdir"
 	ctx.Flags.Verbose = true
-	m.On("UpdateAsset", shopify.Asset{Key: key}).Return(nil)
+	m.On("UpdateAsset", shopify.Asset{Key: key, Checksum: "d41d8cd98f00b204e9800998ecf8427e"}).Return(nil)
 	perform(ctx, key, file.Update)
 	assert.Contains(t, so.String(), "Updated")
 	m.AssertExpectations(t)
