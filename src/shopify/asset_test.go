@@ -23,9 +23,9 @@ func TestFindAssets(t *testing.T) {
 		count  int
 	}{
 		{e: goodEnv, inputs: []string{filepath.Join("assets", "application.js")}, count: 1},
-		{e: goodEnv, count: 8},
+		{e: goodEnv, count: 9},
 		{e: badEnv, count: 7, err: " "},
-		{e: goodEnv, inputs: []string{"assets", "config/settings_data.json"}, count: 4},
+		{e: goodEnv, inputs: []string{"assets", "config/settings_data.json"}, count: 5},
 		{e: goodEnv, inputs: []string{"snippets/nope.txt"}, err: "readAsset: "},
 	}
 
@@ -99,9 +99,9 @@ func TestLoadAssetsFromDirectory(t *testing.T) {
 		ignore    func(string) bool
 		count     int
 	}{
-		{path: "", ignore: ignoreNone, count: 8},
+		{path: "", ignore: ignoreNone, count: 9},
 		{path: "", ignore: selectOne, count: 1},
-		{path: "assets", ignore: ignoreNone, count: 3},
+		{path: "assets", ignore: ignoreNone, count: 4},
 		{path: "nope", ignore: ignoreNone, count: 0, err: " "},
 	}
 
@@ -130,6 +130,9 @@ func TestReadAsset(t *testing.T) {
 		{input: "assets", expected: Asset{}, err: ErrAssetIsDir.Error()},
 		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII=", Checksum: "9e24e19b024c44b778301d880bd8e6f4"}},
 		{input: filepath.Join("assets", "app.json"), expected: Asset{Key: "assets/app.json", Value: "{\"testing\" : \"data\"}", Checksum: "31409bedd9f5852166c0a4a9b874f1a7"}},
+		// `app_alternate.json` has the same content but different white. Since we normalise JSON before persisting,
+		// it has the same checksum.
+		{input: filepath.Join("assets", "app_alternate.json"), expected: Asset{Key: "assets/app_alternate.json", Value: "{\"testing\":\"data\"}", Checksum: "31409bedd9f5852166c0a4a9b874f1a7"}},
 	}
 
 	for _, testcase := range testcases {
