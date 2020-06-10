@@ -128,8 +128,16 @@ func TestReadAsset(t *testing.T) {
 		{input: filepath.Join(".", "assets", "application.js"), expected: Asset{Key: "assets/application.js", Value: "this is js content", Checksum: "f980fcdcfeb5bcf24c0de5c199c3a94b"}},
 		{input: "nope.txt", expected: Asset{}, err: " "},
 		{input: "assets", expected: Asset{}, err: ErrAssetIsDir.Error()},
-		{input: filepath.Join("assets", "image.png"), expected: Asset{Key: "assets/image.png", Attachment: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII=", Checksum: "9e24e19b024c44b778301d880bd8e6f4"}},
-		{input: filepath.Join("assets", "app.json"), expected: Asset{Key: "assets/app.json", Value: "{\"testing\" : \"data\"}", Checksum: "31409bedd9f5852166c0a4a9b874f1a7"}},
+		{input: filepath.Join("assets", "image.png"),
+			expected: Asset{
+				Key:        "assets/image.png",
+				Attachment: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEUlEQVR4nGJiYGBgAAQAAP//AA8AA/6P688AAAAASUVORK5CYII=",
+				Checksum:   "9e24e19b024c44b778301d880bd8e6f4"}},
+		{input: filepath.Join("assets", "app.json"),
+			expected: Asset{
+				Key:      "assets/app.json",
+				Value:    "{\"testing\" : \"data\"}",
+				Checksum: "31409bedd9f5852166c0a4a9b874f1a7"}},
 		// `app_alternate.json` has the same content but different whitespace. Since we normalise JSON before persisting, it has the same checksum.
 		{input: filepath.Join("assets", "app_alternate.json"), expected: Asset{Key: "assets/app_alternate.json", Value: "{\"testing\":\"data\"}", Checksum: "31409bedd9f5852166c0a4a9b874f1a7"}},
 	}
