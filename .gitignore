@@ -6,6 +6,7 @@ tags
 
 # for testing
 coverage.out
+coverage.txt
 
 # for docs
 docs/_site/
