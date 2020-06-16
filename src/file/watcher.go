@@ -49,7 +49,7 @@ type Watcher struct {
 	checksums map[string]string
 }
 
-// NewWatcher will create a new file change watching for a a given directory defined
+// NewWatcher will create a new file change watching for a given directory defined
 // in an environment
 func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 	fsWatcher := watcher.New()
