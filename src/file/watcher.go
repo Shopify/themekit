@@ -52,6 +52,7 @@ type Watcher struct {
 // NewWatcher will create a new file change watching for a given directory defined
 // in an environment
 func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
+	fmt.Printf("newWatcher\n")
 	fsWatcher := watcher.New()
 	fsWatcher.IgnoreHiddenFiles(true)
 	fsWatcher.FilterOps(watcher.Create, watcher.Write, watcher.Remove, watcher.Rename, watcher.Move)
