@@ -12,3 +12,6 @@ coverage.txt
 docs/_site/
 docs/.sass-cache/
 docs/.jekyll-metadata
+
+# created when using mitm_proxy
+themekit_dump
