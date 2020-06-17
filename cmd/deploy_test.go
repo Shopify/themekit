@@ -56,7 +56,7 @@ func TestReplace(t *testing.T) {
 	ctx, client, _, stdOut, _ := createTestCtx()
 	ctx.Flags.Verbose = true
 	ctx.Env.Directory = filepath.Join("_testdata", "projectdir")
-	client.On("GetAllAssets").Return([]string{"assets/logo.png"}, nil)
+	client.On("GetAllAssets").Return([]shopify.Asset{{Key: "assets/logo.png"}}, nil)
 	client.On("UpdateAsset", mock.MatchedBy(func(shopify.Asset) bool { return true })).Return(nil).Times(2)
 	client.On("DeleteAsset", mock.MatchedBy(func(shopify.Asset) bool { return true })).Return(nil).Once()
 	err := deploy(ctx)
@@ -65,7 +65,7 @@ func TestReplace(t *testing.T) {
 	client.AssertExpectations(t)
 
 	ctx, client, _, _, _ = createTestCtx()
-	client.On("GetAllAssets").Return([]string{}, fmt.Errorf("server error"))
+	client.On("GetAllAssets").Return([]shopify.Asset{}, fmt.Errorf("server error"))
 	err = deploy(ctx)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "server error")
@@ -75,7 +75,7 @@ func TestReplace(t *testing.T) {
 func TestGenerateActions(t *testing.T) {
 	ctx, client, _, _, _ := createTestCtx()
 	ctx.Env.Directory = filepath.Join("_testdata", "projectdir")
-	client.On("GetAllAssets").Return([]string{"assets/logo.png"}, nil)
+	client.On("GetAllAssets").Return([]shopify.Asset{{Key: "assets/logo.png"}}, nil)
 	actions, err := generateActions(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, actions["assets/logo.png"], file.Remove)
@@ -87,7 +87,7 @@ func TestGenerateActions(t *testing.T) {
 
 	ctx, client, _, _, _ = createTestCtx()
 	ctx.Env.Directory = filepath.Join("_testdata", "projectdir")
-	client.On("GetAllAssets").Return([]string{}, fmt.Errorf("server error"))
+	client.On("GetAllAssets").Return([]shopify.Asset{}, fmt.Errorf("server error"))
 	_, err = generateActions(ctx)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "server error")
@@ -95,14 +95,14 @@ func TestGenerateActions(t *testing.T) {
 
 	ctx, client, _, _, _ = createTestCtx()
 	ctx.Env.Directory = "not there"
-	client.On("GetAllAssets").Return([]string{}, nil)
+	client.On("GetAllAssets").Return([]shopify.Asset{}, nil)
 	_, err = generateActions(ctx)
 	assert.NotNil(t, err)
 
 	ctx, client, _, _, _ = createTestCtx()
 	ctx.Env.Name = "development"
 	ctx.Env.Directory = filepath.Join("_testdata", "badprojectdir")
-	client.On("GetAllAssets").Return([]string{}, nil)
+	client.On("GetAllAssets").Return([]shopify.Asset{}, nil)
 	actions, err = generateActions(ctx)
 	assert.NotNil(t, err)
 	var tpl bytes.Buffer

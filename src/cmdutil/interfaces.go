@@ -11,7 +11,7 @@ type shopifyClient interface {
 	GetInfo() (shopify.Theme, error)
 	PublishTheme() error
 	Themes() ([]shopify.Theme, error)
-	GetAllAssets() ([]string, error)
+	GetAllAssets() ([]shopify.Asset, error)
 	GetAsset(string) (shopify.Asset, error)
 	UpdateAsset(shopify.Asset) error
 	DeleteAsset(shopify.Asset) error
