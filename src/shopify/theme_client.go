@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"sort"
 
 	"github.com/Shopify/themekit/src/env"
 	"github.com/Shopify/themekit/src/file"
@@ -234,28 +235,28 @@ func (c Client) PublishTheme() error {
 // The assets returned will not have any data, only ID and filenames. This is because
 // fetching all the assets at one time is not a good idea.
 func (c Client) GetAllAssets() ([]string, error) {
-	return nil, nil
-	// resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key,size"}))
-	// if err != nil {
-	// 	return []string{}, err
-	// } else if resp.StatusCode == 404 {
-	// 	return []string{}, ErrThemeNotFound
-	// }
-  //
-	// var r assetsResponse
-	// if err := unmarshalResponse(resp.Body, &r); err != nil {
-	// 	return []string{}, err
-	// }
-  //
-	// filteredAssets := []string{}
-	// sort.Slice(r.Assets, func(i, j int) bool { return r.Assets[i].Key < r.Assets[j].Key })
-	// for index, asset := range r.Assets {
-	// 	if !c.filter.Match(asset.Key) && (index == len(r.Assets)-1 || r.Assets[index+1].Key != asset.Key+".liquid") {
-	// 		filteredAssets = append(filteredAssets, asset.Key)
-	// 	}
-	// }
-  //
-	// return filteredAssets, nil
+	// return nil, nil
+	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key,checksum"}))
+	if err != nil {
+		return []string{}, err
+	} else if resp.StatusCode == 404 {
+		return []string{}, ErrThemeNotFound
+	}
+
+	var r assetsResponse
+	if err := unmarshalResponse(resp.Body, &r); err != nil {
+		return []string{}, err
+	}
+
+	filteredAssets := []string{}
+	sort.Slice(r.Assets, func(i, j int) bool { return r.Assets[i].Key < r.Assets[j].Key })
+	for index, asset := range r.Assets {
+		if !c.filter.Match(asset.Key) && (index == len(r.Assets)-1 || r.Assets[index+1].Key != asset.Key+".liquid") {
+			filteredAssets = append(filteredAssets, asset.Key)
+		}
+	}
+
+	return filteredAssets, nil
 }
 
 // GetAsset will fetch a single remote asset from the remote shopify servers.

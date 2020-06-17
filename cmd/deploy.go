@@ -51,6 +51,7 @@ var deployCmd = &cobra.Command{
 }
 
 func deploy(ctx *cmdutil.Ctx) error {
+	fmt.Printf("deploy...\n")
 	if ctx.Env.ReadOnly {
 		return fmt.Errorf("[%s] environment is readonly", colors.Green(ctx.Env.Name))
 	}
@@ -63,6 +64,7 @@ func deploy(ctx *cmdutil.Ctx) error {
 	var deployGroup sync.WaitGroup
 	ctx.StartProgress(len(assetsActions))
 	for path, op := range assetsActions {
+		fmt.Printf("path: %s\n", path)
 		if path == settingsDataKey {
 			defer perform(ctx, path, op)
 			continue
@@ -79,6 +81,7 @@ func deploy(ctx *cmdutil.Ctx) error {
 }
 
 func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
+	fmt.Printf("generateActions...\n")
 	assetsActions := map[string]file.Op{}
 
 	if len(ctx.Args) == 0 && !ctx.Flags.NoDelete {
@@ -102,6 +105,8 @@ func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 	}
 
 	for _, path := range localAssets {
+		fmt.Printf("setting assectActions for '%s' to Update\n", path)
+		// if checksums match delete assetsActions[path]
 		assetsActions[path] = file.Update
 	}
 	return assetsActions, nil
