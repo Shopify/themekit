@@ -271,20 +271,21 @@ func TestThemeClient_GetAllAssets(t *testing.T) {
 	}
 
 	filtertestcases := []struct {
-		input            string
-		ignore, expected []string
+		input    string
+		ignore   []string
+		expected []Asset
 	}{
 		{
 			input:    `{"assets":[{"key":"templates/foo.json.liquid"},{"key":"templates/foo.json"}]}`,
-			expected: []string{"templates/foo.json.liquid"},
+			expected: []Asset{{Key: "templates/foo.json.liquid"}},
 		},
 		{
 			input:    `{"assets":[{"key":"templates/foo.json"},{"key":"templates/foo.json.liquid"}]}`,
-			expected: []string{"templates/foo.json.liquid"},
+			expected: []Asset{{Key: "templates/foo.json.liquid"}},
 		},
 		{
 			input:    `{"assets":[{"key":"templates/ignore.html.liquid"},{"key":"templates/other.liquid"}]}`,
-			expected: []string{"templates/other.liquid"},
+			expected: []Asset{{Key: "templates/other.liquid"}},
 			ignore:   []string{"templates/ignore.html.liquid"},
 		},
 	}

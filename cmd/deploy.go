@@ -89,8 +89,8 @@ func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 		if err != nil {
 			return assetsActions, err
 		}
-		for _, filename := range remoteFiles {
-			assetsActions[filename] = file.Remove
+		for _, asset := range remoteFiles {
+			assetsActions[asset.Key] = file.Remove
 		}
 	}
 

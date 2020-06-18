@@ -234,25 +234,24 @@ func (c Client) PublishTheme() error {
 // assets are sorted and any ignored files based on your config are filtered out.
 // The assets returned will not have any data, only ID and filenames. This is because
 // fetching all the assets at one time is not a good idea.
-func (c Client) GetAllAssets() ([]string, error) {
-	// return nil, nil
-	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key,checksum"}))
+func (c Client) GetAllAssets() ([]Asset, error) {
+	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key"}))
 	if err != nil {
-		return []string{}, err
+		return []Asset{}, err
 	} else if resp.StatusCode == 404 {
-		return []string{}, ErrThemeNotFound
+		return []Asset{}, ErrThemeNotFound
 	}
 
 	var r assetsResponse
 	if err := unmarshalResponse(resp.Body, &r); err != nil {
-		return []string{}, err
+		return []Asset{}, err
 	}
 
-	filteredAssets := []string{}
+	filteredAssets := []Asset{}
 	sort.Slice(r.Assets, func(i, j int) bool { return r.Assets[i].Key < r.Assets[j].Key })
 	for index, asset := range r.Assets {
 		if !c.filter.Match(asset.Key) && (index == len(r.Assets)-1 || r.Assets[index+1].Key != asset.Key+".liquid") {
-			filteredAssets = append(filteredAssets, asset.Key)
+			filteredAssets = append(filteredAssets, asset)
 		}
 	}
 

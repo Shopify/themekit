@@ -20,7 +20,7 @@ func TestNewTheme(t *testing.T) {
 	client.On("CreateNewTheme", name).Return(shopify.Theme{ID: 42}, nil)
 	conf.On("Set", "development", env.Env{ThemeID: "42"}).Return(nil, nil)
 	conf.On("Save").Return(nil)
-	client.On("GetAllAssets").Return([]string{}, nil)
+	client.On("GetAllAssets").Return([]shopify.Asset{}, nil)
 	err := newTheme(ctx, func(ctx *cmdutil.Ctx) error { return nil })
 	assert.Error(t, err)
 

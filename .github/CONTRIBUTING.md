@@ -38,6 +38,18 @@ Helpful commands
 - `make test` will run linting/vetting/testing to make sure your code is of high standard
 - `make help` will tell you all the commands available to you.
 
+## Test Mocks
+
+If interfaces change, we need to regenerate the mocks with Mockery.
+
+To install Mockery:
+
+`go get github.com/vektra/mockery/...`
+
+Then cd into the directory of the interface and run:
+
+`mockery --name=InterfaceName --output=_mocks`
+
 # Debugging Requests
 
 A man in the middle proxy is the easiest way to introspect the requests that themekit makes. To start using it please do the following.
