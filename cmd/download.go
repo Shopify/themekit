@@ -58,10 +58,17 @@ func download(ctx *cmdutil.Ctx) error {
 }
 
 func filesToDownload(ctx *cmdutil.Ctx) ([]string, error) {
-	allFilenames, err := ctx.Client.GetAllAssets()
+	assets, err := ctx.Client.GetAllAssets()
 	if err != nil {
-		return allFilenames, err
-	} else if len(ctx.Args) <= 0 {
+		return []string{}, err
+	}
+
+	allFilenames := make([]string, len(assets))
+	for i, asset := range assets {
+		allFilenames[i] = asset.Key
+	}
+
+	if len(ctx.Args) <= 0 {
 		return allFilenames, nil
 	}
 

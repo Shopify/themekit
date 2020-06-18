@@ -14,7 +14,7 @@ func TestGet(t *testing.T) {
 	ctx, client, conf, _, _ := createTestCtx()
 	conf.On("Set", "development", env.Env{}).Return(nil, nil)
 	conf.On("Save").Return(nil)
-	client.On("GetAllAssets").Return([]string{}, nil)
+	client.On("GetAllAssets").Return([]shopify.Asset{}, nil)
 	assert.Error(t, getTheme(ctx), "No files to download")
 
 	ctx, _, conf, _, _ = createTestCtx()
@@ -38,7 +38,7 @@ func TestGet(t *testing.T) {
 	ctx.Env.Domain = "my.domain.com"
 	conf.On("Set", "test", env.Env{Domain: "my.domain.com"}).Return(nil, nil)
 	conf.On("Save").Return(nil)
-	client.On("GetAllAssets").Return([]string{}, nil)
+	client.On("GetAllAssets").Return([]shopify.Asset{}, nil)
 	assert.Error(t, getTheme(ctx), "No files to download")
 
 	ctx, client, conf, _, _ = createTestCtx()
