@@ -86,7 +86,7 @@ func (client *HTTPClient) Delete(path string) (*http.Response, error) {
 	return client.do("DELETE", path, nil)
 }
 
-// DoJSON will issue an authenticated json request to shopify.
+// do will issue an authenticated json request to shopify.
 func (client *HTTPClient) do(method, path string, body interface{}) (*http.Response, error) {
 	var jsonData io.Reader
 	if body != nil {
