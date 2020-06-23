@@ -48,7 +48,13 @@ func download(ctx *cmdutil.Ctx) error {
 			} else if err = asset.Write(ctx.Env.Directory); err != nil {
 				ctx.Err("[%s] error writing %s: %s", colors.Green(ctx.Env.Name), colors.Blue(filename), err)
 			} else if ctx.Flags.Verbose {
-				ctx.Log.Printf("[%s] Successfully wrote %s to disk", colors.Green(ctx.Env.Name), colors.Blue(filename))
+				var checksumOutput = ""
+				if asset.Checksum != "" {
+					checksumOutput = "Checksum " + asset.Checksum
+				} else {
+					checksumOutput = "No checksum"
+				}
+				ctx.Log.Printf("[%s] Successfully wrote %s to disk (%s)", colors.Green(ctx.Env.Name), colors.Blue(filename), checksumOutput)
 			}
 		}(filename)
 	}
