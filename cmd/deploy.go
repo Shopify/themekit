@@ -114,8 +114,8 @@ func compileAssetFilenames(assets []shopify.Asset) (problemAssets []string) {
 		filenames = append(filenames, asset.Key)
 	}
 	sort.Strings(filenames)
-	for i := 0; i < len(filenames)-1; i += 2 {
-		if filenames[i]+".liquid" == filenames[i+1] {
+	for i, filename := range filenames {
+		if i < len(filenames)-1 && filename+".liquid" == filenames[i+1] {
 			problemAssets = append(problemAssets, colors.Yellow(filenames[i])+
 				colors.Blue(" conflicts with ")+
 				colors.Yellow(filenames[i+1]))
