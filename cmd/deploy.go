@@ -101,16 +101,21 @@ func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 		return assetsActions, compiledAssetWarning(ctx.Env.Name, problemAssets)
 	}
 
-	for _, path := range localAssets {
+	for _, asset := range localAssets {
+		var path = asset.Key
 		assetsActions[path] = file.Update
 	}
 	return assetsActions, nil
 }
 
-func compileAssetFilenames(filenames []string) (problemAssets []string) {
+func compileAssetFilenames(assets []shopify.Asset) (problemAssets []string) {
+	var filenames []string
+	for _, asset := range assets {
+		filenames = append(filenames, asset.Key)
+	}
 	sort.Strings(filenames)
-	for i := 0; i < len(filenames)-1; i += 2 {
-		if filenames[i]+".liquid" == filenames[i+1] {
+	for i, filename := range filenames {
+		if i < len(filenames)-1 && filename+".liquid" == filenames[i+1] {
 			problemAssets = append(problemAssets, colors.Yellow(filenames[i])+
 				colors.Blue(" conflicts with ")+
 				colors.Yellow(filenames[i+1]))
