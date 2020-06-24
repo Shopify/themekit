@@ -115,13 +115,23 @@ func TestGenerateActions(t *testing.T) {
 }
 
 func TestCompileAssetFilenames(t *testing.T) {
-	input := []string{
+	inputPaths := []string{
 		"assets/app.js",
 		"assets/app.scss",
 		"assets/foo.js.liquid",
 		"assets/app.js.liquid",
 		"assets/foo.js",
 	}
+
+	var input []shopify.Asset
+	ctx, _, _, _, _ := createTestCtx()
+	ctx.Env.Name = "development"
+	ctx.Env.Directory = filepath.Join("_testdata", "badprojectdir")
+	for _, inputPath := range inputPaths {
+		var x, _ = shopify.ReadAsset(ctx.Env, inputPath)
+		input = append(input, x)
+	}
+	
 	expected := []string{
 		colors.Yellow("assets/app.js") + colors.Blue(" conflicts with ") + colors.Yellow("assets/app.js.liquid"),
 	}
