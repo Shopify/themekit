@@ -251,7 +251,7 @@ func TestThemeClient_GetAllAssets(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Get", "/admin/themes/123/assets.json?fields=key")
+		expectation := m.On("Get", "/admin/themes/123/assets.json?fields=key%2Cchecksum")
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
@@ -294,7 +294,7 @@ func TestThemeClient_GetAllAssets(t *testing.T) {
 		m := new(mocks.HttpAdapter)
 		client, _ := NewClient(&env.Env{ThemeID: "123", IgnoredFiles: testcase.ignore})
 		client.http = m
-		m.On("Get", "/admin/themes/123/assets.json?fields=key").Return(jsonResponse(testcase.input, 200), nil)
+		m.On("Get", "/admin/themes/123/assets.json?fields=key%2Cchecksum").Return(jsonResponse(testcase.input, 200), nil)
 		assets, err := client.GetAllAssets()
 		assert.Nil(t, err)
 		assert.Equal(t, testcase.expected, assets)

@@ -46,7 +46,7 @@ func download(ctx *cmdutil.Ctx) error {
 			defer downloadGroup.Done()
 
 			localAsset, _ := shopify.ReadAsset(ctx.Env, requestAsset.Key)
-			if localAsset.Checksum == requestAsset.Checksum {
+			if localAsset.Checksum == requestAsset.Checksum && requestAsset.Checksum != "" {
 				ctx.Log.Printf("[%s] Skipped %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
 			} else if asset, err := ctx.Client.GetAsset(requestAsset.Key); err != nil {
 				ctx.Err("[%s] error downloading %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
@@ -71,7 +71,7 @@ func download(ctx *cmdutil.Ctx) error {
 func filesToDownload(ctx *cmdutil.Ctx) ([]shopify.Asset, error) {
 	assets, err := ctx.Client.GetAllAssets()
 	if err != nil {
-		return assets, err
+		return []shopify.Asset{}, err
 	}
 
 	if len(ctx.Args) <= 0 {
