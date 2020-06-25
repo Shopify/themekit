@@ -11,7 +11,16 @@ import (
 )
 
 func TestDownload(t *testing.T) {
-	allAssets := []shopify.Asset{{Key: "assets/logo.png"}, {Key: "templates/customers/test.liquid"}, {Key: "config/test.liquid"}, {Key: "layout/test.liquid"}, {Key: "snippets/test.liquid"}, {Key: "templates/test.liquid"}, {Key: "locales/test.liquid"}, {Key: "sections/test.liquid"}}
+	allAssets := []shopify.Asset{
+		{Key: "assets/logo.png"},
+		{Key: "templates/customers/test.liquid"},
+		{Key: "config/test.liquid"},
+		{Key: "layout/test.liquid"},
+		{Key: "snippets/test.liquid"},
+		{Key: "templates/test.liquid"},
+		{Key: "locales/test.liquid"},
+		{Key: "sections/test.liquid"},
+	}
 
 	ctx, client, _, _, stdErr := createTestCtx()
 	client.On("GetAllAssets").Return(allAssets, nil)
