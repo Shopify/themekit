@@ -80,15 +80,17 @@ func deploy(ctx *cmdutil.Ctx) error {
 
 func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 	assetsActions := map[string]file.Op{}
+	pathsToChecksums := map[string]string{}
 
-	if len(ctx.Args) == 0 && !ctx.Flags.NoDelete {
-		remoteFiles, err := ctx.Client.GetAllAssets()
-		if err != nil {
-			return assetsActions, err
+	remoteFiles, err := ctx.Client.GetAllAssets()
+	if err != nil {
+		return assetsActions, err
+	}
+	for _, remoteAsset := range remoteFiles {
+		if len(ctx.Args) == 0 && !ctx.Flags.NoDelete {
+			assetsActions[remoteAsset.Key] = file.Remove
 		}
-		for _, asset := range remoteFiles {
-			assetsActions[asset.Key] = file.Remove
-		}
+		pathsToChecksums[remoteAsset.Key] = remoteAsset.Checksum
 	}
 
 	localAssets, err := shopify.FindAssets(ctx.Env, ctx.Args...)
@@ -103,7 +105,11 @@ func generateActions(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
 
 	for _, asset := range localAssets {
 		var path = asset.Key
-		assetsActions[path] = file.Update
+		if asset.Checksum != "" && (asset.Checksum == pathsToChecksums[asset.Key]) {
+			assetsActions[path] = file.Skip
+		} else {
+			assetsActions[path] = file.Update
+		}
 	}
 	return assetsActions, nil
 }

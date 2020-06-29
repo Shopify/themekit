@@ -18,6 +18,8 @@ const (
 	Update Op = iota
 	// Remove is a file op where the file is removed
 	Remove
+	// Skip is a file op where the remote file matches the local file so is not transferred
+	Skip
 	filepathSplit = " -> "
 )
 
