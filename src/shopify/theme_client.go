@@ -235,7 +235,7 @@ func (c Client) PublishTheme() error {
 // The assets returned will not have any data, only ID and filenames. This is because
 // fetching all the assets at one time is not a good idea.
 func (c Client) GetAllAssets() ([]Asset, error) {
-	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key"}))
+	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key,checksum"}))
 	if err != nil {
 		return []Asset{}, err
 	} else if resp.StatusCode == 404 {

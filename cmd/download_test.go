@@ -11,7 +11,16 @@ import (
 )
 
 func TestDownload(t *testing.T) {
-	allAssets := []shopify.Asset{{Key: "assets/logo.png"}, {Key: "templates/customers/test.liquid"}, {Key: "config/test.liquid"}, {Key: "layout/test.liquid"}, {Key: "snippets/test.liquid"}, {Key: "templates/test.liquid"}, {Key: "locales/test.liquid"}, {Key: "sections/test.liquid"}}
+	allAssets := []shopify.Asset{
+		{Key: "assets/logo.png"},
+		{Key: "templates/customers/test.liquid"},
+		{Key: "config/test.liquid"},
+		{Key: "layout/test.liquid"},
+		{Key: "snippets/test.liquid"},
+		{Key: "templates/test.liquid"},
+		{Key: "locales/test.liquid"},
+		{Key: "sections/test.liquid"},
+	}
 
 	ctx, client, _, _, stdErr := createTestCtx()
 	client.On("GetAllAssets").Return(allAssets, nil)
@@ -36,22 +45,19 @@ func TestDownload(t *testing.T) {
 
 func TestFilesToDownload(t *testing.T) {
 	allAssets := []shopify.Asset{{Key: "assets/logo.png"}, {Key: "templates/customers/test.liquid"}, {Key: "config/test.liquid"}, {Key: "layout/test.liquid"}, {Key: "snippets/test.liquid"}, {Key: "templates/test.liquid"}, {Key: "locales/test.liquid"}, {Key: "sections/test.liquid"}}
-	allFilenames := []string{}
-	for _, asset := range allAssets {
-		allFilenames = append(allFilenames, asset.Key)
-	}
 
 	testcases := []struct {
-		err       string
-		respErr   error
-		args, ret []string
+		err     string
+		respErr error
+		args    []string
+		ret     []shopify.Asset
 	}{
-		{ret: allFilenames},
-		{args: []string{"assets/logo.png"}, ret: []string{"assets/logo.png"}},
-		{args: []string{"assets/*"}, ret: []string{"assets/logo.png"}},
-		{args: []string{"templates"}, ret: []string{"templates/test.liquid"}},
-		{args: []string{"assets/nope.png"}, ret: []string{}, err: "No file paths matched the inputted arguments"},
-		{args: []string{"assets/nope.png"}, ret: []string{}, respErr: fmt.Errorf("server error"), err: "server error"},
+		{ret: allAssets},
+		{args: []string{"assets/logo.png"}, ret: []shopify.Asset{{Key: "assets/logo.png"}}},
+		{args: []string{"assets/*"}, ret: []shopify.Asset{{Key: "assets/logo.png"}}},
+		{args: []string{"templates"}, ret: []shopify.Asset{{Key: "templates/test.liquid"}}},
+		{args: []string{"assets/nope.png"}, ret: []shopify.Asset{}, err: "No file paths matched the inputted arguments"},
+		{args: []string{"assets/nope.png"}, ret: []shopify.Asset{}, respErr: fmt.Errorf("server error"), err: "server error"},
 	}
 
 	for i, testcase := range testcases {

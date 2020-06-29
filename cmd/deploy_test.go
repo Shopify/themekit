@@ -115,15 +115,17 @@ func TestGenerateActions(t *testing.T) {
 }
 
 func TestCompileAssetFilenames(t *testing.T) {
-	input := []string{
-		"assets/app.js",
-		"assets/app.scss",
-		"assets/foo.js.liquid",
-		"assets/app.js.liquid",
-		"assets/foo.js",
+	input := []shopify.Asset{
+		{Key: "assets/app.js"},
+		{Key: "assets/app.scss"},
+		{Key: "assets/foo.js.liquid"},
+		{Key: "assets/app.js.liquid"},
+		{Key: "assets/foo.js"},
 	}
+
 	expected := []string{
 		colors.Yellow("assets/app.js") + colors.Blue(" conflicts with ") + colors.Yellow("assets/app.js.liquid"),
+		colors.Yellow("assets/foo.js") + colors.Blue(" conflicts with ") + colors.Yellow("assets/foo.js.liquid"),
 	}
 	assert.Equal(t, expected, compileAssetFilenames(input))
 }

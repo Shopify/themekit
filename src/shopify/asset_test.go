@@ -90,7 +90,6 @@ func TestAsset_Contents(t *testing.T) {
 }
 
 func TestLoadAssetsFromDirectory(t *testing.T) {
-	root := filepath.Join("_testdata", "project")
 	ignoreNone := func(path string) bool { return strings.Contains(path, ".gitkeep") }
 	selectOne := func(path string) bool { return path != "assets/application.js" }
 
@@ -105,8 +104,9 @@ func TestLoadAssetsFromDirectory(t *testing.T) {
 		{path: "nope", ignore: ignoreNone, count: 0, err: " "},
 	}
 
+	e := &env.Env{Directory: filepath.Join("_testdata", "project")}
 	for _, testcase := range testcases {
-		assets, err := loadAssetsFromDirectory(root, testcase.path, testcase.ignore)
+		assets, err := loadAssetsFromDirectory(e, testcase.path, testcase.ignore)
 		if testcase.err == "" {
 			assert.Nil(t, err)
 			assert.Equal(t, testcase.count, len(assets))
@@ -133,7 +133,6 @@ func TestReadAsset(t *testing.T) {
 		// `app_alternate.json` has the same content but different whitespace. Since we normalise JSON before persisting, it has the same checksum.
 		{input: filepath.Join("assets", "app_alternate.json"), expected: Asset{Key: "assets/app_alternate.json", Value: "{\"testing\":\"data\"}", Checksum: "31409bedd9f5852166c0a4a9b874f1a7"}},
 		{input: filepath.Join("assets", "template.liquid"), expected: Asset{Key: "assets/template.liquid", Value: "{% comment %}\n  The contents\n{% endcomment %}\n", Checksum: "8bed50f07f1e8d52b07300e983c21a86"}},
-
 	}
 
 	for _, testcase := range testcases {

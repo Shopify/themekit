@@ -41,28 +41,28 @@ func ReadAsset(e *env.Env, filename string) (Asset, error) {
 // FindAssets will load all assets for paths passed in, this also means that it will
 // read directories recursively. If no paths are passed in then the whole project
 // directory will be read
-func FindAssets(e *env.Env, paths ...string) (assets []string, err error) {
+func FindAssets(e *env.Env, paths ...string) (assets []Asset, err error) {
 	filter, err := file.NewFilter(e.Directory, e.IgnoredFiles, e.Ignores)
 	if err != nil {
-		return []string{}, err
+		return []Asset{}, err
 	}
 
 	if len(paths) == 0 {
-		return loadAssetsFromDirectory(e.Directory, "", filter.Match)
+		return loadAssetsFromDirectory(e, "", filter.Match)
 	}
 
 	for _, path := range paths {
 		asset, err := readAsset(e.Directory, path)
 		if err == ErrAssetIsDir {
-			dirAssets, err := loadAssetsFromDirectory(e.Directory, path, filter.Match)
+			dirAssets, err := loadAssetsFromDirectory(e, path, filter.Match)
 			if err != nil {
-				return []string{}, err
+				return []Asset{}, err
 			}
 			assets = append(assets, dirAssets...)
 		} else if err != nil {
-			return []string{}, err
+			return []Asset{}, err
 		} else if !filter.Match(asset.Key) {
-			assets = append(assets, asset.Key)
+			assets = append(assets, asset)
 		}
 	}
 
@@ -125,7 +125,8 @@ func assetsToFilenames(assets []Asset) []string {
 	return filenames
 }
 
-func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (assets []string, err error) {
+func loadAssetsFromDirectory(e *env.Env, dir string, ignore func(path string) bool) (assets []Asset, err error) {
+	var root = e.Directory
 	err = filepath.Walk(filepath.Join(root, dir), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -139,7 +140,8 @@ func loadAssetsFromDirectory(root, dir string, ignore func(path string) bool) (a
 		}
 		assetKey = filepath.ToSlash(assetKey)
 		if !ignore(assetKey) {
-			assets = append(assets, assetKey)
+			var asset, _ = ReadAsset(e, assetKey) // TODO handle error
+			assets = append(assets, asset)
 		}
 		return nil
 	})
