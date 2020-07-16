@@ -79,13 +79,21 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 func perform(ctx *cmdutil.Ctx, path string, op file.Op) {
 	defer ctx.DoneTask()
 
-	if op == file.Remove {
+	switch op {
+	case file.Skip:
+		localAsset, _ := shopify.ReadAsset(ctx.Env, path)
+
+		if ctx.Flags.Verbose {
+			checksumOutput := "Checksum: " + localAsset.Checksum
+			ctx.Log.Printf("[%s] Skipping %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(path), checksumOutput)
+		}
+	case file.Remove:
 		if err := ctx.Client.DeleteAsset(shopify.Asset{Key: path}); err != nil {
 			ctx.Err("[%s] (%s) %s", colors.Green(ctx.Env.Name), colors.Blue(path), err)
 		} else if ctx.Flags.Verbose {
 			ctx.Log.Printf("[%s] Deleted %s", colors.Green(ctx.Env.Name), colors.Blue(path))
 		}
-	} else {
+	default:
 		assetLimitSemaphore <- struct{}{}
 		defer func() { <-assetLimitSemaphore }()
 

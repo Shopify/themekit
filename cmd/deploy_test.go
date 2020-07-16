@@ -14,41 +14,76 @@ import (
 	"github.com/Shopify/themekit/src/shopify"
 )
 
-func TestUpload(t *testing.T) {
+func TestUploadSingleFile(t *testing.T) {
 	ctx, client, _, _, _ := createTestCtx()
 	ctx.Args = []string{"templates/layout.liquid"}
 	ctx.Flags.NoDelete = true
+	client.On("GetAllAssets").Return([]shopify.Asset{{Key: "templates/layout.liquid"}}, nil)
 	client.On("UpdateAsset", shopify.Asset{Key: "templates/layout.liquid"}).Return(nil)
 	err := deploy(ctx)
 	assert.NotNil(t, err)
+}
 
-	ctx, client, _, _, _ = createTestCtx()
+func TestUploadWithReadOnlyOption(t *testing.T) {
+	ctx, client, _, _, _ := createTestCtx()
 	ctx.Args = []string{"templates/layout.liquid"}
 	ctx.Flags.NoDelete = true
 	ctx.Env.ReadOnly = true
 	client.On("UpdateAsset", shopify.Asset{Key: "templates/layout.liquid"}).Return(nil)
-	err = deploy(ctx)
+	err := deploy(ctx)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "environment is readonly")
 	}
+}
 
+func TestUploadWithVerboseOptions(t *testing.T) {
 	ctx, client, _, stdOut, _ := createTestCtx()
 	ctx.Args = []string{"assets/app.js"}
 	ctx.Flags.NoDelete = true
 	ctx.Env.Directory = "_testdata/projectdir"
 	ctx.Flags.Verbose = true
+	client.On("GetAllAssets").Return([]shopify.Asset{{Key: "assets/app.js"}}, nil)
 	// This checksum corresponds to a zero-byte file
 	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js", Checksum: "d41d8cd98f00b204e9800998ecf8427e"}).Return(nil)
-	err = deploy(ctx)
+	err := deploy(ctx)
 	assert.Nil(t, err)
 	assert.Contains(t, stdOut.String(), "Updated assets/app.js")
+}
 
-	ctx, client, _, stdOut, _ = createTestCtx()
+func TestUploadAllFiles(t *testing.T) {
+	ctx, client, _, stdOut, _ := createTestCtx()
 	ctx.Env.Directory = "_testdata/projectdir"
 	ctx.Flags.Verbose = true
 	ctx.Flags.NoDelete = true
+	client.On("GetAllAssets").Return([]shopify.Asset{{Key: "config/settings_data.json"}}, nil)
 	client.On("UpdateAsset", mock.MatchedBy(func(a shopify.Asset) bool { return true })).Return(nil)
-	err = deploy(ctx)
+	err := deploy(ctx)
+	assert.Nil(t, err)
+	assert.Contains(t, stdOut.String(), "Updated config/settings_data.json")
+}
+
+func TestUploadForSkipFileWhenChecksumsMatch(t *testing.T) {
+	ctx, client, _, stdOut, _ := createTestCtx()
+	ctx.Env.Directory = "_testdata/projectdir"
+	ctx.Flags.Verbose = true
+	ctx.Flags.NoDelete = true
+	client.On("GetAllAssets").Return([]shopify.Asset{{Key: "config/settings_data.json", Checksum: "d41d8cd98f00b204e9800998ecf8427e"}}, nil)
+	// the _testdirectory contains two assets. We expect one to be uploaded, one to be skipped.
+	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js", Checksum: "d41d8cd98f00b204e9800998ecf8427e"}).Return(nil)
+	err := deploy(ctx)
+	assert.Nil(t, err)
+	assert.Contains(t, stdOut.String(), "Skipping config/settings_data.json")
+	assert.Contains(t, stdOut.String(), "Updated assets/app.js")
+}
+
+func TestUploadForDoNotSkipWhenChecksumsDiffer(t *testing.T) {
+	ctx, client, _, stdOut, _ := createTestCtx()
+	ctx.Env.Directory = "_testdata/projectdir"
+	ctx.Flags.Verbose = true
+	ctx.Flags.NoDelete = true
+	client.On("GetAllAssets").Return([]shopify.Asset{{Key: "config/settings_data.json", Checksum: "abc123"}}, nil)
+	client.On("UpdateAsset", mock.MatchedBy(func(a shopify.Asset) bool { return true })).Return(nil)
+	err := deploy(ctx)
 	assert.Nil(t, err)
 	assert.Contains(t, stdOut.String(), "Updated config/settings_data.json")
 }
