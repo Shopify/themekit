@@ -60,6 +60,14 @@ func deploy(ctx *cmdutil.Ctx) error {
 		return err
 	}
 
+	updateCount := 0
+	skipCount := 0
+	removeCount := 0
+
+	defer func() {
+		fmt.Printf("\nUpdated: %d, Removed: %d, Skipped: %d\n", updateCount, removeCount, skipCount)
+	}()
+
 	var deployGroup sync.WaitGroup
 	ctx.StartProgress(len(assetsActions))
 	for path, op := range assetsActions {
@@ -72,6 +80,15 @@ func deploy(ctx *cmdutil.Ctx) error {
 			defer deployGroup.Done()
 			perform(ctx, path, op)
 		}(path, op)
+
+		switch op {
+		case file.Update:
+			updateCount++
+		case file.Skip:
+			skipCount++
+		case file.Remove:
+			removeCount++
+		}
 	}
 
 	deployGroup.Wait()
