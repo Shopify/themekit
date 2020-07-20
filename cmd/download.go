@@ -38,6 +38,8 @@ func download(ctx *cmdutil.Ctx) error {
 		return fmt.Errorf("No files to download")
 	}
 
+	skipCount := 0
+	errorCount := 0
 	ctx.StartProgress(len(assets))
 	for _, asset := range assets {
 		downloadGroup.Add(1)
@@ -47,12 +49,15 @@ func download(ctx *cmdutil.Ctx) error {
 
 			localAsset, _ := shopify.ReadAsset(ctx.Env, requestAsset.Key)
 			if localAsset.Checksum == requestAsset.Checksum && requestAsset.Checksum != "" {
+				skipCount++
 				if ctx.Flags.Verbose {
-			  	ctx.Log.Printf("[%s] Skipped %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
-			  }
+					ctx.Log.Printf("[%s] Skipped %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
+				}
 			} else if asset, err := ctx.Client.GetAsset(requestAsset.Key); err != nil {
 				ctx.Err("[%s] error downloading %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
+				errorCount++
 			} else if err = asset.Write(ctx.Env.Directory); err != nil {
+				errorCount++
 				ctx.Err("[%s] error writing %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
 			} else if ctx.Flags.Verbose {
 				var checksumOutput = ""
@@ -67,6 +72,12 @@ func download(ctx *cmdutil.Ctx) error {
 	}
 
 	downloadGroup.Wait()
+	downloadCount := len(assets) - skipCount - errorCount
+	defer func() {
+		if ctx.Flags.Verbose {
+			ctx.Log.Printf("Downloaded %d, Skipped %d, Errored %d", downloadCount, skipCount, errorCount)
+		}
+	}()
 	return nil
 }
 
