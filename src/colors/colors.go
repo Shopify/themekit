@@ -20,4 +20,6 @@ var (
 	ColorStdOut = log.New(colorable.NewColorableStdout(), "", 0)
 	// ColorStdErr is a wrapped std err that allows colors
 	ColorStdErr = log.New(colorable.NewColorableStderr(), "", 0)
+	// BrightBlack is the color Black
+	BrightBlack = color.New(color.FgBlack).SprintFunc()
 )

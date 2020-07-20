@@ -85,7 +85,7 @@ func perform(ctx *cmdutil.Ctx, path string, op file.Op) {
 
 		if ctx.Flags.Verbose {
 			checksumOutput := "Checksum: " + localAsset.Checksum
-			ctx.Log.Printf("[%s] Skipping %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(path), checksumOutput)
+			ctx.Log.Printf("[%s] %s %s (%s)", colors.Green(ctx.Env.Name), colors.BrightBlack("Skipped"), colors.Blue(path), checksumOutput)
 		}
 	case file.Remove:
 		if err := ctx.Client.DeleteAsset(shopify.Asset{Key: path}); err != nil {
