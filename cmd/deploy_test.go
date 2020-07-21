@@ -72,7 +72,7 @@ func TestUploadForSkipFileWhenChecksumsMatch(t *testing.T) {
 	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js", Checksum: "d41d8cd98f00b204e9800998ecf8427e"}).Return(nil)
 	err := deploy(ctx)
 	assert.Nil(t, err)
-	assert.Contains(t, stdOut.String(), "Skipping config/settings_data.json")
+	assert.Contains(t, stdOut.String(), "Skipped config/settings_data.json")
 	assert.Contains(t, stdOut.String(), "Updated assets/app.js")
 }
 
