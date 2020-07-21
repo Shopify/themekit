@@ -4,12 +4,18 @@ import (
 	"fmt"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/src/cmdutil"
 	"github.com/Shopify/themekit/src/colors"
 	"github.com/Shopify/themekit/src/shopify"
+)
+
+var (
+	skipCount  int32
+	errorCount int32
 )
 
 var downloadCmd = &cobra.Command{
@@ -38,8 +44,6 @@ func download(ctx *cmdutil.Ctx) error {
 		return fmt.Errorf("No files to download")
 	}
 
-	skipCount := 0
-	errorCount := 0
 	ctx.StartProgress(len(assets))
 	for _, asset := range assets {
 		downloadGroup.Add(1)
@@ -49,15 +53,15 @@ func download(ctx *cmdutil.Ctx) error {
 
 			localAsset, _ := shopify.ReadAsset(ctx.Env, requestAsset.Key)
 			if localAsset.Checksum == requestAsset.Checksum && requestAsset.Checksum != "" {
-				skipCount++
+				atomic.AddInt32(&skipCount, 1)
 				if ctx.Flags.Verbose {
 					ctx.Log.Printf("[%s] Skipped %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
 				}
 			} else if asset, err := ctx.Client.GetAsset(requestAsset.Key); err != nil {
 				ctx.Err("[%s] error downloading %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
-				errorCount++
+				atomic.AddInt32(&errorCount, 1)
 			} else if err = asset.Write(ctx.Env.Directory); err != nil {
-				errorCount++
+				atomic.AddInt32(&errorCount, 1)
 				ctx.Err("[%s] error writing %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
 			} else if ctx.Flags.Verbose {
 				var checksumOutput = ""
@@ -72,7 +76,7 @@ func download(ctx *cmdutil.Ctx) error {
 	}
 
 	downloadGroup.Wait()
-	downloadCount := len(assets) - skipCount - errorCount
+	downloadCount := int32(len(assets)) - skipCount - errorCount
 	defer func() {
 		if ctx.Flags.Verbose {
 			ctx.Log.Printf("Downloaded %d, Skipped %d, Errored %d", downloadCount, skipCount, errorCount)
