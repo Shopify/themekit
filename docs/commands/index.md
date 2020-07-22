@@ -76,7 +76,7 @@ could enter the following command:
 theme download templates/404.liquid templates/article.liquid
 ```
 
-As with `deploy`, unchanged files will be skipped.
+Similar to the `deploy` command, Theme Kit will skip downloading any unchanged files.
 
 ## Get
 Get can be used to setup your theme on your local machine. It will both create
