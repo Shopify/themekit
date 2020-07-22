@@ -55,7 +55,7 @@ func download(ctx *cmdutil.Ctx) error {
 			if localAsset.Checksum == requestAsset.Checksum && requestAsset.Checksum != "" {
 				atomic.AddInt32(&skipCount, 1)
 				if ctx.Flags.Verbose {
-					ctx.Log.Printf("[%s] Skipped %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
+					ctx.Log.Printf("[%s] No Changes %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
 				}
 			} else if asset, err := ctx.Client.GetAsset(requestAsset.Key); err != nil {
 				ctx.Err("[%s] error downloading %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
@@ -79,7 +79,7 @@ func download(ctx *cmdutil.Ctx) error {
 	downloadCount := int32(len(assets)) - skipCount - errorCount
 	defer func() {
 		if ctx.Flags.Verbose {
-			ctx.Log.Printf("Downloaded %d, Skipped %d, Errored %d", downloadCount, skipCount, errorCount)
+			ctx.Log.Printf("Downloaded: %d, No Changes: %d, Errored: %d", downloadCount, skipCount, errorCount)
 		}
 	}()
 	return nil

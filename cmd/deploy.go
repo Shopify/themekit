@@ -66,7 +66,7 @@ func deploy(ctx *cmdutil.Ctx) error {
 
 	defer func() {
 		if ctx.Flags.Verbose {
-			fmt.Printf("Updated: %d, Removed: %d, Skipped: %d\n", updateCount, removeCount, skipCount)
+			fmt.Printf("Updated: %d, Removed: %d, No Changes: %d\n", updateCount, removeCount, skipCount)
 		}
 	}()
 
