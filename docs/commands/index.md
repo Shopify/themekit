@@ -60,6 +60,9 @@ disk will be upload to Shopify.
 Deploy can be used without any filenames and it will replace the whole theme. If
 some filenames are provided to replace then only those files will be replaced.
 
+If a file is unchanged from the remote version, it will be skipped to save time.
+The is done by calculating a checksum for each asset for comparison.
+
 |**Optional Flags**||
 |`-a`|`--allenvs` | Will run this command for each environment in your config file.
 |`-n`|`--nodelete`| will run deploy without removing files from shopify.
@@ -73,6 +76,8 @@ could enter the following command:
 ```bash
 theme download templates/404.liquid templates/article.liquid
 ```
+
+As with `deploy`, unchanged files will be skipped.
 
 ## Get
 Get can be used to setup your theme on your local machine. It will both create
