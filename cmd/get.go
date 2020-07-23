@@ -28,6 +28,10 @@ var getCmd = &cobra.Command{
  For more documentation please see http://shopify.github.io/themekit/commands/#get
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// This is a hack to get around theme ID validation for the list operation which doesnt need it
+		if flags.List {
+			flags.ThemeID = "1337"
+		}
 		return cmdutil.ForDefaultClient(flags, args, getTheme)
 	},
 }

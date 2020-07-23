@@ -55,7 +55,7 @@ func TestCreateCtx(t *testing.T) {
 	client.On("GetShop").Return(shopify.Shop{}, nil)
 	client.On("Themes").Return([]shopify.Theme{{ID: 65443, Role: "unpublished"}, {ID: 1234, Role: "main"}}, nil)
 	_, err = createCtx(factory, env.Conf{}, e, Flags{DisableIgnore: true}, []string{}, nil, true)
-	assert.Nil(t, err)
+	assert.Equal(t, ErrLiveTheme, err)
 	assert.Equal(t, e.ThemeID, "1234")
 }
 
