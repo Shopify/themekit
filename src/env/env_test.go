@@ -45,13 +45,13 @@ func TestEnv_Validate(t *testing.T) {
 		notwindows bool
 	}{
 		{env: Env{Password: "file", ThemeID: "123", Domain: "test.myshopify.com"}},
-		{env: Env{Password: "file", ThemeID: "live", Domain: "test.myshopify.com"}},
+		{env: Env{Password: "file", ThemeID: "live", Domain: "test.myshopify.com"}, err: "invalid theme_id"},
 		{env: Env{ThemeID: "123", Domain: "test.myshopify.com"}, err: "missing password"},
 		{env: Env{Password: "test", ThemeID: "123", Domain: "test.nope.com"}, err: "invalid store domain"},
 		{env: Env{Password: "test", ThemeID: "123"}, err: "missing store domain"},
-		{env: Env{Password: "test", Domain: "test.myshopify.com"}},
+		{env: Env{Password: "test", Domain: "test.myshopify.com"}, err: "missing theme_id"},
 		{env: Env{Password: "file", ThemeID: "abc", Domain: "test.myshopify.com"}, err: "invalid theme_id"},
-		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "symlink_projectdir")}},
+		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", ThemeID: "123", Directory: filepath.Join("_testdata", "symlink_projectdir")}},
 		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "bad_symlink")}, err: "invalid project symlink"},
 		{notwindows: true, env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: filepath.Join("_testdata", "symlink_file")}, err: "is not a directory"},
 		{env: Env{Password: "abc123", Domain: "test.myshopify.com", Directory: "not_a_dir"}, err: "invalid project directory"},

@@ -96,7 +96,7 @@ func TestCtx_DoneTask(t *testing.T) {
 func TestGenerateContexts(t *testing.T) {
 	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
 	_, err := generateContexts(factory, nil, Flags{Environments: []string{"development"}}, []string{})
-	assert.EqualError(t, err, "invalid environment [development]: (missing store domain,missing password)")
+	assert.EqualError(t, err, "invalid environment [development]: (missing theme_id,missing store domain,missing password)")
 
 	client := new(mocks.ShopifyClient)
 	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
@@ -109,7 +109,7 @@ func TestGenerateContexts(t *testing.T) {
 	client = new(mocks.ShopifyClient)
 	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
 	_, err = generateContexts(factory, nil, Flags{ConfigPath: "_testdata/config.yml", Environments: []string{"nope"}}, []string{})
-	assert.EqualError(t, err, "invalid environment [nope]: (missing store domain,missing password)")
+	assert.EqualError(t, err, "invalid environment [nope]: (missing theme_id,missing store domain,missing password)")
 
 	client = new(mocks.ShopifyClient)
 	factory = func(*env.Env) (shopifyClient, error) { return client, fmt.Errorf("not today") }
@@ -302,7 +302,7 @@ func TestForDefaultClient(t *testing.T) {
 
 	factory := func(*env.Env) (shopifyClient, error) { return nil, nil }
 	err := forDefaultClient(factory, Flags{}, []string{}, safeHandler)
-	assert.EqualError(t, err, "invalid environment [development]: (missing store domain,missing password)")
+	assert.EqualError(t, err, "invalid environment [development]: (missing theme_id,missing store domain,missing password)")
 
 	client := new(mocks.ShopifyClient)
 	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
@@ -315,19 +315,19 @@ func TestForDefaultClient(t *testing.T) {
 	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
 	client.On("GetShop").Return(shopify.Shop{}, nil)
 	client.On("Themes").Return([]shopify.Theme{}, nil)
-	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, safeHandler)
+	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123", ThemeID: "123"}, []string{}, safeHandler)
 	assert.Nil(t, err)
 
 	client = new(mocks.ShopifyClient)
 	factory = func(*env.Env) (shopifyClient, error) { return client, fmt.Errorf("server err") }
-	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, safeHandler)
+	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123", ThemeID: "123"}, []string{}, safeHandler)
 	assert.EqualError(t, err, "server err")
 
 	client = new(mocks.ShopifyClient)
 	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
 	client.On("GetShop").Return(shopify.Shop{}, nil)
 	client.On("Themes").Return([]shopify.Theme{}, nil)
-	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123"}, []string{}, errHandler)
+	err = forDefaultClient(factory, Flags{Domain: "shop.myshopify.com", Password: "123", ThemeID: "123"}, []string{}, errHandler)
 	assert.EqualError(t, err, gandalfErr.Error())
 
 	stdErr := bytes.NewBufferString("")
