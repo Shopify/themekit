@@ -83,10 +83,10 @@ type reqErr struct {
 }
 
 type httpAdapter interface {
-	Get(string) (*http.Response, error)
-	Post(string, interface{}) (*http.Response, error)
-	Put(string, interface{}) (*http.Response, error)
-	Delete(string) (*http.Response, error)
+	Get(string, map[string]string) (*http.Response, error)
+	Post(string, interface{}, map[string]string) (*http.Response, error)
+	Put(string, interface{}, map[string]string) (*http.Response, error)
+	Delete(string, map[string]string) (*http.Response, error)
 }
 
 // Client is the interactor with the shopify server. All actions are processed
@@ -126,7 +126,7 @@ func NewClient(e *env.Env) (Client, error) {
 
 // GetShop will return information for the shop you are working on
 func (c Client) GetShop() (Shop, error) {
-	resp, err := c.http.Get("/meta.json")
+	resp, err := c.http.Get("/meta.json", nil)
 	if err != nil {
 		return Shop{}, err
 	} else if resp.StatusCode == 404 {
@@ -143,7 +143,7 @@ func (c Client) GetShop() (Shop, error) {
 
 // Themes will return all the available themes on a domain.
 func (c Client) Themes() ([]Theme, error) {
-	resp, err := c.http.Get("/admin/themes.json")
+	resp, err := c.http.Get("/admin/themes.json", nil)
 	if err != nil {
 		return []Theme{}, err
 	}
@@ -163,7 +163,7 @@ func (c *Client) CreateNewTheme(name string) (theme Theme, err error) {
 		return Theme{}, ErrThemeNameRequired
 	}
 
-	resp, err := c.http.Post("/admin/themes.json", map[string]interface{}{"theme": Theme{Name: name}})
+	resp, err := c.http.Post("/admin/themes.json", map[string]interface{}{"theme": Theme{Name: name}}, nil)
 	if err != nil {
 		return Theme{}, err
 	}
@@ -187,7 +187,7 @@ func (c Client) GetInfo() (Theme, error) {
 		return Theme{}, ErrInfoWithoutThemeID
 	}
 
-	resp, err := c.http.Get(fmt.Sprintf("/admin/themes/%s.json", c.themeID))
+	resp, err := c.http.Get(fmt.Sprintf("/admin/themes/%s.json", c.themeID), nil)
 	if err != nil {
 		return Theme{}, err
 	} else if resp.StatusCode == 404 {
@@ -211,6 +211,7 @@ func (c Client) PublishTheme() error {
 	resp, err := c.http.Put(
 		fmt.Sprintf("/admin/themes/%s.json", c.themeID),
 		map[string]Theme{"theme": {Role: "main"}},
+		nil,
 	)
 	if err != nil {
 		return err
@@ -235,7 +236,7 @@ func (c Client) PublishTheme() error {
 // The assets returned will not have any data, only ID and filenames. This is because
 // fetching all the assets at one time is not a good idea.
 func (c Client) GetAllAssets() ([]Asset, error) {
-	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key,checksum"}))
+	resp, err := c.http.Get(c.assetPath(map[string]string{"fields": "key,checksum"}), nil)
 	if err != nil {
 		return []Asset{}, err
 	} else if resp.StatusCode == 404 {
@@ -260,7 +261,7 @@ func (c Client) GetAllAssets() ([]Asset, error) {
 
 // GetAsset will fetch a single remote asset from the remote shopify servers.
 func (c Client) GetAsset(filename string) (Asset, error) {
-	resp, err := c.http.Get(c.assetPath(map[string]string{"asset[key]": filename}))
+	resp, err := c.http.Get(c.assetPath(map[string]string{"asset[key]": filename}), nil)
 	if err != nil {
 		return Asset{}, err
 	} else if resp.StatusCode == 404 {
@@ -286,7 +287,7 @@ func (c Client) CreateAsset(asset Asset) error {
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
 func (c Client) UpdateAsset(asset Asset) error {
-	resp, err := c.http.Put(c.assetPath(map[string]string{}), map[string]Asset{"asset": asset})
+	resp, err := c.http.Put(c.assetPath(map[string]string{}), map[string]Asset{"asset": asset}, nil)
 	if err != nil {
 		return err
 	} else if resp.StatusCode == 404 {
@@ -317,7 +318,7 @@ func (c Client) UpdateAsset(asset Asset) error {
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
 func (c Client) DeleteAsset(asset Asset) error {
-	resp, err := c.http.Delete(c.assetPath(map[string]string{"asset[key]": asset.Key}))
+	resp, err := c.http.Delete(c.assetPath(map[string]string{"asset[key]": asset.Key}), nil)
 	if err != nil {
 		return err
 	} else if resp.StatusCode == 403 {
