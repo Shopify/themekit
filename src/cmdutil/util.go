@@ -109,8 +109,7 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 	if setTheme {
 		for _, theme := range themes {
 			if theme.Role == "main" {
-				if fmt.Sprintf("%v", theme.ID) == e.ThemeID || e.ThemeID == "" {
-					e.ThemeID = fmt.Sprintf("%v", theme.ID) // record the theme id for the live id
+				if fmt.Sprintf("%v", theme.ID) == e.ThemeID {
 					colors.ColorStdOut.Printf(
 						"[%s] Warning, this is the live theme on %s.",
 						colors.Yellow(e.Name),

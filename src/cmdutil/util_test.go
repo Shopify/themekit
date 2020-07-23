@@ -50,7 +50,7 @@ func TestCreateCtx(t *testing.T) {
 		assert.Contains(t, err.Error(), "[API] Invalid API key or access token (unrecognized login or wrong password)")
 	}
 
-	e = &env.Env{Proxy: "http://localhost:3000"}
+	e = &env.Env{ThemeID: "1234", Proxy: "http://localhost:3000"}
 	client = new(mocks.ShopifyClient)
 	client.On("GetShop").Return(shopify.Shop{}, nil)
 	client.On("Themes").Return([]shopify.Theme{{ID: 65443, Role: "unpublished"}, {ID: 1234, Role: "main"}}, nil)
