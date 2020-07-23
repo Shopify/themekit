@@ -34,7 +34,17 @@ var watchCmd = &cobra.Command{
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForEachClient(flags, args, func(ctx *cmdutil.Ctx) error {
-			watcher, err := file.NewWatcher(ctx.Env, ctx.Flags.ConfigPath)
+			checksums := map[string]string{}
+			remoteFiles, err := ctx.Client.GetAllAssets()
+			if err != nil {
+				return fmt.Errorf("[%s] Error while fetching info from server: %v", colors.Green(ctx.Env.Name), err)
+			}
+
+			for _, remoteAsset := range remoteFiles {
+				checksums[remoteAsset.Key] = remoteAsset.Checksum
+			}
+
+			watcher, err := file.NewWatcher(ctx.Env, ctx.Flags.ConfigPath, checksums)
 			if err != nil {
 				return err
 			}

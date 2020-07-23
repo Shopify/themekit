@@ -32,8 +32,7 @@ func TestFileWatcher_Watch(t *testing.T) {
 		Directory:    filepath.Join("_testdata", "project"),
 		IgnoredFiles: []string{"config"},
 	}
-	w, _ := NewWatcher(e, "")
-	w.checksums = map[string]string{}
+	w, _ := NewWatcher(e, "", map[string]string{})
 	w.Watch()
 
 	path := filepath.Join("_testdata", "project", "assets", "application.js")
@@ -50,23 +49,28 @@ func TestFileWatcher_Watch(t *testing.T) {
 	w.Stop()
 }
 
-func TestFileWatcher_WatchDuplicateEvents(t *testing.T) {
+func TestFileWatcher_NoEventIfFileDidntChange(t *testing.T) {
 	e := &env.Env{
 		Directory:    filepath.Join("_testdata", "project"),
 		IgnoredFiles: []string{"config"},
 	}
-	w, _ := NewWatcher(e, "")
+	path := filepath.Join("_testdata", "project", "assets", "application.js")
+	shortPath := filepath.Join("assets", "application.js")
+	currentChecksum, _ := fileChecksum(e.Directory, shortPath)
+
+	w, _ := NewWatcher(e, "", map[string]string{
+		shortPath: currentChecksum,
+	})
 	w.Watch()
 
-	path := filepath.Join("_testdata", "project", "assets", "application.js")
 	info, _ := os.Stat(path)
 	w.fsWatcher.Wait()
-	w.fsWatcher.Event <- watcher.Event{Op: watcher.Create, Path: path, FileInfo: info}
+	w.fsWatcher.Event <- watcher.Event{Op: watcher.Write, Path: path, FileInfo: info}
 
 	select {
 	case <-w.Events:
 		t.Error("should not have recieved an event since file did not change")
-	case <-time.After(50 * time.Millisecond):
+	case <-time.After(time.Second):
 	}
 
 	w.Stop()
@@ -219,7 +223,7 @@ func TestFileWatcher_StopWatching(t *testing.T) {
 
 func TestFileWatcher_TouchNotifyFile(t *testing.T) {
 	notifyPath := filepath.Join("_testdata", "notify_file")
-	w, _ := NewWatcher(&env.Env{Notify: notifyPath}, "")
+	w, _ := NewWatcher(&env.Env{Notify: notifyPath}, "", map[string]string{})
 
 	os.Remove(notifyPath)
 	_, err := os.Stat(notifyPath)
@@ -246,9 +250,8 @@ func createTestWatcher(t *testing.T) *Watcher {
 		IgnoredFiles: []string{"config/"},
 		Notify:       "/tmp/notifytest",
 	}
-	w, err := NewWatcher(e, filepath.Join("_testdata", "project", "config.yml"))
+	w, err := NewWatcher(e, filepath.Join("_testdata", "project", "config.yml"), map[string]string{})
 	assert.Nil(t, err)
-	w.checksums = map[string]string{}
 	return w
 }
 

@@ -1,8 +1,11 @@
 package file
 
 import (
+	"crypto/md5"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -53,7 +56,7 @@ type Watcher struct {
 
 // NewWatcher will create a new file change watching for a given directory defined
 // in an environment
-func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
+func NewWatcher(e *env.Env, configPath string, checksums map[string]string) (*Watcher, error) {
 	fsWatcher := watcher.New()
 	fsWatcher.IgnoreHiddenFiles(true)
 	fsWatcher.FilterOps(watcher.Create, watcher.Write, watcher.Remove, watcher.Rename, watcher.Move)
@@ -66,11 +69,6 @@ func NewWatcher(e *env.Env, configPath string) (*Watcher, error) {
 
 	if err := fsWatcher.AddRecursive(e.Directory); err != nil {
 		return nil, fmt.Errorf("Could not watch directory: %s", err)
-	}
-
-	checksums, err := dirSums(e.Directory)
-	if err != nil {
-		return nil, err
 	}
 
 	return &Watcher{
@@ -157,16 +155,17 @@ func (w *Watcher) updateChecksum(e Event) {
 
 func (w *Watcher) translateEvent(event watcher.Event) []Event {
 	oldPath, currentPath := w.parsePath(event.Path)
-	checksum, err := fileChecksum(w.directory, currentPath)
-	if err == nil && checksum == w.checksums[currentPath] {
-		return []Event{}
-	}
 	if isEventType(event.Op, watcher.Rename, watcher.Move) {
-		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath, checksum: checksum}}
+		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath}}
 	} else if isEventType(event.Op, watcher.Remove) {
 		return []Event{{Op: Remove, Path: currentPath}}
 	} else if isEventType(event.Op, watcher.Create, watcher.Write) {
-		return []Event{{Op: Update, Path: currentPath, checksum: checksum}}
+		checksum, err := fileChecksum(w.directory, currentPath)
+		eventOp := Update
+		if err == nil && checksum == w.checksums[currentPath] {
+			eventOp = Skip
+		}
+		return []Event{{Op: eventOp, Path: currentPath, checksum: checksum}}
 	}
 	return []Event{}
 }
@@ -210,4 +209,15 @@ func (w *Watcher) onIdle() {
 	}
 	os.Create(w.notify)
 	os.Chtimes(w.notify, time.Now(), time.Now())
+}
+
+func fileChecksum(dir, src string) (string, error) {
+	sum := md5.New()
+	s, err := os.Open(filepath.Join(dir, src))
+	if err != nil {
+		return "", err
+	}
+	defer s.Close()
+	_, err = io.Copy(sum, s)
+	return fmt.Sprintf("%x", sum.Sum(nil)), err
 }
