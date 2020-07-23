@@ -67,12 +67,9 @@ func TestFileWatcher_NoEventIfFileDidntChange(t *testing.T) {
 	w.fsWatcher.Wait()
 	w.fsWatcher.Event <- watcher.Event{Op: watcher.Write, Path: path, FileInfo: info}
 
-	select {
-	case <-w.Events:
-		t.Error("should not have recieved an event since file did not change")
-	case <-time.After(time.Second):
-	}
-
+	evt := <-w.Events
+	assert.Equal(t, shortPath, evt.Path)
+	assert.Equal(t, Skip, evt.Op)
 	w.Stop()
 }
 
