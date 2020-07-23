@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var NoHeaders = map[string]string(nil)
+
 func TestNewThemeClient(t *testing.T) {
 	testcases := []struct {
 		e   *env.Env
@@ -53,7 +55,7 @@ func TestThemeClient_GetShop(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: testcase.themeID})
 		client.http = m
 
-		expectation := m.On("Get", "/meta.json")
+		expectation := m.On("Get", "/meta.json", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
@@ -90,7 +92,7 @@ func TestThemeClient_Themes(t *testing.T) {
 		client, _ := NewClient(&env.Env{})
 		client.http = m
 
-		expectation := m.On("Get", "/admin/themes.json")
+		expectation := m.On("Get", "/admin/themes.json", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
@@ -131,9 +133,9 @@ func TestThemeClient_CreateNewTheme(t *testing.T) {
 		query := map[string]interface{}{"theme": Theme{Name: testcase.in}}
 
 		if testcase.resp != "" {
-			m.On("Post", "/admin/themes.json", query).Return(jsonResponse(testcase.resp, 200), nil)
+			m.On("Post", "/admin/themes.json", query, NoHeaders).Return(jsonResponse(testcase.resp, 200), nil)
 		} else if testcase.resperr != "" {
-			m.On("Post", "/admin/themes.json", query).Return(nil, errors.New(testcase.resperr))
+			m.On("Post", "/admin/themes.json", query, NoHeaders).Return(nil, errors.New(testcase.resperr))
 		}
 
 		theme, err := client.CreateNewTheme(testcase.in)
@@ -169,7 +171,7 @@ func TestThemeClient_GetInfo(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: testcase.themeID})
 		client.http = m
 
-		expectation := m.On("Get", fmt.Sprintf("/admin/themes/%s.json", testcase.themeID))
+		expectation := m.On("Get", fmt.Sprintf("/admin/themes/%s.json", testcase.themeID), NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
@@ -214,6 +216,7 @@ func TestThemeClient_PublishTheme(t *testing.T) {
 			"Put",
 			fmt.Sprintf("/admin/themes/%s.json", testcase.themeID),
 			map[string]Theme{"theme": {Role: "main"}},
+			NoHeaders,
 		)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
@@ -251,7 +254,7 @@ func TestThemeClient_GetAllAssets(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Get", "/admin/themes/123/assets.json?fields=key%2Cchecksum")
+		expectation := m.On("Get", "/admin/themes/123/assets.json?fields=key%2Cchecksum", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
@@ -294,7 +297,7 @@ func TestThemeClient_GetAllAssets(t *testing.T) {
 		m := new(mocks.HttpAdapter)
 		client, _ := NewClient(&env.Env{ThemeID: "123", IgnoredFiles: testcase.ignore})
 		client.http = m
-		m.On("Get", "/admin/themes/123/assets.json?fields=key%2Cchecksum").Return(jsonResponse(testcase.input, 200), nil)
+		m.On("Get", "/admin/themes/123/assets.json?fields=key%2Cchecksum", NoHeaders).Return(jsonResponse(testcase.input, 200), nil)
 		assets, err := client.GetAllAssets()
 		assert.Nil(t, err)
 		assert.Equal(t, testcase.expected, assets)
@@ -317,7 +320,7 @@ func TestThemeClient_GetAsset(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Get", "/admin/themes/123/assets.json?asset%5Bkey%5D=filename.txt")
+		expectation := m.On("Get", "/admin/themes/123/assets.json?asset%5Bkey%5D=filename.txt", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else if testcase.code != 0 {
@@ -353,7 +356,7 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Put", "/admin/themes/123/assets.json", map[string]Asset{"asset": {Key: "filename.txt"}})
+		expectation := m.On("Put", "/admin/themes/123/assets.json", map[string]Asset{"asset": {Key: "filename.txt"}}, NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else if testcase.code != 0 {
@@ -387,6 +390,7 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 			return false
 		}),
 		map[string]Asset{"asset": asset},
+		NoHeaders,
 	).Return(&http.Response{
 		Body:       &StringReadCloser{strings.NewReader(`{"errors":{"asset":["Cannot overwrite generated asset filename.txt"]}}`)},
 		StatusCode: 422,
@@ -395,12 +399,14 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 	m.On(
 		"Delete",
 		"/admin/themes/123/assets.json?asset%5Bkey%5D=filename.txt.liquid",
+		NoHeaders,
 	).Return(jsonResponse("{}", 200), nil)
 
 	m.On(
 		"Put",
 		"/admin/themes/123/assets.json",
 		map[string]Asset{"asset": asset},
+		NoHeaders,
 	).Return(jsonResponse(`{"asset":{"key":"assets/hello.txt"}}`, 200), nil)
 
 	assert.Nil(t, client.UpdateAsset(asset))
@@ -423,7 +429,7 @@ func TestThemeClient_DeleteAsset(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Delete", "/admin/themes/123/assets.json?asset%5Bkey%5D=filename.txt")
+		expectation := m.On("Delete", "/admin/themes/123/assets.json?asset%5Bkey%5D=filename.txt", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
