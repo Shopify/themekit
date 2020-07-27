@@ -26,9 +26,9 @@ var (
 	ErrMalformedResponse = errors.New("received a malformed response from shopify, this usually indicates a problem with your connection")
 	// ErrZipPathRequired is returned if a source path was not provided to create a new theme
 	ErrZipPathRequired = errors.New("theme zip path is required")
-	// ErrInfoWithoutThemeID will be returned if GetInfo is called on a live theme
+	// ErrInfoWithoutThemeID will be returned if GetInfo is called without a theme ID
 	ErrInfoWithoutThemeID = errors.New("cannot get info without a theme id")
-	// ErrPublishWithoutThemeID will be returned if PublishTheme is called on a live theme
+	// ErrPublishWithoutThemeID will be returned if PublishTheme is called without a theme ID
 	ErrPublishWithoutThemeID = errors.New("cannot publish a theme without a theme id set")
 	// ErrThemeNotFound will be returned if trying to get a theme that does not exist
 	ErrThemeNotFound = errors.New("requested theme was not found")

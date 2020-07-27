@@ -21,7 +21,10 @@ import (
 )
 
 // ErrReload is an error to return from a command if you want to reload and run again
-var ErrReload = errors.New("reloading config")
+var (
+	ErrReload    = errors.New("reloading config")
+	ErrLiveTheme = errors.New("cannot make changes to a live theme without an override")
+)
 
 // Flags encapsulates all the possible flags that can be set in the themekit
 // command line. Some of the values are used across different commands
@@ -50,6 +53,7 @@ type Flags struct {
 	With                  string
 	List                  bool
 	NoDelete              bool
+	AllowLive             bool
 }
 
 // Ctx is a specific context that a command will run in
@@ -109,13 +113,19 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 	if setTheme {
 		for _, theme := range themes {
 			if theme.Role == "main" {
-				if fmt.Sprintf("%v", theme.ID) == e.ThemeID || e.ThemeID == "" {
-					e.ThemeID = fmt.Sprintf("%v", theme.ID) // record the theme id for the live id
+				if fmt.Sprintf("%v", theme.ID) == e.ThemeID && flags.AllowLive {
 					colors.ColorStdOut.Printf(
 						"[%s] Warning, this is the live theme on %s.",
 						colors.Yellow(e.Name),
 						colors.Yellow(shop.Name),
 					)
+				} else if fmt.Sprintf("%v", theme.ID) == e.ThemeID && !flags.AllowLive {
+					colors.ColorStdOut.Printf(
+						"[%s] This is the live theme on %s. If you wish to make changes to it, then you will have to pass the --allow-live flag",
+						colors.Red(e.Name),
+						colors.Yellow(shop.Name),
+					)
+					return &Ctx{}, ErrLiveTheme
 				}
 				break
 			}

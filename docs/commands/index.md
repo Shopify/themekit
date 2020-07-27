@@ -104,8 +104,7 @@ development:
 |**Required Flags**||
 |`-p`|`--password`| Password for access to your Shopify account.
 |`-s`|`--store   `| Your store's domain for changes to take effect
-|**Optional Flags**||
-|`-t`|`--themeid `| The ID of the theme that you want changes to take effect, if no theme id is passed, your live theme will be fetched
+|`-t`|`--themeid `| The ID of the theme that you want changes to take effect.
 
 ## New
 
