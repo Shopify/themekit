@@ -48,8 +48,8 @@ func download(ctx *cmdutil.Ctx) error {
 			localAsset, _ := shopify.ReadAsset(ctx.Env, requestAsset.Key)
 			if localAsset.Checksum == requestAsset.Checksum && requestAsset.Checksum != "" {
 				if ctx.Flags.Verbose {
-			  	ctx.Log.Printf("[%s] Skipped %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
-			  }
+					ctx.Log.Printf("[%s] Skipped %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
+				}
 			} else if asset, err := ctx.Client.GetAsset(requestAsset.Key); err != nil {
 				ctx.Err("[%s] error downloading %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
 			} else if err = asset.Write(ctx.Env.Directory); err != nil {
