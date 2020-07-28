@@ -50,12 +50,11 @@ func (env *Env) validate() error {
 	errors := []string{}
 
 	env.ThemeID = strings.ToLower(strings.TrimSpace(env.ThemeID))
-	if env.ThemeID != "" {
-		if env.ThemeID == "live" {
-			env.ThemeID = ""
-		} else if _, err := strconv.ParseInt(env.ThemeID, 10, 64); err != nil {
-			errors = append(errors, "invalid theme_id")
-		}
+
+	if env.ThemeID == "" {
+		errors = append(errors, "missing theme_id")
+	} else if _, err := strconv.ParseInt(env.ThemeID, 10, 64); err != nil {
+		errors = append(errors, "invalid theme_id")
 	}
 
 	if len(env.Domain) == 0 {

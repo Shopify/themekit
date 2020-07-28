@@ -15,7 +15,7 @@ There are general values that you will be able to config for all of Theme Kit ac
 | config       | A custom path to your config file. This defaults to the current path that the command is run in.
 | store        | Your store's Shopify domain with the `.myshopify.com` postfix. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
 | password     | Your API password. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
-| theme_id     | The theme that you want the command to take effect on. If you want to make changes to the current live theme you may set this value to `'live'`. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
+| theme_id     | The theme that you want the command to take effect on. Please see the [setup docs]({{ '/#get-api-access' | prepend: site.baseurl }}) on how to get this value.
 | directory    | The project root directory. This allows you to run the command from another directory.
 | ignore_files | A list of patterns to ignore when executing commands. Please see the [Ignore Patterns]({{ '/ignores' | prepend: site.baseurl }})  documentation.
 | ignores      | A list of file paths to files that contain ignore patterns. Please see the [Ignore Patterns]({{ '/ignores' | prepend: site.baseurl }})  documentation.

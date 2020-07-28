@@ -66,9 +66,9 @@ func download(ctx *cmdutil.Ctx) error {
 			} else if ctx.Flags.Verbose {
 				var checksumOutput = ""
 				if asset.Checksum != "" {
-					checksumOutput = "Remote Checksum: " + requestAsset.Checksum + ", Local Checksum: " + localAsset.Checksum
+					checksumOutput = "Remote: " + requestAsset.Checksum + ", Local: " + localAsset.Checksum
 				} else {
-					checksumOutput = "No Checksum, Local Checksum " + localAsset.Checksum
+					checksumOutput = "Local: " + localAsset.Checksum
 				}
 				ctx.Log.Printf("[%s] Successfully wrote %s to disk (%s)", colors.Green(ctx.Env.Name), colors.Blue(asset.Key), checksumOutput)
 			}

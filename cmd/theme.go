@@ -88,6 +88,7 @@ func init() {
 	ThemeCmd.PersistentFlags().StringArrayVar(&flags.IgnoredFiles, "ignored-file", []string{}, "A single file to ignore, use the flag multiple times to add multiple.")
 	ThemeCmd.PersistentFlags().StringArrayVar(&flags.Ignores, "ignores", []string{}, "A path to a file that contains ignore patterns.")
 	ThemeCmd.PersistentFlags().BoolVar(&flags.DisableIgnore, "no-ignore", false, "Will disable config ignores so that all files can be changed")
+	ThemeCmd.PersistentFlags().BoolVar(&flags.AllowLive, "allow-live", false, "Will allow themekit to make changes to the live theme on the store.")
 
 	watchCmd.Flags().StringVarP(&flags.NotifyFile, "notify", "n", "", "file to touch when workers have gone idle")
 	watchCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")

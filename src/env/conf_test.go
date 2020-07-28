@@ -78,8 +78,8 @@ func TestConf_Set(t *testing.T) {
 	}{
 		{name: "", initial: Env{}, err: ErrInvalidEnvironmentName.Error()},
 		{name: "development", initial: Env{}, err: "invalid environment"},
-		{name: "development", initial: Env{Domain: "yes.myshopify.com", Password: "abc123"}, expected: Env{Name: "development", Domain: "yes.myshopify.com", Password: "abc123", Directory: Default.Directory, Timeout: Default.Timeout}},
-		{name: "development", initial: Env{Domain: "yes.myshopify.com", Password: "abc123", Directory: filepath.Join("..", "file")}, expected: Env{Name: "development", Domain: "yes.myshopify.com", Password: "abc123", Directory: dir, Timeout: Default.Timeout}},
+		{name: "development", initial: Env{ThemeID: "123", Domain: "yes.myshopify.com", Password: "abc123"}, expected: Env{ThemeID: "123", Name: "development", Domain: "yes.myshopify.com", Password: "abc123", Directory: Default.Directory, Timeout: Default.Timeout}},
+		{name: "development", initial: Env{ThemeID: "123", Domain: "yes.myshopify.com", Password: "abc123", Directory: filepath.Join("..", "file")}, expected: Env{ThemeID: "123", Name: "development", Domain: "yes.myshopify.com", Password: "abc123", Directory: dir, Timeout: Default.Timeout}},
 		{name: "development", initial: Env{Domain: "yes.myshopify.com", Password: "abc123"}, overrides: []Env{{ThemeID: "12345"}}, expected: Env{Name: "development", Domain: "yes.myshopify.com", Password: "abc123", ThemeID: "12345", Directory: Default.Directory, Timeout: Default.Timeout}},
 	}
 
@@ -108,7 +108,7 @@ func TestConf_Get(t *testing.T) {
 		err                  error
 		overrides            []Env
 	}{
-		{path: "_testdata/projectdir/valid_config.yml", toGet: "development", err: nil},
+		{path: "_testdata/projectdir/valid_config.yml", toGet: "development", err: nil, themeid: "123"},
 		{path: "_testdata/projectdir/valid_config.yml", toGet: "development", err: nil, themeid: "12345", overrides: []Env{{ThemeID: "12345"}}},
 		{path: "_testdata/projectdir/valid_config.yml", toGet: "nope", err: ErrEnvDoesNotExist},
 		{path: "_testdata/projectdir/bad_format.yml", toGet: "other", err: ErrEnvNotDefined},
