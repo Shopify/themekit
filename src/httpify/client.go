@@ -65,29 +65,29 @@ func NewClient(params Params) (*HTTPClient, error) {
 }
 
 // Get will send a get request to the path provided
-func (client *HTTPClient) Get(path string) (*http.Response, error) {
-	return client.do("GET", path, nil)
+func (client *HTTPClient) Get(path string, headers map[string]string) (*http.Response, error) {
+	return client.do("GET", path, nil, headers)
 }
 
 // Post will send a Post request to the path provided and set the post body as the
 // object passed
-func (client *HTTPClient) Post(path string, body interface{}) (*http.Response, error) {
-	return client.do("POST", path, body)
+func (client *HTTPClient) Post(path string, body interface{}, headers map[string]string) (*http.Response, error) {
+	return client.do("POST", path, body, headers)
 }
 
 // Put will send a Put request to the path provided and set the post body as the
 // object passed
-func (client *HTTPClient) Put(path string, body interface{}) (*http.Response, error) {
-	return client.do("PUT", path, body)
+func (client *HTTPClient) Put(path string, body interface{}, headers map[string]string) (*http.Response, error) {
+	return client.do("PUT", path, body, headers)
 }
 
 // Delete will send a delete request to the path provided
-func (client *HTTPClient) Delete(path string) (*http.Response, error) {
-	return client.do("DELETE", path, nil)
+func (client *HTTPClient) Delete(path string, headers map[string]string) (*http.Response, error) {
+	return client.do("DELETE", path, nil, headers)
 }
 
 // do will issue an authenticated json request to shopify.
-func (client *HTTPClient) do(method, path string, body interface{}) (*http.Response, error) {
+func (client *HTTPClient) do(method, path string, body interface{}, headers map[string]string) (*http.Response, error) {
 	var jsonData io.Reader
 	if body != nil {
 		data, err := json.Marshal(body)
@@ -106,6 +106,9 @@ func (client *HTTPClient) do(method, path string, body interface{}) (*http.Respo
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s; %s)", runtime.GOOS, runtime.GOARCH, release.ThemeKitVersion.String()))
+	for label, value := range headers {
+		req.Header.Add(label, value)
+	}
 
 	client.limit.Wait()
 	resp, err := client.client.Do(req)

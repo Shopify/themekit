@@ -36,6 +36,7 @@ func TestClient_do(t *testing.T) {
 
 	var client *HTTPClient
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, r.Header.Get("X-Custom-Header"), "Checksum")
 		assert.Equal(t, r.Header.Get("X-Shopify-Access-Token"), client.password)
 		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
 		assert.Equal(t, r.Header.Get("Accept"), "application/json")
@@ -63,17 +64,18 @@ func TestClient_do(t *testing.T) {
 	assert.NotNil(t, client)
 	assert.Nil(t, err)
 
-	resp, err := client.Post("/assets.json", body)
+	resp, err := client.Post("/assets.json", body, map[string]string{"X-Custom-Header": "Checksum"})
 	assert.Nil(t, err)
 	assert.NotNil(t, resp)
 
-	resp, err = client.Put("/assets.json", body)
+	resp, err = client.Put("/assets.json", body, map[string]string{"X-Custom-Header": "Checksum"})
 	assert.Nil(t, err)
 	assert.NotNil(t, resp)
 
 	server.Close()
 
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, r.Header.Get("X-Custom-Header"), "Foo")
 		assert.Equal(t, r.Header.Get("X-Shopify-Access-Token"), client.password)
 		assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
 		assert.Equal(t, r.Header.Get("Accept"), "application/json")
@@ -87,11 +89,11 @@ func TestClient_do(t *testing.T) {
 	})
 	client.baseURL.Scheme = "http"
 
-	resp, err = client.Get("/assets.json")
+	resp, err = client.Get("/assets.json", map[string]string{"X-Custom-Header": "Foo"})
 	assert.Nil(t, err)
 	assert.NotNil(t, resp)
 
-	resp, err = client.Delete("/assets.json")
+	resp, err = client.Delete("/assets.json", map[string]string{"X-Custom-Header": "Foo"})
 	assert.Nil(t, err)
 	assert.NotNil(t, resp)
 
@@ -112,7 +114,7 @@ func TestClient_do(t *testing.T) {
 	assert.NotNil(t, client)
 	assert.Nil(t, err)
 
-	_, err = client.do("POST", "/assets.json", body)
+	_, err = client.do("POST", "/assets.json", body, nil)
 	if assert.NotNil(t, err) {
 		assert.Equal(t, err, errClientTimeout)
 	}
