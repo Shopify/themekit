@@ -93,7 +93,7 @@ You'll need to set up new Shopify API credentials to connect Theme Kit to your s
 
 You'll return to the app detail page. Your new, unique access credentials are visible in the **Admin API** section. Copy the password. You'll use it in the next step.
 
-<video src="https://screenshot.click/themekit-private-app-setup-1000p15-192kbps.mp4" controls="false" loop autoplay style="max-width: 100%">
+<video src="https://screenshot.click/themekit-private-app-setup-1000p15-192kbps.mp4" style="max-width: 100%" controls="false" loop autoplay>Sorry, your browser doesn't support embedded video.</video>
 
 ## Create a new theme.
 
