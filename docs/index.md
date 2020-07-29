@@ -78,17 +78,22 @@ Please refer to the [contributing docs](https://github.com/Shopify/themekit/blob
 
 ## Get API Access
 
-You will need to set up an API key to add to our configuration and create a connection
-between your store and Theme Kit. The API key allows Theme Kit to talk to and access
-your store, as well as its theme files.
+You'll need to set up new Shopify API credentials to connect Theme Kit to your store and manage your template files. Theme Kit manages its connection using a [private app](https://shopify.dev/concepts/apps#private-apps).
 
-To do so, log into the Shopify store, and create a private app. In the Shopify
-Admin, go to Apps and click on `Manage private apps`. From there, click `Create a new private app`, to create your private app. Fill out the information at the top
-and set the permissions of **Theme templates and theme assets** to have **_Read and write_**
-access. Press `Save` and you will be presented with the next screen. In it you will
-see your access credentials. Please copy the password. You will need it later.
+#### Steps:
 
-<img src="{{ "/assets/images/shopify-local-theme-development-generate-api.gif" | prepend: site.baseurl }}" />
+1. In the store's Shopify admin, click **Apps**.
+1. Near the bottom of the page, click on **Manage private apps**.
+1. Click **Create new private app**.
+1. In the **App details** section, fill out the app name and your email address.
+1. In the **Admin API** section, click **Show inactive Admin API permissions**.
+1. Scroll to the "Themes" section and select **Read and write** from the dropdown.
+1. Click **Save**.
+1. Read the private app confirmation dialog, then click **Create app**.
+
+You'll return to the app detail page. Your new, unique access credentials are visible in the **Admin API** section. Copy the password. You'll use it in the next step.
+
+<video src="https://screenshot.click/themekit-private-app-setup-1000p15-192kbps.mp4" style="max-width: 100%" controls="false" loop autoplay>Sorry, your browser doesn't support embedded video.</video>
 
 ## Create a new theme.
 
