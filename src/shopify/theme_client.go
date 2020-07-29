@@ -276,16 +276,16 @@ func (c Client) GetAsset(filename string) (Asset, error) {
 	return r.Asset, nil
 }
 
-// CreateAsset will take an asset and will return  when the asset has been created.
+// CreateAsset will take an asset and will return when the asset has been created.
 // If there was an error, in the request then error will be defined otherwise the
-//response will have the appropropriate data for usage.
+// response will have the appropriate data for usage.
 func (c Client) CreateAsset(asset Asset) error {
 	return c.UpdateAsset(asset)
 }
 
 // UpdateAsset will take an asset and will return  when the asset has been updated.
 // If there was an error, in the request then error will be defined otherwise the
-//response will have the appropropriate data for usage.
+// response will have the appropriate data for usage.
 func (c Client) UpdateAsset(asset Asset) error {
 	resp, err := c.http.Put(c.assetPath(map[string]string{}), map[string]Asset{"asset": asset}, nil)
 	if err != nil {
@@ -314,7 +314,7 @@ func (c Client) UpdateAsset(asset Asset) error {
 	return nil
 }
 
-// DeleteAsset will take an asset and will return  when the asset has been deleted.
+// DeleteAsset will take an asset and will return when the asset has been deleted.
 // If there was an error, in the request then error will be defined otherwise the
 //response will have the appropropriate data for usage.
 func (c Client) DeleteAsset(asset Asset) error {
