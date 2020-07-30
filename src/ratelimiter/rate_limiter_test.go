@@ -5,44 +5,22 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/time/rate"
 )
 
 func TestRateLimiterForDomain(t *testing.T) {
-	limiter1 := New("domain.com", time.Nanosecond)
-	limiter2 := New("domain.com", time.Nanosecond)
-	limiter3 := New("otherdomain.com", time.Nanosecond)
+	limiter1 := New("domain.com", 1)
+	limiter2 := New("domain.com", 2)
+	limiter3 := New("otherdomain.com", 2)
 	assert.Equal(t, limiter1, limiter2)
 	assert.NotEqual(t, limiter2, limiter3)
 }
 
-func TestRateLimiterHalts(t *testing.T) {
-	received, timeout := checkTime("testone.com", time.Second)
-	assert.Equal(t, true, timeout)
-	assert.Equal(t, false, received)
-}
-
-func TestRateLimiterCanGoAfterTimeout(t *testing.T) {
-	received, timeout := checkTime("testtwo.com", time.Millisecond)
-	assert.Equal(t, false, timeout)
-	assert.Equal(t, true, received)
-}
-
-func TestWait(t *testing.T) {
-	domainLimitMap = make(map[string]*Limiter)
-	limiter := New("domain.com", time.Nanosecond)
-	limiter.Wait()
-}
-
-func checkTime(domain string, dur time.Duration) (received, timeout bool) {
-	domainLimitMap = make(map[string]*Limiter)
-	limiter := New(domain, dur)
-	ticker := time.NewTicker(300 * time.Millisecond)
-	defer ticker.Stop()
-	select {
-	case <-limiter.nextChan:
-		received = true
-	case <-ticker.C:
-		timeout = true
-	}
-	return
+func TestRateLimiterResetAfter(t *testing.T) {
+	limiter := New("domain.com", 1)
+	assert.Equal(t, limiter.rate.Limit(), rate.Limit(1))
+	limiter.ResetAfter(time.Millisecond)
+	assert.Equal(t, limiter.rate.Limit(), rate.Limit(0))
+	time.Sleep(time.Millisecond)
+	assert.Equal(t, limiter.rate.Limit(), rate.Limit(1))
 }

@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/Shopify/themekit/src/env"
 	"github.com/Shopify/themekit/src/file"
@@ -38,8 +37,6 @@ var (
 	ErrMissingAssetName = errors.New("asset has no name so could not be processes")
 	// ErrThemeNameRequired is returned when trying to create a theme with a blank name
 	ErrThemeNameRequired = errors.New("theme name is required to create a theme")
-
-	shopifyAPILimit = time.Second / 2 // 2 calls per second
 )
 
 // Theme represents a shopify theme.
@@ -111,7 +108,6 @@ func NewClient(e *env.Env) (Client, error) {
 		Password: e.Password,
 		Proxy:    e.Proxy,
 		Timeout:  e.Timeout,
-		APILimit: shopifyAPILimit,
 	})
 	if err != nil {
 		return Client{}, err

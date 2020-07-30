@@ -1,38 +1,45 @@
 package ratelimiter
 
-import "time"
+import (
+	"context"
+	"golang.org/x/time/rate"
+	"time"
+)
 
 var domainLimitMap = make(map[string]*Limiter)
 
 // Limiter keeps track of an api rate limit and wont let you pass the limit
 type Limiter struct {
-	nextChan chan bool
-	apiLimit time.Duration
+	perSecond rate.Limit
+	rate      *rate.Limiter
 }
 
 // New creates a new call rate limiter for a single domain
-func New(domain string, apiLimit time.Duration) *Limiter {
+func New(domain string, reqPerSec int) *Limiter {
 	if _, ok := domainLimitMap[domain]; !ok {
+		everySecond := rate.Every(time.Second / time.Duration(reqPerSec))
 		domainLimitMap[domain] = &Limiter{
-			nextChan: make(chan bool),
-			apiLimit: apiLimit,
+			perSecond: everySecond,
+			rate:      rate.NewLimiter(everySecond, 10),
 		}
-		domainLimitMap[domain].next()
 	}
 	return domainLimitMap[domain]
 }
 
-func (limiter *Limiter) next() {
-	go func(l *Limiter) {
-		ticker := time.NewTimer(l.apiLimit)
-		<-ticker.C
-		ticker.Stop()
-		l.nextChan <- true
-	}(limiter)
+// ResetAfter will reset the bucket to 0, wait for the amount of time until it resumes
+// This will allow the rate limiter to stop all activity and restart slowly
+func (limiter *Limiter) ResetAfter(after time.Duration) {
+	if limiter.rate.Limit() == 0 {
+		return
+	}
+	limiter.rate.SetLimit(0)
+	go func() {
+		time.Sleep(after)
+		limiter.rate.SetLimit(limiter.perSecond)
+	}()
 }
 
 // Wait will block until enough time has passed and the limit will not be passed
 func (limiter *Limiter) Wait() {
-	<-limiter.nextChan
-	limiter.next()
+	limiter.rate.Wait(context.Background())
 }

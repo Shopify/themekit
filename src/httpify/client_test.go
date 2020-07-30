@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 
@@ -57,7 +58,6 @@ func TestClient_do(t *testing.T) {
 	client, err := NewClient(Params{
 		Domain:   server.URL,
 		Password: "secret_password",
-		APILimit: time.Nanosecond,
 	})
 	client.baseURL.Scheme = "http"
 
@@ -85,7 +85,6 @@ func TestClient_do(t *testing.T) {
 	client, _ = NewClient(Params{
 		Domain:   server.URL,
 		Password: "secret_password",
-		APILimit: time.Nanosecond,
 	})
 	client.baseURL.Scheme = "http"
 
@@ -99,15 +98,20 @@ func TestClient_do(t *testing.T) {
 
 	server.Close()
 
+	var request uint64
+	var mut sync.Mutex
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(3 * time.Second)
+		mut.Lock()
+		defer mut.Unlock()
+		if request == 0 {
+			request++
+			time.Sleep(3 * time.Second)
+		}
 	}))
-	defer server.Close()
 
 	client, _ = NewClient(Params{
-		Domain:   server.URL,
-		Timeout:  time.Nanosecond,
-		APILimit: time.Nanosecond,
+		Domain:  server.URL,
+		Timeout: time.Millisecond,
 	})
 	client.baseURL.Scheme = "http"
 
@@ -115,9 +119,26 @@ func TestClient_do(t *testing.T) {
 	assert.Nil(t, err)
 
 	_, err = client.do("POST", "/assets.json", body, nil)
-	if assert.NotNil(t, err) {
-		assert.Equal(t, err, errClientTimeout)
-	}
+	assert.Nil(t, err)
+	server.Close()
+
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(3 * time.Second)
+	}))
+
+	client, _ = NewClient(Params{
+		Domain:  server.URL,
+		Timeout: time.Millisecond,
+	})
+	client.maxRetry = 1
+	client.baseURL.Scheme = "http"
+
+	assert.NotNil(t, client)
+	assert.Nil(t, err)
+
+	_, err = client.do("POST", "/assets.json", body, nil)
+	assert.EqualError(t, err, "request timed out after 1 retries, there may be an issue with your connection")
+	server.Close()
 }
 
 func TestGenerateHTTPAdapter(t *testing.T) {

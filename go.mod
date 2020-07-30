@@ -24,6 +24,7 @@ require (
 	github.com/vektra/mockery v1.1.2 // indirect
 	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
 )
 
