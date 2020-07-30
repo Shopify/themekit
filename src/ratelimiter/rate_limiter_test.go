@@ -21,6 +21,6 @@ func TestRateLimiterResetAfter(t *testing.T) {
 	assert.Equal(t, limiter.rate.Limit(), rate.Limit(1))
 	limiter.ResetAfter(time.Millisecond)
 	assert.Equal(t, limiter.rate.Limit(), rate.Limit(0))
-	time.Sleep(time.Millisecond)
+	time.Sleep(2 * time.Millisecond)
 	assert.Equal(t, limiter.rate.Limit(), rate.Limit(1))
 }

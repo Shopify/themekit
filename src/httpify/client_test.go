@@ -102,10 +102,12 @@ func TestClient_do(t *testing.T) {
 	var mut sync.Mutex
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mut.Lock()
-		defer mut.Unlock()
 		if request == 0 {
 			request++
-			time.Sleep(3 * time.Second)
+			mut.Unlock()
+			time.Sleep(time.Second)
+		} else {
+			mut.Unlock()
 		}
 	}))
 
