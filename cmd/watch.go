@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -117,6 +118,10 @@ func perform(ctx *cmdutil.Ctx, path string, op file.Op) {
 			ctx.Err("[%s] (%s) %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key), err)
 		} else if ctx.Flags.Verbose {
 			ctx.Log.Printf("[%s] Updated %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
+			if ctx.Flags.NotifyUploadFile != "" {
+				os.Create(ctx.Env.NotifyUpload)
+				os.Chtimes(ctx.Env.NotifyUpload, time.Now(), time.Now())
+			}
 		}
 	}
 }

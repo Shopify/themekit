@@ -91,6 +91,7 @@ func init() {
 	ThemeCmd.PersistentFlags().BoolVar(&flags.AllowLive, "allow-live", false, "Will allow themekit to make changes to the live theme on the store.")
 
 	watchCmd.Flags().StringVarP(&flags.NotifyFile, "notify", "n", "", "file to touch when workers have gone idle")
+	watchCmd.Flags().StringVarP(&flags.NotifyUploadFile, "notify-upload", "u", "", "file to touch when files have finished uploading")
 	watchCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	removeCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
 	openCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")

@@ -44,6 +44,7 @@ type Flags struct {
 	Ignores               []string
 	DisableIgnore         bool
 	NotifyFile            string
+	NotifyUploadFile      string
 	AllEnvs               bool
 	Version               string
 	Prefix                string
@@ -228,13 +229,14 @@ func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags,
 
 func getFlagEnv(flags Flags) env.Env {
 	flagEnv := env.Env{
-		Directory: flags.Directory,
-		Password:  flags.Password,
-		ThemeID:   flags.ThemeID,
-		Domain:    flags.Domain,
-		Proxy:     flags.Proxy,
-		Timeout:   flags.Timeout,
-		Notify:    flags.NotifyFile,
+		Directory:    flags.Directory,
+		Password:     flags.Password,
+		ThemeID:      flags.ThemeID,
+		Domain:       flags.Domain,
+		Proxy:        flags.Proxy,
+		Timeout:      flags.Timeout,
+		Notify:       flags.NotifyFile,
+		NotifyUpload: flags.NotifyUploadFile,
 	}
 
 	if !flags.DisableIgnore {

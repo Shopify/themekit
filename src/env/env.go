@@ -24,6 +24,7 @@ type Env struct {
 	Timeout      time.Duration `yaml:"timeout,omitempty" json:"timeout,omitempty" env:"THEMEKIT_TIMEOUT"`
 	ReadOnly     bool          `yaml:"readonly,omitempty" json:"readonly,omitempty" env:"-"`
 	Notify       string        `yaml:"notify,omitempty" json:"notify,omitempty" env:"THEMEKIT_NOTIFY"`
+	NotifyUpload string        `yaml:"notify_upload,omitempty" json:"notify_upload,omitempty" env:"THEMEKIT_NOTIFY_UPLOAD"`
 }
 
 //Default is the default values for a environment
