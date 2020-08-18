@@ -358,14 +358,14 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Put", APIPath + "themes/123/assets.json", map[string]Asset{"asset": {Key: "filename.txt"}}, NoHeaders)
+		expectation := m.On("Put", APIPath + "themes/123/assets.json", map[string]Asset{"asset": {Key: "filename.txt"}}, map[string]string{})
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else if testcase.code != 0 {
 			expectation.Return(jsonResponse(testcase.resp, testcase.code), nil)
 		}
 
-		err := client.UpdateAsset(Asset{Key: "filename.txt"})
+		err := client.UpdateAsset(Asset{Key: "filename.txt"}, "")
 
 		if testcase.err == "" {
 			assert.Nil(t, err)
@@ -392,7 +392,7 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 			return false
 		}),
 		map[string]Asset{"asset": asset},
-		NoHeaders,
+		map[string]string{},
 	).Return(&http.Response{
 		Body:       &StringReadCloser{strings.NewReader(`{"errors":{"asset":["Cannot overwrite generated asset filename.txt"]}}`)},
 		StatusCode: 422,
@@ -408,10 +408,10 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 		"Put",
 		APIPath + "themes/123/assets.json",
 		map[string]Asset{"asset": asset},
-		NoHeaders,
+		map[string]string{},
 	).Return(jsonResponse(`{"asset":{"key":"assets/hello.txt"}}`, 200), nil)
 
-	assert.Nil(t, client.UpdateAsset(asset))
+	assert.Nil(t, client.UpdateAsset(asset, ""))
 	m.AssertExpectations(t)
 }
 
