@@ -38,9 +38,10 @@ var (
 
 // Event decsribes a file change event
 type Event struct {
-	Op       Op
-	Path     string
-	checksum string
+	Op                Op
+	Path              string
+	LastKnownChecksum string
+	checksum          string
 }
 
 // Watcher is the object used to watch files for change and notify on any events,
@@ -156,7 +157,7 @@ func (w *Watcher) updateChecksum(e Event) {
 func (w *Watcher) translateEvent(event watcher.Event) []Event {
 	oldPath, currentPath := w.parsePath(event.Path)
 	if isEventType(event.Op, watcher.Rename, watcher.Move) {
-		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath}}
+		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath, LastKnownChecksum: w.checksums[currentPath]}}
 	} else if isEventType(event.Op, watcher.Remove) {
 		return []Event{{Op: Remove, Path: currentPath}}
 	} else if isEventType(event.Op, watcher.Create, watcher.Write) {
@@ -165,7 +166,7 @@ func (w *Watcher) translateEvent(event watcher.Event) []Event {
 		if err == nil && checksum == w.checksums[currentPath] {
 			eventOp = Skip
 		}
-		return []Event{{Op: eventOp, Path: currentPath, checksum: checksum}}
+		return []Event{{Op: eventOp, Path: currentPath, checksum: checksum, LastKnownChecksum: w.checksums[currentPath]}}
 	}
 	return []Event{}
 }

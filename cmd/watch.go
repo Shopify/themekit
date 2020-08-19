@@ -79,14 +79,14 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 				return cmdutil.ErrReload
 			}
 			ctx.Log.Printf("[%s] processing %s", colors.Green(ctx.Env.Name), colors.Blue(event.Path))
-			perform(ctx, event.Path, event.Op)
+			perform(ctx, event.Path, event.Op, event.LastKnownChecksum)
 		case <-sig:
 			return nil
 		}
 	}
 }
 
-func perform(ctx *cmdutil.Ctx, path string, op file.Op) {
+func perform(ctx *cmdutil.Ctx, path string, op file.Op, checksum string) {
 	defer ctx.DoneTask()
 
 	switch op {
@@ -113,7 +113,7 @@ func perform(ctx *cmdutil.Ctx, path string, op file.Op) {
 			return
 		}
 
-		if err := ctx.Client.UpdateAsset(asset); err != nil {
+		if err := ctx.Client.UpdateAsset(asset, checksum); err != nil {
 			ctx.Err("[%s] (%s) %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key), err)
 		} else if ctx.Flags.Verbose {
 			ctx.Log.Printf("[%s] Updated %s", colors.Green(ctx.Env.Name), colors.Blue(asset.Key))
