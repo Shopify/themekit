@@ -17,6 +17,9 @@ import (
 	"github.com/Shopify/themekit/src/httpify"
 )
 
+// APIPath is the version of the Admin REST API to use
+const APIPath = "/admin/api/unstable/"
+
 var (
 	// ErrCriticalFile will be returned when trying to remove a critical file
 	ErrCriticalFile = errors.New("this file is critical and removing it would cause your theme to become non-functional")
@@ -143,7 +146,7 @@ func (c Client) GetShop() (Shop, error) {
 
 // Themes will return all the available themes on a domain.
 func (c Client) Themes() ([]Theme, error) {
-	resp, err := c.http.Get("/admin/themes.json", nil)
+	resp, err := c.http.Get(APIPath + "themes.json", nil)
 	if err != nil {
 		return []Theme{}, err
 	}
@@ -163,7 +166,7 @@ func (c *Client) CreateNewTheme(name string) (theme Theme, err error) {
 		return Theme{}, ErrThemeNameRequired
 	}
 
-	resp, err := c.http.Post("/admin/themes.json", map[string]interface{}{"theme": Theme{Name: name}}, nil)
+	resp, err := c.http.Post(APIPath + "themes.json", map[string]interface{}{"theme": Theme{Name: name}}, nil)
 	if err != nil {
 		return Theme{}, err
 	}
@@ -187,7 +190,7 @@ func (c Client) GetInfo() (Theme, error) {
 		return Theme{}, ErrInfoWithoutThemeID
 	}
 
-	resp, err := c.http.Get(fmt.Sprintf("/admin/themes/%s.json", c.themeID), nil)
+	resp, err := c.http.Get(fmt.Sprintf(APIPath + "themes/%s.json", c.themeID), nil)
 	if err != nil {
 		return Theme{}, err
 	} else if resp.StatusCode == 404 {
@@ -209,7 +212,7 @@ func (c Client) PublishTheme() error {
 	}
 
 	resp, err := c.http.Put(
-		fmt.Sprintf("/admin/themes/%s.json", c.themeID),
+		fmt.Sprintf(APIPath + "themes/%s.json", c.themeID),
 		map[string]Theme{"theme": {Role: "main"}},
 		nil,
 	)
@@ -342,9 +345,9 @@ func (c Client) DeleteAsset(asset Asset) error {
 }
 
 func (c Client) assetPath(query map[string]string) string {
-	formatted := "/admin/assets.json"
+	formatted := APIPath + "assets.json"
 	if c.themeID != "" {
-		formatted = fmt.Sprintf("/admin/themes/%s/assets.json", c.themeID)
+		formatted = fmt.Sprintf(APIPath + "themes/%s/assets.json", c.themeID)
 	}
 
 	if len(query) > 0 {
