@@ -143,7 +143,7 @@ func (c Client) GetShop() (Shop, error) {
 
 // Themes will return all the available themes on a domain.
 func (c Client) Themes() ([]Theme, error) {
-	resp, err := c.http.Get("/admin/themes.json", nil)
+	resp, err := c.http.Get("/admin/api/unstable/themes.json", nil)
 	if err != nil {
 		return []Theme{}, err
 	}
@@ -163,7 +163,7 @@ func (c *Client) CreateNewTheme(name string) (theme Theme, err error) {
 		return Theme{}, ErrThemeNameRequired
 	}
 
-	resp, err := c.http.Post("/admin/themes.json", map[string]interface{}{"theme": Theme{Name: name}}, nil)
+	resp, err := c.http.Post("/admin/api/unstable/themes.json", map[string]interface{}{"theme": Theme{Name: name}}, nil)
 	if err != nil {
 		return Theme{}, err
 	}
@@ -187,7 +187,7 @@ func (c Client) GetInfo() (Theme, error) {
 		return Theme{}, ErrInfoWithoutThemeID
 	}
 
-	resp, err := c.http.Get(fmt.Sprintf("/admin/themes/%s.json", c.themeID), nil)
+	resp, err := c.http.Get(fmt.Sprintf("/admin/api/unstable/themes/%s.json", c.themeID), nil)
 	if err != nil {
 		return Theme{}, err
 	} else if resp.StatusCode == 404 {
@@ -209,7 +209,7 @@ func (c Client) PublishTheme() error {
 	}
 
 	resp, err := c.http.Put(
-		fmt.Sprintf("/admin/themes/%s.json", c.themeID),
+		fmt.Sprintf("/admin/api/unstable/themes/%s.json", c.themeID),
 		map[string]Theme{"theme": {Role: "main"}},
 		nil,
 	)
@@ -342,9 +342,9 @@ func (c Client) DeleteAsset(asset Asset) error {
 }
 
 func (c Client) assetPath(query map[string]string) string {
-	formatted := "/admin/assets.json"
+	formatted := "/admin/api/unstable/assets.json"
 	if c.themeID != "" {
-		formatted = fmt.Sprintf("/admin/themes/%s/assets.json", c.themeID)
+		formatted = fmt.Sprintf("/admin/api/unstable/themes/%s/assets.json", c.themeID)
 	}
 
 	if len(query) > 0 {
