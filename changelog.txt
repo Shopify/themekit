@@ -1,3 +1,10 @@
+v1.1.0-beta (Aug 19 2020)
+====================
+- Use checksums to prevent unnecessary uploads and downloads for unchanged assets
+- Added Strict theme ID handling to prevent accidental live theme alterations (#739)
+- Use checksums sourced from API rather than local filesystem in file watcher to optimize startup and fix changes made
+while the watch command was not running
+
 v1.0.3 (Dec 17 2019)
 ====================
 - Add support for pages/customers directory

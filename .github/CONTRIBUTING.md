@@ -61,7 +61,7 @@ A man in the middle proxy is the easiest way to introspect the requests that the
 
 # Deploying Themekit
 
-- Update ThemeKitVersion in `src/release/version.go` and commit.
+- Update ThemeKitVersion in `src/release/release.go` and commit.
 - Make the release tool `go install ./cmd/tkrelease`
 - run `git tag <version> && git push origin --tags && git push`
 - Update the changelog.txt with the date of the version release
