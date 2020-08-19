@@ -66,11 +66,11 @@ A man in the middle proxy is the easiest way to introspect the requests that the
 - run `git tag <version> && git push origin --tags && git push`
 - Update the changelog.txt with the date of the version release
 - Release using tool
-  - build all distrobutions `make all`
+  - build all distributions `make all`
   - release `tkrelease -k="AWS_ACCESS_KEY" -s="AWS_SECRET_KEY" vX.X.X`
-    - If releasing a different version that in `src/release/version.go` you can use `-f` to force, sometimes this is nessecary for specific issue tags like `v0.0.0-issue432` when trying to debug a issue.
+    - If releasing a different version than in `src/release/version.go` you can use `-f` to force, sometimes this is necessary for specific issue tags like `v0.0.0-issue432` when trying to debug a issue.
     - Using beta/alpha tags on the version number will stop themekit from automatically updating to that version. It would have to be typed in specifically like `theme update --version=v1.0.4-rc1`
-- On Github create a new release for the tag and take note of any relevant changes.
+- On GitHub create a new release for the tag and take note of any relevant changes.
   - Include a brief summary of all the changes
   - Include links to the Pull Requests that introduced these changes
 - Update the [documentation website](https://shopify.github.io/themekit/)
