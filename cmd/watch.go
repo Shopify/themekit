@@ -83,7 +83,7 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifie
 			}
 			ctx.Log.Printf("[%s] processing %s", colors.Green(ctx.Env.Name), colors.Blue(event.Path))
 			perform(ctx, event.Path, event.Op, event.LastKnownChecksum)
-			if event.Op != file.Skip && event.Op != file.Remove {
+			if event.Op != file.Skip {
 				notifier.notify(ctx, event.Path)
 			}
 		case <-sig:

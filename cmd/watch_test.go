@@ -84,11 +84,14 @@ func TestWatch(t *testing.T) {
 		eventChan <- file.Event{Op: file.Remove, Path: "assets/app.js"}
 		signalChan <- os.Interrupt
 	}()
-	err = watch(ctx, eventChan, signalChan, nil)
+	notifier = new(testAdapter)
+	notifier.On("notify", ctx, "assets/app.js")
+	err = watch(ctx, eventChan, signalChan, notifier)
 	assert.Nil(t, err)
 	assert.Contains(t, stdOut.String(), "Watching for file changes")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdOut.String(), "Deleted assets/app.js")
+	notifier.AssertExpectations(t)
 }
 
 func TestPerform(t *testing.T) {
