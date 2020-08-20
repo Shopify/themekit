@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,7 +20,6 @@ import (
 )
 
 var (
-	errClientTimeout   = errors.New(`request timed out. if you are receive this error consistently, try increasing the timeout in your config`)
 	errConnectionIssue = errors.New("DNS problem while connecting to Shopify, this indicates a problem with your internet connection")
 )
 
@@ -29,7 +29,6 @@ type Params struct {
 	Password string
 	Proxy    string
 	Timeout  time.Duration
-	APILimit time.Duration
 }
 
 // HTTPClient encapsulates an authenticate http client to issue theme requests
@@ -40,6 +39,7 @@ type HTTPClient struct {
 	baseURL  *url.URL
 	client   *http.Client
 	limit    *ratelimiter.Limiter
+	maxRetry int
 }
 
 // NewClient will create a new authenticated http client that will communicate
@@ -60,7 +60,8 @@ func NewClient(params Params) (*HTTPClient, error) {
 		password: params.Password,
 		baseURL:  baseURL,
 		client:   adapter,
-		limit:    ratelimiter.New(params.Domain, params.APILimit),
+		limit:    ratelimiter.New(params.Domain, 4),
+		maxRetry: 5,
 	}, nil
 }
 
@@ -88,16 +89,7 @@ func (client *HTTPClient) Delete(path string, headers map[string]string) (*http.
 
 // do will issue an authenticated json request to shopify.
 func (client *HTTPClient) do(method, path string, body interface{}, headers map[string]string) (*http.Response, error) {
-	var jsonData io.Reader
-	if body != nil {
-		data, err := json.Marshal(body)
-		if err != nil {
-			return nil, err
-		}
-		jsonData = bytes.NewBuffer(data)
-	}
-
-	req, err := http.NewRequest(method, client.baseURL.String()+path, jsonData)
+	req, err := http.NewRequest(method, client.baseURL.String()+path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -110,14 +102,38 @@ func (client *HTTPClient) do(method, path string, body interface{}, headers map[
 		req.Header.Add(label, value)
 	}
 
-	client.limit.Wait()
-	resp, err := client.client.Do(req)
-	if err, ok := err.(net.Error); ok && err.Timeout() {
-		return nil, errClientTimeout
-	} else if err != nil && strings.Contains(err.Error(), "no such host") {
-		return nil, errConnectionIssue
+	return client.doWithRetry(req, body)
+}
+
+func (client *HTTPClient) doWithRetry(req *http.Request, body interface{}) (*http.Response, error) {
+	attempt := 0
+	for {
+		// reset the body when non-nil for every request (rewind)
+		if body != nil {
+			data, err := json.Marshal(body)
+			if err != nil {
+				return nil, err
+			}
+			req.Body = ioutil.NopCloser(bytes.NewBuffer(data))
+		}
+
+		client.limit.Wait()
+		resp, err := client.client.Do(req)
+		if err == nil && resp.StatusCode >= 100 && resp.StatusCode <= 428 {
+			return resp, nil
+		} else if err, ok := err.(net.Error); ok && err.Timeout() {
+			attempt++
+			if attempt > client.maxRetry {
+				return resp, fmt.Errorf("request timed out after %v retries, there may be an issue with your connection", client.maxRetry)
+			}
+			time.Sleep(time.Duration(attempt) * time.Second)
+		} else if resp.StatusCode == http.StatusTooManyRequests {
+			after, _ := strconv.ParseFloat(resp.Header.Get("Retry-After"), 10)
+			client.limit.ResetAfter(time.Duration(after))
+		} else if err != nil && strings.Contains(err.Error(), "no such host") {
+			return nil, errConnectionIssue
+		}
 	}
-	return resp, err
 }
 
 func generateHTTPAdapter(timeout time.Duration, proxyURL string) (*http.Client, error) {
