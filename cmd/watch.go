@@ -39,7 +39,6 @@ var watchCmd = &cobra.Command{
 			if err != nil {
 				return fmt.Errorf("[%s] Error while fetching info from server: %v", colors.Green(ctx.Env.Name), err)
 			}
-
 			for _, remoteAsset := range remoteFiles {
 				checksums[remoteAsset.Key] = remoteAsset.Checksum
 			}
@@ -50,14 +49,18 @@ var watchCmd = &cobra.Command{
 			}
 			watcher.Watch()
 			defer watcher.Stop()
+
 			signalChan := make(chan os.Signal)
 			signal.Notify(signalChan, os.Interrupt)
-			return watch(ctx, watcher.Events, signalChan)
+
+			notifier := newNotifyAdapter(ctx.Env.Notify)
+
+			return watch(ctx, watcher.Events, signalChan, notifier)
 		})
 	},
 }
 
-func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
+func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifier notifyAdapter) error {
 	ctx.Flags.Verbose = true
 	ctx.Log.SetFlags(log.Ltime)
 
@@ -80,6 +83,9 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal) error {
 			}
 			ctx.Log.Printf("[%s] processing %s", colors.Green(ctx.Env.Name), colors.Blue(event.Path))
 			perform(ctx, event.Path, event.Op, event.LastKnownChecksum)
+			if event.Op != file.Skip && event.Op != file.Remove {
+				notifier.notify(ctx, event.Path)
+			}
 		case <-sig:
 			return nil
 		}

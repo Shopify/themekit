@@ -125,7 +125,7 @@ func TestGetFlagEnv(t *testing.T) {
 		Domain:       "o",
 		Proxy:        "r",
 		Timeout:      1,
-		NotifyFile:   "n",
+		Notify:       "n",
 		IgnoredFiles: []string{"i"},
 		Ignores:      []string{"c"},
 	}

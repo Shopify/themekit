@@ -22,7 +22,6 @@ func TestMain(m *testing.M) {
 
 func TestNewFileWatcher(t *testing.T) {
 	w := createTestWatcher(t)
-	assert.Equal(t, w.notify, "/tmp/notifytest")
 	assert.NotNil(t, w.fsWatcher)
 	assert.NotNil(t, w.Events)
 }
@@ -218,34 +217,10 @@ func TestFileWatcher_StopWatching(t *testing.T) {
 	w.Stop()
 }
 
-func TestFileWatcher_TouchNotifyFile(t *testing.T) {
-	notifyPath := filepath.Join("_testdata", "notify_file")
-	w, _ := NewWatcher(&env.Env{Notify: notifyPath}, "", map[string]string{})
-
-	os.Remove(notifyPath)
-	_, err := os.Stat(notifyPath)
-	assert.True(t, os.IsNotExist(err))
-
-	w.onIdle()
-	_, err = os.Stat(notifyPath)
-	assert.Nil(t, err)
-	// need to make the time different larger than milliseconds because windows
-	// trucates the time and it will fail
-	os.Chtimes(w.notify, time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, -1))
-	info1, err := os.Stat(notifyPath)
-	assert.Nil(t, err)
-
-	w.onIdle()
-	info2, err := os.Stat(notifyPath)
-	assert.Nil(t, err)
-	assert.NotEqual(t, info1.ModTime(), info2.ModTime())
-}
-
 func createTestWatcher(t *testing.T) *Watcher {
 	e := &env.Env{
 		Directory:    filepath.Join("_testdata", "project"),
 		IgnoredFiles: []string{"config/"},
-		Notify:       "/tmp/notifytest",
 	}
 	w, err := NewWatcher(e, filepath.Join("_testdata", "project", "config.yml"), map[string]string{})
 	assert.Nil(t, err)
@@ -256,7 +231,6 @@ func createTestFilterHook(t *testing.T) watcher.FilterFileHookFunc {
 	e := &env.Env{
 		Directory:    filepath.Join("_testdata", "project"),
 		IgnoredFiles: []string{"config/"},
-		Notify:       "/tmp/notifytest",
 	}
 	hook, err := filterHook(e, filepath.Join("_testdata", "project", "config.yml"))
 	assert.Nil(t, err)
