@@ -43,7 +43,7 @@ type Flags struct {
 	IgnoredFiles          []string
 	Ignores               []string
 	DisableIgnore         bool
-	NotifyFile            string
+	Notify                string
 	AllEnvs               bool
 	Version               string
 	Prefix                string
@@ -234,7 +234,7 @@ func getFlagEnv(flags Flags) env.Env {
 		Domain:    flags.Domain,
 		Proxy:     flags.Proxy,
 		Timeout:   flags.Timeout,
-		Notify:    flags.NotifyFile,
+		Notify:    flags.Notify,
 	}
 
 	if !flags.DisableIgnore {

@@ -32,8 +32,6 @@ var (
 	// the interval that the watcher polls the filesystem this needs to be less than
 	// the drain timeout, otherwise debouncing will not work
 	pollInterval = 500 * time.Millisecond
-	// amount of time with no events before touching the notify file
-	idleTimeout = time.Second
 )
 
 // Event decsribes a file change event
@@ -50,7 +48,6 @@ type Watcher struct {
 	Events chan Event
 
 	fsWatcher *watcher.Watcher
-	notify    string
 	directory string
 	checksums map[string]string
 }
@@ -76,7 +73,6 @@ func NewWatcher(e *env.Env, configPath string, checksums map[string]string) (*Wa
 		Events:    make(chan Event),
 		directory: e.Directory,
 		checksums: checksums,
-		notify:    e.Notify,
 		fsWatcher: fsWatcher,
 	}, nil
 }
@@ -102,16 +98,12 @@ func (w *Watcher) Watch() {
 }
 
 func (w *Watcher) watchFsEvents() {
-	idleTimer := time.NewTimer(idleTimeout)
-	defer idleTimer.Stop()
 	for {
 		select {
 		case event, ok := <-w.fsWatcher.Event:
-			if ok && w.onEvent(event) {
-				idleTimer.Reset(idleTimeout)
+			if ok {
+				w.onEvent(event)
 			}
-		case <-idleTimer.C:
-			w.onIdle()
 		case <-w.fsWatcher.Closed:
 			w.Stop()
 			return
@@ -202,14 +194,6 @@ func (w *Watcher) Stop() {
 	for len(w.Events) > 0 { // drain events
 		<-w.Events
 	}
-}
-
-func (w *Watcher) onIdle() {
-	if w.notify == "" {
-		return
-	}
-	os.Create(w.notify)
-	os.Chtimes(w.notify, time.Now(), time.Now())
 }
 
 func fileChecksum(dir, src string) (string, error) {

@@ -8,14 +8,21 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/Shopify/themekit/src/cmdutil"
 	"github.com/Shopify/themekit/src/file"
 	"github.com/Shopify/themekit/src/shopify"
 )
 
+type testAdapter struct{ mock.Mock }
+
+func (adapter *testAdapter) notify(ctx *cmdutil.Ctx, path string) {
+	adapter.Called(ctx, path)
+}
+
 func TestWatch(t *testing.T) {
 	ctx, _, _, _, _ := createTestCtx()
 	ctx.Env.ReadOnly = true
-	err := watch(ctx, make(chan file.Event), make(chan os.Signal))
+	err := watch(ctx, make(chan file.Event), make(chan os.Signal), nil)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "environment is reaonly")
 	}
@@ -24,7 +31,7 @@ func TestWatch(t *testing.T) {
 	ctx, _, _, stdOut, _ := createTestCtx()
 	ctx.Flags.ConfigPath = "config.yml"
 	eventChan <- file.Event{Path: ctx.Flags.ConfigPath}
-	err = watch(ctx, eventChan, make(chan os.Signal))
+	err = watch(ctx, eventChan, make(chan os.Signal), nil)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "reload")
 	}
@@ -39,11 +46,14 @@ func TestWatch(t *testing.T) {
 		eventChan <- file.Event{Op: file.Update, Path: "assets/app.js"}
 		signalChan <- os.Interrupt
 	}()
-	err = watch(ctx, eventChan, signalChan)
+	notifier := new(testAdapter)
+	notifier.On("notify", ctx, "assets/app.js")
+	err = watch(ctx, eventChan, signalChan, notifier)
 	assert.Nil(t, err)
 	assert.Contains(t, stdOut.String(), "Watching for file changes")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdErr.String(), "error loading assets/app.js: readAsset: ")
+	notifier.AssertExpectations(t)
 
 	signalChan = make(chan os.Signal)
 	eventChan = make(chan file.Event)
@@ -55,11 +65,14 @@ func TestWatch(t *testing.T) {
 		eventChan <- file.Event{Op: file.Update, Path: "assets/app.js"}
 		signalChan <- os.Interrupt
 	}()
-	err = watch(ctx, eventChan, signalChan)
+	notifier = new(testAdapter)
+	notifier.On("notify", ctx, "assets/app.js")
+	err = watch(ctx, eventChan, signalChan, notifier)
 	assert.Nil(t, err)
 	assert.Contains(t, stdOut.String(), "Watching for file changes")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdOut.String(), "Updated assets/app.js")
+	notifier.AssertExpectations(t)
 
 	signalChan = make(chan os.Signal)
 	eventChan = make(chan file.Event)
@@ -71,11 +84,14 @@ func TestWatch(t *testing.T) {
 		eventChan <- file.Event{Op: file.Remove, Path: "assets/app.js"}
 		signalChan <- os.Interrupt
 	}()
-	err = watch(ctx, eventChan, signalChan)
+	notifier = new(testAdapter)
+	notifier.On("notify", ctx, "assets/app.js")
+	err = watch(ctx, eventChan, signalChan, notifier)
 	assert.Nil(t, err)
 	assert.Contains(t, stdOut.String(), "Watching for file changes")
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdOut.String(), "Deleted assets/app.js")
+	notifier.AssertExpectations(t)
 }
 
 func TestPerform(t *testing.T) {
