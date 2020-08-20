@@ -1,12 +1,17 @@
-v1.1.0-beta (Aug 19 2020)
-====================
+v1.1.0-beta2 (Aug 20, 2020)
+===========================
+- Improvements to notification system (#757)
+- Added retries and improved throttling to HTTP requests (#747)
+
+v1.1.0-beta (Aug 19, 2020)
+==========================
 - Use checksums to prevent unnecessary uploads and downloads for unchanged assets
 - Added Strict theme ID handling to prevent accidental live theme alterations (#739)
 - Use checksums sourced from API rather than local filesystem in file watcher to optimize startup and fix changes made
 while the watch command was not running
 
-v1.0.3 (Dec 17 2019)
-====================
+v1.0.3 (Dec 17, 2019)
+=====================
 - Add support for pages/customers directory
 
 v1.0.2 (Dec 12, 2019)
@@ -14,7 +19,7 @@ v1.0.2 (Dec 12, 2019)
 - Content checks to not process files that have not changed
 
 v1.0.1 (Jun 19, 2019)
-======================
+=====================
 - Added support for Sections-Everywhere
 - Changes file watcher to be more flexible by polling recursivly instead of
 individually on each folder
@@ -25,7 +30,7 @@ individually on each folder
 - Disabled cgo and updated to Go 1.12 for better certificate handling
 
 v1.0.0 (Jan 8, 2019)
-======================
+====================
 - Changed how the New command works. Now will create files locally and upload them.
 - Fixed a problem with uploading compiled assets
 - Decoupled config file from command execution so any command can run without a config file.
@@ -38,8 +43,8 @@ events each operating systems send.
 - Added an error when developers are deploying themes with files that will
 conflict with Shopify's liquid compilation. example: app.js and app.js.liquid
 
-v0.8.1 (Sept 18, 2018)
-======================
+v0.8.1 (Sep 18, 2018)
+=====================
 - Added checksums to the download links
 - Added checksum validation for auto install scripts
 - Added support for freebsd
@@ -106,7 +111,7 @@ not be able to overwrite changes.
 - Browser flag on open command
 
 v0.6.12 (May 24, 2017)
-=====================
+======================
 - Throttle api calls per domain
 - Show open link with open command
 - Simplify install script and make it use the cdn
@@ -121,7 +126,7 @@ v0.6.11 (Apr 3, 2017)
 - Fixed asset request query params encoding
 
 v0.6.10 (Mar 10, 2017)
-=====================
+======================
 - minimal vcs integration for watch command so that watch is reloaded when branch is changed
 - watch CPU usage optimizations
 - theme open -E command to open the editor
@@ -131,7 +136,7 @@ v0.6.10 (Mar 10, 2017)
 - Better Config File Loading
 
 v0.6.9-6 (Feb 21, 2017)
-=====================
+=======================
 There were some deploy issues with these versions
 - Fixing watching symlinked directories
 - Fix for singlle file operations
