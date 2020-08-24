@@ -59,6 +59,8 @@ A man in the middle proxy is the easiest way to introspect the requests that the
 - in another console, in your project directory run `theme deploy --proxy http://localhost:5000`
 - After that command finished, you can quit mitmproxy by pressing q then y
 
+If troubleshooting an issue for a partner, we can ask that they provide the `themekit_dump` log which can then be loaded into mitmproxy for analysis.
+
 # Deploying Themekit
 
 - Update ThemeKitVersion in `src/release/release.go` and commit.
