@@ -45,7 +45,7 @@ func TestEnv_Validate(t *testing.T) {
 		notwindows bool
 	}{
 		{env: Env{Password: "file", ThemeID: "123", Domain: "test.myshopify.com"}},
-		{env: Env{Password: "file", ThemeID: "live", Domain: "test.myshopify.com"}, err: "invalid theme_id"},
+		{env: Env{Password: "file", ThemeID: "live", Domain: "test.myshopify.com"}, err: "invalid environment []: ('live' is no longer supported for theme_id. Please use an ID instead)"},
 		{env: Env{ThemeID: "123", Domain: "test.myshopify.com"}, err: "missing password"},
 		{env: Env{Password: "test", ThemeID: "123", Domain: "test.nope.com"}, err: "invalid store domain"},
 		{env: Env{Password: "test", ThemeID: "123"}, err: "missing store domain"},

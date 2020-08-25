@@ -28,6 +28,8 @@ var downloadCmd = &cobra.Command{
  For more documentation please see http://shopify.github.io/themekit/commands/#download
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// download should not care about the live theme
+		flags.AllowLive = true
 		return cmdutil.ForEachClient(flags, args, download)
 	},
 }
