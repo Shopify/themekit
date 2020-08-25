@@ -84,6 +84,8 @@ You'll need to set up new Shopify API credentials to connect Theme Kit to your s
 
 1. In the store's Shopify admin, click **Apps**.
 1. Near the bottom of the page, click on **Manage private apps**.
+1. If you see a notice that "Private app development is disabled", click "Enable
+   private app development".
 1. Click **Create new private app**.
 1. In the **App details** section, fill out the app name and your email address.
 1. In the **Admin API** section, click **Show inactive Admin API permissions**.
