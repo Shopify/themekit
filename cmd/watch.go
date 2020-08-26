@@ -61,6 +61,7 @@ var watchCmd = &cobra.Command{
 }
 
 func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifier notifyAdapter) error {
+	// watch should output every action that it is taking and not use a progress bar
 	ctx.Flags.Verbose = true
 	ctx.Log.SetFlags(log.Ltime)
 

@@ -19,6 +19,8 @@ var openCmd = &cobra.Command{
 	Long: `Open will open the preview page in your browser as well as print out
 url for your reference`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// open should not care about the live theme
+		flags.AllowLive = true
 		return cmdutil.ForSingleClient(flags, args, func(ctx *cmdutil.Ctx) error {
 			return preview(ctx, open.Run, open.RunWith)
 		})

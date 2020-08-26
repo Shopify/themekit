@@ -53,6 +53,8 @@ func (env *Env) validate() error {
 
 	if env.ThemeID == "" {
 		errors = append(errors, "missing theme_id")
+	} else if env.ThemeID == "live" {
+		errors = append(errors, "'live' is no longer supported for theme_id. Please use an ID instead")
 	} else if _, err := strconv.ParseInt(env.ThemeID, 10, 64); err != nil {
 		errors = append(errors, "invalid theme_id")
 	}
