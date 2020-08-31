@@ -106,10 +106,7 @@ func (c *Conf) Set(name string, initial Env, overrides ...Env) (*Env, error) {
 	}
 	var err error
 	c.Envs[name], err = newEnv(name, initial, append([]Env{c.osEnv}, overrides...)...)
-	if err != nil {
-		return nil, err
-	}
-	return c.Envs[name], c.Envs[name].validate()
+	return c.Envs[name], err
 }
 
 // Get will check if an environment exists and then return it. If the environment
