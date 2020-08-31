@@ -5,8 +5,8 @@ $file           = "$($toolsDir)\theme.exe"
 $version        = "v1.0.2"
 $url            = "https://shopify-themekit.s3.amazonaws.com/$($version)/windows-386/theme.exe"
 $url64          = "https://shopify-themekit.s3.amazonaws.com/$($version)/windows-amd64/theme.exe"
-$checksum       = '5dce511bce4f3d97ea029f5401ab2c20'
-$checksum64     = '17fbb2d5a99c8418bec49f3f203baf98'
+$checksum       = '16e1073b67419268430110b3775c0463'
+$checksum64     = 'cb4e86ee372916f8247974a6012a3896'
 $validExitCodes = @(0)
 
 Get-ChocolateyWebFile `
