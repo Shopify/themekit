@@ -178,4 +178,13 @@ theme watch --notify=/tmp/theme.update
 
 |**Optional Flags**||
 |`-a`|`--allenvs`| Will run this command for each environment in your config file.
-|`-n`|`--notify` | File path to a file that you want updated on idle.
+|`-n`|`--notify` | Filepath or ULR. Filepath is to a file that you want updated on idle. The Url path is where you want a webhook posted to to report on file changes.
+
+**Special Note**
+Supplying the `--notify` flag with a url will send a payload like the following. For a file change to the file `assets/app.js` the url with receive a `POST` with a payload of:
+
+```json
+{
+  "files": ["assets/app.js"]
+}
+```
