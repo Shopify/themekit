@@ -3,7 +3,7 @@ layout: default
 ---
 # FAQ
 
-## How can I reload the page when I make changes
+## How can I reload the page when I make changes?
 
 You will need to use another tool to do this, however there are many options available
 to you to suit all use cases.
@@ -13,7 +13,7 @@ to you to suit all use cases.
 - [BrowserSync](https://www.browsersync.io/)
 - [LiveReload](http://livereload.com/)
 
-## How can I use LiveReload/Prepros/Browsersync/LivePage
+## How can I use LiveReload/Prepros/Browsersync/LivePage?
 
 You can find a guide to setup [Prepros on the shopify blog](https://www.shopify.com/partners/blog/live-reload-shopify-sass)
 that can apply to many other tools as well.
@@ -40,7 +40,7 @@ command:
 rm $(which theme)
 ```
 
-## Theme Kit does not upload my changes.
+## Theme Kit does not upload my changes
 
 This usually means that your file is being ignored. Please check your ignore
 patterns and see the [documentation on ignore patterns]({{ '/ignores' | prepend: site.baseurl }}).
