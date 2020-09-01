@@ -63,7 +63,7 @@ some filenames are provided to replace then only those files will be replaced.
 Theme Kit calculates a checksum for each file, and only updates assets if you've made changes to them locally.
 
 |**Optional Flags**||
-|    |`--allow-live`| Will allow themekit to deploy the file changes to the currently live theme.
+|    |`--allow-live`| Will allow Theme Kit to deploy the file changes to the currently live theme.
 |`-a`|`--allenvs` | Will run this command for each environment in your config file.
 |`-n`|`--nodelete`| will run deploy without removing files from shopify.
 
@@ -161,7 +161,7 @@ are required to serve a valid theme.
 
 |**Optional Flags**||
 |`-a`|`--allenvs`| Will run this command for each environment in your config file.
-|    |`--allow-live`| Will allow themekit to remove files from a live theme
+|    |`--allow-live`| Will allow Theme Kit to remove files from a live theme
 
 ## Watch
 Watch will start a process that will watch your directory for changes and
@@ -181,7 +181,7 @@ theme watch --notify=/tmp/theme.update
 |**Optional Flags**||
 |`-a`|`--allenvs`| Will run this command for each environment in your config file.
 |`-n`|`--notify` | Filepath or URL. Filepath is to a file that you want updated on idle. The URL path is where you want a webhook posted to to report on file changes.
-|    |`--allow-live`| Will allow themekit to make changes to the live theme
+|    |`--allow-live`| Will allow Theme Kit to make changes to the live theme
 
 **Special Note**
 Supplying the `--notify` flag with a URL will send a payload like the following. For a file change to the file `assets/app.js` the URL with receive a `POST` with a payload of:
