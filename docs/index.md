@@ -74,7 +74,7 @@ There is a package available for install on the [AUR](https://aur.archlinux.org/
 
 #### Build from source
 
-Please refer to the [contributing docs](https://github.com/Shopify/themekit/blob/master/.github/CONTRIBUTING.md#developing-themekit)
+Please refer to the [contributing docs](https://github.com/Shopify/themekit/blob/master/CONTRIBUTING.md#developing-themekit)
 
 ## Get API Access
 
