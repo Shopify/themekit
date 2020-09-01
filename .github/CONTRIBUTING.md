@@ -79,6 +79,7 @@ If troubleshooting an issue for a partner, we can ask that they provide the `the
   - run `make serve_docs`
   - update any changes to the API
   - commit changes
+- (Consider waiting a day before performing the next steps, in case a defect is reported and we need to issue a patch release).
 - Update `themekitversion` in docs config `docs/_config.yml` to update the download links,
   then run `make md5s` to generate the checksums for the new files. Add these to the `docs/_config.yml`
   file as well.
