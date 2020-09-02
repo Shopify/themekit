@@ -11,13 +11,13 @@ We welcome your contributions to the project. There are a few steps to take when
 
 # Bug Reporting
 
-Themekit uses github issue tracking to manage bugs, please open an issue there.
+Theme Kit uses GitHub issue tracking to manage bugs, please open an issue there.
 
 # Feature Request
 
-You can open a new issue on the github issues and describe the feature you would like to see.
+You can open a new issue on the GitHub issues and describe the feature you would like to see.
 
-# Developing Themekit
+# Developing Theme Kit
 
 Requirements:
 
@@ -61,7 +61,7 @@ A man in the middle proxy is the easiest way to introspect the requests that the
 
 If troubleshooting an issue for a partner, we can ask that they provide the `themekit_dump` log which can then be loaded into mitmproxy for analysis.
 
-# Deploying Themekit
+# Deploying Theme Kit
 
 - Update ThemeKitVersion in `src/release/release.go` and commit.
 - Make the release tool `go install ./cmd/tkrelease`
