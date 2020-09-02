@@ -30,7 +30,7 @@ Please find further usage instructions on the [theme kit website](https://shopif
 
 ## Contribution & Development
 
-Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob/master/.github/CONTRIBUTING.md)
+Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob/master/CONTRIBUTING.md)
 
 ## Authors
 
