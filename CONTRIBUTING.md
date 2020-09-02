@@ -90,7 +90,7 @@ If troubleshooting an issue for a partner, we can ask that they provide the `the
     - Log into [chocolatey.org](chocolatey.org) (use the themekit@shopify.com credentials) and submit an update for approval
 - Update `themekit.rb` formula for homebrew on https://github.com/Shopify/homebrew-shopify
   - run `make sha` to generate the SHA256 for the darwin build
-  - update the link and sha in the homebrew formula
+  - update the link, sha and version in the homebrew formula
 - Notify the maintainer of the AUR themekit package https://aur.archlinux.org/packages/shopify-themekit-bin
   of an update so they can release a new version.
 
