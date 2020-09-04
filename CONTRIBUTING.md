@@ -86,8 +86,12 @@ If troubleshooting an issue for a partner, we can ask that they provide the `the
 - Update Chocolatey package in the `choco` folder
     - Update the version in `choco/themekit.nuspec`
     - Update the version and checksums in `choco/tools/chocolateyinstall.ps1`
-    - Run `choco pack` in a window VM
-    - Log into [https://chocolatey.org/](chocolatey.org) (use the themekit@shopify.com credentials) and submit an update for approval
+    - Merge the changes to master
+    - Sign into [AppVeyor](https://www.appveyor.com/) (you can use your GitHub account)
+    - Visit https://ci.appveyor.com/project/Shopify/themekit to confirm the package was published
+    - Notes:
+        - Chocolately releases go into an approval queue but should later appear on https://chocolatey.org/packages/themekit
+        - If you need to sign in to [https://chocolatey.org/](chocolatey.org) you can use use the themekit@shopify.com credentials
 - Update `themekit.rb` formula for homebrew on https://github.com/Shopify/homebrew-shopify
   - run `make sha` to generate the SHA256 for the darwin build
   - update the link, sha and version in the homebrew formula
