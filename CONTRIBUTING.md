@@ -87,7 +87,7 @@ If troubleshooting an issue for a partner, we can ask that they provide the `the
     - Update the version in `choco/themekit.nuspec`
     - Update the version and checksums in `choco/tools/chocolateyinstall.ps1`
     - Run `choco pack` in a window VM
-    - Log into [chocolatey.org](chocolatey.org) (use the themekit@shopify.com credentials) and submit an update for approval
+    - Log into [https://chocolatey.org/](chocolatey.org) (use the themekit@shopify.com credentials) and submit an update for approval
 - Update `themekit.rb` formula for homebrew on https://github.com/Shopify/homebrew-shopify
   - run `make sha` to generate the SHA256 for the darwin build
   - update the link, sha and version in the homebrew formula
