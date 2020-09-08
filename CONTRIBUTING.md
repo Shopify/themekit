@@ -91,6 +91,3 @@ If troubleshooting an issue for a partner, we can ask that they provide the `the
 - Update `themekit.rb` formula for homebrew on https://github.com/Shopify/homebrew-shopify
   - run `make sha` to generate the SHA256 for the darwin build
   - update the link, sha and version in the homebrew formula
-- Notify the maintainer of the AUR themekit package https://aur.archlinux.org/packages/shopify-themekit-bin
-  of an update so they can release a new version.
-

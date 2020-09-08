@@ -42,9 +42,14 @@ download and install the latest Theme Kit for you.
 curl -s https://shopify.github.io/themekit/scripts/install.py | sudo python
 ```
 
-### Arch installation
+### Community Packages
 
-There is a package available for install on the [AUR](https://aur.archlinux.org/packages/shopify-themekit-bin)
+Theme Kit is available through other package manager distributions, but as these are not
+maintained by Shopify, care should be taken before using:
+
+* [AUR](https://aur.archlinux.org/packages/shopify-themekit-bin)
+
+These packages may not contain the latest Theme Kit release, but running `theme update` will auto-update to the latest.
 
 ### Manual Installation
 
