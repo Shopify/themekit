@@ -115,7 +115,7 @@ development:
 
 If you are starting a new theme and want to have some sane defaults, you can use
 the new command. The command will
-- Create a new theme on shopify with the provided name.
+- Create a new theme on shopify with the provided name in the current directory you are in.
 - Initialize your configuration with your credentials and your new theme id.
 - Generate and upload some default templates to make your theme valid.
 
@@ -132,6 +132,9 @@ theme new --password=[your-api-password] --store=[your-store.myshopify.com] --na
 |`-p`|`--password`| Password for access to your Shopify account.
 |`-s`|`--store   `| Your store's domain for changes to take effect
 |`-n`|`--name    `| The name of your new theme.
+
+|**Optional Flags**||
+|`--dir`| Directory to place all of the files for the new theme in. **Note:** Directory must exist beforehand.
 
 ## Open
 Open will open the preview page for your theme in your browser as well as print
