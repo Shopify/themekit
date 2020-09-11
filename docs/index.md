@@ -27,7 +27,7 @@ brew install themekit
 
 ### Windows Chocolatey Installation
 
-If you have [chocolatey](https://chocolatey.org/) installed you can install themekit by running the following commands.
+If you have [chocolatey](https://chocolatey.org/) installed you can install Theme Kit by running the following commands.
 
 ```
 choco install themekit
@@ -65,7 +65,7 @@ These packages may not contain the latest Theme Kit release, but running `theme 
 
 #### Linux & macOS
 
-- Download the themekit binary that works for your system.
+- Download the Theme Kit binary that works for your system.
 - Compare checksums of the binary by running `md5 theme`
 - Put the binary on your path. We recommend somewhere like `/usr/local/bin`
 - Ensure that it works as expected by running `theme version`
@@ -73,7 +73,7 @@ These packages may not contain the latest Theme Kit release, but running `theme 
 #### Windows Installation
 
 - Create a folder inside `C:\Program Files` called `Theme Kit`
-- Download themekit (below) and copy the extracted program into `C:\Program Files\Theme Kit`
+- Download Theme Kit (below) and copy the extracted program into `C:\Program Files\Theme Kit`
 - You will then need to add `C:\Program Files\Theme Kit` to your `PATH` environment variable. You can find really [in-depth instructions here](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/)
 - To verify that Theme Kit has been installed, open `cmd.exe` and type in `theme`.
 

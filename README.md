@@ -26,7 +26,7 @@ You can find installation instructions for each platform on the [Docs Website](h
 
 ## Setup, Usage and Commands
 
-Please find further usage instructions on the [theme kit website](https://shopify.github.io/themekit/)
+Please find further usage instructions on the [Theme Kit website](https://shopify.github.io/themekit/)
 
 ## Contribution & Development
 
