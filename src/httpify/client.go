@@ -127,7 +127,7 @@ func (client *HTTPClient) doWithRetry(req *http.Request, body interface{}) (*htt
 				return resp, fmt.Errorf("request timed out after %v retries, there may be an issue with your connection", client.maxRetry)
 			}
 			time.Sleep(time.Duration(attempt) * time.Second)
-		} else if resp.StatusCode == http.StatusTooManyRequests {
+		} else if err == nil && resp.StatusCode == http.StatusTooManyRequests {
 			after, _ := strconv.ParseFloat(resp.Header.Get("Retry-After"), 10)
 			client.limit.ResetAfter(time.Duration(after))
 		} else if err != nil && strings.Contains(err.Error(), "no such host") {
