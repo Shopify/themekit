@@ -14,7 +14,7 @@ import (
 
 var newCmd = &cobra.Command{
 	Use:   "new",
-	Short: "New will create theme using Shopify in the same directory where it gets called from",
+	Short: "New will generate a new blank slate theme in the same directory where it gets called from and create a new theme on Shopify with those files.",
 	Long: `New will create a new theme on Shopify, generate a minimal template of
 	all the required files that a theme needs to be functional and then setup
 	your config file for working with your new theme. Note: by default the new command will generate files in
