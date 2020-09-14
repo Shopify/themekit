@@ -22,6 +22,7 @@ You can open a new issue on the GitHub issues and describe the feature you would
 Requirements:
 
 - Go 1.12 or higher
+- [Golint](https://github.com/golang/lint)
 
 You can setup your development environment by running the following:
 
