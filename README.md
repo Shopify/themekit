@@ -36,4 +36,3 @@ Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob
 
 [Tim Anema](https://github.com/tanema), [Chris Saunders](https://github.com/csaunders),
 [Chris Butcher](https://github.com/chrisbutcher), [Jakob Külzer](https://github.com/ilikeorangutans)
-.
