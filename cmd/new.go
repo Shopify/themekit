@@ -14,10 +14,12 @@ import (
 
 var newCmd = &cobra.Command{
 	Use:   "new",
-	Short: "New will create theme using Shopify Timber",
+	Short: "New will generate a new blank slate theme in the same directory where it gets called from and create a new theme on Shopify with those files.",
 	Long: `New will create a new theme on Shopify, generate a minimal template of
 	all the required files that a theme needs to be functional and then setup
-  your config file for working with your new theme.
+	your config file for working with your new theme. Note: by default the new command will generate files in
+	the same directory it's called from. Use the --dir flag to specify a custom directory where the generated files
+	should be placed.
 
   For more documentation please see http://shopify.github.io/themekit/commands/#new
   `,
