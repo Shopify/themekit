@@ -31,8 +31,3 @@ Please find further usage instructions on the [Theme Kit website](https://shopif
 ## Contribution & Development
 
 Please see the [contributing guidlines](https://github.com/Shopify/themekit/blob/master/CONTRIBUTING.md)
-
-## Authors
-
-[Tim Anema](https://github.com/tanema), [Chris Saunders](https://github.com/csaunders),
-[Chris Butcher](https://github.com/chrisbutcher), [Jakob Külzer](https://github.com/ilikeorangutans)
