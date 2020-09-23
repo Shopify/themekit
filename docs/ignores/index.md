@@ -29,6 +29,9 @@ There are a few rules for the specifications of ignore patterns.
 - Any pattern that starts with a **/** and ends with a **/** will be considered a
   regular expression and will match the whole path. An example pattern would be
   `/\.(txt|gif|bat)$/` that would match any file with the `txt`, `gif` or `bat` extentions.
+- On Windows, you'll need to use a backslash (`\`) as the path separator. We
+  acknowledge that this is not ideal if working across different platforms:
+  [#797](https://github.com/Shopify/themekit/issues/797)
 
 ## Ignores in config.yml example
 
