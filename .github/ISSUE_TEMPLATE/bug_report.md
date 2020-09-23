@@ -18,7 +18,7 @@ A clear and concise description of what you expected to happen.
 
 **Environment (please complete the following information):**
  - OS [e.g. iOS]:
-- Themekit version (run `theme version` to check):
+- Themekit version (run theme version to check):
  - Editor [e.g. atom, sublime]:
  - Ignore:
 
