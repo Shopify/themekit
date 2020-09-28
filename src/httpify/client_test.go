@@ -105,7 +105,7 @@ func TestClient_do(t *testing.T) {
 		if request == 0 {
 			request++
 			mut.Unlock()
-			time.Sleep(time.Second)
+			time.Sleep(5 * time.Millisecond)
 		} else {
 			mut.Unlock()
 		}
@@ -139,7 +139,7 @@ func TestClient_do(t *testing.T) {
 	assert.Nil(t, err)
 
 	_, err = client.do("POST", "/assets.json", body, nil)
-	assert.EqualError(t, err, "request timed out after 1 retries, there may be an issue with your connection")
+	assert.Contains(t, err.Error(), "request failed after 1 retries with err: ", server.URL)
 	server.Close()
 }
 
