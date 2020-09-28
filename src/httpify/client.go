@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -119,20 +118,23 @@ func (client *HTTPClient) doWithRetry(req *http.Request, body interface{}) (*htt
 
 		client.limit.Wait()
 		resp, err := client.client.Do(req)
-		if err == nil && resp.StatusCode >= 100 && resp.StatusCode <= 428 {
-			return resp, nil
-		} else if err, ok := err.(net.Error); ok && err.Timeout() {
-			attempt++
-			if attempt > client.maxRetry {
-				return resp, fmt.Errorf("request timed out after %v retries, there may be an issue with your connection", client.maxRetry)
+		if err == nil {
+			if resp.StatusCode >= 100 && resp.StatusCode <= 428 {
+				return resp, nil
+			} else if resp.StatusCode == http.StatusTooManyRequests {
+				after, _ := strconv.ParseFloat(resp.Header.Get("Retry-After"), 10)
+				client.limit.ResetAfter(time.Duration(after))
+				continue
 			}
-			time.Sleep(time.Duration(attempt) * time.Second)
-		} else if resp.StatusCode == http.StatusTooManyRequests {
-			after, _ := strconv.ParseFloat(resp.Header.Get("Retry-After"), 10)
-			client.limit.ResetAfter(time.Duration(after))
-		} else if err != nil && strings.Contains(err.Error(), "no such host") {
+		} else if strings.Contains(err.Error(), "no such host") {
 			return nil, errConnectionIssue
 		}
+
+		attempt++
+		if attempt > client.maxRetry {
+			return resp, fmt.Errorf("request failed after %v retries with err: %v", client.maxRetry, err)
+		}
+		time.Sleep(time.Duration(attempt) * time.Second)
 	}
 }
 
