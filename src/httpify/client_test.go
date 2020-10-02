@@ -113,7 +113,7 @@ func TestClient_do(t *testing.T) {
 
 	client, _ = NewClient(Params{
 		Domain:  server.URL,
-		Timeout: time.Millisecond,
+		Timeout: 5 * time.Millisecond,
 	})
 	client.baseURL.Scheme = "http"
 
@@ -130,7 +130,7 @@ func TestClient_do(t *testing.T) {
 
 	client, _ = NewClient(Params{
 		Domain:  server.URL,
-		Timeout: time.Millisecond,
+		Timeout: 5 * time.Millisecond,
 	})
 	client.maxRetry = 1
 	client.baseURL.Scheme = "http"
