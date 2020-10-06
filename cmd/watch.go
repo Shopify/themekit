@@ -30,7 +30,7 @@ var watchCmd = &cobra.Command{
 
  run 'theme watch' while you are editing and it will detect create, update and delete events.
 
- For more documentation please see http://shopify.github.io/themekit/commands/#watch
+ For more documentation please see https://shopify.github.io/themekit/commands/#watch
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForEachClient(flags, args, func(ctx *cmdutil.Ctx) error {

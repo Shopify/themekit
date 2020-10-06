@@ -25,7 +25,7 @@ var getCmd = &cobra.Command{
  that it accesses. To get a list of all themes that you can access, you can pass in
  a --list flag.
 
- For more documentation please see http://shopify.github.io/themekit/commands/#get
+ For more documentation please see https://shopify.github.io/themekit/commands/#get
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// This is a hack to get around theme ID validation for the list operation which doesnt need it

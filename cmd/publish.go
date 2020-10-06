@@ -13,7 +13,7 @@ var publishCmd = &cobra.Command{
 	Long: `Publish will update the theme to be your current publish theme. Select
 the theme you want to publish using the env flag.
 
- For more documentation please see http://shopify.github.io/themekit/commands/#deploy
+ For more documentation please see https://shopify.github.io/themekit/commands/#deploy
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForSingleClient(flags, args, publish)
