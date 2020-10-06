@@ -139,37 +139,41 @@ func TestClient_do(t *testing.T) {
 	assert.Nil(t, err)
 
 	_, err = client.do("POST", "/assets.json", body, nil)
-	assert.Contains(t, err.Error(), "request failed after 1 retries with err: ", server.URL)
+	assert.Contains(t, err.Error(), "request failed after 1 retries", server.URL)
 	server.Close()
 }
 
 func TestGenerateHTTPAdapter(t *testing.T) {
-	_, err := generateHTTPAdapter(time.Second, "#$#$^$%^##$")
-	if assert.NotNil(t, err) {
-		assert.EqualError(t, err, "invalid proxy URI")
-	}
+	NewClient(Params{
+		Domain:  "https://shop.myshopify.com",
+		Timeout: 60 * time.Second,
+	})
+	assert.Equal(t, httpClient.Timeout, 60*time.Second)
 
-	c, err := generateHTTPAdapter(time.Second, "http://localhost:3000")
-	assert.Nil(t, err)
-	assert.Equal(t, time.Second, c.Timeout)
-	assert.NotNil(t, c.Transport)
+	NewClient(Params{Domain: "https://shop.myshopify.com"})
+	assert.Equal(t, httpClient.Timeout, 60*time.Second)
 }
 
-func TestGenerateClientTransport(t *testing.T) {
+func TestProxyConfig(t *testing.T) {
 	testcases := []struct {
 		proxyURL, err string
-		expectNil     bool
 	}{
-		{proxyURL: "", expectNil: true},
-		{proxyURL: "http//localhost:3000", expectNil: true, err: "invalid proxy URI"},
-		{proxyURL: "http://127.0.0.1:8080", expectNil: false},
+		{proxyURL: ""},
+		{proxyURL: "http//localhost:3000", err: "invalid proxy URI"},
+		{proxyURL: "http://127.0.0.1:8080"},
 	}
 
 	for _, testcase := range testcases {
-		transport, err := generateClientTransport(testcase.proxyURL)
-		assert.Equal(t, transport == nil, testcase.expectNil)
-		if testcase.err == "" {
-			assert.Nil(t, err)
+		_, err := NewClient(Params{
+			Domain: "https://shop.myshopify.com",
+			Proxy:  testcase.proxyURL,
+		})
+		if testcase.err == "" && assert.Nil(t, err) {
+			if testcase.proxyURL == "" {
+				assert.Nil(t, httpTransport.Proxy)
+			} else {
+				assert.NotNil(t, httpTransport.Proxy)
+			}
 		} else if assert.NotNil(t, err) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}

@@ -28,8 +28,7 @@ type Env struct {
 
 //Default is the default values for a environment
 var Default = Env{
-	Name:    "development",
-	Timeout: 30 * time.Second,
+	Name: "development",
 }
 
 func init() {
