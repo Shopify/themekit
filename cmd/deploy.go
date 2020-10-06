@@ -43,7 +43,7 @@ var deployCmd = &cobra.Command{
  exist on your local machine will be removed from shopify unless the --nodelete
  flag is passed
 
- For more documentation please see http://shopify.github.io/themekit/commands/#deploy
+ For more documentation please see https://shopify.github.io/themekit/commands/#deploy
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForEachClient(flags, args, deploy)

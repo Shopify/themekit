@@ -25,7 +25,7 @@ var downloadCmd = &cobra.Command{
  If no filenames are provided then download will download every file in the project
  and write them to disk.
 
- For more documentation please see http://shopify.github.io/themekit/commands/#download
+ For more documentation please see https://shopify.github.io/themekit/commands/#download
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// download should not care about the live theme

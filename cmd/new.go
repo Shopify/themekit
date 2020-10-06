@@ -21,7 +21,7 @@ var newCmd = &cobra.Command{
 	the same directory it's called from. Use the --dir flag to specify a custom directory where the generated files
 	should be placed.
 
-  For more documentation please see http://shopify.github.io/themekit/commands/#new
+  For more documentation please see https://shopify.github.io/themekit/commands/#new
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// This is a hack to get around theme ID validation for the list operation which doesn't need it
