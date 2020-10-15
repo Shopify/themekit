@@ -20,7 +20,7 @@ func New(domain string, reqPerSec int) *Limiter {
 		everySecond := rate.Every(time.Second / time.Duration(reqPerSec))
 		domainLimitMap[domain] = &Limiter{
 			perSecond: everySecond,
-			rate:      rate.NewLimiter(everySecond, 10),
+			rate:      rate.NewLimiter(everySecond, reqPerSec),
 		}
 	}
 	return domainLimitMap[domain]
