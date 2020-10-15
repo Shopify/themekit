@@ -94,7 +94,7 @@ func TestThemeClient_Themes(t *testing.T) {
 		client, _ := NewClient(&env.Env{})
 		client.http = m
 
-		expectation := m.On("Get", APIPath + "themes.json", NoHeaders)
+		expectation := m.On("Get", APIPath+"themes.json", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
@@ -135,9 +135,9 @@ func TestThemeClient_CreateNewTheme(t *testing.T) {
 		query := map[string]interface{}{"theme": Theme{Name: testcase.in}}
 
 		if testcase.resp != "" {
-			m.On("Post", APIPath + "themes.json", query, NoHeaders).Return(jsonResponse(testcase.resp, 200), nil)
+			m.On("Post", APIPath+"themes.json", query, NoHeaders).Return(jsonResponse(testcase.resp, 200), nil)
 		} else if testcase.resperr != "" {
-			m.On("Post", APIPath + "themes.json", query, NoHeaders).Return(nil, errors.New(testcase.resperr))
+			m.On("Post", APIPath+"themes.json", query, NoHeaders).Return(nil, errors.New(testcase.resperr))
 		}
 
 		theme, err := client.CreateNewTheme(testcase.in)
@@ -173,7 +173,7 @@ func TestThemeClient_GetInfo(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: testcase.themeID})
 		client.http = m
 
-		expectation := m.On("Get", fmt.Sprintf(APIPath + "themes/%s.json", testcase.themeID), NoHeaders)
+		expectation := m.On("Get", fmt.Sprintf(APIPath+"themes/%s.json", testcase.themeID), NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
@@ -216,7 +216,7 @@ func TestThemeClient_PublishTheme(t *testing.T) {
 
 		expectation := m.On(
 			"Put",
-			fmt.Sprintf(APIPath + "themes/%s.json", testcase.themeID),
+			fmt.Sprintf(APIPath+"themes/%s.json", testcase.themeID),
 			map[string]Theme{"theme": {Role: "main"}},
 			NoHeaders,
 		)
@@ -256,7 +256,7 @@ func TestThemeClient_GetAllAssets(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Get", APIPath + "themes/123/assets.json?fields=key%2Cchecksum", NoHeaders)
+		expectation := m.On("Get", APIPath+"themes/123/assets.json?fields=key%2Cchecksum", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
@@ -299,7 +299,7 @@ func TestThemeClient_GetAllAssets(t *testing.T) {
 		m := new(mocks.HttpAdapter)
 		client, _ := NewClient(&env.Env{ThemeID: "123", IgnoredFiles: testcase.ignore})
 		client.http = m
-		m.On("Get", APIPath + "themes/123/assets.json?fields=key%2Cchecksum", NoHeaders).Return(jsonResponse(testcase.input, 200), nil)
+		m.On("Get", APIPath+"themes/123/assets.json?fields=key%2Cchecksum", NoHeaders).Return(jsonResponse(testcase.input, 200), nil)
 		assets, err := client.GetAllAssets()
 		assert.Nil(t, err)
 		assert.Equal(t, testcase.expected, assets)
@@ -322,7 +322,7 @@ func TestThemeClient_GetAsset(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Get", APIPath + "themes/123/assets.json?asset%5Bkey%5D=filename.txt", NoHeaders)
+		expectation := m.On("Get", APIPath+"themes/123/assets.json?asset%5Bkey%5D=filename.txt", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else if testcase.code != 0 {
@@ -358,7 +358,7 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Put", APIPath + "themes/123/assets.json", map[string]Asset{"asset": {Key: "filename.txt"}}, map[string]string{})
+		expectation := m.On("Put", APIPath+"themes/123/assets.json", map[string]Asset{"asset": {Key: "filename.txt"}}, map[string]string{})
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else if testcase.code != 0 {
@@ -400,13 +400,13 @@ func TestThemeClient_UpdateAsset(t *testing.T) {
 
 	m.On(
 		"Delete",
-		APIPath + "themes/123/assets.json?asset%5Bkey%5D=filename.txt.liquid",
+		APIPath+"themes/123/assets.json?asset%5Bkey%5D=filename.txt.liquid",
 		NoHeaders,
 	).Return(jsonResponse("{}", 200), nil)
 
 	m.On(
 		"Put",
-		APIPath + "themes/123/assets.json",
+		APIPath+"themes/123/assets.json",
 		map[string]Asset{"asset": asset},
 		map[string]string{},
 	).Return(jsonResponse(`{"asset":{"key":"assets/hello.txt"}}`, 200), nil)
@@ -431,7 +431,7 @@ func TestThemeClient_DeleteAsset(t *testing.T) {
 		client, _ := NewClient(&env.Env{ThemeID: "123"})
 		client.http = m
 
-		expectation := m.On("Delete", APIPath + "themes/123/assets.json?asset%5Bkey%5D=filename.txt", NoHeaders)
+		expectation := m.On("Delete", APIPath+"themes/123/assets.json?asset%5Bkey%5D=filename.txt", NoHeaders)
 		if testcase.resperr != "" {
 			expectation.Return(nil, errors.New(testcase.resperr))
 		} else {
