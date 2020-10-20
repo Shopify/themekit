@@ -56,6 +56,7 @@ type Flags struct {
 	NoDelete              bool
 	AllowLive             bool
 	Live                  bool
+	HidePB                bool
 }
 
 // Ctx is a specific context that a command will run in

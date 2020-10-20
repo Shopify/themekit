@@ -29,6 +29,9 @@ url for your reference`,
 
 func preview(ctx *cmdutil.Ctx, run runFunc, runWith runWithFunc) error {
 	url := fmt.Sprintf("https://%s?preview_theme_id=%s", ctx.Env.Domain, ctx.Env.ThemeID)
+	if ctx.Flags.HidePB {
+		url += "&pb=0"
+	}
 	if ctx.Flags.Edit {
 		url = fmt.Sprintf("https://%s/admin/themes/%s/editor", ctx.Env.Domain, ctx.Env.ThemeID)
 	}
