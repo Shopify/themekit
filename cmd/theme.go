@@ -102,6 +102,7 @@ func init() {
 	openCmd.Flags().StringVarP(&flags.With, "browser", "b", "", "name of the browser to open the url. the name should match the name of browser on your system.")
 	getCmd.Flags().BoolVarP(&flags.List, "list", "l", false, "list available themes.")
 	deployCmd.Flags().BoolVarP(&flags.NoDelete, "nodelete", "n", false, "do not delete files on shopify during deploy.")
+	openCmd.Flags().BoolVar(&flags.HidePB, "hidepb", false, "run command with all environments")
 
 	ThemeCmd.AddCommand(publishCmd, openCmd, versionCmd, newCmd, configureCmd, downloadCmd, removeCmd, updateCmd, watchCmd, getCmd, deployCmd)
 }
