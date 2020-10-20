@@ -40,20 +40,22 @@ func TestGet(t *testing.T) {
 	conf.On("Save").Return(nil)
 	client.On("GetAllAssets").Return([]shopify.Asset{}, nil)
 	assert.Error(t, getTheme(ctx), "No files to download")
+}
 
-	ctx, client, conf, _, _ = createTestCtx()
+func TestListThemes(t *testing.T) {
+	ctx, client, conf, _, _ := createTestCtx()
 	ctx.Flags.List = true
 	client.On("Themes").Return([]shopify.Theme{}, nil)
-	assert.EqualError(t, getTheme(ctx), errNoThemes.Error())
+	assert.EqualError(t, listThemes(ctx), errNoThemes.Error())
 
 	ctx, client, conf, _, _ = createTestCtx()
 	ctx.Flags.List = true
 	client.On("Themes").Return([]shopify.Theme{}, fmt.Errorf("server error"))
-	assert.EqualError(t, getTheme(ctx), "server error")
+	assert.EqualError(t, listThemes(ctx), "server error")
 
 	ctx, client, conf, stdOut, _ := createTestCtx()
 	ctx.Flags.List = true
 	client.On("Themes").Return([]shopify.Theme{{ID: 1234, Role: "main", Name: "test"}}, nil)
-	assert.Nil(t, getTheme(ctx))
+	assert.Nil(t, listThemes(ctx))
 	assert.Contains(t, stdOut.String(), "[1234][live] test")
 }

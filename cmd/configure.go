@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strconv"
+
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/src/cmdutil"
@@ -15,6 +17,15 @@ var configureCmd = &cobra.Command{
  For more documentation please see https://shopify.github.io/themekit/commands/#configure
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// get should not care about the live theme
+		flags.AllowLive = true
+		if flags.Live {
+			theme, err := getLiveTheme(flags, args)
+			if err != nil {
+				return err
+			}
+			flags.ThemeID = strconv.Itoa(int(theme.ID))
+		}
 		return cmdutil.ForDefaultClient(flags, args, createConfig)
 	},
 }
