@@ -19,7 +19,7 @@ func TestCreateCtx(t *testing.T) {
 	client := new(mocks.ShopifyClient)
 	factory := func(*env.Env) (shopifyClient, error) { return client, nil }
 	client.On("GetShop").Return(shopify.Shop{}, shopify.ErrShopDomainNotFound)
-	_, err := createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil, false)
+	_, err := createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "invalid domain")
 	}
@@ -28,7 +28,7 @@ func TestCreateCtx(t *testing.T) {
 	client = new(mocks.ShopifyClient)
 	factory = func(*env.Env) (shopifyClient, error) { return client, nil }
 	client.On("GetShop").Return(shopify.Shop{}, fmt.Errorf("This is bad"))
-	_, err = createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil, false)
+	_, err = createCtx(factory, env.Conf{}, e, Flags{}, []string{}, nil)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "This is bad")
 	}
@@ -37,7 +37,7 @@ func TestCreateCtx(t *testing.T) {
 	client.On("GetShop").Return(shopify.Shop{}, nil)
 	client.On("Themes").Return([]shopify.Theme{}, nil)
 	badFactory := func(*env.Env) (shopifyClient, error) { return nil, fmt.Errorf("no such file or directory") }
-	_, err = createCtx(badFactory, env.Conf{}, &env.Env{}, Flags{}, []string{}, nil, true)
+	_, err = createCtx(badFactory, env.Conf{}, &env.Env{}, Flags{}, []string{}, nil)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "no such file or directory")
 	}
@@ -45,7 +45,7 @@ func TestCreateCtx(t *testing.T) {
 	client = new(mocks.ShopifyClient)
 	client.On("GetShop").Return(shopify.Shop{}, nil)
 	client.On("Themes").Return([]shopify.Theme{}, fmt.Errorf("[API] Invalid API key or access token (unrecognized login or wrong password)"))
-	_, err = createCtx(factory, env.Conf{}, &env.Env{}, Flags{}, []string{}, nil, true)
+	_, err = createCtx(factory, env.Conf{}, &env.Env{}, Flags{}, []string{}, nil)
 	if assert.NotNil(t, err) {
 		assert.Contains(t, err.Error(), "[API] Invalid API key or access token (unrecognized login or wrong password)")
 	}
@@ -54,7 +54,7 @@ func TestCreateCtx(t *testing.T) {
 	client = new(mocks.ShopifyClient)
 	client.On("GetShop").Return(shopify.Shop{}, nil)
 	client.On("Themes").Return([]shopify.Theme{{ID: 65443, Role: "unpublished"}, {ID: 1234, Role: "main"}}, nil)
-	_, err = createCtx(factory, env.Conf{}, e, Flags{DisableIgnore: true}, []string{}, nil, true)
+	_, err = createCtx(factory, env.Conf{}, e, Flags{DisableIgnore: true}, []string{}, nil)
 	assert.Equal(t, ErrLiveTheme, err)
 	assert.Equal(t, e.ThemeID, "1234")
 }

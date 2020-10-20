@@ -103,5 +103,9 @@ func init() {
 	getCmd.Flags().BoolVarP(&flags.List, "list", "l", false, "list available themes.")
 	deployCmd.Flags().BoolVarP(&flags.NoDelete, "nodelete", "n", false, "do not delete files on shopify during deploy.")
 
+	getCmd.Flags().BoolVar(&flags.Live, "live", false, "will allow themekit to autofill the theme ID as the currently published theme ID")
+	downloadCmd.Flags().BoolVar(&flags.Live, "live", false, "will allow themekit to autofill the theme ID as the currently published theme ID")
+	configureCmd.Flags().BoolVar(&flags.Live, "live", false, "will allow themekit to autofill the theme ID as the currently published theme ID")
+
 	ThemeCmd.AddCommand(publishCmd, openCmd, versionCmd, newCmd, configureCmd, downloadCmd, removeCmd, updateCmd, watchCmd, getCmd, deployCmd)
 }
