@@ -67,6 +67,7 @@ These packages may not contain the latest Theme Kit release, but running `theme 
 
 - Download the Theme Kit binary that works for your system.
 - Compare checksums of the binary by running `md5 theme`
+- Set execute permissions with `chmod +x theme`
 - Put the binary on your path. We recommend somewhere like `/usr/local/bin`
 - Ensure that it works as expected by running `theme version`
 
