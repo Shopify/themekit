@@ -18,12 +18,14 @@ Using Theme Kit will enable you to
 
 ### macOS Installation
 
-Use [homebrew](http://brew.sh/) to install Theme Kit by running the following commands.
+Use [Homebrew](http://brew.sh/) to install Theme Kit by running the following commands.
 
 ```bash
 brew tap shopify/shopify
 brew install themekit
 ```
+
+(Homebrew for Linux is not currently supported)
 
 ### Windows Chocolatey Installation
 
