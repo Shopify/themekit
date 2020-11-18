@@ -1,18 +1,15 @@
 package httpify
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -142,30 +139,22 @@ func (client *HTTPClient) do(method, path string, body interface{}, headers map[
 }
 
 func (client *HTTPClient) doWithRetry(req *http.Request, body interface{}) (*http.Response, error) {
-	for attempt := 0; attempt <= client.maxRetry; {
-		// reset the body when non-nil for every request (rewind)
-		if body != nil {
-			data, err := json.Marshal(body)
-			if err != nil {
-				return nil, err
-			}
-			req.Body = ioutil.NopCloser(bytes.NewBuffer(data))
+	var bodyData []byte
+	var err error
+	if body != nil {
+		bodyData, err = json.Marshal(body)
+		if err != nil {
+			return nil, err
 		}
+	}
 
-		client.limit.Wait()
-		resp, err := httpClient.Do(req)
-		if err == nil {
-			if resp.StatusCode >= 100 && resp.StatusCode <= 428 {
-				return resp, nil
-			} else if resp.StatusCode == http.StatusTooManyRequests {
-				after, _ := strconv.ParseFloat(resp.Header.Get("Retry-After"), 10)
-				client.limit.ResetAfter(time.Duration(after) * time.Second)
-				continue
-			}
+	for attempt := 0; attempt <= client.maxRetry; attempt++ {
+		resp, err := client.limit.GateReq(httpClient, req, bodyData)
+		if err == nil && resp.StatusCode >= 100 && resp.StatusCode < 500 {
+			return resp, nil
 		} else if strings.Contains(err.Error(), "no such host") {
 			return nil, ErrConnectionIssue
 		}
-		attempt++
 		time.Sleep(time.Duration(attempt) * time.Second)
 	}
 	return nil, fmt.Errorf("request failed after %v retries", client.maxRetry)
