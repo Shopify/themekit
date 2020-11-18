@@ -22,7 +22,7 @@ func TestOpen(t *testing.T) {
 	ctx, _, _, _, _ = createTestCtx()
 	ctx.Env.Domain = "my.test.domain"
 	ctx.Env.ThemeID = "123"
-	ctx.Flags.HidePB = true
+	ctx.Flags.HidePreviewBar = true
 	assert.Nil(t, preview(ctx, func(path string) error {
 		assert.Equal(t, path, "https://my.test.domain?preview_theme_id=123&pb=0")
 		return nil
