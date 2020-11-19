@@ -468,35 +468,6 @@ func TestThemeClient_assetPath(t *testing.T) {
 	}
 }
 
-func TestUnmarshalResponse(t *testing.T) {
-	testcases := []struct {
-		input, err    string
-		code          int
-		out, expected themeResponse
-	}{
-		{input: `{"errors":{"name":["can't be blank"]}}`, code: 200, expected: themeResponse{Errors: map[string][]string{"name": {"can't be blank"}}}},
-		{input: `{"errors": "Not Found"}`, code: 404, err: "Not Found"},
-		{input: `{"theme":{"id": 123456}}`, code: 200, expected: themeResponse{Theme: Theme{ID: int64(123456)}}},
-		{input: `{"theme":{"id": 123456}}`, code: 200, expected: themeResponse{Theme: Theme{ID: int64(123456)}}},
-		{input: `<html><body>BAD ERROR</body></html>`, code: 500, err: "could not unmarshal JSON from response body on a response with HTTP status 500. This usually means Theme Kit received an HTML error page. Please find the full response at "},
-	}
-
-	for _, testcase := range testcases {
-		err := unmarshalResponse(jsonResponse(testcase.input, testcase.code), &testcase.out)
-		assert.Equal(t, testcase.expected, testcase.out)
-		if testcase.err == "" {
-			assert.Nil(t, err)
-		} else if assert.NotNil(t, err) {
-			assert.Contains(t, err.Error(), testcase.err)
-		}
-	}
-
-	out := assetsResponse{}
-	err := unmarshalResponse(jsonResponse(`{"errors":"oh no"}`, 200), &out)
-	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "oh no")
-}
-
 func TestToMessages(t *testing.T) {
 	testcases := []struct {
 		input    map[string][]string
