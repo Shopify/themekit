@@ -44,6 +44,16 @@ download and install the latest Theme Kit for you.
 curl -s https://shopify.github.io/themekit/scripts/install.py | sudo python
 ```
 
+### Node Package
+
+If you want to integrate themekit into your web tools, there is a node wrapper around themekit available on npm.
+
+```bash
+npm install @shopify/themekit
+```
+
+For more support please see [github.com/Shopify/node-themekit](https://github.com/Shopify/node-themekit)
+
 ### Community Packages
 
 Theme Kit is available through other package manager distributions, but as these are not
