@@ -9,6 +9,8 @@
 '''
 import os, json, sys, hashlib
 
+from six.moves.urllib.request import urlopen
+
 class Installer(object):
     LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
     ARCH_MAPPING = {
@@ -25,7 +27,7 @@ class Installer(object):
         self.bin_path = "%s/theme" % self.install_path
         self.arch = self.__getArch()
         print("Fetching release data")
-        self.release = json.loads(self.__req(Installer.LATEST_RELEASE_URL).decode("utf-8"))
+        self.release = json.loads(urlopen(Installer.LATEST_RELEASE_URL).read().decode("utf-8"))
         print("Downloading version %s of Shopify Themekit" % self.release['version'])
         self.__download()
         print("Theme Kit has been installed at %s" % self.bin_path)
@@ -47,7 +49,7 @@ class Installer(object):
 
     def __download(self):
         platform = self.__findReleasePlatform()
-        data = self.__req(platform['url'])
+        data = urlopen(platform['url']).read()
         if hashlib.md5(data).hexdigest() != platform['digest']:
             sys.exit("Downloaded binary did not match checksum.")
         else:
@@ -57,13 +59,5 @@ class Installer(object):
         with open(self.bin_path, "wb") as themefile:
             themefile.write(data)
         os.chmod(self.bin_path, 0o755)
-
-    def __req(self, url):
-        if sys.version_info[0] < 3:
-            import urllib
-            return urllib.urlopen(url).read()
-        else:
-            import urllib.request
-            return urllib.request.urlopen(url).read()
 
 Installer()
