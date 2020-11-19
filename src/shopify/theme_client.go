@@ -377,7 +377,7 @@ func unmarshalResponse(resp *http.Response, data interface{}) error {
 		if err == nil {
 			tmpFile.Write([]byte(reqBody))
 			tmpFile.Close()
-			errStr += " Please find the full response at %v and include it with your ticket on github."
+			errStr += " Please find the full response at %v and include it with your ticket on GitHub."
 			return fmt.Errorf(errStr, resp.StatusCode, tmpFile.Name())
 		}
 		return fmt.Errorf(errStr, resp.StatusCode)
