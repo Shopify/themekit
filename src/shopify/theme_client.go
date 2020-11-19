@@ -1,13 +1,10 @@
 package shopify
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"sort"
 	"strings"
 
@@ -74,10 +71,6 @@ type assetResponse struct {
 
 type assetsResponse struct {
 	Assets []Asset `json:"assets"`
-}
-
-type reqErr struct {
-	Errors string `json:"errors"`
 }
 
 type httpAdapter interface {
@@ -357,35 +350,6 @@ func (c Client) assetPath(query map[string]string) string {
 	}
 
 	return formatted
-}
-
-func unmarshalResponse(resp *http.Response, data interface{}) error {
-	reqBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("could not read response body on a response with HTTP status %v. This may mean that the request was not able to finish successfully", resp.StatusCode)
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		return err
-	}
-	var re reqErr
-	mainErr := json.Unmarshal(reqBody, data) // check if we can unmarshal into the expected returned data
-	basicErr := json.Unmarshal(reqBody, &re) // if no returned data, check if we can get errors from the body
-	if mainErr != nil && basicErr != nil {
-		errStr := "could not unmarshal JSON from response body on a response with HTTP status %v. This usually means Theme Kit received an HTML error page."
-		tmpFile, err := ioutil.TempFile(os.TempDir(), "themekit-response-*.txt")
-		if err == nil {
-			tmpFile.Write([]byte(reqBody))
-			tmpFile.Close()
-			errStr += " Please find the full response at %v and include it with your ticket on GitHub."
-			return fmt.Errorf(errStr, resp.StatusCode, tmpFile.Name())
-		}
-		return fmt.Errorf(errStr, resp.StatusCode)
-	}
-	if len(re.Errors) > 0 {
-		return errors.New(re.Errors)
-	}
-	return nil
 }
 
 func toMessages(a map[string][]string) []string {
