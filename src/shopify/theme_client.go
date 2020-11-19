@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strings"
 
@@ -24,8 +24,6 @@ var (
 	ErrCriticalFile = errors.New("this file is critical and removing it would cause your theme to become non-functional")
 	// ErrNotPartOfTheme will be returned when trying to alter a filepath that does not exist in the theme
 	ErrNotPartOfTheme = errors.New("this file is not part of your theme")
-	// ErrMalformedResponse will be returned if we could not unmarshal the response from shopify
-	ErrMalformedResponse = errors.New("received a malformed response from shopify, this usually indicates a problem with your connection")
 	// ErrZipPathRequired is returned if a source path was not provided to create a new theme
 	ErrZipPathRequired = errors.New("theme zip path is required")
 	// ErrInfoWithoutThemeID will be returned if GetInfo is called without a theme ID
@@ -133,7 +131,7 @@ func (c Client) GetShop() (Shop, error) {
 	}
 
 	var shop Shop
-	if err := unmarshalResponse(resp.Body, &shop); err != nil {
+	if err := unmarshalResponse(resp, &shop); err != nil {
 		return Shop{}, err
 	}
 
@@ -148,7 +146,7 @@ func (c Client) Themes() ([]Theme, error) {
 	}
 
 	var r themesResponse
-	if err := unmarshalResponse(resp.Body, &r); err != nil {
+	if err := unmarshalResponse(resp, &r); err != nil {
 		return []Theme{}, err
 	}
 
@@ -168,7 +166,7 @@ func (c *Client) CreateNewTheme(name string) (theme Theme, err error) {
 	}
 
 	var r themeResponse
-	if err = unmarshalResponse(resp.Body, &r); err != nil {
+	if err = unmarshalResponse(resp, &r); err != nil {
 		return Theme{}, err
 	}
 
@@ -194,7 +192,7 @@ func (c Client) GetInfo() (Theme, error) {
 	}
 
 	var r themeResponse
-	if err := unmarshalResponse(resp.Body, &r); err != nil {
+	if err := unmarshalResponse(resp, &r); err != nil {
 		return Theme{}, err
 	}
 
@@ -219,7 +217,7 @@ func (c Client) PublishTheme() error {
 	}
 
 	var r themeResponse
-	if err = unmarshalResponse(resp.Body, &r); err != nil {
+	if err = unmarshalResponse(resp, &r); err != nil {
 		return err
 	}
 
@@ -243,7 +241,7 @@ func (c Client) GetAllAssets() ([]Asset, error) {
 	}
 
 	var r assetsResponse
-	if err := unmarshalResponse(resp.Body, &r); err != nil {
+	if err := unmarshalResponse(resp, &r); err != nil {
 		return []Asset{}, err
 	}
 
@@ -268,7 +266,7 @@ func (c Client) GetAsset(filename string) (Asset, error) {
 	}
 
 	var r assetResponse
-	if err := unmarshalResponse(resp.Body, &r); err != nil {
+	if err := unmarshalResponse(resp, &r); err != nil {
 		return Asset{}, err
 	}
 
@@ -298,7 +296,7 @@ func (c Client) UpdateAsset(asset Asset, lastKnownChecksum string) error {
 	}
 
 	var r assetResponse
-	if err := unmarshalResponse(resp.Body, &r); err != nil {
+	if err := unmarshalResponse(resp, &r); err != nil {
 		return err
 	}
 
@@ -333,7 +331,7 @@ func (c Client) DeleteAsset(asset Asset) error {
 	}
 
 	var r assetResponse
-	if err := unmarshalResponse(resp.Body, &r); err != nil {
+	if err := unmarshalResponse(resp, &r); err != nil {
 		return err
 	}
 
@@ -361,20 +359,27 @@ func (c Client) assetPath(query map[string]string) string {
 	return formatted
 }
 
-func unmarshalResponse(body io.ReadCloser, data interface{}) error {
-	reqBody, err := ioutil.ReadAll(body)
+func unmarshalResponse(resp *http.Response, data interface{}) error {
+	reqBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ErrMalformedResponse
+		return fmt.Errorf("could not read response body on a response with HTTP status %v. This may mean that the request was not able to finish successfully", resp.StatusCode)
 	}
-	err = body.Close()
+	err = resp.Body.Close()
 	if err != nil {
 		return err
 	}
 	var re reqErr
-	mainErr := json.Unmarshal(reqBody, data)
-	basicErr := json.Unmarshal(reqBody, &re)
+	mainErr := json.Unmarshal(reqBody, data) // check if we can unmarshal into the expected returned data
+	basicErr := json.Unmarshal(reqBody, &re) // if not returned data, check if we can get errors from the body
 	if mainErr != nil && basicErr != nil {
-		return ErrMalformedResponse
+		errStr := "could not unmarshal JSON from response body on a response with HTTP status %v. This usually means themekit received an html error page"
+		tmpFile, err := ioutil.TempFile(os.TempDir(), "themekit-response-*.txt")
+		if err == nil {
+			tmpFile.Write([]byte(reqBody))
+			tmpFile.Close()
+			return fmt.Errorf(errStr+" %v", resp.StatusCode, tmpFile.Name())
+		}
+		return fmt.Errorf(errStr, resp.StatusCode)
 	}
 	if len(re.Errors) > 0 {
 		return errors.New(re.Errors)

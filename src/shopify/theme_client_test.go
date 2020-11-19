@@ -471,16 +471,18 @@ func TestThemeClient_assetPath(t *testing.T) {
 func TestUnmarshalResponse(t *testing.T) {
 	testcases := []struct {
 		input, err    string
+		code          int
 		out, expected themeResponse
 	}{
-		{input: `{"errors":{"name":["can't be blank"]}}`, expected: themeResponse{Errors: map[string][]string{"name": {"can't be blank"}}}},
-		{input: `{"errors": "Not Found"}`, err: "Not Found"},
-		{input: `{"theme":{"id": 123456}}`, expected: themeResponse{Theme: Theme{ID: int64(123456)}}},
-		{input: `{"theme":{"id": 123456}}`, expected: themeResponse{Theme: Theme{ID: int64(123456)}}},
+		{input: `{"errors":{"name":["can't be blank"]}}`, code: 200, expected: themeResponse{Errors: map[string][]string{"name": {"can't be blank"}}}},
+		{input: `{"errors": "Not Found"}`, code: 404, err: "Not Found"},
+		{input: `{"theme":{"id": 123456}}`, code: 200, expected: themeResponse{Theme: Theme{ID: int64(123456)}}},
+		{input: `{"theme":{"id": 123456}}`, code: 200, expected: themeResponse{Theme: Theme{ID: int64(123456)}}},
+		{input: `<html><body>BAD ERROR</body></html>`, code: 500, err: "could not unmarshal JSON from response body on a response with HTTP status 500"},
 	}
 
 	for _, testcase := range testcases {
-		err := unmarshalResponse(&StringReadCloser{strings.NewReader(testcase.input)}, &testcase.out)
+		err := unmarshalResponse(jsonResponse(testcase.input, testcase.code), &testcase.out)
 		assert.Equal(t, testcase.expected, testcase.out)
 		if testcase.err == "" {
 			assert.Nil(t, err)
@@ -490,7 +492,7 @@ func TestUnmarshalResponse(t *testing.T) {
 	}
 
 	out := assetsResponse{}
-	err := unmarshalResponse(&StringReadCloser{strings.NewReader(`{"errors":"oh no"}`)}, &out)
+	err := unmarshalResponse(jsonResponse(`{"errors":"oh no"}`, 200), &out)
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "oh no")
 }
