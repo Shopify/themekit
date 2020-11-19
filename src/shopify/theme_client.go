@@ -372,12 +372,13 @@ func unmarshalResponse(resp *http.Response, data interface{}) error {
 	mainErr := json.Unmarshal(reqBody, data) // check if we can unmarshal into the expected returned data
 	basicErr := json.Unmarshal(reqBody, &re) // if not returned data, check if we can get errors from the body
 	if mainErr != nil && basicErr != nil {
-		errStr := "could not unmarshal JSON from response body on a response with HTTP status %v. This usually means themekit received an html error page"
+		errStr := "could not unmarshal JSON from response body on a response with HTTP status %v. This usually means themekit received an html error page."
 		tmpFile, err := ioutil.TempFile(os.TempDir(), "themekit-response-*.txt")
 		if err == nil {
 			tmpFile.Write([]byte(reqBody))
 			tmpFile.Close()
-			return fmt.Errorf(errStr+" %v", resp.StatusCode, tmpFile.Name())
+			errStr += " Please find the full response at %v and include it with your ticket on github."
+			return fmt.Errorf(errStr, resp.StatusCode, tmpFile.Name())
 		}
 		return fmt.Errorf(errStr, resp.StatusCode)
 	}
