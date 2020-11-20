@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/Shopify/themekit/src/file"
 	"github.com/Shopify/themekit/src/shopify"
 )
 
@@ -24,7 +25,9 @@ func TestDownload(t *testing.T) {
 
 	ctx, client, _, _, stdErr := createTestCtx()
 	client.On("GetAllAssets").Return(allAssets, nil)
-	client.On("GetAsset", mock.MatchedBy(func(string) bool { return true })).Return(shopify.Asset{}, nil).Times(len(allAssets))
+	client.On("GetAsset", mock.MatchedBy(func(string) bool { return true })).
+		Return(shopify.Asset{Key: "assets/logo.png"}, nil).
+		Times(len(allAssets))
 	err := download(ctx)
 	assert.Nil(t, err)
 	assert.Contains(t, stdErr.String(), "error writing assets/logo.png")
@@ -45,19 +48,23 @@ func TestDownload(t *testing.T) {
 
 func TestFilesToDownload(t *testing.T) {
 	allAssets := []shopify.Asset{{Key: "assets/logo.png"}, {Key: "templates/customers/test.liquid"}, {Key: "config/test.liquid"}, {Key: "layout/test.liquid"}, {Key: "snippets/test.liquid"}, {Key: "templates/test.liquid"}, {Key: "locales/test.liquid"}, {Key: "sections/test.liquid"}}
+	allOps := map[string]file.Op{}
+	for _, asset := range allAssets {
+		allOps[asset.Key] = file.Get
+	}
 
 	testcases := []struct {
 		err     string
 		respErr error
 		args    []string
-		ret     []shopify.Asset
+		ret     map[string]file.Op
 	}{
-		{ret: allAssets},
-		{args: []string{"assets/logo.png"}, ret: []shopify.Asset{{Key: "assets/logo.png"}}},
-		{args: []string{"assets/*"}, ret: []shopify.Asset{{Key: "assets/logo.png"}}},
-		{args: []string{"templates"}, ret: []shopify.Asset{{Key: "templates/test.liquid"}}},
-		{args: []string{"assets/nope.png"}, ret: []shopify.Asset{}, err: "No file paths matched the inputted arguments"},
-		{args: []string{"assets/nope.png"}, ret: []shopify.Asset{}, respErr: fmt.Errorf("server error"), err: "server error"},
+		{ret: allOps},
+		{args: []string{"assets/logo.png"}, ret: map[string]file.Op{"assets/logo.png": file.Get}},
+		{args: []string{"assets/*"}, ret: map[string]file.Op{"assets/logo.png": file.Get}},
+		{args: []string{"templates"}, ret: map[string]file.Op{"templates/test.liquid": file.Get}},
+		{args: []string{"assets/nope.png"}, ret: map[string]file.Op{}, err: "No file paths matched the inputted arguments"},
+		{args: []string{"assets/nope.png"}, ret: map[string]file.Op{}, respErr: fmt.Errorf("server error"), err: "server error"},
 	}
 
 	for i, testcase := range testcases {
@@ -72,4 +79,19 @@ func TestFilesToDownload(t *testing.T) {
 			assert.Contains(t, err.Error(), testcase.err)
 		}
 	}
+}
+
+func TestFilesToDownloadFileAction(t *testing.T) {
+	ctx, _, _, _, _ := createTestCtx()
+	ctx.Env.Directory = "_testdata/projectdir"
+
+	localAsset, _ := shopify.ReadAsset(ctx.Env, "assets/app.js")
+	op := downloadFileAction(ctx, shopify.Asset{Key: "assets/app.js", Checksum: localAsset.Checksum})
+	assert.Equal(t, file.Skip, op)
+
+	op = downloadFileAction(ctx, shopify.Asset{Key: "assets/app.js", Checksum: "not correct"})
+	assert.Equal(t, file.Get, op)
+
+	op = downloadFileAction(ctx, shopify.Asset{Key: "assets/app.js"})
+	assert.Equal(t, file.Get, op)
 }

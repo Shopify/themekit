@@ -4,18 +4,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"sync"
-	"sync/atomic"
 
 	"github.com/spf13/cobra"
 
 	"github.com/Shopify/themekit/src/cmdutil"
-	"github.com/Shopify/themekit/src/colors"
+	"github.com/Shopify/themekit/src/file"
 	"github.com/Shopify/themekit/src/shopify"
-)
-
-var (
-	skipCount  int32
-	errorCount int32
 )
 
 var downloadCmd = &cobra.Command{
@@ -47,69 +41,45 @@ func download(ctx *cmdutil.Ctx) error {
 	}
 
 	ctx.StartProgress(len(assets))
-	for _, asset := range assets {
+	for asset, op := range assets {
 		downloadGroup.Add(1)
-		go func(requestAsset shopify.Asset) {
-			defer ctx.DoneTask()
+		go func(path string, op file.Op) {
 			defer downloadGroup.Done()
-
-			localAsset, _ := shopify.ReadAsset(ctx.Env, requestAsset.Key)
-			if localAsset.Checksum == requestAsset.Checksum && requestAsset.Checksum != "" {
-				atomic.AddInt32(&skipCount, 1)
-				if ctx.Flags.Verbose {
-					ctx.Log.Printf("[%s] No Changes %s (%s)", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), localAsset.Checksum)
-				}
-			} else if asset, err := ctx.Client.GetAsset(requestAsset.Key); err != nil {
-				ctx.Err("[%s] error downloading %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
-				atomic.AddInt32(&errorCount, 1)
-			} else if err = asset.Write(ctx.Env.Directory); err != nil {
-				atomic.AddInt32(&errorCount, 1)
-				ctx.Err("[%s] error writing %s: %s", colors.Green(ctx.Env.Name), colors.Blue(requestAsset.Key), err)
-			} else if ctx.Flags.Verbose {
-				var checksumOutput = ""
-				if asset.Checksum != "" {
-					checksumOutput = "Remote: " + requestAsset.Checksum + ", Local: " + localAsset.Checksum
-				} else {
-					checksumOutput = "Local: " + localAsset.Checksum
-				}
-				ctx.Log.Printf("[%s] Successfully wrote %s to disk (%s)", colors.Green(ctx.Env.Name), colors.Blue(asset.Key), checksumOutput)
-			}
-		}(asset)
+			perform(ctx, path, op, "")
+		}(asset, op)
 	}
 
 	downloadGroup.Wait()
-	downloadCount := int32(len(assets)) - skipCount - errorCount
-	defer func() {
-		if ctx.Flags.Verbose {
-			ctx.Log.Printf("Downloaded: %d, No Changes: %d, Errored: %d", downloadCount, skipCount, errorCount)
-		}
-	}()
+
 	return nil
 }
 
-func filesToDownload(ctx *cmdutil.Ctx) ([]shopify.Asset, error) {
+func filesToDownload(ctx *cmdutil.Ctx) (map[string]file.Op, error) {
+	fetchableFiles := map[string]file.Op{}
+
 	assets, err := ctx.Client.GetAllAssets()
 	if err != nil {
-		return []shopify.Asset{}, err
+		return fetchableFiles, err
 	}
 
 	if len(ctx.Args) <= 0 {
-		return assets, nil
+		for _, asset := range assets {
+			fetchableFiles[asset.Key] = downloadFileAction(ctx, asset)
+		}
+		return fetchableFiles, nil
 	}
 
-	fetchableFiles := []shopify.Asset{}
 	for _, asset := range assets {
 		for _, pattern := range ctx.Args {
 			// These need to be converted to platform specific because filepath.Match
 			// uses platform specific separators
 			pattern = filepath.FromSlash(pattern)
 			filename := filepath.FromSlash(asset.Key)
-
 			globMatched, _ := filepath.Match(pattern, filename)
 			dirMatched, _ := filepath.Match(pattern+string(filepath.Separator)+"*", filename)
 			fileMatched := filename == pattern
 			if globMatched || dirMatched || fileMatched {
-				fetchableFiles = append(fetchableFiles, asset)
+				fetchableFiles[asset.Key] = downloadFileAction(ctx, asset)
 			}
 		}
 	}
@@ -119,4 +89,15 @@ func filesToDownload(ctx *cmdutil.Ctx) ([]shopify.Asset, error) {
 	}
 
 	return fetchableFiles, nil
+}
+
+func downloadFileAction(ctx *cmdutil.Ctx, asset shopify.Asset) file.Op {
+	op := file.Get
+	if asset.Checksum == "" {
+		return op
+	}
+	if localAsset, _ := shopify.ReadAsset(ctx.Env, asset.Key); asset.Checksum == localAsset.Checksum {
+		op = file.Skip
+	}
+	return op
 }

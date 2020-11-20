@@ -23,6 +23,8 @@ const (
 	Remove
 	// Skip is a file op where the remote file matches the local file so is not transferred
 	Skip
+	// Get is when a file should be re-fetched, used in download operations
+	Get
 	filepathSplit = " -> "
 )
 
