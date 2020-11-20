@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.12
+  - 1.13
 script:
   - ./check_format.sh
   - env GO111MODULE=on make lint

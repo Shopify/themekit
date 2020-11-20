@@ -16,11 +16,22 @@ func TestRateLimiterForDomain(t *testing.T) {
 	assert.NotEqual(t, limiter2, limiter3)
 }
 
-func TestRateLimiterResetAfter(t *testing.T) {
+func TestRateLimiterLockUnlock(t *testing.T) {
 	limiter := New("domain.com", 1)
 	assert.Equal(t, limiter.rate.Limit(), rate.Limit(1))
-	limiter.ResetAfter(time.Millisecond)
+	limiter.lock()
+	<-limiter.ctx.Done()
 	assert.Equal(t, limiter.rate.Limit(), rate.Limit(0))
-	time.Sleep(2 * time.Millisecond)
+	limiter.unlock()
 	assert.Equal(t, limiter.rate.Limit(), rate.Limit(1))
+	assert.Nil(t, limiter.ctx.Err())
+	limiter.unlock()
+}
+
+func TestRateLimiterRetryAfter(t *testing.T) {
+	limiter := New("domain.com", 1)
+	expected := time.Now().Add(2 * time.Second)
+	limiter.retryAfter("2.0")
+	after := time.Now()
+	assert.True(t, after.After(expected) || after.Equal(expected))
 }
