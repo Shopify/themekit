@@ -55,6 +55,7 @@ type Flags struct {
 	List                  bool
 	NoDelete              bool
 	AllowLive             bool
+	Live                  bool
 }
 
 // Ctx is a specific context that a command will run in
@@ -75,7 +76,7 @@ type Ctx struct {
 
 type clientFact func(*env.Env) (shopifyClient, error)
 
-func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, args []string, progress *mpb.Progress, setTheme bool) (*Ctx, error) {
+func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, args []string, progress *mpb.Progress) (*Ctx, error) {
 	if e.Proxy != "" {
 		colors.ColorStdOut.Printf(
 			"[%s] Proxy URL detected from Configuration [%s] SSL Certificate Validation will be disabled!",
@@ -111,25 +112,23 @@ func createCtx(newClient clientFact, conf env.Conf, e *env.Env, flags Flags, arg
 		return &Ctx{}, err
 	}
 
-	if setTheme {
-		for _, theme := range themes {
-			if theme.Role == "main" {
-				if fmt.Sprintf("%v", theme.ID) == e.ThemeID && flags.AllowLive {
-					colors.ColorStdOut.Printf(
-						"[%s] Warning, this is the live theme on %s.",
-						colors.Yellow(e.Name),
-						colors.Yellow(shop.Name),
-					)
-				} else if fmt.Sprintf("%v", theme.ID) == e.ThemeID && !flags.AllowLive {
-					colors.ColorStdOut.Printf(
-						"[%s] This is the live theme on %s. If you wish to make changes to it, then you will have to pass the --allow-live flag",
-						colors.Red(e.Name),
-						colors.Yellow(shop.Name),
-					)
-					return &Ctx{}, ErrLiveTheme
-				}
-				break
+	for _, theme := range themes {
+		if theme.Role == "main" {
+			if fmt.Sprintf("%v", theme.ID) == e.ThemeID && flags.AllowLive {
+				colors.ColorStdOut.Printf(
+					"[%s] Warning, this is the live theme on %s.",
+					colors.Yellow(e.Name),
+					colors.Yellow(shop.Name),
+				)
+			} else if fmt.Sprintf("%v", theme.ID) == e.ThemeID && !flags.AllowLive {
+				colors.ColorStdOut.Printf(
+					"[%s] This is the live theme on %s. If you wish to make changes to it, then you will have to pass the --allow-live flag",
+					colors.Red(e.Name),
+					colors.Yellow(shop.Name),
+				)
+				return &Ctx{}, ErrLiveTheme
 			}
+			break
 		}
 	}
 
@@ -213,7 +212,7 @@ func generateContexts(newClient clientFact, progress *mpb.Progress, flags Flags,
 			}
 		}
 
-		ctx, err := createCtx(newClient, config, e, flags, args, progress, true)
+		ctx, err := createCtx(newClient, config, e, flags, args, progress)
 		if err != nil {
 			return ctxs, err
 		}
@@ -361,7 +360,7 @@ func forDefaultClient(newClient clientFact, flags Flags, args []string, handler 
 		}
 	}
 
-	ctx, err := createCtx(newClient, config, e, flags, args, progressBarGroup, false)
+	ctx, err := createCtx(newClient, config, e, flags, args, progressBarGroup)
 	if err != nil {
 		return err
 	}

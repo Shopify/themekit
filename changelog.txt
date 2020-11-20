@@ -3,6 +3,8 @@ v1.1.3
 - Added an error summary (#826)
 - Added error count to action summary (#826)
 - Set status error codes when errors occur for better scriptability (#826)
+- Added --live flag to get, download, configure to automatically set
+configuration to the published theme
 
 v1.1.2 (Sep 29, 2020)
 =====================
