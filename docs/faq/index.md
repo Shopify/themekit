@@ -40,6 +40,12 @@ command:
 rm $(which theme)
 ```
 
+If you installed Theme Kit through HomeBrew, you can run:
+
+```bash
+brew uninstall themekit
+```
+
 ## Theme Kit does not upload my changes
 
 This usually means that your file is being ignored. Please check your ignore
