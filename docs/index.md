@@ -27,6 +27,11 @@ brew install themekit
 
 (Homebrew for Linux is not currently supported)
 
+The Apple M1 architecture is not yet natively supported, but Theme Kit will work
+if you start the terminal with the 'Open using Rosetta' option: [About the
+Rosetta Translation
+Environment](https://developer.apple.com/documentation/apple_silicon/about_the_rosetta_translation_environment).
+
 ### Windows Chocolatey Installation
 
 If you have [chocolatey](https://chocolatey.org/) installed you can install Theme Kit by running the following commands.
