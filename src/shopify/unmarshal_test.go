@@ -25,9 +25,26 @@ func TestRespUnmarshalError(t *testing.T) {
 	assert.Equal(t, err.Error(), `this is your problem
 test your things
 Http Response Status: 442
-Request ID: abc-123-456
-`)
+Request ID: abc-123-456`)
 
+	err = RespUnmarshalError{
+		Resp:       resp,
+		Problem:    "this is your problem",
+		Suggestion: "test your things",
+		ReadErr:    fmt.Errorf("Bad READ"),
+	}
+
+	assert.Equal(t, err.Error(), `this is your problem
+test your things
+Http Response Status: 442
+Request ID: abc-123-456
+Error: Bad READ`)
+
+	err = RespUnmarshalError{
+		Resp:       resp,
+		Problem:    "this is your problem",
+		Suggestion: "test your things",
+	}
 	err.TmpFile, _ = ioutil.TempFile(os.TempDir(), "themekit-response-*.txt")
 	err.TmpFile.Write([]byte("body"))
 	err.TmpFile.Close()
@@ -37,8 +54,7 @@ Request ID: abc-123-456
 test your things
 Http Response Status: 442
 Request ID: abc-123-456
-ResponseBody: %v
-`, err.TmpFile.Name()))
+ResponseBody: %v`, err.TmpFile.Name()))
 }
 
 func TestUnmarshalResponse(t *testing.T) {
