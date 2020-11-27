@@ -30,6 +30,7 @@ type RespUnmarshalError struct {
 	Resp       *http.Response
 	Problem    string
 	Suggestion string
+	ReadErr    error
 	TmpFile    *os.File
 }
 
@@ -37,9 +38,9 @@ var respUnmarshalErrorTemplate = template.Must(template.New("respUnmarshalError"
 	`{{ .Problem }}
 {{ .Suggestion }}
 Http Response Status: {{ .Resp.StatusCode }}
-Request ID: {{ .RequestID }}{{with .TmpFile}}
-ResponseBody: {{ .Name }}{{end}}
-`))
+Request ID: {{ .RequestID }}{{ if .ReadErr }}
+Error: {{ .ReadErr }}{{ end }}{{ with .TmpFile }}
+ResponseBody: {{ .Name }}{{ end }}`))
 
 // RequestID is a helper for the template
 func (err RespUnmarshalError) RequestID() string {
@@ -65,6 +66,7 @@ func unmarshalResponse(resp *http.Response, data interface{}) error {
 			Resp:       resp,
 			Problem:    "could not read response body",
 			Suggestion: "This may mean that the request was not able to finish successfully",
+			ReadErr:    err,
 		}
 	}
 	defer resp.Body.Close()
