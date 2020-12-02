@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 '''
-    File name: install
+    File name: install.py
     Author: Tim Anema
     Date created: Sep 29, 2016
-    Date last modified: Sep 14 2018
-    Python Version: 2.7
+    Date last modified: Nov 19 2020
+    Python Version: 2.x, 3.x
     Description: Install script for themekit. It will download a release and make it executable
 '''
-import os, urllib, json, sys, hashlib
+import os, json, sys, hashlib
+
+from six.moves.urllib.request import urlopen
 
 class Installer(object):
     LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
@@ -25,7 +27,7 @@ class Installer(object):
         self.bin_path = "%s/theme" % self.install_path
         self.arch = self.__getArch()
         print("Fetching release data")
-        self.release = json.loads(urllib.urlopen(Installer.LATEST_RELEASE_URL).read().decode("utf-8"))
+        self.release = json.loads(urlopen(Installer.LATEST_RELEASE_URL).read().decode("utf-8"))
         print("Downloading version %s of Shopify Themekit" % self.release['version'])
         self.__download()
         print("Theme Kit has been installed at %s" % self.bin_path)
@@ -47,7 +49,7 @@ class Installer(object):
 
     def __download(self):
         platform = self.__findReleasePlatform()
-        data = urllib.urlopen(platform['url']).read()
+        data = urlopen(platform['url']).read()
         if hashlib.md5(data).hexdigest() != platform['digest']:
             sys.exit("Downloaded binary did not match checksum.")
         else:
@@ -58,7 +60,4 @@ class Installer(object):
             themefile.write(data)
         os.chmod(self.bin_path, 0o755)
 
-if sys.version_info[0] < 3:
-    Installer()
-else:
-    sys.exit("Python 2 is required for this script.")
+Installer()
