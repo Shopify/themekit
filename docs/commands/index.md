@@ -50,6 +50,9 @@ development:
 |`-s`|`--store   `| Your store's domain for changes to take effect
 |`-t`|`--themeid `| The ID of the theme that you want changes to take effect
 
+|**Optional Flags**||
+|    |`--live`| Will set theme id to the published theme
+
 ## Deploy
 Deploy will completely replace what is on Shopify with what is in your current
 project directory. This means that any files that are on Shopify but are not on
@@ -78,6 +81,9 @@ theme download templates/404.liquid templates/article.liquid
 ```
 
 Similar to the `deploy` command, Theme Kit will skip downloading any unchanged files.
+
+|**Optional Flags**||
+|    |`--live`| Will set theme id to the published theme
 
 ## Get
 Get can be used to setup your theme on your local machine. It will both create
@@ -110,6 +116,9 @@ development:
 |`-p`|`--password`| Password for access to your Shopify account.
 |`-s`|`--store   `| Your store's domain for changes to take effect
 |`-t`|`--themeid `| The ID of the theme that you want changes to take effect.
+
+|**Optional Flags**||
+|    |`--live`| Will set theme id to the published theme
 
 ## New
 

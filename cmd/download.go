@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -24,6 +25,13 @@ var downloadCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// download should not care about the live theme
 		flags.AllowLive = true
+		if flags.Live {
+			theme, err := getLiveTheme(flags, args)
+			if err != nil {
+				return err
+			}
+			flags.ThemeID = strconv.Itoa(int(theme.ID))
+		}
 		return cmdutil.ForEachClient(flags, args, download)
 	},
 }
