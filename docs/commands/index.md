@@ -157,6 +157,7 @@ theme open --env=production # will open http://your-store.myshopify.com?preview_
 |`-a`|`--allenvs`| run command with all environments
 |`-b`|`--browser`| name of the browser to open the url, matching the name of browser on your system.
 |`-E`|`--edit   `| open the web editor for the theme.
+|    |`--hidepb `| hide preview bar when opening the the preview page
 
 ## Remove
 Remove will delete theme files both locally and on Shopify. Unlike the other file
