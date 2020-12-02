@@ -8,6 +8,7 @@ configuration to the published theme
 - Added --hidepb flag to hide preview bar (#829)
 - Improved request throttling and retrying, to eliminate ABS interactions and
 hanging operations (#839)
+- Adding more feedback when having issues unmarshalling responses (#840)
 
 v1.1.2 (Sep 29, 2020)
 =====================
