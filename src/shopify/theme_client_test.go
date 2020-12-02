@@ -468,33 +468,6 @@ func TestThemeClient_assetPath(t *testing.T) {
 	}
 }
 
-func TestUnmarshalResponse(t *testing.T) {
-	testcases := []struct {
-		input, err    string
-		out, expected themeResponse
-	}{
-		{input: `{"errors":{"name":["can't be blank"]}}`, expected: themeResponse{Errors: map[string][]string{"name": {"can't be blank"}}}},
-		{input: `{"errors": "Not Found"}`, err: "Not Found"},
-		{input: `{"theme":{"id": 123456}}`, expected: themeResponse{Theme: Theme{ID: int64(123456)}}},
-		{input: `{"theme":{"id": 123456}}`, expected: themeResponse{Theme: Theme{ID: int64(123456)}}},
-	}
-
-	for _, testcase := range testcases {
-		err := unmarshalResponse(&StringReadCloser{strings.NewReader(testcase.input)}, &testcase.out)
-		assert.Equal(t, testcase.expected, testcase.out)
-		if testcase.err == "" {
-			assert.Nil(t, err)
-		} else if assert.NotNil(t, err) {
-			assert.Contains(t, err.Error(), testcase.err)
-		}
-	}
-
-	out := assetsResponse{}
-	err := unmarshalResponse(&StringReadCloser{strings.NewReader(`{"errors":"oh no"}`)}, &out)
-	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "oh no")
-}
-
 func TestToMessages(t *testing.T) {
 	testcases := []struct {
 		input    map[string][]string
