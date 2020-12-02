@@ -27,7 +27,7 @@ func main() {
 	}
 
 	if err := cmd.ThemeCmd.Execute(); err != nil {
-		stdErr.Fatal(err)
+		stdErr.Fatal(colors.Red(err.Error()))
 	}
 
 	if memProfile := os.Getenv(memProfileVar); memProfile != "" {

@@ -48,6 +48,8 @@ var deployCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForEachClient(flags, args, deploy)
 	},
+	PostRun: func(cmd *cobra.Command, args []string) {
+	},
 }
 
 func deploy(ctx *cmdutil.Ctx) error {
@@ -59,16 +61,6 @@ func deploy(ctx *cmdutil.Ctx) error {
 	if err != nil {
 		return err
 	}
-
-	updateCount := 0
-	skipCount := 0
-	removeCount := 0
-
-	defer func() {
-		if ctx.Flags.Verbose {
-			fmt.Printf("Updated: %d, Removed: %d, No Changes: %d\n", updateCount, removeCount, skipCount)
-		}
-	}()
 
 	var deployGroup sync.WaitGroup
 	ctx.StartProgress(len(assetsActions))
@@ -82,18 +74,10 @@ func deploy(ctx *cmdutil.Ctx) error {
 			defer deployGroup.Done()
 			perform(ctx, path, op, "")
 		}(path, op)
-
-		switch op {
-		case file.Update:
-			updateCount++
-		case file.Skip:
-			skipCount++
-		case file.Remove:
-			removeCount++
-		}
 	}
 
 	deployGroup.Wait()
+
 	return nil
 }
 
