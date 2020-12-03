@@ -52,7 +52,7 @@ var watchCmd = &cobra.Command{
 			watcher.Watch()
 			defer watcher.Stop()
 
-			signalChan := make(chan os.Signal)
+			signalChan := make(chan os.Signal, 1)
 			signal.Notify(signalChan, os.Interrupt)
 
 			notifier := newNotifyAdapter(ctx.Env.Notify)

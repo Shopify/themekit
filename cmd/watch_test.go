@@ -92,6 +92,27 @@ func TestWatch(t *testing.T) {
 	assert.Contains(t, stdOut.String(), "processing assets/app.js")
 	assert.Contains(t, stdOut.String(), "Deleted assets/app.js")
 	notifier.AssertExpectations(t)
+
+	signalChan = make(chan os.Signal)
+	eventChan = make(chan file.Event)
+	ctx, client, _, stdOut, stdErr = createTestCtx()
+	client.On("UpdateAsset", shopify.Asset{Key: "assets/app.js", Checksum: "d41d8cd98f00b204e9800998ecf8427e"}, "").Return(nil)
+	ctx.Flags.ConfigPath = "config.yml"
+	ctx.Env.Directory = "_testdata/projectdir"
+	go func() {
+		eventChan <- file.Event{Op: file.Update, Path: "assets/app.js"}
+		signalChan <- os.Interrupt
+		eventChan <- file.Event{Op: file.Remove, Path: "assets/app.js"}
+	}()
+	notifier = new(testAdapter)
+	notifier.On("notify", ctx, "assets/app.js")
+	err = watch(ctx, eventChan, signalChan, notifier)
+	assert.Nil(t, err)
+	assert.Contains(t, stdOut.String(), "Watching for file changes")
+	assert.Contains(t, stdOut.String(), "processing assets/app.js")
+	assert.Contains(t, stdOut.String(), "Updated assets/app.js")
+	assert.NotContains(t, stdOut.String(), "Deleted assets/app.js")
+	notifier.AssertExpectations(t)
 }
 
 func TestPerform(t *testing.T) {
