@@ -1,6 +1,7 @@
 v1.1.4
 ======
 - Fix for theme get --list (#862)
+- Removed too restrictive timeouts (#864)
 
 v1.1.3 (Dec 2, 2020)
 ====================

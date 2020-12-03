@@ -1,12 +1,10 @@
 package httpify
 
 import (
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -23,29 +21,11 @@ var (
 	ErrConnectionIssue = errors.New("DNS problem while connecting to Shopify, this indicates a problem with your internet connection")
 	// ErrInvalidProxyURL is returned if a proxy url has been passed but is improperly formatted
 	ErrInvalidProxyURL = errors.New("invalid proxy URI")
-	netDialer          = &net.Dialer{
-		Timeout:   3 * time.Second,
-		KeepAlive: 1 * time.Second,
-	}
-	httpTransport = &http.Transport{
-		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
-		IdleConnTimeout:       time.Second,
-		TLSHandshakeTimeout:   time.Second,
-		ExpectContinueTimeout: time.Second,
-		ResponseHeaderTimeout: time.Second,
-		MaxIdleConnsPerHost:   10,
-		DialContext: func(ctx context.Context, network, address string) (conn net.Conn, err error) {
-			if conn, err = netDialer.DialContext(ctx, network, address); err != nil {
-				return nil, err
-			}
-			deadline := time.Now().Add(5 * time.Second)
-			conn.SetReadDeadline(deadline)
-			return conn, conn.SetDeadline(deadline)
-		},
+	httpTransport      = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	httpClient = &http.Client{
-		Transport: httpTransport,
-		Timeout:   30 * time.Second,
+		Timeout: 30 * time.Second,
 	}
 )
 
@@ -87,6 +67,7 @@ func NewClient(params Params) (*HTTPClient, error) {
 			return nil, ErrInvalidProxyURL
 		}
 		httpTransport.Proxy = http.ProxyURL(parsedURL)
+		httpClient.Transport = httpTransport
 	}
 
 	return &HTTPClient{
@@ -139,8 +120,12 @@ func (client *HTTPClient) do(method, path string, body interface{}, headers map[
 }
 
 func (client *HTTPClient) doWithRetry(req *http.Request, body interface{}) (*http.Response, error) {
-	var bodyData []byte
-	var err error
+	var (
+		bodyData []byte
+		resp     *http.Response
+		err      error
+	)
+
 	if body != nil {
 		bodyData, err = json.Marshal(body)
 		if err != nil {
@@ -149,15 +134,16 @@ func (client *HTTPClient) doWithRetry(req *http.Request, body interface{}) (*htt
 	}
 
 	for attempt := 0; attempt <= client.maxRetry; attempt++ {
-		resp, err := client.limit.GateReq(httpClient, req, bodyData)
+		resp, err = client.limit.GateReq(httpClient, req, bodyData)
 		if err == nil && resp.StatusCode >= 100 && resp.StatusCode < 500 {
 			return resp, nil
-		} else if strings.Contains(err.Error(), "no such host") {
+		} else if err != nil && strings.Contains(err.Error(), "no such host") {
 			return nil, ErrConnectionIssue
 		}
 		time.Sleep(time.Duration(attempt) * time.Second)
 	}
-	return nil, fmt.Errorf("request failed after %v retries", client.maxRetry)
+
+	return nil, fmt.Errorf("request failed after %v retries with error: %v", client.maxRetry, err)
 }
 
 func parseBaseURL(domain string) (*url.URL, error) {
