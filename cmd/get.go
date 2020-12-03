@@ -54,6 +54,7 @@ func getTheme(ctx *cmdutil.Ctx) error {
 }
 
 func listThemes(flags cmdutil.Flags, args []string) error {
+	flags.ThemeID = "1337"
 	themes, err := getDefaultThemes(flags, args)
 	if err != nil {
 		return err
