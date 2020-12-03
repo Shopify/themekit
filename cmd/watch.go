@@ -79,6 +79,8 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifie
 	)
 	for {
 		select {
+		case <-sig:
+			return nil
 		case event := <-events:
 			if event.Path == ctx.Flags.ConfigPath {
 				ctx.Log.Print("Reloading config changes")
@@ -89,8 +91,6 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifie
 			if event.Op != file.Skip {
 				notifier.notify(ctx, event.Path)
 			}
-		case <-sig:
-			return nil
 		}
 	}
 }

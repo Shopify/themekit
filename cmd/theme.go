@@ -110,6 +110,7 @@ func init() {
 
 	ThemeCmd.AddCommand(
 		configureCmd,
+		checkCmd,
 		deployCmd,
 		downloadCmd,
 		getCmd,

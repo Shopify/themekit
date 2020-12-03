@@ -13,6 +13,8 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.0.0-20180310133214-efa589957cd0
 	github.com/mattn/go-isatty v0.0.4 // indirect
+	github.com/osteele/liquid v1.2.4
+	github.com/osteele/tuesday v1.0.3 // indirect
 	github.com/radovskyb/watcher v1.0.6
 	github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db
 	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0
@@ -26,6 +28,7 @@ require (
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 go 1.13
