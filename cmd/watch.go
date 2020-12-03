@@ -78,13 +78,6 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifie
 		colors.Yellow(ctx.Env.ThemeID),
 	)
 	for {
-		// non-blocking exit signal check
-		select {
-		case <-sig:
-			return nil
-		default:
-		}
-
 		select {
 		case event := <-events:
 			if event.Path == ctx.Flags.ConfigPath {
@@ -96,10 +89,9 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifie
 			if event.Op != file.Skip {
 				notifier.notify(ctx, event.Path)
 			}
-		case <-sig: // blocking signal check
+		case <-sig:
 			return nil
 		}
-
 	}
 }
 
