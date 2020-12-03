@@ -1,5 +1,5 @@
-v1.1.4
-======
+v1.1.4 (Dec 3, 2020)
+====================
 - Fix for theme get --list (#862)
 - Removed too restrictive timeouts (#864)
 - Allow watch command to be cancelled while working on events (#865)
