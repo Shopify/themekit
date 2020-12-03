@@ -137,7 +137,7 @@ func (client *HTTPClient) doWithRetry(req *http.Request, body interface{}) (*htt
 		resp, err = client.limit.GateReq(httpClient, req, bodyData)
 		if err == nil && resp.StatusCode >= 100 && resp.StatusCode < 500 {
 			return resp, nil
-		} else if strings.Contains(err.Error(), "no such host") {
+		} else if err != nil && strings.Contains(err.Error(), "no such host") {
 			return nil, ErrConnectionIssue
 		}
 		time.Sleep(time.Duration(attempt) * time.Second)
