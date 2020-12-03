@@ -52,7 +52,7 @@ var watchCmd = &cobra.Command{
 			watcher.Watch()
 			defer watcher.Stop()
 
-			signalChan := make(chan os.Signal)
+			signalChan := make(chan os.Signal, 1)
 			signal.Notify(signalChan, os.Interrupt)
 
 			notifier := newNotifyAdapter(ctx.Env.Notify)
@@ -78,6 +78,13 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifie
 		colors.Yellow(ctx.Env.ThemeID),
 	)
 	for {
+		// non-blocking exit signal check
+		select {
+		case <-sig:
+			return nil
+		default:
+		}
+
 		select {
 		case event := <-events:
 			if event.Path == ctx.Flags.ConfigPath {
@@ -89,9 +96,10 @@ func watch(ctx *cmdutil.Ctx, events chan file.Event, sig chan os.Signal, notifie
 			if event.Op != file.Skip {
 				notifier.notify(ctx, event.Path)
 			}
-		case <-sig:
+		case <-sig: // blocking signal check
 			return nil
 		}
+
 	}
 }
 
