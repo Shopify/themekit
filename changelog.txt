@@ -1,6 +1,7 @@
 v1.1.5
 ======
 - Fix layout after renaming application.scss.css to application.css
+- Added more to customer templates
 
 v1.1.4 (Dec 3, 2020)
 ====================
