@@ -1,3 +1,7 @@
+v1.1.5
+======
+- Fix layout after renaming application.scss.css to application.css
+
 v1.1.4 (Dec 3, 2020)
 ====================
 - Fix for theme get --list (#862)
