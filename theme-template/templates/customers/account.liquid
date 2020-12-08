@@ -1,1 +1,26 @@
 <!-- /templates/customers/account.liquid -->
+
+{% if customer.default_address %}
+  <h2>Address</h2>
+  <p>{{ customer.default_address.address1 }}</p>
+  {% if customer.default_address.address2 != "" %}
+    <p>{{ customer.default_address.address2 }}</p>
+  {% endif %}
+  <p>{{ customer.default_address.city}}, {% if address.province_code %}{{ customer.default_address.province_code }}, {% endif %}{{ customer.default_address.country }}</p>
+  <p>{{ customer.default_address.zip }}</p>
+  <p>{{ customer.default_address.phone }}</p>
+{% endif %}
+
+<div id="customer_orders">
+  <h2>Orders</h2>
+  {% paginate customer.orders by 10 %}
+  {% if customer.orders.size != 0 %}
+    {% for order in customer.orders %}
+      <!-- order details here -->
+    {% endfor %}
+  {% else %}
+    <p>You haven't placed any orders yet.</p>
+  {% endif %}
+  {{ paginate | default_pagination }}
+  {% endpaginate %}
+</div>

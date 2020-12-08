@@ -1,1 +1,39 @@
 <!-- /templates/customers/addresses.liquid -->
+
+<h2>New Address</h2>
+{% form 'customer_address', customer.new_address %}
+
+{{ form.errors | default_errors }}
+
+<label for="first_name">First Name</label>
+<input type="text" value="" name="address[first_name]" size="30" />
+
+<label for="last_name">Last Name</label>
+<input type="text" value="" name="address[last_name]" size="30" />
+
+<label for="company">Company</label>
+<input type="text" value="" name="address[company]" />
+
+<label for="address1">Address 1</label>
+<input type="text" value="" name="address[address1]" />
+
+<label for="address2">Address 2</label>
+<input type="text" value="" name="address[address2]" />
+
+<label for="city">City</label>
+<input type="text" value="" name="address[city]" />
+
+<!-- See docs for @shopify/theme-addresses to support Country and Province -->
+<label for="country">Country</label>
+<select name="address[country]" /></select>
+
+<label for="province">Province</label>
+<select name="address[province]" /></select>
+
+<label for="zip">Zip/Post Code</label>
+<input type="text" value="" name="address[zip]" />
+
+<label for="phone">Phone Number</label>
+<input type="tel" value="" name="address[phone]" />
+
+{% endform %}
