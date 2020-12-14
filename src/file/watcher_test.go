@@ -80,7 +80,9 @@ func TestFileWatcher_filterHook(t *testing.T) {
 		{filename: "_testdata/project/config/settings.json", skip: true},
 		{filename: "_testdata/project/config.yml", skip: false},
 		{filename: "_testdata/project/templates/template.liquid", skip: false},
-		{filename: "_testdata/project/templates", skip: true},
+		{filename: "_testdata/project/templates", skip: false},
+		{filename: "_testdata", skip: true},
+		{filename: "_testdata/project/javascripts/app.js", skip: true},
 	}
 
 	hook := createTestFilterHook(t)
@@ -105,7 +107,6 @@ func TestFileWatcher_WatchFsEvents(t *testing.T) {
 		{expectedOp: Update, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
 		{expectedOp: Update, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Write},
 		{expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
-		{expectedOp: Remove, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Rename},
 	}
 
 	for i, testcase := range testcases {
@@ -130,23 +131,23 @@ func (p OptSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func TestFileWatcher_OnEvent(t *testing.T) {
 	testcases := []struct {
-		filename   string
-		op         watcher.Op
-		expectedOp OptSlice
+		filename, oldname string
+		op                watcher.Op
+		expectedOp        OptSlice
 	}{
 		{expectedOp: OptSlice{Update}, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
 		{expectedOp: OptSlice{Update}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Create},
+		{expectedOp: OptSlice{}, filename: "_testdata/project/config", op: watcher.Create},
 		{expectedOp: OptSlice{Remove}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
-		{expectedOp: OptSlice{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Rename},
-		{expectedOp: OptSlice{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid -> _testdata/project/assets/application.js", op: watcher.Move},
+		{expectedOp: OptSlice{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid", oldname: "_testdata/project/assets/application.js", op: watcher.Rename},
+		{expectedOp: OptSlice{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid", oldname: "_testdata/project/assets/application.js", op: watcher.Move},
 	}
 
 	for i, testcase := range testcases {
 		w := createTestWatcher(t)
 		w.Events = make(chan Event, len(testcases))
-		_, currentPath := w.parsePath(testcase.filename)
-		info, _ := os.Stat(filepath.Join("_testdata", "project", currentPath))
-		w.onEvent(watcher.Event{Op: testcase.op, Path: testcase.filename, FileInfo: info})
+		info, _ := os.Stat(testcase.filename)
+		w.onEvent(watcher.Event{Op: testcase.op, Path: testcase.filename, OldPath: testcase.oldname, FileInfo: info})
 		assert.Equal(t, len(testcase.expectedOp), len(w.Events), fmt.Sprintf("testcase: %v", i))
 
 		recievedEvents := OptSlice{}
@@ -183,17 +184,14 @@ func TestFileWatcher_debouncing(t *testing.T) {
 
 func TestFileWatcher_ParsePath(t *testing.T) {
 	testcases := []struct {
-		input, oldpath, currentpath string
+		input, currentpath string
 	}{
-		{"_testdata/project/assets/app.js", "", "assets/app.js"},
-		{"_testdata/project/assets/app.js -> _testdata/project/assets/app.js.liquid", "assets/app.js", "assets/app.js.liquid"},
-		{"not/another/path/assets/app.js", "", "not/another/path/assets/app.js"},
+		{"_testdata/project/assets/app.js", "assets/app.js"},
+		{"not/another/path/assets/app.js", "not/another/path/assets/app.js"},
 	}
 	w := createTestWatcher(t)
 	for _, testcase := range testcases {
-		o, c := w.parsePath(testcase.input)
-		assert.Equal(t, o, testcase.oldpath)
-		assert.Equal(t, c, testcase.currentpath)
+		assert.Equal(t, w.parsePath(testcase.input), testcase.currentpath)
 	}
 }
 
