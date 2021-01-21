@@ -9,13 +9,13 @@ sass:
 # remember to update the checksums
 themekitversion: "v1.1.5"
 # these can be generated with `make md5s`
-darwinamd64sum: ca8c6cca407604028ebc4ca1ee996184
-windows386sum: c66899cb55a9a02bacef541a8094ece4
-windowsamd64sum: 572091a546271d15458a090f15330f3f
-linux386sum: 2d056fdc02cd75d8b6f48f053a61eb44
-linuxamd64sum: dbbfc3e19979f4709db5067beb04fc22
-freebsd386sum: d30dd8333b92461dd437daa007d46b56
-freebsdamd64sum: 154a8d2d99d5ea61e325e8ad8c444336
+darwinamd64sum: f85765e969256dec9a365112f230d37c
+windows386sum: ea53990984e61f774f2c52d390d84b0a
+windowsamd64sum: fb45f717e502f376444ee44c65e04df6
+linux386sum: ed7812adbacbc79f6d5d8ac4fc1e368f
+linuxamd64sum: b0b134b084c780a4054a3c47971351fb
+freebsd386sum: 4743786ec3cb000a03ebf696d0e403c8
+freebsdamd64sum: 8d043fe5116e09099a5821f5c6ce0200
 
 # Build settings
 markdown: kramdown
