@@ -34,6 +34,8 @@ github.com/radovskyb/watcher v1.0.2 h1:9L5TsZUbo1nKhQEQPtICVc+x9UZQ6VPdBepLHyGw/
 github.com/radovskyb/watcher v1.0.2/go.mod h1:78okwvY5wPdzcb1UYnip1pvrZNIVEIh/Cm+ZuvsUYIg=
 github.com/radovskyb/watcher v1.0.6 h1:8WIQ9UxEYMZjem1OwU7dVH94DXXk9mAIE1i8eqHD+IY=
 github.com/radovskyb/watcher v1.0.6/go.mod h1:78okwvY5wPdzcb1UYnip1pvrZNIVEIh/Cm+ZuvsUYIg=
+github.com/radovskyb/watcher v1.0.7 h1:AYePLih6dpmS32vlHfhCeli8127LzkIgwJGcwwe8tUE=
+github.com/radovskyb/watcher v1.0.7/go.mod h1:78okwvY5wPdzcb1UYnip1pvrZNIVEIh/Cm+ZuvsUYIg=
 github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db h1:ge9atzKq16843f793fDVxKUhmTb4H5muzjJQ6PgsnHg=
 github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db/go.mod h1:807d1WSdnB0XRJzKNil9Om6lcp/3a0v4qIHxIXzX/Yc=
 github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0 h1:Xuk8ma/ibJ1fOy4Ee11vHhUFHQNpHhrBneOCNHVXS5w=
