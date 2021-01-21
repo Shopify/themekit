@@ -7,15 +7,15 @@ url: "https://shopify.github.io"
 sass:
   cache: true
 # remember to update the checksums
-themekitversion: "v1.1.2"
+themekitversion: "v1.1.5"
 # these can be generated with `make md5s`
-darwinamd64sum: 5335eaa9d5bb4d428075c2f5398cb486
-windows386sum: fc1f491247d2d6e5f3f9974f12e6b896
-windowsamd64sum: 6c10c267e799dd0a3bb06c2b6c29f66c
-linux386sum: 86c3d33fc1111129460f69614dee0ad4
-linuxamd64sum: 7dcf5d31cab6b66f5e23595e99678cc0
-freebsd386sum: df6ee5890e436d5de168ddfa8b77fffc
-freebsdamd64sum: 5167197428c8119076438b121f8bb6ec
+darwinamd64sum: f85765e969256dec9a365112f230d37c
+windows386sum: ea53990984e61f774f2c52d390d84b0a
+windowsamd64sum: fb45f717e502f376444ee44c65e04df6
+linux386sum: ed7812adbacbc79f6d5d8ac4fc1e368f
+linuxamd64sum: b0b134b084c780a4054a3c47971351fb
+freebsd386sum: 4743786ec3cb000a03ebf696d0e403c8
+freebsdamd64sum: 8d043fe5116e09099a5821f5c6ce0200
 
 # Build settings
 markdown: kramdown
