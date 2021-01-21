@@ -2,6 +2,7 @@ v1.1.5
 ======
 - Fix layout after renaming application.scss.css to application.css
 - Added more to customer templates
+- Optimization for watcher to reduce CPU usage.
 
 v1.1.4 (Dec 3, 2020)
 ====================
