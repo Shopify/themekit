@@ -7,7 +7,7 @@ url: "https://shopify.github.io"
 sass:
   cache: true
 # remember to update the checksums
-themekitversion: "v1.1.4"
+themekitversion: "v1.1.5"
 # these can be generated with `make md5s`
 darwinamd64sum: ca8c6cca407604028ebc4ca1ee996184
 windows386sum: c66899cb55a9a02bacef541a8094ece4
