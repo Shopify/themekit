@@ -59,7 +59,7 @@ After Mockery is installed, `cd` into the directory of the interface and run:
 
 `mockery --name=InterfaceName --output=_mocks`
 
-# Debug requests
+## Debug requests
 
 A [mitmproxy (man in the middle proxy)](https://mitmproxy.org/) is the easiest way to introspect the requests that themekit makes.
 
