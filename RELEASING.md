@@ -46,7 +46,7 @@ Update the Chocolatey package in the `choco` folder:
 3. Run `choco pack` in a window VM.
 4. Log into [https://chocolatey.org/](chocolatey.org) (use `themekit@shopify.com` for your credentials) and submit an update for approval.
 
-## 7. Update ThemeKit for Homebrew
+## 7. Update Theme Kit for Homebrew
 
 Update the `themekit.rb` formula for Homebrew on [homebrew-shopify](https://github.com/Shopify/homebrew-shopify):
 
