@@ -14,7 +14,7 @@ var configureCmd = &cobra.Command{
 	Long: `Configure will create a new configuration file to
  access shopify using the theme kit.
 
- For more documentation please see https://shopify.github.io/themekit/commands/#configure
+ For more information, refer to https://shopify.dev/tools/theme-kit/command-reference/configure.
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// get should not care about the live theme

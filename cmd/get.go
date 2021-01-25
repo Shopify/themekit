@@ -28,7 +28,7 @@ var getCmd = &cobra.Command{
  that it accesses. To get a list of all themes that you can access, you can pass in
  a --list flag.
 
- For more documentation please see https://shopify.github.io/themekit/commands/#get
+ For more information, refer to https://shopify.dev/tools/theme-kit/command-reference/get.
  `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// get should not care about the live theme

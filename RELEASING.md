@@ -12,7 +12,7 @@
 - On GitHub create a new release for the tag and take note of any relevant changes.
   - Include a brief summary of all the changes
   - Include links to the Pull Requests that introduced these changes
-- Update the [documentation website](https://shopify.github.io/themekit/)
+- Update the [documentation website](https://shopify.dev/tools/theme-kit)
   - run `make serve_docs`
   - update any changes to the API
   - commit changes
