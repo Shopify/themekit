@@ -1,9 +1,0 @@
-// For links containing multiple elements, this helper class underlines text
-// with the link__title class wrapped inside of the link.
-
-.link__title {
-  a:hover &,
-  a:focus & {
-    text-decoration: underline;
-  }
-}
