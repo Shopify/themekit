@@ -25,16 +25,16 @@ With Theme Kit, you can integrate workflow tools (for example, Git) into your th
 
 ## Getting started
 
-**[Getting started with Theme Kit](tools/theme-kit/getting-started)** - Learn how to install and configure Theme Kit, use the Admin API to connect to the Shopify platform, create a new theme, and configure an existing theme.
+**[Getting started with Theme Kit](https://shopify.dev/tools/theme-kit/getting-started)** - Learn how to install and configure Theme Kit, use the Admin API to connect to the Shopify platform, create a new theme, and configure an existing theme.
 
 ## Reference guides
 
-- **[Theme Kit command reference](tools/theme-kit/command-reference)** - Learn about the different commands that you can use in Theme Kit to execute key operations.
-- **[Theme Kit configuration reference](tools/theme-kit/configuration-reference)** - Familiarize yourself with the configuration variables available and the accepted values.
+- **[Theme Kit command reference](https://shopify.dev/tools/theme-kit/command-reference)** - Learn about the different commands that you can use in Theme Kit to execute key operations.
+- **[Theme Kit configuration reference](https://shopify.dev/tools/theme-kit/configuration-reference)** - Familiarize yourself with the configuration variables available and the accepted values.
 
 ## Troubleshooting
 
-**[Troubleshooting Theme Kit](tools/theme-kit/troubleshooting)** - Learn how to identify and resolve common issues in Theme Kit.
+**[Troubleshooting Theme Kit](https://shopify.dev/tools/theme-kit/troubleshooting)** - Learn how to identify and resolve common issues in Theme Kit.
 
 ## Contributing to Theme Kit
 
