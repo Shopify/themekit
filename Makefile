@@ -39,11 +39,6 @@ md5s: ## Generate md5 sums for all builds
 	@echo "linuxamd64sum: $(shell md5 -q ./build/dist/linux-amd64/theme)"
 	@echo "freebsd386sum: $(shell md5 -q ./build/dist/freebsd-386/theme)"
 	@echo "freebsdamd64sum: $(shell md5 -q ./build/dist/freebsd-amd64/theme)"
-serve_docs: ## Start the dev server for the jekyll static site serving the theme kit docs.
-ifeq ("$(shell which jekyll 2>/dev/null)","")
-	@gem install jekyll
-endif
-	@cd docs && jekyll serve
 help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
