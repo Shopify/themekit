@@ -26,7 +26,7 @@ To release a new version of Theme Kit, make sure to complete all of the followin
 
 ## 4. Update the Theme Kit documentation on shopify.dev
 
-1. Open a [pull request in shopify-dev](https://github.com/Shopify/shopify-dev/pulls) to update the [Theme Kit documentation](https://shopify.dev/tools/theme-kit)
+1. Open a [pull request in shopify-dev](https://github.com/Shopify/shopify-dev/pulls) to update the [Theme Kit documentation](https://shopify.dev/tools/theme-kit).
 2. Commit your changes and tag the partner-facing docs team ([@Shopify/dev-docs](https://github.com/orgs/Shopify/teams/dev-docs)) for review. After the PR is approved, and the new Theme Kit version is released, merge the docs PR.
 
 ## 5. Update Theme Kit installation links on GitHub
