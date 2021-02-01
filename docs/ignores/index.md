@@ -40,7 +40,7 @@ development:
   ... # other content
   ignore_files:
   - config/settings_data.json
-  - "*.png" # patterns that start with * need to be quoted to have vaild yaml
+  - "*.png" # patterns that start with * need to be quoted to have valid yaml
   - /\.(txt|gif|bat)$/
   ignores:
   - themekit_ignores # file to load ignore patterns, check out the ignore file example
