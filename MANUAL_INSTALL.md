@@ -3,7 +3,7 @@
 > Note:
 > The recommended way to [install Theme Kit](https://shopify.dev/tools/theme-kit/getting-started) is by using the command line. You should only complete the following steps if you know what you're doing.
 
-To manually install Theme Kit, [download the file](https://github.com/Shopify/themekit/releases/latest) that matches your operating system (OS) and architecture. When the Theme Kit download finishes, complete the installation steps for [macOS and Linux](#macos-and-linux-steps) or [Windows](#windows-steps).
+To manually install Theme Kit, [download the file](https://github.com/Shopify/themekit/releases/latest) that matches your operating system (OS) and architecture. When the Theme Kit download finishes, complete the installation steps for macOS and Linux or Windows.
 
 ## macOS and Linux steps
 
