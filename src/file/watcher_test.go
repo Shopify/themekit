@@ -166,6 +166,43 @@ func TestFileWatcher_OnEvent(t *testing.T) {
 	}
 }
 
+func TestFileWatcher_translateEvent(t *testing.T) {
+	testcases := []struct {
+		filename, oldname string
+		op                watcher.Op
+		expectedOp        OptSlice
+	}{
+		{expectedOp: OptSlice{Update}, filename: "_testdata/project/templates/template.liquid", op: watcher.Write},
+		{expectedOp: OptSlice{Update}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Create},
+		{expectedOp: OptSlice{}, filename: "_testdata/project/config", op: watcher.Create},
+		{expectedOp: OptSlice{Remove}, filename: "_testdata/project/templates/customers/test.liquid", op: watcher.Remove},
+		{expectedOp: OptSlice{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid", oldname: "_testdata/project/assets/application.js", op: watcher.Rename},
+		{expectedOp: OptSlice{Remove, Update}, filename: "_testdata/project/assets/application.js.liquid", oldname: "_testdata/project/assets/application.js", op: watcher.Move},
+	}
+
+	for _, testcase := range testcases {
+		info, _ := os.Stat(testcase.filename)
+		evt := watcher.Event{
+			Op:       testcase.op,
+			Path:     testcase.filename,
+			OldPath:  testcase.oldname,
+			FileInfo: info,
+		}
+
+		w := createTestWatcher(t)
+		events := w.translateEvent(evt)
+		assert.Equal(t, len(testcase.expectedOp), len(events))
+		recievedEvents := OptSlice{}
+		for _, e := range events {
+			recievedEvents = append(recievedEvents, e.Op)
+		}
+		sort.Sort(testcase.expectedOp)
+		sort.Sort(recievedEvents)
+		assert.Equal(t, testcase.expectedOp, recievedEvents)
+		w.Stop()
+	}
+}
+
 func TestFileWatcher_debouncing(t *testing.T) {
 	w := createTestWatcher(t)
 	w.Events = make(chan Event, 10)

@@ -122,16 +122,14 @@ func (w *Watcher) watchFsEvents() {
 }
 
 func (w *Watcher) onEvent(event watcher.Event) bool {
-	if event.IsDir() {
-		if isEventType(event.Op, watcher.Create) {
-			w.fsWatcher.Add(event.Path)
-		}
+	events := map[string]Event{}
+	for _, e := range w.translateEvent(event) {
+		events[e.Path] = e
+	}
+	if len(events) == 0 {
 		return false
 	}
-	events := map[string]Event{}
-	for _, event := range w.translateEvent(event) {
-		events[event.Path] = event
-	}
+
 	drainTimer := time.NewTimer(drainTimeout)
 	defer drainTimer.Stop()
 	for {
@@ -164,7 +162,11 @@ func (w *Watcher) updateChecksum(e Event) {
 
 func (w *Watcher) translateEvent(event watcher.Event) []Event {
 	oldPath, currentPath := w.parsePath(event.OldPath), w.parsePath(event.Path)
-	if isEventType(event.Op, watcher.Rename, watcher.Move) {
+	if event.IsDir() {
+		if isEventType(event.Op, watcher.Create) {
+			w.fsWatcher.Add(event.Path)
+		}
+	} else if isEventType(event.Op, watcher.Rename, watcher.Move) {
 		return []Event{{Op: Remove, Path: oldPath}, {Op: Update, Path: currentPath, LastKnownChecksum: w.checksums[currentPath]}}
 	} else if isEventType(event.Op, watcher.Remove) {
 		return []Event{{Op: Remove, Path: currentPath}}
