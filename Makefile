@@ -27,7 +27,7 @@ build:
 			-ldflags="-s -w" \
 			-o build/dist/${GOOS}-${GOARCH}/theme${EXT} \
 			github.com/Shopify/themekit/cmd/theme && \
-		zip -qj build/release/${GOOS}-${GOARCH}.zip \
+		zip --quiet --junk-paths build/release/${GOOS}-${GOARCH}.zip \
 			build/dist/${GOOS}-${GOARCH}/theme${EXT} && \
 		echo "[${GOOS}-${GOARCH}] build complete";
 bundle:
