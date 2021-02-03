@@ -20,25 +20,31 @@ all: clean bundle ## will build a binary for all platforms
 	@export GOOS=freebsd GOARCH=386; $(MAKE) build;
 	@export GOOS=freebsd GOARCH=amd64; $(MAKE) build;
 build:
+	@mkdir -p build/release
 	@mkdir -p build/dist/${GOOS}-${GOARCH} && \
     echo "[${GOOS}-${GOARCH}] build started" && \
 		CGO_ENABLED=0 go build \
 			-ldflags="-s -w" \
 			-o build/dist/${GOOS}-${GOARCH}/theme${EXT} \
 			github.com/Shopify/themekit/cmd/theme && \
+		zip -qj build/release/${GOOS}-${GOARCH}.zip \
+			build/dist/${GOOS}-${GOARCH}/theme${EXT} && \
 		echo "[${GOOS}-${GOARCH}] build complete";
 bundle:
 	@go run src/static/cmd/bundle.go
 sha: ## Generate sha256 for a darwin build for usage with homebrew
 	@shasum -a 256 ./build/dist/darwin-amd64/theme
+
 md5s: ## Generate md5 sums for all builds
-	@echo "darwinamd64sum: $(shell md5 -q ./build/dist/darwin-amd64/theme)"
-	@echo "windows386sum: $(shell md5 -q ./build/dist/windows-386/theme.exe)"
-	@echo "windowsamd64sum: $(shell md5 -q ./build/dist/windows-amd64/theme.exe)"
-	@echo "linux386sum: $(shell md5 -q ./build/dist/linux-386/theme)"
-	@echo "linuxamd64sum: $(shell md5 -q ./build/dist/linux-amd64/theme)"
-	@echo "freebsd386sum: $(shell md5 -q ./build/dist/freebsd-386/theme)"
-	@echo "freebsdamd64sum: $(shell md5 -q ./build/dist/freebsd-amd64/theme)"
+	@echo "| OS      | Architecture | md5 checksums              |"
+	@echo "| :------ | :----------- | :------------------------- |"
+	@echo "| macOS   | 64-bit       | $(shell md5 -q ./build/dist/darwin-amd64/theme)|"
+	@echo "| Windows | 64-bit       | $(shell md5 -q ./build/dist/windows-amd64/theme.exe)|"
+	@echo "| Windows | 32-bit       | $(shell md5 -q ./build/dist/windows-386/theme.exe)|"
+	@echo "| Linux   | 64-bit       | $(shell md5 -q ./build/dist/linux-amd64/theme)|"
+	@echo "| Linux   | 32-bit       | $(shell md5 -q ./build/dist/linux-386/theme)|"
+	@echo "| FreeBSD | 64-bit       | $(shell md5 -q ./build/dist/freebsd-amd64/theme)|"
+	@echo "| FreeBSD | 32-bit       | $(shell md5 -q ./build/dist/freebsd-386/theme)|"
 help:
 	@grep -E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
