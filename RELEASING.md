@@ -23,7 +23,8 @@ To release a new version of Theme Kit, make sure to complete all of the followin
 1. In GitHub, create a new release for the tag.
 2. Include a brief summary of all the changes pertaining to the release.
 3. Include links to the pull requests that introduced the changes.
-4. Upload the binary files and include the md5 checksums in the description.
+4. Include the md5(`make md5s`) checksums in the description.
+5. Upload the zipped binary files from `build/release`.
 
 ## 4. Update the Theme Kit documentation on shopify.dev
 
