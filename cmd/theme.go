@@ -34,7 +34,7 @@ var (
 
 Theme Kit is a fast and cross platform tool that enables you to build shopify themes with ease.
 
-Complete documentation is available at https://shopify.github.io/themekit/`,
+Complete documentation is available at https://shopify.dev/tools/theme-kit.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -49,7 +49,7 @@ Complete documentation is available at https://shopify.github.io/themekit/`,
 		Short: "Update Theme kit to the newest version.",
 		Long: `Update will check for a new release, then if there is an applicable update it will download it and apply it.
 
- For more documentation please see https://shopify.github.io/themekit/commands/#update
+ For more information, refer to https://shopify.dev/tools/theme-kit/troubleshooting.
  `,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			colors.ColorStdOut.Printf("Updating from %s to %s", colors.Yellow(release.ThemeKitVersion), colors.Yellow(flags.Version))

@@ -12,7 +12,7 @@
     <copyright>Shopify 2019</copyright>
     <licenseUrl>https://github.com/Shopify/themekit/blob/master/LICENSE</licenseUrl>
     <projectSourceUrl>https://github.com/Shopify/themekit</projectSourceUrl>
-    <docsUrl>https://shopify.github.io/themekit/</docsUrl>
+    <docsUrl>https://shopify.dev/tools/theme-kit</docsUrl>
     <bugTrackerUrl>https://github.com/Shopify/themekit/issues</bugTrackerUrl>
     <tags>themekit shopify</tags>
     <summary>Theme Kit is a command line tool for shopify themes.</summary>
