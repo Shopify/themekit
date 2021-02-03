@@ -340,6 +340,11 @@ func ForDefaultClient(flags Flags, args []string, handler func(*Ctx) error) erro
 
 func forDefaultClient(newClient clientFact, flags Flags, args []string, handler func(*Ctx) error) error {
 	progressBarGroup := mpb.New(nil)
+
+	if err := env.SourceVariables(flags.VariableFilePath); err != nil {
+		return err
+	}
+
 	config, err := env.Load(flags.ConfigPath)
 	if err != nil && os.IsNotExist(err) {
 		config = env.New(flags.ConfigPath)
