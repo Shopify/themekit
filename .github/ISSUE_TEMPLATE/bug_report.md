@@ -18,10 +18,12 @@ Steps to reproduce the behavior:
 
 #### Environment
 <!-- Please complete the following information: -->
-- OS [e.g. iOS]:
-- Themekit version (run `theme version` to check):
-- Editor [e.g. atom, sublime]:
-- Ignore:
+Information      | Value
+---              | ---
+OS version       | E.g. macOS 11.2
+Themekit version | Run `theme version` to check
+Editor           | E.g. atom, sublime
+Ignore           | e.g. `config.yml`, `.gitignore`
 
 #### Additional context
 <!-- Add any other context about the problem here. -->
