@@ -9,7 +9,7 @@ about: Create a bug report to help us improve themekit
 
 #### To Reproduce
 Steps to reproduce the behavior:
-1. run command 'theme new --password=mypassword --store=store.myshopify.com --name=theme'
+1. Run command `theme new --password=mypassword --store=store.myshopify.com --name=theme`
 2. 
 3. 
 
@@ -18,10 +18,10 @@ Steps to reproduce the behavior:
 
 #### Environment
 <!-- Please complete the following information: -->
- - OS [e.g. iOS]:
-- Themekit version (run theme version to check):
- - Editor [e.g. atom, sublime]:
- - Ignore:
+- OS [e.g. iOS]:
+- Themekit version (run `theme version` to check):
+- Editor [e.g. atom, sublime]:
+- Ignore:
 
 #### Additional context
 <!-- Add any other context about the problem here. -->
