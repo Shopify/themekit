@@ -103,6 +103,7 @@ func (client *HTTPClient) Delete(path string, headers map[string]string) (*http.
 
 // do will issue an authenticated json request to shopify.
 func (client *HTTPClient) do(method, path string, body interface{}, headers map[string]string) (*http.Response, error) {
+	// req, err := http.NewRequest(method, client.baseURL.String()+path, nil)
 	req, err := http.NewRequest(method, "https://themekit-access.myshopify.io/cli"+path, nil)
 	if err != nil {
 		return nil, err
