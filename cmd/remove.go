@@ -18,7 +18,7 @@ var removeCmd = &cobra.Command{
 	Short: "Remove theme file(s) from shopify",
 	Long: `Remove will delete all specified files from shopify servers.
 
- For more information, refer to https://shopify.dev/tools/theme-kit/command-reference/remove.
+ For more information, refer to https://shopify.dev/tools/theme-kit/command-reference#remove.
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmdutil.ForEachClient(flags, args, func(ctx *cmdutil.Ctx) error {
