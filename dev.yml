@@ -1,0 +1,8 @@
+name: themekit
+
+type: go
+
+up:
+  - go:
+      version: 1.13
+      modules: true
