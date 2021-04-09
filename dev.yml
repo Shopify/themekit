@@ -5,6 +5,7 @@ type: go
 up:
   - homebrew:
     - mitmproxy
+    - dep
   - go:
       version: 1.13
       modules: true
