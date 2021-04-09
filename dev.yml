@@ -3,6 +3,8 @@ name: themekit
 type: go
 
 up:
+  - homebrew:
+    - mitmproxy
   - go:
       version: 1.13
       modules: true
