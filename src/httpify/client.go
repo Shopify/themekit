@@ -27,6 +27,7 @@ var (
 	httpClient = &http.Client{
 		Timeout: 30 * time.Second,
 	}
+	themeKitAccessURL = "https://theme-kit-access.shopifyapps.com/cli"
 )
 
 type proxyHandler func(*http.Request) (*url.URL, error)
@@ -42,11 +43,12 @@ type Params struct {
 // HTTPClient encapsulates an authenticate http client to issue theme requests
 // to Shopify
 type HTTPClient struct {
-	domain   string
-	password string
-	baseURL  *url.URL
-	limit    *ratelimiter.Limiter
-	maxRetry int
+	domain            string
+	password          string
+	baseURL           *url.URL
+	limit             *ratelimiter.Limiter
+	maxRetry          int
+	themeKitAccessURL string
 }
 
 // NewClient will create a new authenticated http client that will communicate
@@ -71,11 +73,12 @@ func NewClient(params Params) (*HTTPClient, error) {
 	}
 
 	return &HTTPClient{
-		domain:   params.Domain,
-		password: params.Password,
-		baseURL:  baseURL,
-		limit:    ratelimiter.New(params.Domain, 4),
-		maxRetry: 5,
+		domain:            params.Domain,
+		password:          params.Password,
+		baseURL:           baseURL,
+		limit:             ratelimiter.New(params.Domain, 4),
+		maxRetry:          5,
+		themeKitAccessURL: themeKitAccessURL,
 	}, nil
 }
 
@@ -103,7 +106,16 @@ func (client *HTTPClient) Delete(path string, headers map[string]string) (*http.
 
 // do will issue an authenticated json request to shopify.
 func (client *HTTPClient) do(method, path string, body interface{}, headers map[string]string) (*http.Response, error) {
-	req, err := http.NewRequest(method, client.baseURL.String()+path, nil)
+	appBaseURL := client.baseURL.String()
+	themeKitPasswordPrefix := "shptka_"
+
+	// redirect to Theme Kit Access
+	if strings.HasPrefix(client.password, themeKitPasswordPrefix) {
+		appBaseURL = client.themeKitAccessURL
+	}
+
+	req, err := http.NewRequest(method, appBaseURL+path, nil)
+
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +124,9 @@ func (client *HTTPClient) do(method, path string, body interface{}, headers map[
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s; %s)", runtime.GOOS, runtime.GOARCH, release.ThemeKitVersion.String()))
+	if strings.HasPrefix(client.password, themeKitPasswordPrefix) {
+		req.Header.Add("X-Shopify-Shop", client.domain)
+	}
 	for label, value := range headers {
 		req.Header.Add(label, value)
 	}
