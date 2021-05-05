@@ -153,7 +153,7 @@ func TestClient_do(t *testing.T) {
 		Domain:   shopifyServer.URL,
 		Password: "shptka_00000000000000000000000000000000",
 	})
-	client.themeKitAccessURL = themeKitAccessServer.URL
+	themeKitAccessURL = themeKitAccessServer.URL
 
 	assert.NotNil(t, client)
 	assert.Nil(t, err)
@@ -175,7 +175,7 @@ func TestClient_do(t *testing.T) {
 		Domain:   shopifyServer.URL,
 		Password: "secret_password",
 	})
-	client.themeKitAccessURL = themeKitAccessServer.URL
+	themeKitAccessURL = themeKitAccessServer.URL
 
 	assert.NotNil(t, client)
 	assert.Nil(t, err)

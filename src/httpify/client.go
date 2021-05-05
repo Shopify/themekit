@@ -15,6 +15,8 @@ import (
 	"github.com/Shopify/themekit/src/release"
 )
 
+const themeKitPasswordPrefix = "shptka_"
+
 var (
 	// ErrConnectionIssue is an error that is thrown when a very specific error is
 	// returned from our http request that usually implies bad connections.
@@ -43,12 +45,11 @@ type Params struct {
 // HTTPClient encapsulates an authenticate http client to issue theme requests
 // to Shopify
 type HTTPClient struct {
-	domain            string
-	password          string
-	baseURL           *url.URL
-	limit             *ratelimiter.Limiter
-	maxRetry          int
-	themeKitAccessURL string
+	domain   string
+	password string
+	baseURL  *url.URL
+	limit    *ratelimiter.Limiter
+	maxRetry int
 }
 
 // NewClient will create a new authenticated http client that will communicate
@@ -73,12 +74,11 @@ func NewClient(params Params) (*HTTPClient, error) {
 	}
 
 	return &HTTPClient{
-		domain:            params.Domain,
-		password:          params.Password,
-		baseURL:           baseURL,
-		limit:             ratelimiter.New(params.Domain, 4),
-		maxRetry:          5,
-		themeKitAccessURL: themeKitAccessURL,
+		domain:   params.Domain,
+		password: params.Password,
+		baseURL:  baseURL,
+		limit:    ratelimiter.New(params.Domain, 4),
+		maxRetry: 5,
 	}, nil
 }
 
@@ -107,11 +107,10 @@ func (client *HTTPClient) Delete(path string, headers map[string]string) (*http.
 // do will issue an authenticated json request to shopify.
 func (client *HTTPClient) do(method, path string, body interface{}, headers map[string]string) (*http.Response, error) {
 	appBaseURL := client.baseURL.String()
-	themeKitPasswordPrefix := "shptka_"
 
 	// redirect to Theme Kit Access
 	if strings.HasPrefix(client.password, themeKitPasswordPrefix) {
-		appBaseURL = client.themeKitAccessURL
+		appBaseURL = themeKitAccessURL
 	}
 
 	req, err := http.NewRequest(method, appBaseURL+path, nil)
