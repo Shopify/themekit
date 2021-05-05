@@ -15,6 +15,8 @@ import (
 	"github.com/Shopify/themekit/src/release"
 )
 
+const themeKitPasswordPrefix = "shptka_"
+
 var (
 	// ErrConnectionIssue is an error that is thrown when a very specific error is
 	// returned from our http request that usually implies bad connections.
@@ -27,6 +29,7 @@ var (
 	httpClient = &http.Client{
 		Timeout: 30 * time.Second,
 	}
+	themeKitAccessURL = "https://theme-kit-access.shopifyapps.com/cli"
 )
 
 type proxyHandler func(*http.Request) (*url.URL, error)
@@ -103,7 +106,15 @@ func (client *HTTPClient) Delete(path string, headers map[string]string) (*http.
 
 // do will issue an authenticated json request to shopify.
 func (client *HTTPClient) do(method, path string, body interface{}, headers map[string]string) (*http.Response, error) {
-	req, err := http.NewRequest(method, client.baseURL.String()+path, nil)
+	appBaseURL := client.baseURL.String()
+
+	// redirect to Theme Kit Access
+	if strings.HasPrefix(client.password, themeKitPasswordPrefix) {
+		appBaseURL = themeKitAccessURL
+	}
+
+	req, err := http.NewRequest(method, appBaseURL+path, nil)
+
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +123,9 @@ func (client *HTTPClient) do(method, path string, body interface{}, headers map[
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s; %s)", runtime.GOOS, runtime.GOARCH, release.ThemeKitVersion.String()))
+	if strings.HasPrefix(client.password, themeKitPasswordPrefix) {
+		req.Header.Add("X-Shopify-Shop", client.domain)
+	}
 	for label, value := range headers {
 		req.Header.Add(label, value)
 	}
