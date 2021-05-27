@@ -1,3 +1,7 @@
+v1.2.0 (May 27, 2021)
+=====================
+- Add support for Theme Kit access https://github.com/Shopify/themekit/pull/933
+
 v1.1.6 (Feb 3, 2021)
 =====================
 - Allow theme get and theme new to use env vars https://github.com/Shopify/themekit/pull/891
