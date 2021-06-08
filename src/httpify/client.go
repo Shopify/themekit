@@ -13,9 +13,8 @@ import (
 
 	"github.com/Shopify/themekit/src/ratelimiter"
 	"github.com/Shopify/themekit/src/release"
+	"github.com/Shopify/themekit/src/util"
 )
-
-const themeKitPasswordPrefix = "shptka_"
 
 var (
 	// ErrConnectionIssue is an error that is thrown when a very specific error is
@@ -109,7 +108,7 @@ func (client *HTTPClient) do(method, path string, body interface{}, headers map[
 	appBaseURL := client.baseURL.String()
 
 	// redirect to Theme Kit Access
-	if strings.HasPrefix(client.password, themeKitPasswordPrefix) {
+	if util.IsThemeKitAccessPassword(client.password) {
 		appBaseURL = themeKitAccessURL
 	}
 
@@ -123,7 +122,7 @@ func (client *HTTPClient) do(method, path string, body interface{}, headers map[
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s; %s)", runtime.GOOS, runtime.GOARCH, release.ThemeKitVersion.String()))
-	if strings.HasPrefix(client.password, themeKitPasswordPrefix) {
+	if util.IsThemeKitAccessPassword(client.password) {
 		req.Header.Add("X-Shopify-Shop", client.domain)
 	}
 	for label, value := range headers {

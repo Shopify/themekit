@@ -11,6 +11,7 @@ import (
 	"github.com/Shopify/themekit/src/colors"
 	"github.com/Shopify/themekit/src/env"
 	"github.com/Shopify/themekit/src/release"
+	"github.com/Shopify/themekit/src/util"
 )
 
 const afterUpdateMessage = `Successfully updated to theme kit version %v, for more information on this release please see the change log
@@ -41,6 +42,18 @@ Complete documentation is available at https://shopify.dev/tools/theme-kit.`,
 			if !flags.DisableUpdateNotifier && release.IsUpdateAvailable() {
 				colors.ColorStdOut.Print(colors.Yellow("An update for Themekit is available. To update please run `theme update`"))
 			}
+		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			// env validation requires a theme id. setting a dummy one here if not provided
+			if flags.ThemeID == "" {
+				flags.ThemeID = "1337"
+			}
+			cmdutil.ForDefaultClient(flags, args, func(ctx *cmdutil.Ctx) error {
+				if !flags.DisableThemeKitAccessNotifier && !util.IsThemeKitAccessPassword(ctx.Env.Password) {
+					colors.ColorStdOut.Print(colors.Yellow("* Build themes without private apps. Learn more about the Theme Kit Access app: https://shopify.dev/tools/theme-kit/manage-theme-kit-access"))
+				}
+				return nil
+			})
 		},
 	}
 
@@ -89,6 +102,7 @@ func init() {
 	ThemeCmd.PersistentFlags().StringArrayVar(&flags.Ignores, "ignores", []string{}, "A path to a file that contains ignore patterns.")
 	ThemeCmd.PersistentFlags().BoolVar(&flags.DisableIgnore, "no-ignore", false, "Will disable config ignores so that all files can be changed")
 	ThemeCmd.PersistentFlags().BoolVar(&flags.AllowLive, "allow-live", false, "Will allow themekit to make changes to the live theme on the store.")
+	ThemeCmd.PersistentFlags().BoolVarP(&flags.DisableThemeKitAccessNotifier, "no-theme-kit-access-notifier", "", false, "Stop theme kit from notifying about Theme Kit Access.")
 
 	watchCmd.Flags().StringVarP(&flags.Notify, "notify", "n", "", "file to touch or url to notify when a file has been changed")
 	watchCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")
