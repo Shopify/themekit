@@ -1,3 +1,7 @@
+v1.3.0 (Jun 23, 2021)
+=====================
+- Add messaging for Theme Kit access https://github.com/Shopify/themekit/pull/939
+
 v1.2.0 (May 27, 2021)
 =====================
 - Add support for Theme Kit access https://github.com/Shopify/themekit/pull/933
