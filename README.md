@@ -35,7 +35,7 @@ You can install Theme Kit using the command line on the following operating syst
 If you want to integrate Theme Kit into your build process, then you can run the following `npm` command to install the [Node wrapper](https://github.com/Shopify/node-themekit) around Theme Kit:
 
 ``` terminal
-$ npm install themekit
+$ npm install @shopify/themekit
 ```
 
 ## Reference guides
