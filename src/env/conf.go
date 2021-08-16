@@ -1,6 +1,7 @@
 package env
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -8,8 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"encoding/json"
-	"github.com/caarlos0/env"
+	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/shibukawa/configdir"
 	"gopkg.in/yaml.v1"
@@ -64,7 +64,7 @@ func New(configPath string) Conf {
 		osEnv: Env{},
 		path:  configPath,
 	}
-	env.Parse(&conf.osEnv)
+	_ = env.Parse(&conf.osEnv)
 	return conf
 }
 
