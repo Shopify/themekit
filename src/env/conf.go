@@ -18,7 +18,7 @@ import (
 const (
 	vendor   = "Shopify"
 	appname  = "Themekit"
-	filename = "variables"
+	filename = ".env"
 )
 
 var (
