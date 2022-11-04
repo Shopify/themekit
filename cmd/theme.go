@@ -49,8 +49,8 @@ Complete documentation is available at https://shopify.dev/tools/theme-kit.`,
 				flags.ThemeID = "1337"
 			}
 			cmdutil.ForDefaultClient(flags, args, func(ctx *cmdutil.Ctx) error {
-				if !flags.DisableThemeKitAccessNotifier && !util.IsThemeKitAccessPassword(ctx.Env.Password) {
-					colors.ColorStdOut.Print(colors.Yellow("* Build themes without private apps. Learn more about the Theme Kit Access app: https://shopify.dev/tools/theme-kit/manage-theme-kit-access"))
+				if !flags.DisableThemeKitAccessNotifier && !util.IsThemeAccessPassword(ctx.Env.Password) {
+					colors.ColorStdOut.Print(colors.Yellow("* Build themes without private apps. Learn more about the Theme Access app: https://shopify.dev/themes/tools/theme-access"))
 				}
 				return nil
 			})
@@ -102,7 +102,7 @@ func init() {
 	ThemeCmd.PersistentFlags().StringArrayVar(&flags.Ignores, "ignores", []string{}, "A path to a file that contains ignore patterns.")
 	ThemeCmd.PersistentFlags().BoolVar(&flags.DisableIgnore, "no-ignore", false, "Will disable config ignores so that all files can be changed")
 	ThemeCmd.PersistentFlags().BoolVar(&flags.AllowLive, "allow-live", false, "Will allow themekit to make changes to the live theme on the store.")
-	ThemeCmd.PersistentFlags().BoolVarP(&flags.DisableThemeKitAccessNotifier, "no-theme-kit-access-notifier", "", false, "Stop theme kit from notifying about Theme Kit Access.")
+	ThemeCmd.PersistentFlags().BoolVarP(&flags.DisableThemeKitAccessNotifier, "no-theme-kit-access-notifier", "", false, "Stop theme kit from notifying about Theme Access.")
 
 	watchCmd.Flags().StringVarP(&flags.Notify, "notify", "n", "", "file to touch or url to notify when a file has been changed")
 	watchCmd.Flags().BoolVarP(&flags.AllEnvs, "allenvs", "a", false, "run command with all environments")

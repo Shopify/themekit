@@ -142,7 +142,7 @@ func TestClient_do(t *testing.T) {
 	assert.Contains(t, err.Error(), "request failed after 1 retries", server.URL)
 	server.Close()
 
-	// Client should query Theme Kit Access server instead of Shopify when password starts with a prefix "shptka_"
+	// Client should query Theme Access server instead of Shopify when password starts with a prefix "shptka_"
 	shopifyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
 	themeKitAccessServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -164,7 +164,7 @@ func TestClient_do(t *testing.T) {
 
 	server.Close()
 
-	// Client should query Shopify instead of Theme Kit Access server when password has no specified prefix
+	// Client should query Shopify instead of Theme Access server when password has no specified prefix
 	shopifyServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Empty(t, r.Header.Get("X-Shopify-Shop"))
 	}))
