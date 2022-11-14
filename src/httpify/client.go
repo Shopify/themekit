@@ -107,8 +107,8 @@ func (client *HTTPClient) Delete(path string, headers map[string]string) (*http.
 func (client *HTTPClient) do(method, path string, body interface{}, headers map[string]string) (*http.Response, error) {
 	appBaseURL := client.baseURL.String()
 
-	// redirect to Theme Kit Access
-	if util.IsThemeKitAccessPassword(client.password) {
+	// redirect to Theme Access
+	if util.IsThemeAccessPassword(client.password) {
 		appBaseURL = themeKitAccessURL
 	}
 
@@ -122,7 +122,7 @@ func (client *HTTPClient) do(method, path string, body interface{}, headers map[
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", fmt.Sprintf("go/themekit (%s; %s; %s)", runtime.GOOS, runtime.GOARCH, release.ThemeKitVersion.String()))
-	if util.IsThemeKitAccessPassword(client.password) {
+	if util.IsThemeAccessPassword(client.password) {
 		req.Header.Add("X-Shopify-Shop", client.domain)
 	}
 	for label, value := range headers {

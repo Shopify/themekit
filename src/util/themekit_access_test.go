@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsThemeKitAccessPassword(t *testing.T) {
+func TestIsThemeAccessPassword(t *testing.T) {
 	themeKitAccessPassword := "shptka_00000000000000000000000000000000"
-	assert.True(t, IsThemeKitAccessPassword(themeKitAccessPassword))
+	assert.True(t, IsThemeAccessPassword(themeKitAccessPassword))
 
 	privateAppPassword := "shp_00000000000000000000000000000000"
-	assert.False(t, IsThemeKitAccessPassword(privateAppPassword))
+	assert.False(t, IsThemeAccessPassword(privateAppPassword))
 }
