@@ -1,3 +1,7 @@
+v1.3.1 (Dec 12, 2022)
+=====================
+- Rename Theme Kit Access references to Theme Access https://github.com/Shopify/themekit/pull/984
+
 v1.3.0 (Jun 23, 2021)
 =====================
 - Add messaging for Theme Access https://github.com/Shopify/themekit/pull/939
