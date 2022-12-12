@@ -21,7 +21,6 @@ import (
 var (
 	builds = map[string]string{
 		"darwin-amd64":  "theme",
-		"darwin-386":    "theme",
 		"linux-386":     "theme",
 		"linux-amd64":   "theme",
 		"freebsd-386":   "theme",
