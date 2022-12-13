@@ -46,7 +46,7 @@ Update the Chocolatey package in the `choco` folder:
 1. Update the version in `choco/themekit.nuspec`.
 2. Update the version and checksums in `choco/tools/chocolateyinstall.ps1`.
 3. Run `choco pack` in a window VM.
-4. Log into [https://chocolatey.org/](chocolatey.org) (use `themekit@shopify.com` for your credentials) and submit an update for approval.
+4. Log into [Chocolatey](https://community.chocolatey.org/users/account/LogOn) (use `themekit@shopify.com` for your credentials) and submit an update for approval.
 
 ## 7. Update Theme Kit for Homebrew
 
