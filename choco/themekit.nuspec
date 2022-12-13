@@ -2,17 +2,17 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>themekit</id>
-    <version>1.2.0</version>
+    <version>1.3.1</version>
     <packageSourceUrl>https://github.com/Shopify/themekit/blob/master/choco</packageSourceUrl>
     <owners>Shopify</owners>
     <title>Shopify Themekit</title>
     <authors>Tim Anema</authors>
-    <projectUrl>https://shopify.github.io/themekit/</projectUrl>
-    <iconUrl>https://shopify.github.io/themekit/choco_assets/shopify-logo.png</iconUrl>
+    <projectUrl>https://shopify.dev/themes/tools/theme-kit/</projectUrl>
+    <iconUrl>https://cdn.shopifycdn.net/static/images/logos/shopify-bag.png</iconUrl>
     <copyright>Shopify 2019</copyright>
     <licenseUrl>https://github.com/Shopify/themekit/blob/master/LICENSE</licenseUrl>
     <projectSourceUrl>https://github.com/Shopify/themekit</projectSourceUrl>
-    <docsUrl>https://shopify.dev/tools/theme-kit</docsUrl>
+    <docsUrl>https://shopify.dev/themes/tools/theme-kit/</docsUrl>
     <bugTrackerUrl>https://github.com/Shopify/themekit/issues</bugTrackerUrl>
     <tags>themekit shopify</tags>
     <summary>Theme Kit is a command line tool for shopify themes.</summary>
