@@ -59,6 +59,7 @@ func TestPathInProject(t *testing.T) {
 		filepath.Join(root, "config.yml"): false,
 		filepath.Join(root, "misc", "other.html"):                    false,
 		filepath.Join(root, "assets", "logo.png"):                    true,
+		filepath.Join(root, "assets", "node_modules_logo.png"):       true,
 		filepath.Join(root, "node_modules", "assets", "logo.png"):    false,
 		filepath.Join(root, "pages", "customers", "test.liquid"):     true,
 		filepath.Join(root, "templates", "customers", "test.liquid"): true,
