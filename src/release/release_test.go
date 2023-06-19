@@ -282,7 +282,6 @@ func TestBuildRelease(t *testing.T) {
 
 	testplatforms := []platform{
 		{Name: "darwin-amd64", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
-		{Name: "darwin-386", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
 		{Name: "linux-386", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
 		{Name: "linux-amd64", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},
 		{Name: "windows-386", URL: "http://amazon/themekit", Digest: "d41d8cd98f00b204e9800998ecf8427e"},

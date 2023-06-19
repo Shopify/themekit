@@ -4,7 +4,4 @@ go:
 script:
   - ./check_format.sh
   - env GO111MODULE=on make lint
-  - env GO111MODULE=on go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
-
+  - env GO111MODULE=on go test -race -covermode=atomic $(go list ./...)
