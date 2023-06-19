@@ -13,7 +13,6 @@ clean: ## Remove all temporary build artifacts
 all: clean bundle ## will build a binary for all platforms
 	@export GOOS=windows GOARCH=386 EXT=.exe; $(MAKE) build;
 	@export GOOS=windows GOARCH=amd64 EXT=.exe; $(MAKE) build;
-	@export GOOS=darwin GOARCH=386; $(MAKE) build;
 	@export GOOS=darwin GOARCH=amd64; $(MAKE) build;
 	@export GOOS=linux GOARCH=386; $(MAKE) build;
 	@export GOOS=linux GOARCH=amd64; $(MAKE) build;

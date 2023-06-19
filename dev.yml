@@ -1,0 +1,11 @@
+name: themekit
+
+type: go
+
+up:
+  - homebrew:
+    - mitmproxy
+    - dep
+  - go:
+      version: 1.17.13
+      modules: true

@@ -13,7 +13,6 @@ class Installer(object):
     LATEST_RELEASE_URL = "https://shopify-themekit.s3.amazonaws.com/releases/latest.json"
     ARCH_MAPPING = {
         "darwin x86_64": "darwin-amd64",
-        "darwin i386": "darwin-386",
         "linux x86_64": "linux-amd64",
         "linux i386": "linux-386",
         "freebsd x86_64": "freebsd-amd64",
