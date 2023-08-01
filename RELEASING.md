@@ -36,7 +36,7 @@ To release a new version of Theme Kit, make sure to complete all of the followin
 > Note:
 > Before proceeding with the remaining steps, consider waiting a day. If a defect is reported shortly after we make the release public, then we'll need to issue a patch release.
 
-1. Update the manual installation links on the [GitHub releases page](https://github.com/Shopify/themekit/releases) and in the [main README](https://github.com/Shopify/themekit/blob/master/README.md).
+1. Update the manual installation links on the [GitHub releases page](https://github.com/Shopify/themekit/releases) and in the [main README](https://github.com/Shopify/themekit/blob/main/README.md).
 2. Verify that the links work, as expected.
 
 ## 6. Update the Chocolately package

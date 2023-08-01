@@ -3,7 +3,7 @@
   <p align="center">Shopify Theme Manipulation CLI</p>
   <p align="center">
     <a href="https://goreportcard.com/report/github.com/shopify/themekit"><img src="https://goreportcard.com/badge/github.com/shopify/themekit"></a>
-    <a href="https://travis-ci.com/Shopify/themekit"><img src="https://travis-ci.com/Shopify/themekit.svg?branch=master"></a>
+    <a href="https://travis-ci.com/Shopify/themekit"><img src="https://travis-ci.com/Shopify/themekit.svg?branch=main"></a>
     <a href="http://godoc.org/github.com/Shopify/themekit"><img src="https://godoc.org/github.com/Shopify/themekit?status.svg"></a>
     <a href="https://github.com/Shopify/themekit/releases/latest"><img src="https://img.shields.io/github/release/Shopify/themekit.svg"></a>
   </p>
@@ -49,7 +49,7 @@ Refer to [*Troubleshooting Theme Kit*](https://shopify.dev/tools/theme-kit/troub
 
 ## Contributing to Theme Kit
 
-Theme Kit is open source and you can help [contribute to the GitHub repository](https://github.com/Shopify/themekit/blob/master/CONTRIBUTING.md).
+Theme Kit is open source and you can help [contribute to the GitHub repository](https://github.com/Shopify/themekit/blob/main/CONTRIBUTING.md).
 
 ## Where to get help
 

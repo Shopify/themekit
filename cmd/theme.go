@@ -15,7 +15,7 @@ import (
 )
 
 const afterUpdateMessage = `Successfully updated to theme kit version %v, for more information on this release please see the change log
-	https://github.com/Shopify/themekit/blob/master/changelog.txt
+	https://github.com/Shopify/themekit/blob/main/changelog.txt
 
 If you have troubles with this release please report them to
 	https://github.com/Shopify/themekit/issues
