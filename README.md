@@ -13,6 +13,8 @@
 
 Theme Kit is a cross-platform command line tool that you can use to build Shopify themes.
 
+If you're working on Online Store 2.0 themes, you should use [Shopify CLI](https://github.com/Shopify/cli), which replaces Theme Kit for most Shopify theme development tasks. You should use Theme Kit instead of Shopify CLI only if you're working on older themes.
+
 ## Features
 
 With Theme Kit, you can use your own development tools to interact with the Shopify platform in the following ways:

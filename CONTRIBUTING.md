@@ -7,7 +7,7 @@ Theme Kit is open source and we welcome your contributions to the project. The f
 3. Implement a patch to resolve the issue.
 4. Include tests to prevent regressions and validate the patch.
 5. Update the documentation for any API changes.
-6. Submit [a pull request](https://github.com/Shopify/themekit/pulls) and mention maintainers. The current maintainers are @tanema and @chrisbutcher.
+6. Submit [a pull request](https://github.com/Shopify/themekit/pulls) and mention maintainers. The current maintainers are @shopify/app-management
 
 ## Developing Theme Kit
 
