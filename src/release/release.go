@@ -29,7 +29,7 @@ var (
 		"windows-amd64": "theme.exe",
 	}
 	// ThemeKitVersion is the version build of the library
-	ThemeKitVersion, _ = version.NewVersion("1.3.1")
+	ThemeKitVersion, _ = version.NewVersion("1.3.2")
 )
 
 const (
