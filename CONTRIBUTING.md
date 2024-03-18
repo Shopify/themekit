@@ -15,7 +15,7 @@ Although Theme Kit is a command line interface, it's also a library that can be 
 
 ### Requirements
 
-- Go 1.13 or higher
+- Go 1.22.1 or higher
 - [Golint](https://github.com/golang/lint)
 
 ### Set up your development environment
