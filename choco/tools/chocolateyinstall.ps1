@@ -2,11 +2,11 @@
 $toolsDir       = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $packageName    = $env:ChocolateyPackageName
 $file           = "$($toolsDir)\theme.exe"
-$version        = "v1.3.1"
+$version        = "v1.3.2"
 $url            = "https://shopify-themekit.s3.amazonaws.com/$($version)/windows-386/theme.exe"
 $url64          = "https://shopify-themekit.s3.amazonaws.com/$($version)/windows-amd64/theme.exe"
-$checksum       = '3A75C7D3C25DD09F9701EB25522429B3'
-$checksum64     = '38C357C696C560758CE9FA35C0447D8F'
+$checksum       = 'd5777417bda8cf086c4103dd50891fc8'
+$checksum64     = 'b569ccf03d2e9c358a8f58744f9b265e'
 $validExitCodes = @(0)
 
 Get-ChocolateyWebFile `
