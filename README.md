@@ -1,3 +1,7 @@
+> [!WARNING]
+> Theme Kit has been deprecated. Theme developers should use [Shopify CLI](https://shopify.dev/docs/storefronts/themes/tools/cli)
+> for Shopify theme development, as parts of Theme Kit will become unsupported and may stop working soon.
+
 <p align="center">
   <a href="https://shopify.dev/tools/theme-kit"><h3 align="center">Theme Kit</h3></a>
   <p align="center">Shopify Theme Manipulation CLI</p>
@@ -12,8 +16,6 @@
 ---
 
 Theme Kit is a cross-platform command line tool that you can use to build Shopify themes.
-
-If you're working on Online Store 2.0 themes, you should use [Shopify CLI](https://github.com/Shopify/cli), which replaces Theme Kit for most Shopify theme development tasks. You should use Theme Kit instead of Shopify CLI only if you're working on older themes.
 
 ## Features
 
