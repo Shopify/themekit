@@ -43,9 +43,6 @@ var (
 		SilenceErrors: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			colors.ColorStdOut.Println(colors.Yellow(deprecationMessage))
-			if !flags.DisableUpdateNotifier && release.IsUpdateAvailable() {
-				colors.ColorStdOut.Print(colors.Yellow("An update for Themekit is available. To update please run `theme update`"))
-			}
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
 			// env validation requires a theme id. setting a dummy one here if not provided

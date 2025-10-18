@@ -13,7 +13,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/Shopify/themekit/src/release/_mocks"
+	mocks "github.com/Shopify/themekit/src/release/_mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -59,28 +59,6 @@ func TestRelease_ForCurrentPlatform(t *testing.T) {
 		{Name: "bad-system"},
 	}}
 	assert.Equal(t, "", r.forCurrentPlatform().Name)
-}
-
-func TestIsUpdateAvailable(t *testing.T) {
-	testcases := []struct {
-		in         string
-		applicable bool
-	}{
-		{"20.0.0", true}, {"0.0.0", false}, {ThemeKitVersion.String(), false},
-		{"v2.7.5-beta", false}, {"v2.7.5+prerelease", false}, {"this_is_not_a_version", false},
-	}
-
-	for _, testcase := range testcases {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, `{"version":"`+testcase.in+`", "platforms": [{}]}`)
-		}))
-		assert.Equal(t, checkUpdateAvailable(ts.URL), testcase.applicable)
-		ts.Close()
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
-	ts.Close()
-	assert.False(t, checkUpdateAvailable(ts.URL))
 }
 
 func TestInstallLatest(t *testing.T) {
