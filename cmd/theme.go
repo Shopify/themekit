@@ -14,7 +14,13 @@ import (
 	"github.com/Shopify/themekit/src/util"
 )
 
-const afterUpdateMessage = `Successfully updated to theme kit version %v, for more information on this release please see the change log
+const (
+	deprecationMessage = `Theme Kit has been deprecated. Theme developers should use Shopify CLI for Shopify theme development, as parts of Theme Kit will become unsupported and may stop working soon.
+
+https://shopify.dev/docs/storefronts/themes/tools/cli
+ `
+
+	afterUpdateMessage = `Successfully updated to theme kit version %v, for more information on this release please see the change log
 	https://github.com/Shopify/themekit/blob/main/changelog.txt
 
 If you have troubles with this release please report them to
@@ -23,25 +29,20 @@ If you have troubles with this release please report them to
 If your troubles are preventing you from working you can roll back to the previous version using the command
 	'theme update --version=v%s'
  `
+)
 
 var (
 	flags cmdutil.Flags
 
 	// ThemeCmd is the main entry point to the theme kit command line interface.
 	ThemeCmd = &cobra.Command{
-		Use:   "theme",
-		Short: "Theme Kit is a tool kit for manipulating shopify themes",
-		Long: `Theme Kit is a tool kit for manipulating shopify themes
-
-Theme Kit is a fast and cross platform tool that enables you to build shopify themes with ease.
-
-Complete documentation is available at https://shopify.dev/tools/theme-kit.`,
+		Use:           "theme",
+		Short:         "Theme Kit is deprecated, use Shopify CLI",
+		Long:          deprecationMessage,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if !flags.DisableUpdateNotifier && release.IsUpdateAvailable() {
-				colors.ColorStdOut.Print(colors.Yellow("An update for Themekit is available. To update please run `theme update`"))
-			}
+			colors.ColorStdOut.Println(colors.Yellow(deprecationMessage))
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
 			// env validation requires a theme id. setting a dummy one here if not provided

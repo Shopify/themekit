@@ -69,12 +69,6 @@ func (r release) forCurrentPlatform() platform {
 	return platform{}
 }
 
-// IsUpdateAvailable will check if there is an update to the theme kit command
-// and if there is one it will return true. Otherwise it will return false.
-func IsUpdateAvailable() bool {
-	return checkUpdateAvailable(latestS3URL)
-}
-
 // Install will take a semver string and parse it then check if that
 // update is available and install it. If the string is 'latest' it will install
 // the most current. If the string is latest and there is no update it will return an
@@ -100,14 +94,6 @@ func Update(key, secret, ver string, force bool) error {
 // appropriate S3 priviledges
 func Remove(key, secret, ver string) error {
 	return remove(ver, releasesS3URL, newS3Uploader(key, secret))
-}
-
-func checkUpdateAvailable(latestURL string) bool {
-	release, err := fetchLatest(latestURL)
-	if err != nil {
-		return false
-	}
-	return release.isApplicable()
 }
 
 func installLatest(latestURL string, install func(platform) error) error {
