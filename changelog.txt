@@ -1,3 +1,7 @@
+v1.3.3 (October 22, 2025)
+=====================
+- Add deprecation notice to all commands https://github.com/Shopify/themekit/pull/1026
+
 v1.3.2 (March 18, 2024)
 =====================
 - Upgrade Go to 1.22.1 https://github.com/Shopify/themekit/pull/1009

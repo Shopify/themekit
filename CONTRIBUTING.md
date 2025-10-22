@@ -1,3 +1,6 @@
+> [!WARNING]
+> This repository is no longer in development and is no longer accepting contributions.
+
 # Contributing to Theme Kit
 
 Theme Kit is open source and we welcome your contributions to the project. The following steps illustrate the workflow for making a contribution:
