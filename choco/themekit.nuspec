@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>themekit</id>
-    <version>1.3.2</version>
+    <version>1.3.3</version>
     <packageSourceUrl>https://github.com/Shopify/themekit/blob/main/choco</packageSourceUrl>
     <owners>Shopify</owners>
     <title>Shopify Themekit</title>
