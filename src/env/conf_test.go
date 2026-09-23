@@ -146,6 +146,21 @@ func TestConf_Save(t *testing.T) {
 	assert.Equal(t, err, ErrNoEnvironmentsDefined)
 }
 
+func TestConf_SaveCreatesFileWithOwnerOnlyPermissions(t *testing.T) {
+	configPath := filepath.Join(t.TempDir(), "config.yml")
+	conf := New(configPath)
+	conf.Set("foobar", Env{
+		Password: "password",
+		Domain:   "nope.myshopify.com",
+	})
+
+	assert.Nil(t, conf.Save())
+
+	info, err := os.Stat(configPath)
+	assert.Nil(t, err)
+	assert.Equal(t, os.FileMode(0600), info.Mode().Perm())
+}
+
 func TestConf_SaveKeepsDirectoryRelativeIfItIsRelative(t *testing.T) {
 	configDir, _ := os.Getwd()
 	configPath := filepath.Join(configDir, "config.yml")

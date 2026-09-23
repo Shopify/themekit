@@ -166,7 +166,9 @@ func (c Conf) save(w io.Writer) error {
 }
 
 func (c Conf) file() (io.WriteCloser, error) {
-	return os.OpenFile(c.path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	// The config holds the theme password, so newly created files must not be
+	// readable by other local users. A umask can only clear bits, never set them.
+	return os.OpenFile(c.path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 }
 
 func searchConfigPath(configPath string) (string, string, error) {
