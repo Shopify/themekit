@@ -2,8 +2,10 @@ package shopify
 
 import (
 	"encoding/base64"
+	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -64,6 +66,75 @@ func TestAsset_Write(t *testing.T) {
 	}
 
 	os.RemoveAll(testDir)
+}
+
+func TestAsset_WriteRejectsNonLocalKeys(t *testing.T) {
+	testcases := []struct {
+		name, key string
+	}{
+		{name: "empty", key: ""},
+		{name: "parent traversal", key: "../outside.txt"},
+		{name: "nested traversal", key: "assets/../../outside.txt"},
+		{name: "new directory outside destination", key: "../new/file.txt"},
+		{name: "absolute"},
+	}
+	if runtime.GOOS == "windows" {
+		testcases = append(testcases, []struct{ name, key string }{
+			{name: "backslash traversal", key: `..\outside.txt`},
+			{name: "drive relative", key: `C:outside.txt`},
+			{name: "drive absolute", key: `C:\outside.txt`},
+			{name: "UNC", key: `\\server\share\outside.txt`},
+			{name: "rooted", key: `\outside.txt`},
+			{name: "reserved device", key: "NUL"},
+		}...)
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			root := t.TempDir()
+			directory := filepath.Join(root, "theme")
+			if err := os.Mkdir(directory, 0755); err != nil {
+				t.Fatal(err)
+			}
+			outside := filepath.Join(root, "outside.txt")
+			if err := os.WriteFile(outside, []byte("unchanged"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			key := testcase.key
+			if testcase.name == "absolute" {
+				key = outside
+			}
+
+			err := (Asset{Key: key, Value: "overwritten"}).Write(directory)
+			assert.True(t, errors.Is(err, ErrAssetKeyEscapesDirectory), "expected invalid asset key error, got %v", err)
+			contents, err := os.ReadFile(outside)
+			assert.NoError(t, err)
+			assert.Equal(t, "unchanged", string(contents))
+			entries, err := os.ReadDir(directory)
+			assert.NoError(t, err)
+			assert.Empty(t, entries)
+			entries, err = os.ReadDir(root)
+			assert.NoError(t, err)
+			assert.Len(t, entries, 2)
+		})
+	}
+}
+
+func TestAsset_WriteLocalKeys(t *testing.T) {
+	for _, key := range []string{
+		"file.txt",
+		"assets/nested/file.txt",
+		"assets/../templates/file.txt",
+	} {
+		t.Run(key, func(t *testing.T) {
+			directory := t.TempDir()
+			err := (Asset{Key: key, Value: "contents"}).Write(directory)
+			assert.NoError(t, err)
+			contents, err := os.ReadFile(filepath.Join(directory, key))
+			assert.NoError(t, err)
+			assert.Equal(t, "contents", string(contents))
+		})
+	}
 }
 
 func TestAsset_Contents(t *testing.T) {
