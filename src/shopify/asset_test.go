@@ -106,7 +106,7 @@ func TestAsset_WriteRejectsNonLocalKeys(t *testing.T) {
 			}
 
 			err := (Asset{Key: key, Value: "overwritten"}).Write(directory)
-			assert.True(t, errors.Is(err, ErrAssetKeyEscapesDirectory), "expected invalid asset key error, got %v", err)
+			assert.True(t, errors.Is(err, ErrInvalidAssetKey), "expected invalid asset key error, got %v", err)
 			contents, err := os.ReadFile(outside)
 			assert.NoError(t, err)
 			assert.Equal(t, "unchanged", string(contents))
