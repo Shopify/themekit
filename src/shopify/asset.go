@@ -31,6 +31,8 @@ type Asset struct {
 var (
 	// ErrAssetIsDir is the error returned if you try and load a directory with ReadAsset
 	ErrAssetIsDir = errors.New("requested asset is a directory")
+	// ErrInvalidAssetKey is returned when an asset key is not a relative path inside the destination directory.
+	ErrInvalidAssetKey = errors.New("asset key is not a valid relative path inside the theme directory")
 )
 
 // ReadAsset will read a single asset from disk
@@ -71,6 +73,10 @@ func FindAssets(e *env.Env, paths ...string) (assets []Asset, err error) {
 
 // Write will write the asset out to the destination directory
 func (asset Asset) Write(directory string) error {
+	if !filepath.IsLocal(filepath.FromSlash(asset.Key)) {
+		return ErrInvalidAssetKey
+	}
+
 	perms, err := os.Stat(directory)
 	if err != nil {
 		return err
